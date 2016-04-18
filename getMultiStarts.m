@@ -455,11 +455,9 @@ end
                 % do nothing
             case 'iter'
                 if(ftrace)
-                    if optimValues.iteration>0
-                        parameters.MS.par_trace(:,optimValues.iteration,i) = x;
-                        parameters.MS.fval_trace(optimValues.iteration,i) = optimValues.fval;
-                        parameters.MS.time_trace(optimValues.iteration,i) = cputime - t_cpu_fmincon;
-                    end
+                    parameters.MS.par_trace(:,optimValues.iteration+1,i) = x;
+                    parameters.MS.fval_trace(optimValues.iteration+1,i) = optimValues.fval;
+                    parameters.MS.time_trace(optimValues.iteration+1,i) = cputime - t_cpu_fmincon;
                 end
                 if(ftempsave)
                     if optimValues.iteration>0
