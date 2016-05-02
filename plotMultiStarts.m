@@ -46,7 +46,11 @@ end
 % Open figure
 if nargin >= 2
     if ~isempty(varargin{2})
-        fh = figure(varargin{2});
+        if(isvalid(varargin{2}))
+            fh = figure(varargin{2});
+        else
+            fh = figure;
+        end
     else
         fh = figure;
     end
