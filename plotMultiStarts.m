@@ -77,11 +77,36 @@ end
 %% SORT RESULTS
 [parameters] = sortMultiStarts(parameters);
 
+%% CLUSTERING
+clust = cluster(linkage(pdist(parameters.MS.logPost)),'cutoff',0.1,'criterion','distance');
+
+uclust = unique(clust);
+for iclust = 1:length(uclust)
+    sizecluster(iclust) = sum(clust == uclust(iclust));
+end
+
 %% ASSIGN COLORS
 i = length(parameters.MS.logPost);
 Col = colormap(gray(i+ceil(i/3)));
 Col = Col.^(1/3);
 Col(1,:) = [1,0,0];
+
+% sort clusters
+for iclust = 1:length(uclust)
+    Jclust(iclust) = parameters.MS.logPost(find(clust == uclust(iclust),1));
+end
+[~,idx] = sort(Jclust);
+uclust = uclust(idx);
+sizecluster = sizecluster(idx);
+
+ColClust = parula(sum(sizecluster>1));
+ColClust(end,:) = [1,0,0];
+
+for iclust = 1:length(uclust);
+    if(sizecluster(iclust)>1)
+    Col(clust == uclust(iclust),:) = repmat(ColClust(sum(sizecluster(1:iclust)>1),:),[sizecluster(iclust),1]);
+    end
+end
 
 %% PLOT OBJECTIVES
 subplot(2,2,1);
