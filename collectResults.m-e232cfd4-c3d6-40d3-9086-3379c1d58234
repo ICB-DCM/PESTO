@@ -23,29 +23,19 @@ try
     obj = init.parameters;
     type = 'parameters';
 catch
-    init = load([foldername '/init'],'properties');
-    obj = init.properties;
-    type = 'properties';
+   % init = load([foldername '/init'],'properties');
+   % obj = init.properties;
+   % type = 'properties';
 end
+type = 'parameters';
+obj = struct([]);
+
 warning on;
 
 %% Collection of data
 files = dir(fullfile(foldername,'*.csv'));
 
-ntheta = size(init.parameters.MS.par0,1);
-nstarts = init.parameters.MS.n_starts;
-
-obj.MS.logPost = NaN(nstarts,1);
-obj.MS.logPost0 = NaN(nstarts,1);
-obj.MS.par = NaN(ntheta,nstarts);
-obj.MS.par0 = NaN(ntheta,nstarts);
-obj.MS.gradient = NaN(ntheta,nstarts);
-obj.MS.hessian = NaN(ntheta,ntheta,nstarts);
-obj.MS.t_cpu = NaN(nstarts,1);
-obj.MS.n_objfun = NaN(nstarts,1);
-obj.MS.n_iter = NaN(nstarts,1);
-obj.MS.exitflag = NaN(nstarts,1);
-% should do this for prop and prop_Sigma aswell, but what are the dimensions?
+files 
 
 % Loop: files
 for j = 1:length(files)
@@ -85,6 +75,8 @@ for j = 1:length(files)
             end
    end
 end
+
+obj
 
 %% Sort and save results 
 switch type
