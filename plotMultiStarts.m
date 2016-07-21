@@ -93,14 +93,18 @@ Col(1,:) = [1,0,0];
 
 % sort clusters
 for iclust = 1:length(uclust)
-    Jclust(iclust) = parameters.MS.logPost(find(clust == uclust(iclust),1));
+    Jclust(iclust) = max(parameters.MS.logPost(find(clust == uclust(iclust))));
 end
-[~,idx] = sort(Jclust);
+Jclust(isnan(Jclust)) = -Inf;
+[~,idx] = sort(Jclust,'descend');
 uclust = uclust(idx);
 sizecluster = sizecluster(idx);
 
-ColClust = [parula(max(sum(sizecluster>1)-1,0));1,0,0];
-
+if(sizecluster(1)>1)
+    ColClust = [1,0,0;parula(max(sum(sizecluster>1)-1,0))];
+else
+    ColClust = parula(sum(sizecluster>1));
+end
 
 for iclust = 1:length(uclust);
     if(sizecluster(iclust)>1)
