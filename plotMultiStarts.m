@@ -99,7 +99,7 @@ end
 uclust = uclust(idx);
 sizecluster = sizecluster(idx);
 
-ColClust = [parula(min(sum(sizecluster>1)-1,0));1,0,0];
+ColClust = [parula(max(sum(sizecluster>1)-1,0));1,0,0];
 
 
 for iclust = 1:length(uclust);
