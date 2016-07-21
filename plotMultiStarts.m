@@ -101,9 +101,9 @@ uclust = uclust(idx);
 sizecluster = sizecluster(idx);
 
 if(sizecluster(1)>1)
-    ColClust = [1,0,0;parula(max(sum(sizecluster>1)-1,0))];
+    ColClust = [1,0,0;flipud(parula(max(sum(sizecluster>1)-1,0)))];
 else
-    ColClust = parula(sum(sizecluster>1));
+    ColClust = flipud(parula(sum(sizecluster>1)));
 end
 
 for iclust = 1:length(uclust);
