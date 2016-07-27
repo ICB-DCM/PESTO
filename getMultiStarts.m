@@ -448,11 +448,11 @@ if strcmp(options.comp_type, 'sequential')
             
             % Assignment
             parameters.MS.J(1, i) = -J_0;
-            parameters.MS.normG(1, i) = sqrt(sum(grad_J_0.^2));
             parameters.MS.logPost(i) = -J_opt;
             parameters.MS.par(:,i) = theta;
             parameters.MS.gradient(:,i) = gradient_opt;
             if (~strcmp(options.optimizer, 'minibatch'))
+                parameters.MS.normG(1, i) = sqrt(sum(grad_J_0.^2));
                 if isempty(hessian_opt)
                     if strcmp(options.fmincon.Hessian,'user-supplied')
                         [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
@@ -468,7 +468,7 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.n_objfun(i) = options.optim_options.nOptimSteps;
                 parameters.MS.n_iter(i) = options.optim_options.nOptimSteps;
             end
-            % parameters.MS.hessian(:,:,i) = full(hessian_opt);
+            parameters.MS.hessian(:,:,i) = full(hessian_opt);
         end
         parameters.MS.t_cpu(i) = cputime - t_cpu_fmincon;
         
