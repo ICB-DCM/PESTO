@@ -1,4 +1,6 @@
 clear all;
+close all;
+clc;
 
 TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
@@ -89,19 +91,6 @@ logP = @(theta) logP__T(theta,t,ym);
 % Options
 options.n_starts = 20;
 options.comp_type = 'sequential'; options.mode = 'visual';
-
-options.optimizer = 'minibatch';
-options.optim_options.isMinibatch = false;
-options.optim_options.nOptimSteps = 1000;
-options.optim_options.method = 'adam';
-options.optim_options.hyperparams = struct(...
-    'rho1', 0.999, ...
-    'rho2', 0.9, ...
-    'delta', 1e-8, ...
-    'eps0', 1e-1, ...
-    'epsTau', 1e-5, ...
-    'tau', 850);
-
 % options.comp_type = 'parallel'; options.mode = 'silent'; % n_workers = 10;
 % options.save = 'true'; options.foldername = 'results';
 

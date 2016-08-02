@@ -463,12 +463,12 @@ if strcmp(options.comp_type, 'sequential')
                 end
                 parameters.MS.n_objfun(i) = results_fmincon.funcCount;
                 parameters.MS.n_iter(i) = results_fmincon.iterations;
+                parameters.MS.hessian(:,:,i) = full(hessian_opt);
             else
                 parameters.MS.normG(1, i) = sqrt(sum(grad_J_0.^2));
                 parameters.MS.n_objfun(i) = options.optim_options.nOptimSteps;
                 parameters.MS.n_iter(i) = options.optim_options.nOptimSteps;
             end
-            parameters.MS.hessian(:,:,i) = full(hessian_opt);
         end
         parameters.MS.t_cpu(i) = cputime - t_cpu_fmincon;
         
