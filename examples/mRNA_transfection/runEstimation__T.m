@@ -1,3 +1,8 @@
+% Main file of the mRNA transfection example
+%
+% This is a model of ...
+%
+
 clear all;
 close all;
 clc;

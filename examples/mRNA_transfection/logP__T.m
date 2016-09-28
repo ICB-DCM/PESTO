@@ -1,9 +1,22 @@
+function [logL,dlogLdtheta,Happ] = logP__T(varargin)
 % logP__T.m provides the log-posterior, its gradient and an 
 % approximation of the Hessian matrix based on Fisher information matrix
 % for the mRNA transfection model.
-
-%function varargout = logP__T(theta,t,D)
-function [logL,dlogLdtheta,Happ] = logP__T(varargin)
+%
+% Usage:
+% function varargout = logP__T(theta,t,D)
+% 
+% Parameters:
+% varargin:
+% theta: Model parameters
+% t: Timepoints
+% D: measurement data
+%
+% Return values:
+% logL: Log-likelihood of observing the measurement values D given the
+% model parameters theta
+% dlogLdtheta: Gradient of the log-likelihood
+% Happ: Approximation of the Hessian matrix based on Fisher information matrix
 
 %% Initialization
 theta = varargin{1}; theta = theta(:);

@@ -1,4 +1,14 @@
 function [Y,X] = sim__T(theta,t)
+% sim__T performs a simulation of the transfection model for the
+% given timepoints t and parameters theta
+%
+% Parameters:
+% theta: Parameter vector
+% t: Time vector
+%
+% Return values:
+% Y: Vector with values of the observables Y = [X_2] at timepoints t
+% X: State vector at timepoints t
 
 % Parameter assignment
 t0 = theta(1);
