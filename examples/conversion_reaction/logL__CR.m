@@ -1,8 +1,19 @@
+function [logL, dlogLdxi, F] = logL__CR(xi, t, ym, sigma2, scale)
 % logL__CR.m provides the log-likelihood, its gradient and an 
 % approximation of the Hessian matrix based on Fisher information matrix
-% for the conversion reaction process.
-
-function [logL,dlogLdxi,F] = logL__CR(xi,t,ym,sigma2,scale)
+% (FIM) for the conversion reaction process.
+% 
+% Parameters:
+% xi: Model parameters [k1, k2]'
+% t: timepoints of the measurements
+% ym: measurement vector
+% sigma2: variance of the measurements
+% scale: 'lin' or 'log'
+%
+% Return values:
+% logL: log-likelihood
+% dlogLdxi: gradient of log-likelihood
+% F: approximation of Hessian of log-likelihood (= - FIM)
 
 %% Initialization
 n_x = 2;
@@ -38,12 +49,14 @@ switch scale
             dxdxi_i = X(:,i*n_x+(1:n_x))*exp(xi(i));
             dydxi(1:length(t),(i-1)*n_y+(1:n_y)) = dxdxi_i*dhdx(X,exp(xi))';
         end
+    otherwise
+        error('Scale argument must be either "lin" or "log".')
 end
 
 %% Objective function evaluation
 logL = 0; % log-likelihood
 dlogLdxi = zeros(n_xi,1); % gradient of log-likelihood
-F = zeros(n_xi,n_xi); %  approxiamtion of Hessian of log-likelihood (= - FIM)
+F = zeros(n_xi,n_xi); %  approximation of Hessian of log-likelihood (= - FIM)
 for i = 1:n_y
     logL = logL - 0.5*sum(log(2*pi*sigma2) + (ym(:,i)-y(:,i)).^2/sigma2);
     dlogLdxi = dlogLdxi + dydxi(:,i+(0:n_y:n_xi*n_y-i))'*((ym(:,i)-y(:,i))/sigma2);
