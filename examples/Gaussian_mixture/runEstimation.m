@@ -1,3 +1,11 @@
+% Main file for the Gaussian mixture example.
+%
+% Model of ... 
+%
+% This example demonstrates the use of:
+% * getParameterSamples()
+% * plotParameterSamples()
+
 clear all;
 close all;
 clc;
