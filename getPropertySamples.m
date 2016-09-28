@@ -1,27 +1,27 @@
+function [properties,fh] = getPropertySamples(varargin)
 % getPropertySamples.m evaluates the properties for the sampled parameters.
 %
 % USAGE:
-% ======
 % [...] = getPropertySamples(properties,parameters)
 % [...] = getPropertySamples(properties,parameters,options)
 % [parameters,fh] = getPropertySamples(...)
 %
-% INPUTS:
-% =======
-% properties ... property struct containing at least:
+% Parameters:
+% properties: property struct containing at least:<pre>
 %   .number ... number of parameter
 %   .min ... lower bound for property values       
 %   .max ... upper bound for property values       
 %   .name = {'name1',...} ... names of the parameters       
 %   .function = {'function1',...} ... functions to evaluate property  
 %       values. These functions provide the values of the respective  
-%       properties and the corresponding 1st and 2nd order derivatives.       
-% parameters ... parameter struct containing at least:
+%       properties and the corresponding 1st and 2nd order
+%       derivatives.</pre>
+% parameters: parameter struct containing at least:<pre>
 %   .S ... parameter and posterior sample.
 %       .logPost ... log-posterior function along chain
 %       .par  ... parameters along chain
-%   Note: This struct is obtained using getSamples.m.
-% options ... options of algorithm
+%   Note: This struct is obtained using getSamples.m.</pre>
+% options: options of algorithm<pre>
 %   .comp_type ... type of computations
 %       = 'sequential' (default) ... classical sequential (in core) method
 %       = 'parallel' ... multi-core method exploiting parfor
@@ -41,25 +41,21 @@
 %       setting only the properties for every 10th parameter vector is
 %       evaluated.
 %   .property_index ... index of the properties for which the properties
-%         are calculated (default = 1:properties.number).
+%         are calculated (default = 1:properties.number).</pre>
 %
-% Outputs:
-% ========
-% properties ... updated parameter object containing:
+% Return values:
+% properties: updated parameter object containing:<pre>
 %   .S ... properties for sampling results
-%       .par(:,i) ... ith samples parameter vector
+%       .par(*,i) ... ith samples parameter vector
 %       .logPost(i) ... log-posterior for ith samples parameter vector
 %       .prop(j,i) ... values of jth property for ith samples parameter 
 %           vector
-%       .prop_Sigma(:,:,i) ... covariance of properties for ith samples 
-%           parameter vector
-% fh ... figure handle
+%       .prop_Sigma(*,*,i) ... covariance of properties for ith samples 
+%           parameter vector</pre>
+% fh: figure handle
 %
-% 2015/04/01 Jan Hasenauer
-
-% function [properties,fh] = getPropertySamples(properties,parameters,options)
-function [properties,fh] = getPropertySamples(varargin)
-
+% History:
+% * 2015/04/01 Jan Hasenauer
 
 %% Check and assign inputs
 if nargin >= 2

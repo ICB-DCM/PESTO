@@ -1,4 +1,5 @@
-% getMultiStarts.m computes the maximum a posterior estimate of the
+function [parameters,fh] = getMultiStarts(varargin)
+% getMultiStarts() computes the maximum a posterior estimate of the
 %   parameters of a user-supplied posterior function. Therefore, a
 %   multi-start local optimization is used.
 %
@@ -6,27 +7,24 @@
 % in 'parallel' mode.
 %
 % USAGE:
-% ======
-% [...] = getMultiStarts(parameters,objective_function)
-% [...] = getMultiStarts(parameters,objective_function,options)
+% [...] = getMultiStarts(parameters,objective_function)\n
+% [...] = getMultiStarts(parameters,objective_function,options)\n
 % [parameters,fh] = getMultiStarts(...)
 %
-% INPUTS:
-% =======
-% parameters ... parameter struct containing at least:
-%   .number ... number of parameter
-%   .guess ... initial guess of parameter
-%   .min ... lower bound for parameter values
-%   .max ... upper bound for parameter values
-%   .name = {'name1',...} ... names of the parameters
-%   .init_fun ... function to draw starting points for local
-%   	optimization. The function has to have the input structure
-%           .init_fun(theta_0,theta_min,theta_max)
+% Parameters:
+%  varargin: 
+%  parameters: parameter struct containing at least<pre>
+%    .number ... number of parameter
+%    .guess ... initial guess of parameter
+%    .min ... lower bound for parameter values
+%    .max ... upper bound for parameter values
+%    .name = {'name1',...} ... names of the parameters
+%    .init_fun ... function to draw starting points for local optimization. The function has to have the input structure
+%    .init_fun(theta_0,theta_min,theta_max)
 %       Alternatively, a latin hypercube or a uniform random sampling can
-%       be used by setting the respective options
-% objective_function ... objective function to be optimized. This function
-%       should possess exactly one input, the parameter vector.
-% options ... options of algorithm
+%       be used by setting the respective options</pre>
+% objective_function: objective function to be optimized. This function should accept exactly one input, the parameter vector.
+% options: options of algorithm<pre>
 %   .obj_type ... type of objective function provided
 %       = 'log-posterior' (default) ... algorithm assumes that
 %               log-posterior or log-likelihood are provided and perfroms
@@ -98,38 +96,33 @@
 %           = 'adadelta' ... adaptive method
 %       .hyperparams ... struct containing the hyperparameters 
 %           (e.g. learning rate) for the opt-method, must fit with chosen 
-%           method (see documentation there)
+%           method (see documentation there)</pre>
 %
-%
-%
-% Outputs:
-% ========
-% parameters ... updated parameter object containing:
-%   .MS ... information about multi-start optimization
-%       .par(:,i) ... ith MAP
-%       .par0(:,i) ... starting point yielding ith MAP
+% Return values:
+% parameters: updated parameter object containing<pre>
+%       * .MS ... information about multi-start optimization
+%       * .par(*,i) ... ith MAP
+%       .par0(*,i) ... starting point yielding ith MAP
 %       .logPost(i) ... log-posterior for ith MAP
 %       .logPost0(i) ... log-posterior for starting point yielding ith MAP
-%       .gradient(:,i) ... gradient of log-posterior at ith MAP
-%       .hessian(:,:,i) ... hessian of log-posterior at ith MAP
+%       .gradient(*,i) ... gradient of log-posterior at ith MAP
+%       .hessian(*,*,i) ... hessian of log-posterior at ith MAP
 %       .n_objfun(i) ... # objective evaluations used to calculate ith MAP
 %       .n_iter(i) ... # iterations used to calculate ith MAP
 %       .t_cpu(i) ... CPU time for calculation of ith MAP
 %       .exitflag(i) ... exitflag the optimizer returned for ith MAP
-%       .par_trace(:,:,i) ... parameter trace for ith MAP
-%       .fval_trace(:,i) ... objective function value trace for ith MAP
-%       .time_trace(:,i) ... computation time trace for ith MAP
-% fh ... figure handle
+%       .par_trace(*,*,i) ... parameter trace for ith MAP
+%       .fval_trace(*,i) ... objective function value trace for ith MAP
+%       .time_trace(*,i) ... computation time trace for ith MAP</pre>
+% fh: figure handle
 %
-% 2012/05/31 Jan Hasenauer
-% 2012/07/11 Jan Hasenauer
-% 2014/06/11 Jan Hasenauer
-% 2015/07/28 Fabian Froehlich
-% 2015/11/10 Fabian Froehlich
-% 2016/06/07 Paul Stapor
-
-% function [parameters,fh] = getMultiStarts(parameters,objective_function,options)
-function [parameters,fh] = getMultiStarts(varargin)
+% History:
+% * 2012/05/31 Jan Hasenauer
+% * 2012/07/11 Jan Hasenauer
+% * 2014/06/11 Jan Hasenauer
+% * 2015/07/28 Fabian Froehlich
+% * 2015/11/10 Fabian Froehlich
+% * 2016/06/07 Paul Stapor
 
 global error_count
     

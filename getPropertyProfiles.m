@@ -1,3 +1,4 @@
+function [properties,fh] = getPropertyProfiles(varargin)
 % getPropertyProfiles.m calculates the profiles of a user-supplied function,
 %   starting from the maximum a posteriori estimate.
 %
@@ -5,22 +6,22 @@
 % in 'parallel' mode.
 %
 % USAGE:
-% ======
 % [...] = getPropertyProfiles(properties,parameters,objective_function)
 % [...] = getPropertyProfiles(properties,parameters,objective_function,property_name,options)
 % [parameters,fh] = getPropertyProfiles(...)
 %
-% INPUTS:
-% =======
-% properties ... property struct containing at least:
+% Parameters:
+% varargin:
+% properties: property struct containing at least:<pre>
 %   .number ... number of parameter
 %   .min ... lower bound for property values       
 %   .max ... upper bound for property values       
 %   .name = {'name1',...} ... names of the parameters       
 %   .function = {'function1',...} ... functions to evaluate property  
 %       values. These functions provide the values of the respective  
-%       properties and the corresponding 1st and 2nd order derivatives.       
-% parameters ... parameter struct containing at least:
+%       properties and the corresponding 1st and 2nd order
+%       derivatives.</pre>
+% parameters: parameter struct containing at least:<pre>
 %   .number ... number of parameter
 %   .min ... lower bound for parameter values       
 %   .max ... upper bound for parameter values       
@@ -30,10 +31,10 @@
 %       .par ... sorted list n_theta x n_starts of parameter estimates.
 %                The first entry is assumed to be the best one.
 %       .logPost ... sorted list n_starts x 1 of of log-posterior values
-%                corresponding to the parameters listed in .par.
-% objective_function ... objective function to be optimized. This function
+%                corresponding to the parameters listed in .par.</pre>
+% objective_function: objective function to be optimized. This function
 %       should possess exactly one input, the parameter vector.
-% options ... options of algorithm
+% options: options of algorithm<pre>
 %   .obj_type ... type of objective function provided
 %       = 'log-posterior' (default) ... algorithm assumes that
 %               log-posterior or log-likelihood are provided and perfroms 
@@ -79,22 +80,20 @@
 %       If no folder is provided, a random foldername is generated.
 %   .MAP_index ... index MAP parameter vector starting from which the
 %       profile is calculated. This option is helpful if local
-%       optima are present.
+%       optima are present.</pre>
 %
-% Outputs:
-% ========
-% properties ... updated parameter object containing:
+% Return values:
+% properties: updated parameter object containing<pre>
 %   .P(i) ... profile for i-th parameter
 %       .prop ... MAPs along profile
 %       .par ... MAPs along profile
 %       .logPost ... maximum log-posterior along profile
-%       .R ... ratio
-% fh ... figure handle
+%       .R ... ratio</pre>
+% fh: figure handle
 %
-% 2012/03/02 Jan Hasenauer
+% History:
+% * 2012/03/02 Jan Hasenauer
 
-% function [properties,fh] = getPropertyProfiles(parameters,objective_function,property_function,property_name,options)
-function [properties,fh] = getPropertyProfiles(varargin)
 
 %% Check and assign inputs
 if nargin >= 3

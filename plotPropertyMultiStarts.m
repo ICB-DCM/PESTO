@@ -1,28 +1,25 @@
+function fh = plotPropertyMultiStarts(varargin)
 % plotPropertyMultiStarts plots the result of the multi-start optimization stored in properties.
 %
 % USAGE:
-% ======
 % fh = plotPropertyMultiStarts(properties)
 % fh = plotPropertyMultiStarts(properties,fh)
 % fh = plotPropertyMultiStarts(properties,fh,options)
 %
-% INPUTS:
-% =======
-% properties ... property struct containing information about properties
+% Parameters:
+% varargin:
+% properties: property struct containing information about properties
 %   and log-posterior.
-% fh ... handle of figure in which profile likelihood is plotted. If no
+% fh: handle of figure in which profile likelihood is plotted. If no
 %   figure handle is provided, a new figure is opened.
-% options ... options of plotting
-%   .title ... switches plot title of (default = 'off').
+% options: options of plotting<pre>
+%   .title ... switches plot title of (default = 'off').</pre>
 %
-% Outputs:
-% ========
-% fh .. figure handle
+% Return values:
+% fh: figure handle
 %
-% 2015/03/03 Jan Hasenauer
-
-% function fh = plotPropertyMultiStarts(parameters,fh,options)
-function fh = plotPropertyMultiStarts(varargin)
+% History:
+% * 2015/03/03 Jan Hasenauer
 
 %% CHECK AND ASSIGN INPUTS
 % Assign parameters

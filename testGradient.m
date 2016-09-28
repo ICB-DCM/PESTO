@@ -1,45 +1,42 @@
+function [g, g_fd_f, g_fd_b, g_fd_c] = testGradient(varargin)
 % testGradient.m calculates finite difference approximations to the
 %   gradient to check an analytical version.
 %
-%   backward differences: g_fd_f = (f(theta+eps*e_i) - f(theta))/eps
-%   forward differences:  g_fd_b = (f(theta) - f(theta-eps*e_i))/eps
-%   central differences:  g_fd_c = (f(theta+eps*e_i) - f(theta-eps*e_i))/(2*eps)
+%   backward differences: g_fd_f = (f(theta+eps*e_i) - f(theta))/eps\n
+%   forward differences:  g_fd_b = (f(theta) - f(theta-eps*e_i))/eps\n
+%   central differences:  g_fd_c = (f(theta+eps*e_i) - f(theta-eps*e_i))/(2*eps)\n
 %
 %   in order to work with tensors of order n the gradient must be returned as tensor of
 %   order n+1 where the n+1th tensor dimension indexes the parameters with respect to which
 %   the differentiation was carried out
 %
 % USAGE:
-% ======
 % [...] = testGradient(theta,fun,eps,il,ig)
 % [g,g_fd_f,g_fd_b,g_fd_c] = testGradient(...)
 %
-% INPUTS:
-% =======
-% theta ... parameter vector at which gradient is evaluated.
-% fun ... function of theta for which gradients are checked.
-% eps ... epsilon used for finite difference approximation of gradient (eps = 1e-4).
-% il ... argout index/fieldname at which function values are returned (default = 1).
-% ig ... argout index/fieldname at which gradient values are returned (default = 2).
+% Parameters:
+% varargin:
+% theta: parameter vector at which gradient is evaluated.
+% fun: function of theta for which gradients are checked.
+% eps: epsilon used for finite difference approximation of gradient (eps = 1e-4).
+% il: argout index/fieldname at which function values are returned (default = 1).
+% ig: argout index/fieldname at which gradient values are returned (default = 2).
 %
-% OUTPUTS:
-% ========
-% g ... gradient computed by f
-% g_fd_f ... backward differences
-% g_fd_b ... forward differences
-% g_fd_c ... central differences
+% Return values:
+% g: gradient computed by f
+% g_fd_f: backward differences
+% g_fd_b: forward differences
+% g_fd_c: central differences
 %
-% 2014/06/11 Jan Hasenauer
-% 2015/01/16 Fabian Froehlich
-% 2015/04/03 Jan Hasenauer
-% 2015/07/28 Fabian Froehlich
-
-%function [g,g_fd_f,g_fd_b,g_fd_c] = testGradient(theta,fun,eps,il,ig)
-function [g,g_fd_f,g_fd_b,g_fd_c] = testGradient(varargin)
+% History:
+% * 2014/06/11 Jan Hasenauer
+% * 2015/01/16 Fabian Froehlich
+% * 2015/04/03 Jan Hasenauer
+% * 2015/07/28 Fabian Froehlich
 
 theta = varargin{1};
 fun = varargin{2};
-if nargin >= 4
+if nargin >= 3
     eps = varargin{3};
 else
     eps = 1e-4;
@@ -58,13 +55,9 @@ else
 end
 theta = theta(:);
 
-
 if(~ischar(ig))
     % Evaluation of function and gradient
-    if(ig<0)
-        error('gradient argout index must be positive')
-    end
-    if(round(ig)~=ig)
+    if(ig<0 || round(ig)~=ig)
         error('gradient argout index must be positive')
     end
     
@@ -181,4 +174,3 @@ for i = 1:length(theta)
         eval(['g_fd_c(' repmat(':,',1,numel(size(g))-1) 'i) = (l_i_f-l_i_b)/(2*eps);'])
     end
 end
-

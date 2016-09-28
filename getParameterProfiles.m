@@ -1,3 +1,4 @@
+function [parameters,fh] = getParameterProfiles(varargin)
 % getParameterProfiles.m calculates the profiles of a user-supplied function,
 %   starting from the maximum a posteriori estimate.
 %
@@ -5,14 +6,13 @@
 % in 'parallel' mode.
 %
 % USAGE:
-% ======
 % [...] = getParameterProfiles(parameters,objective_function)
 % [...] = getParameterProfiles(parameters,objective_function,options)
 % [parameters,fh] = getParameterProfiles(...)
 %
-% INPUTS:
-% =======
-% parameters ... parameter struct containing at least:
+% Parameters:
+% varargin:
+% parameters: parameter struct containing at least <pre>
 %   .number ... number of parameter
 %   .guess ... initial guess of parameter
 %   .min ... lower bound for parameter values       
@@ -23,10 +23,10 @@
 %       .par ... sorted list n_theta x n_starts of parameter estimates.
 %                The first entry is assumed to be the best one.
 %       .logPost ... sorted list n_starts x 1 of of log-posterior values
-%                corresponding to the parameters listed in .par.
-% objective_function ... objective function to be optimized. This function
+%                corresponding to the parameters listed in .par.</pre>
+% objective_function: objective function to be optimized. This function
 %       should possess exactly one input, the parameter vector.
-% options ... options of algorithm
+% options: options of algorithm<pre>    
 %   .obj_type ... type of objective function provided
 %       = 'log-posterior' (default) ... algorithm assumes that
 %               log-posterior or log-likelihood are provided and perfroms 
@@ -81,22 +81,19 @@
 %       If no folder is provided, a random foldername is generated.
 %   .MAP_index ... index MAP parameter vector starting from which the
 %       profile is calculated. This option is helpful if local
-%       optima are present.
+%       optima are present.</pre>
 %
-% Outputs:
-% ========
-% parameters ... updated parameter object containing:
+% Return values:
+% parameters: updated parameter object containing:<pre>
 %   .P(i) ... profile for i-th parameter
 %       .par ... MAPs along profile
 %       .logPost ... maximum log-posterior along profile
-%       .R ... ratio
-% fh ... figure handle
+%       .R ... ratio</pre>
+% fh: figure handle
 %
-% 2012/05/16 Jan Hasenauer
-% 2014/06/12 Jan Hasenauer
-
-% function [parameters,fh] = getParameterProfiles(parameters,objective_function,options)
-function [parameters,fh] = getParameterProfiles(varargin)
+% History:
+% * 2012/05/16 Jan Hasenauer
+% * 2014/06/12 Jan Hasenauer
 
 %% Check and assign inputs
 if nargin >= 2

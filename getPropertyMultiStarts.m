@@ -1,31 +1,32 @@
+function [properties,fh] = getPropertyMultiStarts(varargin)
 % getPropertyMultiStarts.m evaluates the properties for the different
 %   mutli-start results.
 %
 % USAGE:
-% ======
 % [...] = getPropertyMultiStarts(properties,parameters)
 % [...] = getPropertyMultiStarts(properties,parameters,options)
 % [parameters,fh] = getPropertyMultiStarts(...)
 %
-% INPUTS:
-% =======
-% properties ... property struct containing at least:
+% Parameters:
+% varargin:
+% properties: property struct containing at least:<pre>
 %   .number ... number of parameter
 %   .min ... lower bound for property values       
 %   .max ... upper bound for property values       
 %   .name = {'name1',...} ... names of the parameters       
 %   .function = {'function1',...} ... functions to evaluate property  
 %       values. These functions provide the values of the respective  
-%       properties and the corresponding 1st and 2nd order derivatives.       
-% parameters ... parameter struct containing at least:
+%       properties and the corresponding 1st and 2nd order
+%       derivatives.</pre>
+% parameters: parameter struct containing at least:<pre>
 %   .MS ... information about multi-start optimization
-%       .par(:,i) ... ith MAP
+%       .par(*,i) ... ith MAP
 %       .logPost(i) ... log-posterior for ith MAP
-%       .gradient(:,i) ... gradient of log-posterior at ith MAP
-%       .hessian(:,:,i) ... hessian of log-posterior at ith MAP
+%       .gradient(*,i) ... gradient of log-posterior at ith MAP
+%       .hessian(*,*,i) ... hessian of log-posterior at ith MAP
 %       .exitflag ... exitflag the optimizer returned
-%   Note: This struct is obtained using getMultiStarts.m.
-% options ... options of algorithm
+%   Note: This struct is obtained using getMultiStarts.m.</pre>
+% options: options of algorithm<pre>
 %   .comp_type ... type of computations
 %       = 'sequential' (default) ... classical sequential (in core) method
 %       = 'parallel' ... multi-core method exploiting parfor
@@ -39,24 +40,20 @@
 %       = false (default) ... results are not saved
 %       = true ... results are stored do an extra folder
 %   .foldername ... name of the folder in which results are stored.
-%       If no folder is provided, a random foldername is generated.
+%       If no folder is provided, a random foldername is generated.</pre>
 %
-% Outputs:
-% ========
-% properties ... updated parameter object containing:
+% Return values:
+% properties: updated parameter object containing:<pre>
 %   .MS ... properties for multi-start optimization results
-%       .par(:,i) ... ith MAP
+%       .par(*,i) ... ith MAP
 %       .logPost(i) ... log-posterior for ith MAP
 %       .exitflag(i) ... exit flag of ith MAP
 %       .prop(j,i) ... values of jth property for ith MAP
-%       .prop_Sigma(:,:,i) ... covariance of properties for ith MAP
-% fh ... figure handle
+%       .prop_Sigma(*,*,i) ... covariance of properties for ith MAP</pre>
+% fh: figure handle
 %
-% 2015/03/03 Jan Hasenauer
-
-% function [properties,fh] = getPropertyMultiStarts(properties,parameters,options)
-function [properties,fh] = getPropertyMultiStarts(varargin)
-
+% History:
+% * 2015/03/03 Jan Hasenauer
 
 %% Check and assign inputs
 if nargin >= 2

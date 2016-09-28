@@ -1,4 +1,15 @@
-function [Sigma] = updateCovariance(Sigma,dtheta,i,d,r)
+function [Sigma] = updateCovariance(Sigma, dtheta, i, d, r)
+% TODO updateCovariance
+%
+% Parameters:
+% Sigma: Covariance matrix
+% dtheta: 
+% i:
+% d:
+% r: Regularization factor
+%
+% Return values: 
+% Sigma: updated covariance
 
 % Updating of Sigma
 Sigma = i/(i+1+d*i)*Sigma + (1+d*i)/(i+1+d*i)*dtheta*dtheta';
@@ -7,7 +18,7 @@ Sigma = i/(i+1+d*i)*Sigma + (1+d*i)/(i+1+d*i)*dtheta*dtheta';
 % Regularisation
 [~,p] = cholcov(Sigma,0);
 if p ~= 0
-    Sigma = Sigma + r*eye(size(dtheta,1));
+    Sigma = Sigma + r * eye(size(dtheta, 1));
 end
 
 end

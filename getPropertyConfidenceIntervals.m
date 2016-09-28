@@ -1,27 +1,25 @@
+function properties = getPropertyConfidenceIntervals(properties, alpha)
 % getPropertyConfidenceIntervals.m calculates the confidence intervals 
 %   based on the Hessian at the maximum a posteriori estimate or profiles.
 %
 % USAGE:
-% ======
-% properties = getPropertyConfidenceIntervals(properties,alpha)
+% properties = getPropertyConfidenceIntervals(properties, alpha)
 %
-% INPUTS:
-% =======
-% properties ... properties struct
-% alpha ... vector of confidence levels
+% Parameters: 
+% properties: properties struct
+% alpha: vector of confidence levels
 %
-% Outputs:
-% ========
+% Return values:
+% properties: Updated properties containing:<pre>
 % properties.CI ... Information about confidence levels
 %   Threshold based confidence intervals:
 %     .local_PL ... from local approximation.
 %     .PL ... from profiles.
 %   Mass based confidence intervals:
-%     .local_B ... from local approximation.
+%     .local_B ... from local approximation.</pre>
 %
-% 2013/11/29 Jan Hasenauer
-
-function properties = getPropertyConfidenceIntervals(properties,alpha)
+% History:
+% * 2013/11/29 Jan Hasenauer
 
 % Initialization
 properties.CI.alpha_levels = alpha;
