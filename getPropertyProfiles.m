@@ -1,4 +1,4 @@
-function [properties,fh] = getPropertyProfiles(varargin)
+function [properties,fh] = getPropertyProfiles(properties, parameters, objective_function, varargin)
 % getPropertyProfiles.m calculates the profiles of a user-supplied function,
 %   starting from the maximum a posteriori estimate.
 %
@@ -34,111 +34,45 @@ function [properties,fh] = getPropertyProfiles(varargin)
 %                corresponding to the parameters listed in .par.</pre>
 % objective_function: objective function to be optimized. This function
 %       should possess exactly one input, the parameter vector.
-% options: options of algorithm<pre>
-%   .obj_type ... type of objective function provided
-%       = 'log-posterior' (default) ... algorithm assumes that
-%               log-posterior or log-likelihood are provided and perfroms 
-%               a maximization of the objective function.
-%       = 'negative log-posterior' ... algorithm assumes that negative
-%               log-posterior or negative log-likelihood are provided and  
-%               perfroms a minimization of the objective function.
-%   .comp_type ... type of computations
-%       = 'sequential' (default) ... classical sequential (in core) method
-%       = 'parallel' ... multi-core method exploiting parfor
-%   .fmincon ... options for fmincon (the local optimizer)
-%   .property_index ... index of the properties for which the profile
-%         is calculated (default = 1:properties.number).
-%   .P.min ... lower bound for profiling parameters, having same
-%         dimension as the parameter vector (default = parameters.min).
-%   .P.max ... lower bound for profiling parameters, having same
-%         dimension as the parameter vector (default = parameters.max).
-%   .R_min ... minimal ratio down to which the profile is calculated 
-%         (default = 0.03).
-%   .dR_max ... maximal relative decrease of ratio allowed
-%         for two adjacent points in the profile (default = 0.15) if
-%         options.dJ = 0;
-%   .dJ ... influnces step size at small likelihood ratio values (default = 0.5).
-%   .calc_profiles ... flag for profile calculation
-%       = 'true' (default) ... profiles are calculated
-%       = 'false' ... profiles are not calculated 
-%   .reopt_profil ... flag for profile reoptimization
-%       = 'true' ... profiles are reoptimized
-%       = 'false' (default) ... profiles are not reoptimized
-%   .plot_options ... plot options for plotPropertyProfiles.m.
-%   .boundary_tol ... tolance for the maximal distance of the list point 
-%           the lower and upper bounds for teh properties (default = 1e-5).
-%   .mode ... output of algorithm 
-%       = 'visual' (default) ... plots are gnerated which show the progress
-%       = 'text' ... optimization results for multi-start is printed on screen
-%       = 'silent' ... no output during the multi-start local optimization
-%   .fh ... handle of figure in which results are printed. If no
-%       handle is provided, a new figure is used.
-%   .save ... determine whether results are directly saved
-%       = false (default) ... results are not saved
-%       = true ... results are stored do an extra folder
-%   .foldername ... name of the folder in which results are stored.
-%       If no folder is provided, a random foldername is generated.
-%   .MAP_index ... index MAP parameter vector starting from which the
-%       profile is calculated. This option is helpful if local
-%       optima are present.</pre>
+% options: A PestoOptions object holding various options for the algorithm.
 %
 % Return values:
-% properties: updated parameter object containing<pre>
-%   .P(i) ... profile for i-th parameter
-%       .prop ... MAPs along profile
-%       .par ... MAPs along profile
-%       .logPost ... maximum log-posterior along profile
-%       .R ... ratio</pre>
+% properties: updated parameter object containing
+%   * .P(i): profile for i-th parameter
+%   * .prop: MAPs along profile
+%   * .par: MAPs along profile
+%   * .logPost: maximum log-posterior along profile
+%   * .R: ratio
 % fh: figure handle
 %
 % History:
 % * 2012/03/02 Jan Hasenauer
-
+% * 2016/04/10 Daniel Weindl
 
 %% Check and assign inputs
-if nargin >= 3
-    properties = varargin{1};
-    parameters = varargin{2};
-    objective_function = varargin{3};
+if nargin >= 1
+    options = varargin{1};
+    if ~isa(options, 'PestoOptions')
+        error('Third argument is not of type PestoOptions.')
+    end
 else
-    error('getPropertyProfiles requires at least three inputs.')
+    options = PestoOptions();
 end
 
 % Check and assign options
-options.fmincon = optimset('algorithm','active-set',...
-                           'display','off',...
-                           'GradObj','on',...
-                           'GradConstr','on',...
-                           'MaxIter',300,...
-                           'MaxFunEvals',300*parameters.number,...
-                           'TolCon',1e-4,...
-                           'MaxSQPIter',100*parameters.number);
-options.comp_type = 'sequential'; % 'parallel';
-options.obj_type = 'log-posterior'; % 'negative log-posterior'
-options.mode = 'visual'; % 'text','silent'
-options.save = false; % true
+%TODO
 options.plot_options.interval = 'dynamic';
 options.plot_options.mark_constraint = 'false';
-options.boundary_tol = 1e-5;
 options.property_index = 1:properties.number;
 options.P.min = parameters.min;
 options.P.max = parameters.max;
-options.R_min = 0.03;
-options.dR_max = 0.15;
-options.dJ = 0.5;
-options.foldername = strrep(datestr(now,31),' ','__');
-options.calc_profiles = 'true'; % 'false'
-options.reopt_profiles = 'false'; % 'true'
 options.MAP_index = 1;
-options.fh = [];
-if nargin == 4
-    options = setdefault(varargin{4},options);
-end
 
 % Warning if objective function gradient is not available
 if ~strcmp(options.fmincon.GradConstr,'on')
     warning('For efficient and reliable optimization, getPropertyProfiles.m requires gradient information.')
 end
+
 %% Initialization and figure generation
 fh = [];
 switch options.mode

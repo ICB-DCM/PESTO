@@ -29,6 +29,16 @@ classdef PestoOptions < hgsetget
             'GradObj','on',...
             'PrecondBandWidth',inf,...
             'MaxIter', 1000); % MaxIter: fmincon default, necessary to be set for tracing
+        % from getPropertyProfiles: 
+        % options.fmincon = optimset('algorithm','active-set',...
+        %                   'display','off',...
+        %                   'GradObj','on',...
+        %                  'GradConstr','on',...
+        %                   'MaxIter',300,...
+        %                   'MaxFunEvals',300*parameters.number,...
+        %                   'TolCon',1e-4,...
+        %                   'MaxSQPIter',100*parameters.number);
+
         
         % (getMultiStarts) Number of local optimizations (default = 20).
         n_starts = 20;
@@ -145,6 +155,10 @@ classdef PestoOptions < hgsetget
         % is calculated (default = 1:parameters.number).
         parameter_index = [];
         
+        % Indices of the properties for which the profile
+        % is to be calculated (default = 1:properties.number).
+        property_index = [];
+
         % profiling parameters
         % .P.min ... lower bound for profiling parameters, having same
         %   dimension as the parameter vector (default = parameters.min).
@@ -195,11 +209,17 @@ classdef PestoOptions < hgsetget
         %       optima are present.
         MAP_index = [];
         
+        % Tolance for the maximal distance of the list point 
+        % the lower and upper bounds for the properties (default = 1e-5).
+        boundary_tol = 1e-5;
+
         % Parameter sampling options
         sampling_scheme = '';
         proposal_scheme = '';
         AM = {};
         MC = {};
+        
+        
     end
     
     properties (Hidden)
