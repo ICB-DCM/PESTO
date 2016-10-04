@@ -1,6 +1,14 @@
 function [warningMsg, hyperparams] = checkHyperparams(Opt)
-
-    % Sanity check for the hyperparameters
+    % Sanity check for the hyperparameters. Select default values for
+    % options not set.
+    %
+    % Parameters:
+    % Opt: 
+    %
+    % Return values:
+    % warningMsg: Warning message text
+    % hyperparams: The processed hyperparameters
+    
     warningMsg = '';
     hyperparams = Opt.hyperparams;
     

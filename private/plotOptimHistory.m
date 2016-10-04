@@ -1,4 +1,13 @@
 function fg = plotOptimHistory(varargin)
+% TODO: plotOptimHistory
+%
+% Parameters:
+% varargin:
+% parameters:
+% figure:
+%
+% Return values:
+% fg: figure
 
     %% Assign parameters
     if nargin >= 1

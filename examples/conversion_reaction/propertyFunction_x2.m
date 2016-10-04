@@ -1,4 +1,13 @@
 function varargout = propertyFunction_x2(xi,T,scale)
+% propertyFunction_x2 TODO
+%
+% Parameters:
+% xi:
+% T: 
+% scale:
+%
+% Return values:
+% varargout:
 
 % T = 10;
 % scale = 'log';

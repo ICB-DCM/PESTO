@@ -1,5 +1,13 @@
 function X = getEllipse(m,C,d)
-
+% TODO
+%
+% Parameters:
+% m:
+% C:
+% d:
+%
+% Return values:
+% X:
 phi = linspace(0,2*pi,100);
 
 [V,L] = eig(C);

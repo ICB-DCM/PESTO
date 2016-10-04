@@ -1,39 +1,34 @@
-% kde_simpe.m
-% computes the kernel density estimate KDest at X given the sample P.
+function [KDest,Sigma] = kde_simple(varargin)
+% kde_simple.m computes the kernel density estimate KDest at X given the sample P.
 % The bandwidth can be determined using different methods (see below).
 %
 % USAGE:
-% ======
 % [KDest,Sigma] = kde_simple(P,X,Sigma,options)
 %
-% INPUT:
-% ======
-% p ... D x N - matrix, where each column defines a member 
-%       of the sample.
-% X ... D x Ngrid - matrix, where each column defines a point
+% Parameters:
+% varargin:
+% P: D x N - matrix, where each column defines a member of the sample.
+% X: D x Ngrid - matrix, where each column defines a point
 %       at which the kernel density estimate is determined.
-% Sigma ... kernel bandwidth. (If a kernel bandwidth is provided, it is
+% Sigma: kernel bandwidth. (If a kernel bandwidth is provided, it is
 %       used. Otherwise, the bandwidth is computed from the data.)
-% options ... options for the algorithm
+% options: options for the algorithm<pre>
 %   .bw_selection ... bandwidth selction methods:
 %       = 'scott' ... Scott's rule
 %       = 'gen scott' (default) ... generalized Scott's rule
 %       = 'user' ... bandwidth is provided
 %   .kernel ... type of kernel:
 %       = 'normal' (default) ... multi-variate Gausian kernel
-%       = 'log-normal' ... multi-variate log-normal kernel
+%       = 'log-normal' ... multi-variate log-normal kernel</pre>
 %
-% OUTPUT:
-% =======
-% KDest ... kernel density estimate at points defined by X.
-% Sigma ... covariance matrix of Gaussian kernel detemined 
+% Return values:
+% KDest: kernel density estimate at points defined by X.
+% Sigma: covariance matrix of Gaussian kernel detemined
 %           using the generalized Scott's rule.
-% 
-% 07/10/2010 - Jan Hasenauer
-% modified 14/01/2011 - Jan Hasenauer
-
-%function [KDest,Sigma] = kde_simple(P,X,Sigma,options)
-function [KDest,Sigma] = kde_simple(varargin)
+%
+% History:
+% * 07/10/2010 - Jan Hasenauer
+% * modified 14/01/2011 - Jan Hasenauer
 
 %% CHECK/ASSIGN INPUTS
 if nargin >= 2
@@ -52,7 +47,7 @@ if ~isempty(Sigma)
         error('Dimension of data D and bandwidth Sigma does not agree.');
     end
 end
-    
+
 % Check options
 options.bw_selection = 'gen scott';
 options.kernel = 'normal';
@@ -61,7 +56,7 @@ if nargin == 4
 end
 if ~isempty(Sigma)
     options.bw_selection = 'user';
-end    
+end
 
 % Check dimension
 if size(P,1) ~= size(X,1)
@@ -97,17 +92,17 @@ switch options.kernel
 end
 % Compute kernal shape, bandwidth, and scaling constant
 if isempty(Sigma)
-switch options.bw_selection
-    case 'scott'
-        Sigma = diag((var(P')) * N^(-2/(D+4)));
-    case 'gen scott';
-        Sigma = cov(P') * N^(-2/(D+4));
-    case 'user'
-        % Nothing has to be done.
-    otherwise
-        % error
-        error('This option is not available.');
-end
+    switch options.bw_selection
+        case 'scott'
+            Sigma = diag((var(P')) * N^(-2/(D+4)));
+        case 'gen scott';
+            Sigma = cov(P') * N^(-2/(D+4));
+        case 'user'
+            % Nothing has to be done.
+        otherwise
+            % error
+            error('This option is not available.');
+    end
 end
 invSigma = inv(Sigma);
 c = 1/((2*pi)^(D/2)*sqrt(det(Sigma))) * 1/N;

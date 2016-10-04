@@ -1,4 +1,5 @@
-% getMultiStarts.m computes the maximum a posterior estimate of the
+function [parameters,fh] = getMultiStarts(parameters, objective_function, varargin)
+% getMultiStarts() computes the maximum a posterior estimate of the
 %   parameters of a user-supplied posterior function. Therefore, a
 %   multi-start local optimization is used.
 %
@@ -6,217 +7,67 @@
 % in 'parallel' mode.
 %
 % USAGE:
-% ======
-% [...] = getMultiStarts(parameters,objective_function)
-% [...] = getMultiStarts(parameters,objective_function,options)
-% [parameters,fh] = getMultiStarts(...)
+% * [...] = getMultiStarts(parameters,objective_function)
+% * [...] = getMultiStarts(parameters,objective_function,options)
+% * [parameters,fh] = getMultiStarts(...)
 %
-% INPUTS:
-% =======
-% parameters ... parameter struct containing at least:
-%   .number ... number of parameter
-%   .guess ... initial guess of parameter
-%   .min ... lower bound for parameter values
-%   .max ... upper bound for parameter values
-%   .name = {'name1',...} ... names of the parameters
-%   .init_fun ... function to draw starting points for local
-%   	optimization. The function has to have the input structure
-%           .init_fun(theta_0,theta_min,theta_max)
+% Parameters:
+%  varargin: 
+%  parameters: parameter struct containing at least
+%    * .number: Number of parameters
+%    * .guess: Initial guess for each parameter
+%    * .min: Lower bound for each parameter
+%    * .max: upper bound for each parameter
+%    * .name = {'name1',...}: names of the parameters
+%    * .init_fun: function to draw starting points for local optimization. 
+%           The function has to have the input structure
+%            .init_fun(theta_0,theta_min,theta_max).
 %       Alternatively, a latin hypercube or a uniform random sampling can
-%       be used by setting the respective options
-% objective_function ... objective function to be optimized. This function
-%       should possess exactly one input, the parameter vector.
-% options ... options of algorithm
-%   .obj_type ... type of objective function provided
-%       = 'log-posterior' (default) ... algorithm assumes that
-%               log-posterior or log-likelihood are provided and perfroms
-%               a maximization of the objective function.
-%       = 'negative log-posterior' ... algorithm assumes that negative
-%               log-posterior or negative log-likelihood are provided and
-%               perfroms a minimization of the objective function.
-%   .comp_type ... type of computations
-%       = 'sequential' (default) ... classical sequential (in core) method
-%       = 'parallel' ... multi-core method exploiting parfor
-%   .fmincon ... options for fmincon (the local optimizer)
-%   .n_starts ... number of local optimizations (default = 20).
-%   .init_threshold ... log-likelihood / log-posterior threshold for 
-%       initialization of optimization (default = -inf).
-%   .proposal ... method used to propose starting points
-%       = 'latin hypercube' (default) ... latin hypercube sampling
-%       = 'uniform' ... uniform random sampling
-%       = 'user-supplied' ... user supplied function parameters.init_fun
-%   .rng ... initialization of random number generator (default = 0).
-%       = any ral number r => random generator is initialized with r.
-%       = [] ... random number generator is not initialized.
-%       (Initializing the random number generator with a specific seed can be
-%       helpful to reproduce problems.)
-%   .mode ... output of algorithm
-%       = 'visual' (default) ... plots are gnerated which show the progress
-%       = 'text' ... optimization results for multi-start is printed on screen
-%       = 'silent' ... no output during the multi-start local optimization
-%   .fh ... handle of figure in which results are printed. If no
-%       handle is provided, a new figure is used.
-%   .plot_options ... plot options for plotMultiStarts.m.
-%   .save ... determine whether results are directly saved
-%       = false (default) ... results are not saved
-%       = true ... results are stored to an extra folder
-%   .trace ... determine whether objective function, parameter values and
-%   computation time are stored over iterations
-%       = false (default) ...  not saved
-%       = true ... stored in fields par_trace, fval_trace and time_trace
-%   .tempsave ... determine whether intermediate results are stored every
-%   10 iterations
-%       = false (default) ...  not saved
-%       = true ... results are stored to an extra folder
-%   .foldername ... name of the folder in which results are stored.
-%       If no folder is provided, a random foldername is generated.
-%   .start_index ... vector of indexes which starts should be performed.
-%       default is 1:n_starts
-%   .resetobjective ... clears the objective function before every
-%       multi-start.
-%       = false ... (default) persistent variables are preserved.
-%       = true ... remove all temporary/persistent variables.
-%       WHEN TRUE THIS OPTION REMOVES ALL OBJECTIVE FUNCTION BREAK POINTS
-%   .optimizer ... specifies which optimizer should be used
-%       = 'fmincon' ... (default) fmincon
-%       = 'minibatch' ... uses a minibatch optimization approach
-%   .optim_options ... struct with options for minibatch optimization
-%       .isMinibatch ... logical: perform full batch or minibatch optim
-%           = false ... deterministic optimization
-%           = true ... minibatch optim, Obj function must be adapted
-%       .nDatasets ... number of measurement points, only if isMinibatch
-%       .nBatchdata ... Size of Minibatches, only if isMinibatch
-%       .nOptimSteps ... number of maximum optimization steps
-%       .model ... String with the model name for AMICI, may be left void
-%       .method ... optimization method, to be chosen from
-%           = 'standard' ... stochastic gradient descent, standard method
-%           = 'momentum' ... sgd with momentum
-%           = 'nesterov' ... sgd with Nesterov momentum function
-%           = 'rmsprop' ... adaptive step size for each parameter
-%           = 'rmspropnesterov' ... with additional momentum
-%           = 'adam' ... adaptive method
-%           = 'adadelta' ... adaptive method
-%       .hyperparams ... struct containing the hyperparameters 
-%           (e.g. learning rate) for the opt-method, must fit with chosen 
-%           method (see documentation there)
+%       be used by setting the respective PestoOption
+% objective_function: objective function to be optimized. 
+%     This function should accept exactly one input, the parameter vector.
+% options: A PestoOptions object holding various options for the algorithm.
 %
+% Return values:
+% parameters: updated parameter object containing
+%       * .MS: information about multi-start optimization
+%       * .par(:,i): ith MAP
+%       * .par0(:,i): starting point yielding ith MAP
+%       * .logPost(i): log-posterior for ith MAP
+%       * .logPost0(i): log-posterior for starting point yielding ith MAP
+%       * .gradient(_,i): gradient of log-posterior at ith MAP
+%       * .hessian(:,:,i): hessian of log-posterior at ith MAP
+%       * .n_objfun(i): # objective evaluations used to calculate ith MAP
+%       * .n_iter(i): # iterations used to calculate ith MAP
+%       * .t_cpu(i): CPU time for calculation of ith MAP
+%       * .exitflag(i): exitflag the optimizer returned for ith MAP
+%       * .par_trace(:,:,i): parameter trace for ith MAP
+%       * .fval_trace(:,i): objective function value trace for ith MAP
+%       * .time_trace(:,i): computation time trace for ith MAP</pre>
+% fh: figure handle
 %
-%
-% Outputs:
-% ========
-% parameters ... updated parameter object containing:
-%   .MS ... information about multi-start optimization
-%       .par(:,i) ... ith MAP
-%       .par0(:,i) ... starting point yielding ith MAP
-%       .logPost(i) ... log-posterior for ith MAP
-%       .logPost0(i) ... log-posterior for starting point yielding ith MAP
-%       .gradient(:,i) ... gradient of log-posterior at ith MAP
-%       .hessian(:,:,i) ... hessian of log-posterior at ith MAP
-%       .n_objfun(i) ... # objective evaluations used to calculate ith MAP
-%       .n_iter(i) ... # iterations used to calculate ith MAP
-%       .t_cpu(i) ... CPU time for calculation of ith MAP
-%       .exitflag(i) ... exitflag the optimizer returned for ith MAP
-%       .par_trace(:,:,i) ... parameter trace for ith MAP
-%       .fval_trace(:,i) ... objective function value trace for ith MAP
-%       .time_trace(:,i) ... computation time trace for ith MAP
-% fh ... figure handle
-%
-% 2012/05/31 Jan Hasenauer
-% 2012/07/11 Jan Hasenauer
-% 2014/06/11 Jan Hasenauer
-% 2015/07/28 Fabian Froehlich
-% 2015/11/10 Fabian Froehlich
-% 2016/06/07 Paul Stapor
-
-% function [parameters,fh] = getMultiStarts(parameters,objective_function,options)
-function [parameters,fh] = getMultiStarts(varargin)
+% History:
+% * 2012/05/31 Jan Hasenauer
+% * 2012/07/11 Jan Hasenauer
+% * 2014/06/11 Jan Hasenauer
+% * 2015/07/28 Fabian Froehlich
+% * 2015/11/10 Fabian Froehlich
+% * 2016/06/07 Paul Stapor
+% * 2016/10/04 Daniel Weindl
 
 global error_count
-    
-%% Check inputs and assign default values
-if nargin >= 2
-    parameters = varargin{1};
-    objective_function = varargin{2};
-else
-    error('getMultiStarts.m requires at least two inputs.')
-end
 
-% Check parameters:
-if ~isfield(parameters,'min') || ~isfield(parameters,'max')
-    error('Algorithm requires lower and upper bounds');
-else
-    parameters.min = parameters.min(:);
-    parameters.max = parameters.max(:);
-end
-if length(parameters.min) ~= length(parameters.max)
-    error('Dimension of parameters.min and parameters.max does not agree.');
-else
-    if max(parameters.min >= parameters.max)
-        error('There exists at least one i for which parameters.min(i) >= parameters.max(i).');
+%% Check inputs
+if nargin >= 1
+    options = varargin{1};
+    if ~isa(options, 'PestoOptions')
+        error('Third argument is not of type PestoOptions.')
     end
-end
-if(any(isnan(parameters.min)) || any(isinf(parameters.min)))
-   error('parameters.min contains NaN of Inf values.'); 
-end
-if(any(isnan(parameters.max)) || any(isinf(parameters.max)))
-   error('parameters.max contains NaN of Inf values.'); 
-end
-if ~isfield(parameters,'number')
-    parameters.number = length(parameters.min);
 else
-    if parameters.number ~= length(parameters.min)
-        error('Dimension mismatch: parameters.number ~= length(parameters.min).');
-    end
-end
-if isfield(parameters,'guess')
-    if ~isempty(parameters.guess);
-        if size(parameters.guess,1) ~= length(parameters.max)
-            error('Dimension of parameters.guess does not agree with dimesion of parameters.min and .max.');
-        end
-    end
-end
-constr.A = [];
-constr.b = [];
-constr.Aeq = [];
-constr.beq = [];
-if isfield(parameters,'constraints')
-    parameters.constraints = setdefault(parameters.constraints,constr);
-else
-    parameters.constraints = constr;
+    options = PestoOptions();
 end
 
-% Check initial guess
-if ~isfield(parameters,'guess')
-    parameters.guess = [];
-end
-
-% Check and assign options
-options.fmincon = optimset('algorithm','interior-point',...
-    'display','off',...
-    'GradObj','on',...
-    'PrecondBandWidth',inf);
-options.comp_type = 'sequential'; % 'parallel';
-options.obj_type = 'log-posterior'; % 'negative log-posterior'
-options.n_starts = 20; % number of multi-start local optimizations
-options.proposal = 'latin hypercube'; % 'uniform','user-supplied'
-options.init_threshold = -inf;
-options.mode = 'visual'; % 'text','silent'
-options.save = false; % true
-options.rng = 0;
-options.foldername = strrep(datestr(now,31),' ','__');
-options.fh = [];
-options.trace = false;
-options.tempsave = false;
-options.plot_options.add_points.par = [];
-options.fmincon.MaxIter = 1000; % fmincon default, necessary to be set for tracing
-options.resetobjective = false;
-
-if nargin == 3
-    options = setdefault(varargin{3},options);
-end
-if (~isfield(options, 'optimizer'))
-    options.optimizer = 'fmincon';
-end
+parameters = parametersSanityCheck(parameters);
 
 % Check, if the objective function has the correct number of inputs for
 % the given optimization scheme
@@ -235,6 +86,7 @@ if  strcmp(options.optimizer, 'minibatch') ...
             error('Optimization aborted due to invalid user input.');
     end
 end
+
 if  ((~strcmp(options.optimizer, 'minibatch')) ...
         && (nargin(objective_function) ~= 1)) ...
         || (strcmp(options.optimizer, 'minibatch') ...
@@ -252,9 +104,6 @@ if  ((~strcmp(options.optimizer, 'minibatch')) ...
         otherwise
             error('Optimization aborted due to invalid user input.');
     end
-end
-if(~isfield(options,'start_index'))
-    options.start_index = 1:options.n_starts;
 end
 
 %% Initialization and figure generation
@@ -638,6 +487,7 @@ end
 
 
 %% Objective function interface
+function varargout = obj(varargin)
 % This function is used as interface to the user-provided objective
 % function. It adapts the sign and supplies the correct number of outputs.
 % Furthermore, it catches errors in the user-supplied objective function.
@@ -645,8 +495,6 @@ end
 %   fun ... user-supplied objective function
 %   type ... type of user-supplied objective function
 %   options (optional) ... additional options, like subset for minibatch
-
-function varargout = obj(varargin)
 
 % Catch up possible overload
 switch nargin
@@ -709,6 +557,7 @@ end
 end
 
 %% Objective function interface
+function varargout = obj_w_error_count(varargin)
 % This function is used as interface to the user-provided objective
 % function. It adapts the sign and supplies the correct number of outputs.
 % Furthermore, it catches errors in the user-supplied objective function.
@@ -716,8 +565,6 @@ end
 %   fun ... user-supplied objective function
 %   type ... type of user-supplied objective function
 %   options (optional) ... additional options, like subset for minibatch
-
-function varargout = obj_w_error_count(varargin)
 
 global error_count
 

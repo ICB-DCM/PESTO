@@ -1,3 +1,35 @@
+% Main file of the conversion reaction example
+%
+% Demonstrates the use of:
+% * getMultiStarts()
+% * getParameterProfiles()
+% * getParameterSamples()
+% * plotParameterUncertainty()
+% * getPropertyProfiles()
+% * getPropertyConfidenceIntervals()
+%
+% This example provides a model for the interconversion of two species 
+% (X_1 and X_2) following first-order mass action kinetics with the 
+% parameters k_1 and k_2 respectively:
+%
+% * X_1 -> X_2, rate = k_1*[X_1]
+% * X_2 -> X_1, rate = k_2*[X_2]
+%
+% Measurement of [X_2] are provided as: Y = [X_2]
+%
+% This file provides time-series measurement data Y and 
+% performs a multistart maximum likelihood parameter estimation based on
+% these measurements, demonstrating the use of getMultiStarts(). The model 
+% fit is then visualized.
+% 
+% Profile likelihood calculation is done using getParameterProfiles().
+%
+% Multi-chain Monte-Carlo sampling is performed by getParameterSamples() 
+% and plotted using plotParameterUncertainty().
+%
+% getPropertyProfiles()
+% getPropertyConfidenceIntervals()
+
 clear all;
 close all;
 clc;
@@ -51,11 +83,12 @@ properties.max = [-2.4;-1.7; 5; 10; 1; 1];
 properties.number = length(properties.name);
 
 % Log-likelihood function
-options_par.obj_type = 'log-posterior';
-logL = @(theta) logL__CR(theta,t,ym,sigma2,'log');
+logL = @(theta) logLikelihood(theta,t,ym,sigma2,'log');
 
 %% Multi-start local optimization
 % Options
+options_par = PestoOptions();
+options_par.obj_type = 'log-posterior';
 options_par.n_starts = 10;
 options_par.comp_type = 'sequential'; options_par.mode = 'visual';
 % options_par.comp_type = 'parallel'; options_par.mode = 'text'; n_workers = 1;
@@ -77,7 +110,7 @@ parameters = getMultiStarts(parameters,logL,options_par);
 if strcmp(options_par.mode,'visual')
     % Simulation
     tsim = linspace(t(1),t(end),100);
-    ysim = sim__CR(exp(parameters.MS.par(:,1)),tsim);
+    ysim = simulateConversionReaction(exp(parameters.MS.par(:,1)),tsim);
 
     % Plot: Fit
     figure;
@@ -90,6 +123,10 @@ end
 
 %% Profile likelihood calculation -- Parameters
 parameters = getParameterProfiles(parameters,logL,options_par);
+
+%%
+warning('Stopping example execution. Remove this block when getParameterSamples is working');
+return;
 
 %% Single-chain Monte-Carlo sampling -- Parameters
 % options.sampling_scheme = 'DRAM';

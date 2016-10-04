@@ -1,3 +1,4 @@
+function [parameters,fh] = getParameterProfiles(parameters, objective_function, varargin)
 % getParameterProfiles.m calculates the profiles of a user-supplied function,
 %   starting from the maximum a posteriori estimate.
 %
@@ -5,140 +6,61 @@
 % in 'parallel' mode.
 %
 % USAGE:
-% ======
 % [...] = getParameterProfiles(parameters,objective_function)
 % [...] = getParameterProfiles(parameters,objective_function,options)
 % [parameters,fh] = getParameterProfiles(...)
 %
-% INPUTS:
-% =======
-% parameters ... parameter struct containing at least:
-%   .number ... number of parameter
-%   .guess ... initial guess of parameter
-%   .min ... lower bound for parameter values       
-%   .max ... upper bound for parameter values       
-%   .name = {'name1',...} ... names of the parameters       
-%   .MS ... results of global optimization, obtained using for instance 
+% Parameters:
+% varargin:
+%  parameters: parameter struct containing at least
+%    * .number: Number of parameters
+%    * .guess: Initial guess for each parameter
+%    * .min: Lower bound for each parameter
+%    * .max: upper bound for each parameter
+%    * .name = {'name1',...}: names of the parameters
+%    * .MS: results of global optimization, obtained using for instance 
 %       the routine 'getMultiStarts.m'. MS has to contain at least
-%       .par ... sorted list n_theta x n_starts of parameter estimates.
+%    * .par: sorted list n_theta x n_starts of parameter estimates.
 %                The first entry is assumed to be the best one.
-%       .logPost ... sorted list n_starts x 1 of of log-posterior values
+%    * .logPost: sorted list n_starts x 1 of of log-posterior values
 %                corresponding to the parameters listed in .par.
-% objective_function ... objective function to be optimized. This function
-%       should possess exactly one input, the parameter vector.
-% options ... options of algorithm
-%   .obj_type ... type of objective function provided
-%       = 'log-posterior' (default) ... algorithm assumes that
-%               log-posterior or log-likelihood are provided and perfroms 
-%               a maximization of the objective function.
-%       = 'negative log-posterior' ... algorithm assumes that negative
-%               log-posterior or negative log-likelihood are provided and  
-%               perfroms a minimization of the objective function.
-%   .comp_type ... type of computations
-%       = 'sequential' (default) ... classical sequential (in core) method
-%       = 'parallel' ... multi-core method exploiting parfor
-%   .fmincon ... options for fmincon (the local optimizer)
-%   .parameter_index ... index of the parameters for which the profile
-%         is calculated (default = 1:parameters.number).
-%   .P.min ... lower bound for profiling parameters, having same
-%         dimension as the parameter vector (default = parameters.min).
-%   .P.max ... lower bound for profiling parameters, having same
-%         dimension as the parameter vector (default = parameters.max).
-%   .R_min ... minimal ratio down to which the profile is calculated 
-%         (default = 0.03).
-%   .dR_max ... maximal relative decrease of ratio allowed
-%         for two adjacent points in the profile (default = 0.10) if
-%         options.dJ = 0;
-%   .dJ ... influnces step size at small likelihood ratio values (default = 0.5).
-%   .options_getNextPoint ... options for the generation fo the next profile point
-%       .mode ... choice of proposal direction
-%           = 'multi-dimensional' (default) ... all parameters are updated.
-%               The direct is the same as between the last two points.
-%           = 'one-dimensional' ... only parameter for which profile is
-%               currently calculated is updated.
-%       .guess = 1e-2 ... guess for initial update stepsize
-%       .min = 1e-6 ... lower bound for update stepsize
-%       .min = 1e2 ... upper bound for update stepsize
-%       .update = 1.25 ... incremental change if stepsize is too large or
-%           too small.
-%   .calc_profiles ... flag for profile calculation
-%       = 'true' (default) ... profiles are calculated
-%       = 'false' ... profiles are not calculated 
-%   .reopt_profil ... flag for profile reoptimization
-%       = 'true' ... profiles are reoptimized
-%       = 'false' (default) ... profiles are not reoptimized
-%   .plot_options ... plot options for plotPropertyProfiles.m.
-%   .mode ... output of algorithm
-%       = 'visual' (default) ... plots are gnerated which show the progress
-%       = 'text' ... optimization results for multi-start is printed on screen
-%       = 'silent' ... no output during the multi-start local optimization
-%   .fh ... handle of figure in which results are printed. If no
-%       handle is provided, a new figure is used.
-%   .save ... determine whether results are directly saved
-%       = false (default) ... results are not saved
-%       = true ... results are stored do an extra folder
-%   .foldername ... name of the folder in which results are stored.
-%       If no folder is provided, a random foldername is generated.
-%   .MAP_index ... index MAP parameter vector starting from which the
-%       profile is calculated. This option is helpful if local
-%       optima are present.
+% objective_function: objective function to be optimized. 
+%     This function should accept exactly one input, the parameter vector.
+% options: A PestoOptions object holding various options for the algorithm.
 %
-% Outputs:
-% ========
-% parameters ... updated parameter object containing:
-%   .P(i) ... profile for i-th parameter
-%       .par ... MAPs along profile
-%       .logPost ... maximum log-posterior along profile
-%       .R ... ratio
-% fh ... figure handle
+% Return values:
+% parameters: updated parameter object containing:
+%   * .P(i): profile for i-th parameter
+%   * .par: MAPs along profile
+%   * .logPost: maximum log-posterior along profile
+%   * .R: ratio
+% fh: figure handle
 %
-% 2012/05/16 Jan Hasenauer
-% 2014/06/12 Jan Hasenauer
-
-% function [parameters,fh] = getParameterProfiles(parameters,objective_function,options)
-function [parameters,fh] = getParameterProfiles(varargin)
+% History:
+% * 2012/05/16 Jan Hasenauer
+% * 2014/06/12 Jan Hasenauer
+% * 2016/10/04 Daniel Weindl
 
 %% Check and assign inputs
-if nargin >= 2
-    parameters = varargin{1};
-    objective_function = varargin{2};
+if nargin >= 1
+    options = varargin{1};
+    if ~isa(options, 'PestoOptions')
+        error('Third argument is not of type PestoOptions.')
+    end
 else
-    error('getParameterProfiles requires at least two inputs.')
+    options = PestoOptions();
 end
 
 % Check and assign options
-options.fmincon = optimset('algorithm','interior-point',...
-                           'display','off',...
-                           'GradObj','on',...
-                           'MaxIter',2000,...
-                           'MaxFunEvals',300*parameters.number,...
-                           'PrecondBandWidth',inf);
-options.comp_type = 'sequential'; % 'parallel';
-options.obj_type = 'log-posterior'; % 'negative log-posterior'
-options.mode = 'visual'; % 'text','silent'
-options.save = false; % true
+options.P.min = parameters.min;
+options.P.max = parameters.max;
+if isempty(options.parameter_index)
+    options.parameter_index = 1:parameters.number;
+end
+%TODO: 
 options.plot_options.interval = 'dynamic';
 options.plot_options.mark_constraint = 'false';
 options.plot_options.hold_on = 'false';
-options.parameter_index = 1:parameters.number;
-options.P.min = parameters.min;
-options.P.max = parameters.max;
-options.R_min = 0.03;
-options.dR_max = 0.1;
-options.dJ = 0.5;
-options.options_getNextPoint.mode = 'multi-dimensional'; %'one-dimensional';
-options.options_getNextPoint.guess = 1e-2;
-options.options_getNextPoint.min = 1e-6;
-options.options_getNextPoint.max = 1e2;
-options.options_getNextPoint.update = 1.25;
-options.foldername = strrep(datestr(now,31),' ','__');
-options.calc_profiles = 'true'; % 'false'
-options.reopt_profiles = 'false'; % 'true'
-options.MAP_index = 1;
-options.fh = [];
-if nargin == 3
-    options = setdefault(varargin{3},options);
-end
 
 %% Initialization and figure generation
 fh = [];

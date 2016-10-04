@@ -1,20 +1,17 @@
-% sortMultiStarts.m sorts the multi-start results.
+function [parameters] = sortMultiStarts(parameters)
+% sortMultiStarts.m sorts the multi-start results from highest to lowest logarithm of the posterior probability 'logPost'.
 %
 % USAGE:
-% ======
 % [parameters] = sortMultiStart(parameters)
 %
-% INPUTS:
-% =======
-% parameters ... parameters struct
+% Parameters:
+% parameters: parameters struct
 %
-% Outputs:
-% ========
-% parameters ... parameter struct with sorted MS
+% Return values:
+% parameters: parameter struct with sorted MS
 %
-% 2014/06/12 Jan Hasenauer
-
-function [parameters] = sortMultiStarts(parameters)
+% History:
+% * 2014/06/12 Jan Hasenauer
 
 %% Sort
 [~,ind] = sort(parameters.MS.logPost,1,'descend');

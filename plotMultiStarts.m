@@ -1,19 +1,18 @@
+function fh = plotMultiStarts(varargin)
 % plotMultiStarts plots the result of the multi-start 
 % optimization stored in parameters.
 %
 % USAGE:
-% ======
 % fh = plotMultiStarts(parameters)
 % fh = plotMultiStarts(parameters,fh)
 % fh = plotMultiStarts(parameters,fh,options)
 %
-% INPUTS:
-% =======
-% parameters ... parameter struct containing information about parameters
+% Parameters:
+% parameters: parameter struct containing information about parameters
 %   and log-posterior.
-% fh ... handle of figure in which profile likelihood is plotted. If no
+% fh: handle of figure in which profile likelihood is plotted. If no
 %   figure handle is provided, a new figure is opened.
-% options ... options of plotting
+% options: options of plotting<pre>
 %   .title ... switches plot title of (default = 'off').
 %   .add_points ... option used to add additional points, e.g. true
 %           parameter in the case of test examples
@@ -24,16 +23,13 @@
 %       .lw ... line width (default = 2)
 %       .m ... marker style (default = 's')
 %       .ms ... line width (default = 8)
-%       .name ... name of legend entry (default = 'add. point')
+%       .name ... name of legend entry (default = 'add. point')</pre>
 %
-% Outputs:
-% ========
-% fh .. figure handle
+% Return values:
+% fh: figure handle
 %
-% 2012/05/31 Jan Hasenauer
-
-% function fh = plotMultiStarts(parameters,fh,options)
-function fh = plotMultiStarts(varargin)
+% History: 
+% * 2012/05/31 Jan Hasenauer
 
 %% CHECK AND ASSIGN INPUTS
 % Assign parameters

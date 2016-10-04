@@ -1,25 +1,24 @@
+function fh = plotParameterProfiles(varargin)
 % plotParameterProfiles.m visualizes profile likelihood.
 % Note: This routine provides an interface for plotUncertainty.m.
 %
 % USAGE:
-% ======
 % fh = plotParameterProfiles(parameters,type)
 % fh = plotParameterProfiles(parameters,type,fh)
 % fh = plotParameterProfiles(parameters,type,fh,I)
 % fh = plotParameterProfiles(parameters,type,fh,I,options)
 %
-% INPUTS:
-% =======
-% parameters ... parameter struct containing information about parameters
+% Parameters:
+% parameters: parameter struct containing information about parameters
 %       and results of optimization (.MS) and uncertainty analysis
 %       (.P and .S). This structures is the output of plotMultiStarts.m,
 %       getProfiles.m or plotSamples.m.
-% type ... string indicating the type of visualization: '1D' or '2D'
-% fh ... handle of figure. If no figure handle is provided, a new figure
+% type: string indicating the type of visualization: '1D' or '2D'
+% fh: handle of figure. If no figure handle is provided, a new figure
 %       is opened.
-% I ... index of parameters which are updated. If no index is provided
+% I: index of parameters which are updated. If no index is provided
 %       all parameters are updated.
-% options ... options of plotting
+% options: options of plotting<pre>
 %   .hold_on ... indicates whether plots are redrawn or whether something
 %       is added to the plot
 %       = 'false' (default) ... new plot
@@ -100,17 +99,14 @@
 %   .legend ... legend options
 %       .color ... background color (default = 'none').
 %       .box ... legend outine (default = 'on').
-%       .orientation ... orientation of list (default = 'vertical').
+%       .orientation ... orientation of list (default = 'vertical').</pre>
 %
-% Outputs:
-% ========
-% fh .. figure handle
+% Return values:
+% fh: figure handle
 %
-% 2012/05/31 Jan Hasenauer
-% 2014/06/20 Jan Hasenauer
-
-% function fh = plotParameterProfiles(parameters,type,fh,I,options)
-function fh = plotParameterProfiles(varargin)
+% History:
+% * 2012/05/31 Jan Hasenauer
+% * 2014/06/20 Jan Hasenauer
 
 %% Check and assign inputs
 % Assign parameters

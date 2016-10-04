@@ -1,24 +1,24 @@
+function fh = plotPropertyProfiles(varargin)
 % plotPropertyProfiles.m visualizes profile likelihood of model properties.
 % Note: This routine provides an interface for plotPropertyUncertainty.m.
 %
 % USAGE:
-% ======
 % fh = plotPropertyProfiles(properties,type)
 % fh = plotPropertyProfiles(properties,type,fh)
 % fh = plotPropertyProfiles(properties,type,fh,I)
 % fh = plotPropertyProfiles(properties,type,fh,I,options)
 %
-% INPUTS:
-% =======
-% properties ... property struct containing information about properties
+% Parameters:
+% varargin:
+% properties: property struct containing information about properties
 %       and results of optimization (.MS) and uncertainty analysis
 %       (.P and .S).
-% type ... string indicating the type of visualization: '1D' or '2D'
-% fh ... handle of figure. If no figure handle is provided, a new figure
+% type: string indicating the type of visualization: '1D' or '2D'
+% fh: handle of figure. If no figure handle is provided, a new figure
 %       is opened.
-% I ... index of properties which are updated. If no index is provided
+% I: index of properties which are updated. If no index is provided
 %       all properties are updated.
-% options ... options of plotting
+% options: options of plotting<pre>
 %   .hold_on ... indicates whether plots are redrawn or whether something
 %       is added to the plot
 %       = 'false' (default) ... new plot
@@ -99,16 +99,13 @@
 %   .legend ... legend options
 %       .color ... background color (default = 'none').
 %       .box ... legend outine (default = 'on').
-%       .orientation ... orientation of list (default = 'vertical').
+%       .orientation ... orientation of list (default = 'vertical').</pre>
 %
-% Outputs:
-% ========
-% fh .. figure handle
+% Return values:
+% fh: figure handle
 %
-% 2015/03/02 Jan Hasenauer
-
-% function fh = plotPropertyProfiles(properties,type,fh,I,options)
-function fh = plotPropertyProfiles(varargin)
+% History:
+% * 2015/03/02 Jan Hasenauer
 
 %% Check and assign inputs
 % Assign properties

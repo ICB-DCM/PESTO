@@ -1,22 +1,22 @@
+function fh = plotPropertyUncertainty(varargin)
 % plotPropertyUncertainty.m visualizes profile likelihood and MCMC samples
 % stored in properties.
 %
 % USAGE:
-% ======
 % fh = plotPropertyUncertainty(properties,type)
 % fh = plotPropertyUncertainty(properties,type,fh)
 % fh = plotPropertyUncertainty(properties,type,fh,I)
 % fh = plotUnplotPropertyUncertaintycertainty(properties,type,fh,I,options)
 %
-% INPUTS:
-% =======
-% properties ... properties struct.
-% type ... string indicating the type of visualization: '1D'
-% fh ... handle of figure. If no figure handle is provided, a new figure
+% Parameters:
+% varargin:
+% properties: properties struct.
+% type: string indicating the type of visualization: '1D'
+% fh: handle of figure. If no figure handle is provided, a new figure
 %       is opened.
-% I ... index of properties which are updated. If no index is provided
+% I: index of properties which are updated. If no index is provided
 %       all parameters are updated.
-% options ... options of plotting
+% options: options of plotting<pre>
 %   .hold_on ... indicates whether plots are redrawn or whether something
 %       is added to the plot
 %       = 'false' (default) ... new plot
@@ -103,17 +103,14 @@
 %       .box ... legend outine (default = 'on').
 %       .orientation ... orientation of list (default = 'vertical').
 %   .fontsize ... fontsize
-%       .tick ... fontsize for ticklabels (default = 12).
+%       .tick ... fontsize for ticklabels (default = 12).</pre>
 %
-% Outputs:
-% ========
-% fh ... figure handle
+% Return values:
+% fh: figure handle
 %
-% 2012/05/31 Jan Hasenauer
-% 2014/06/20 Jan Hasenauer
-
-% function fh = plotPropertyUncertainty(properties,fh,I,options)
-function fh = plotPropertyUncertainty(varargin)
+% History:
+% * 2012/05/31 Jan Hasenauer
+% * 2014/06/20 Jan Hasenauer
 
 %% Check and assign inputs
 % Assign parameters
