@@ -1,4 +1,4 @@
-function [properties,fh] = getPropertySamples(varargin)
+function [properties,fh] = getPropertySamples(properties, parameters, varargin)
 % getPropertySamples.m evaluates the properties for the sampled parameters.
 %
 % USAGE:
@@ -21,28 +21,8 @@ function [properties,fh] = getPropertySamples(varargin)
 %       .logPost ... log-posterior function along chain
 %       .par  ... parameters along chain
 %   Note: This struct is obtained using getSamples.m.</pre>
-% options: options of algorithm<pre>
-%   .comp_type ... type of computations
-%       = 'sequential' (default) ... classical sequential (in core) method
-%       = 'parallel' ... multi-core method exploiting parfor
-%   .plot_options ... plot options for plotPropertyProfiles.m.
-%   .mode ... output of algorithm
-%       = 'visual' (default) ... plots are gnerated which show the progress
-%       = 'text' ... optimization results for multi-start is printed on screen
-%       = 'silent' ... no output during the multi-start local optimization
-%   .fh ... handle of figure in which results are printed. If no
-%       handle is provided, a new figure is used.
-%   .save ... determine whether results are directly saved
-%       = 'false' (default) ... results are not saved
-%       = 'true' ... results are stored do an extra folder
-%   .foldername ... name of the folder in which results are stored.
-%       If no folder is provided, a random foldername is generated.
-%   .thinning ... rate of thinning (default = 10). In the default
-%       setting only the properties for every 10th parameter vector is
-%       evaluated.
-%   .property_index ... index of the properties for which the properties
-%         are calculated (default = 1:properties.number).</pre>
-%
+% options: A PestoOptions object holding various options for the algorithm.
+%  
 % Return values:
 % properties: updated parameter object containing:<pre>
 %   .S ... properties for sampling results
@@ -56,36 +36,19 @@ function [properties,fh] = getPropertySamples(varargin)
 %
 % History:
 % * 2015/04/01 Jan Hasenauer
+% * 2016/10/04 Daniel Weindl
 
 %% Check and assign inputs
-if nargin >= 2
-    properties = varargin{1};
-    parameters = varargin{2};
+if nargin >= 1
+    options = varargin{1};
+    if ~isa(options, 'PestoOptions')
+        error('Third argument is not of type PestoOptions.')
+    end
 else
-    error('getPropertySamples requires at least two inputs.')
+    options = PestoOptions();
 end
 
-% Check properties:
-if ~isfield(properties,'min') || ~isfield(properties,'max')
-    error('Algorithm requires lower and upper bounds');
-else
-    properties.min = properties.min(:);
-    properties.max = properties.max(:);
-end
-if length(properties.min) ~= length(properties.max)
-	error('Dimension of properties.min and properties.max does not agree.');
-else
-    if max(properties.min >= properties.max)
-        error('There exists at least one i for which properties.min(i) >= properties.max(i).');
-    end
-end
-if ~isfield(properties,'number')
-    properties.number = length(properties.min);
-else
-    if properties.number ~= length(properties.min)
-        error('Dimension mismatch: properties.number ~= length(properties.min).');
-    end
-end
+properties = propertySanityCheck(properties);
 
 % Check initial guess
 if ~isfield(parameters,'guess')
@@ -93,17 +56,7 @@ if ~isfield(parameters,'guess')
 end
 
 % Check and assign options
-options.comp_type = 'sequential'; % 'parallel';
-options.mode = 'visual'; % 'text','silent'
-options.save = 'false'; % 'true'
-options.plot_options = [];
-options.foldername = strrep(datestr(now,31),' ','__');
-options.fh = [];
-options.thinning = 1;
 options.property_index = 1:properties.number;
-if nargin == 3
-    options = setdefault(varargin{3},options);
-end
 
 %% Initialization and figure generation
 fh = [];

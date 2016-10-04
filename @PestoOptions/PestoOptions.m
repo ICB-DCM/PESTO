@@ -213,6 +213,11 @@ classdef PestoOptions < hgsetget
         % the lower and upper bounds for the properties (default = 1e-5).
         boundary_tol = 1e-5;
 
+        % Rate of thinning (default = 10). In the default
+        % setting only the properties for every 10th parameter vector is
+        % evaluated.
+        thinning = 10;
+        
         % Parameter sampling options
         sampling_scheme = '';
         proposal_scheme = '';
