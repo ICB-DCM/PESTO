@@ -1,5 +1,4 @@
 function [J, gradJ] = objectiveFunction(varargin)
-
         nTimepoints = 100;
         t           = linspace(0, 5, nTimepoints)';
         yBar        = nan(nTimepoints, 4);
@@ -15,7 +14,7 @@ function [J, gradJ] = objectiveFunction(varargin)
         amiciData = varargin{6};
         
         for iMeas = 1 : 100                
-            [~,~,~,y,~,sy] = simulate_enzymatic(t, theta, ...
+            [~,~,~,y,~,sy] = simulateEnzymaticReaction(t, theta, ...
                                   con0(iMeas, :), ...
                                   amiciData, amiciOptions);
             yBar(:, :) = yMeas(iMeas, :, :);
@@ -40,7 +39,7 @@ function [J, gradJ] = objectiveFunction(varargin)
         
         nBatch      = length(options.subset);
         for iMeas = 1 : nBatch                
-            [~, ~, ~, y, ~, sy] = simulate_enzymatic(t, theta, ...
+            [~, ~, ~, y, ~, sy] = simulate_enzymaticCatalysis(t, theta, ...
                                   con0(options.subset(iMeas), :), ...
                                   amiciData, amiciOptions);
             yBar(:, :) = yMeas(options.subset(iMeas), :, :);

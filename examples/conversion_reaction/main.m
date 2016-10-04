@@ -12,8 +12,8 @@
 % (X_1 and X_2) following first-order mass action kinetics with the 
 % parameters k_1 and k_2 respectively:
 %
-% X_1 -> X_2, rate = k_1*[X_1]\n
-% X_2 -> X_1, rate = k_2*[X_2]
+% * X_1 -> X_2, rate = k_1*[X_1]
+% * X_2 -> X_1, rate = k_2*[X_2]
 %
 % Measurement of [X_2] are provided as: Y = [X_2]
 %
@@ -84,7 +84,7 @@ properties.number = length(properties.name);
 
 % Log-likelihood function
 options_par.obj_type = 'log-posterior';
-logL = @(theta) logL__CR(theta,t,ym,sigma2,'log');
+logL = @(theta) logLikelihood(theta,t,ym,sigma2,'log');
 
 %% Multi-start local optimization
 % Options
@@ -109,7 +109,7 @@ parameters = getMultiStarts(parameters,logL,options_par);
 if strcmp(options_par.mode,'visual')
     % Simulation
     tsim = linspace(t(1),t(end),100);
-    ysim = sim__CR(exp(parameters.MS.par(:,1)),tsim);
+    ysim = simulateConversionReaction(exp(parameters.MS.par(:,1)),tsim);
 
     % Plot: Fit
     figure;
