@@ -89,12 +89,12 @@ properties.max = [log10(max(t)); 5; 5; 5; 2];
 properties.number = length(properties.name);
 
 % Log-posterior function
-options.obj_type = 'log-posterior';
-logP = @(theta) logP__T(theta,t,ym);
+logP = @(theta) logPosterior(theta,t,ym);
 
 %% MULTI-START LOCAL OPTIMIZATION
 % Options
-options.n_starts = 20;
+options = PestoOptions();
+options.obj_type = 'log-posterior';
 options.comp_type = 'sequential'; options.mode = 'visual';
 % options.comp_type = 'parallel'; options.mode = 'silent'; % n_workers = 10;
 % options.save = 'true'; options.foldername = 'results';
@@ -111,7 +111,7 @@ parameters = getMultiStarts(parameters,logP,options);
 if strcmp(options.mode,'visual')
     % Simulation
     tsim = linspace(t(1),t(end),100);
-    ysim = sim__T(10.^parameters.MS.par(:,1),tsim);
+    ysim = simulate_mRNA_Transfection(10.^parameters.MS.par(:,1),tsim);
 
     % Plot: Fit
     figure;
@@ -124,6 +124,10 @@ end
 
 % %% Profile likelihood calculation -- Parameters
 % parameters = getParameterProfiles(parameters,logP,options);
+
+%%
+warning('Stopping example execution. Remove this block when getParameterSamples is working');
+return;
 
 %% Single-chain Markov chain Monte-Carlo sampling -- Parameters
 % options.sampling_scheme = 'DRAM';

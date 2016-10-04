@@ -83,11 +83,12 @@ properties.max = [-2.4;-1.7; 5; 10; 1; 1];
 properties.number = length(properties.name);
 
 % Log-likelihood function
-options_par.obj_type = 'log-posterior';
 logL = @(theta) logLikelihood(theta,t,ym,sigma2,'log');
 
 %% Multi-start local optimization
 % Options
+options_par = PestoOptions();
+options_par.obj_type = 'log-posterior';
 options_par.n_starts = 10;
 options_par.comp_type = 'sequential'; options_par.mode = 'visual';
 % options_par.comp_type = 'parallel'; options_par.mode = 'text'; n_workers = 1;
@@ -122,6 +123,10 @@ end
 
 %% Profile likelihood calculation -- Parameters
 parameters = getParameterProfiles(parameters,logL,options_par);
+
+%%
+warning('Stopping example execution. Remove this block when getParameterSamples is working');
+return;
 
 %% Single-chain Monte-Carlo sampling -- Parameters
 % options.sampling_scheme = 'DRAM';
