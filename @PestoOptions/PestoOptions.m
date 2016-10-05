@@ -14,6 +14,7 @@ classdef PestoOptions < hgsetget
         % a maximization of the objective function or that the negative
         % log-posterior or negative log-likelihood are provided so that
         % a minimization of the objective function is performed.
+        % Needed in
         obj_type = 'log-posterior';
         
         % Perform calculations sequantially (''sequential'', default), or
@@ -107,48 +108,9 @@ classdef PestoOptions < hgsetget
         % 
         % WHEN TRUE THIS OPTION REMOVES ALL OBJECTIVE FUNCTION BREAK POINTS
         resetobjective = false;
-    
-        % Specifies which optimizer should be used:
-        % * 'fmincon': (default) fmincon
-        % * 'minibatch': uses a minibatch optimization approach
-        optimizer = 'fmincon';
-        
-        % struct with options for minibatch optimization
-        optim_options = {}; 
-        
-        % logical: perform full batch or minibatch optim
-        % * false: deterministic optimization
-        % * true: minibatch optim, Obj function must be adapted
-        %
-        % TODO: redundant with optimizer == minibatch?
-        isMinibatch = false;
-        
-        % number of measurement points, only if isMinibatch
-        nDatasets = NaN;
-        
-        % Size of Minibatches, only if isMinibatch
-        nBatchdata = NaN;
-        
-        % number of maximum optimization steps
-        nOptimSteps = NaN;
         
         % String with the model name for AMICI, may be left empty
         model = '';
-        
-        % Optimization method to be used. One of:
-        % * 'standard': stochastic gradient descent (SGD), standard method
-        % * 'momentum': sgd with momentum
-        % * 'nesterov': sgd with Nesterov momentum function
-        % * 'rmsprop': adaptive step size for each parameter
-        % * 'rmspropnesterov': with additional momentum
-        % * 'adam': adaptive method
-        % * 'adadelta': adaptive method
-        method = 'standard';
-        
-        % struct containing the hyperparameters
-        % (e.g. learning rate) for the opt-method, must fit with chosen
-        % method (see documentation there)
-        hyperparams = {};
         
         % The following options are for getParameterProfiles only:
         % index of the parameters for which the profile

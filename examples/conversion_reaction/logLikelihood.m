@@ -1,4 +1,4 @@
-function [logL, dlogLdxi, F] = logL__CR(xi, t, ym, sigma2, scale)
+function [logL, dlogLdxi, F] = logLikelihood(xi, t, ym, sigma2, scale)
 % logL__CR.m provides the log-likelihood, its gradient and an 
 % approximation of the Hessian matrix based on Fisher information matrix
 % (FIM) for the conversion reaction process.

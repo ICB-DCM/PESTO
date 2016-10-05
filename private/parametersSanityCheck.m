@@ -1,5 +1,5 @@
 function [ parameters ] = parametersAreValid( parameters )
-%parametersAreValid Checks if the provided parameters are okay.
+% parametersAreValid Checks if the provided parameters are okay.
 
 % Check parameters:
 if ~isfield(parameters,'min') || ~isfield(parameters,'max')

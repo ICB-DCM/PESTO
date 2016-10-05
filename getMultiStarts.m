@@ -69,43 +69,6 @@ end
 
 parameters = parametersSanityCheck(parameters);
 
-% Check, if the objective function has the correct number of inputs for
-% the given optimization scheme
-if  strcmp(options.optimizer, 'minibatch') ...
-        && options.optim_options.isMinibatch ...
-        && (nargin(objective_function) ~= 2)
-    warning('Objective function has not enough inputs for minibatch optimization.');
-    prompt = 'Do you want to perform a full batch optimization instead? (y/n)';
-    choice = input(prompt, 's');
-    switch choice
-        case 'y'
-            options.optim_options.isMinibatch = false;
-        case 'n'
-            error('Optimization aborted by user due to not suitably defined obejctive function.');
-        otherwise
-            error('Optimization aborted due to invalid user input.');
-    end
-end
-
-if  ((~strcmp(options.optimizer, 'minibatch')) ...
-        && (nargin(objective_function) ~= 1)) ...
-        || (strcmp(options.optimizer, 'minibatch') ...
-        && options.optim_options.isMinibatch == false ...
-        && (nargin(objective_function) ~= 1))
-    warning('Objective function has too many input arguments for the chosen optimization method.');
-    prompt = 'Do you want to pass additionally the whole dataset? Errors may occur... (y/n)';
-    choice = input(prompt, 's');
-    switch choice
-        case 'y'
-            additional_opt = struct('subset', 1 : options.optim_options.nDatasets);
-            objective_function = @(theta) objective_function(theta, additional_opt);
-        case 'n'
-            error('Optimization aborted by user due to not suitably defined objective function.');
-        otherwise
-            error('Optimization aborted due to invalid user input.');
-    end
-end
-
 %% Initialization and figure generation
 fh = [];
 switch options.mode
@@ -135,7 +98,7 @@ switch options.proposal
                 bsxfun(@plus,parameters.min,bsxfun(@times,parameters.max - parameters.min,...
                              lhsdesign(options.n_starts - size(parameters.guess,2),parameters.number,'smooth','off')'))];
     case 'uniform'
-        % Sampling from latin hypercube
+        % Sampling from uniform distribution
         par0 = [parameters.guess,...
                 bsxfun(@plus,parameters.min,bsxfun(@times,parameters.max - parameters.min,...
                              rand(parameters.number,options.n_starts - size(parameters.guess,2))))];
@@ -171,24 +134,6 @@ if(options.trace)
     parameters.MS.time_trace = nan(options.fmincon.MaxIter+1,length(options.start_index));
 end
 
-if strcmp(options.optimizer, 'minibatch')
-    parameters.MS.J = nan(options.optim_options.nOptimSteps + 1, length(options.start_index));
-    parameters.MS.normG = nan(options.optim_options.nOptimSteps + 1, length(options.start_index));
-    parameters.MS.changeTheta = nan(options.optim_options.nOptimSteps, length(options.start_index));
-    ResultsOptim = struct(...
-        'j', nan(options.optim_options.nOptimSteps + 1, length(options.start_index)), ...
-        'normG', nan(options.optim_options.nOptimSteps + 1, length(options.start_index)), ...
-        'changeTheta', nan(options.optim_options.nOptimSteps, length(options.start_index)));
-end
-
-%% Check for hyperparameters
-if strcmp(options.optimizer, 'minibatch')
-    [hpWarningMsg, options.optim_options.hyperparams] = checkHyperparams(options.optim_options);
-    if (~strcmp(hpWarningMsg, ''))
-        warning(hpWarningMsg);
-    end
-end
-
 %% Multi-start local optimization -- SEQUENTIAL
 if strcmp(options.comp_type, 'sequential')
     
@@ -210,54 +155,14 @@ if strcmp(options.comp_type, 'sequential')
         
         % Reset error count
         error_count = 0;
-        
-        % === Check if minibatch optimization should be used and create the
-        % === minibatches if necessary
-        skip_safe = 10;
-        if (strcmp(options.optimizer, 'minibatch') && options.optim_options.isMinibatch)
-            % Give shorter names to variables... (Readability)
-            nBatch = options.optim_options.nBatchdata;
-            nData  = options.optim_options.nDatasets;
-            nSteps = options.optim_options.nOptimSteps + 1;
-            
-            % How many minibatches are needed? How many epoches?
-            % Create some more minibatches if some must be skipped
-            subsets = nan(1, skip_safe * nSteps * nBatch);
-            nEpoches = ceil((skip_safe * nSteps * nBatch) / nData);
-            
-            for iEpoche = 1 : nEpoches
-                if (iEpoche == nEpoches)
-                    subsets(1 + (iEpoche-1) * nData : skip_safe * nSteps * nBatch) = ...
-                        randperm(nData, skip_safe * nSteps * nBatch - (iEpoche-1) * nData);
-                else
-                    subsets(1 + (iEpoche-1) * nData : iEpoche * nData) = ...
-                        randperm(nData);
-                end
-            end
-            subsets = reshape(subsets, nBatch, skip_safe * nSteps);
-            jOptions = struct('subset', subsets(:, 1));
-        end
-        % === End of minibatch creation ===================================
 
         % Evaluation of objective function at starting point
-        if (strcmp(options.optimizer, 'minibatch'))
-            if (options.optim_options.isMinibatch)
-                [J_0, grad_J_0] = ...
-                    obj_w_error_count(parameters.MS.par0(:,i), ...
-                    objective_function, options.obj_type, jOptions);
-            else
-                [J_0, grad_J_0] = ...
-                    obj_w_error_count(parameters.MS.par0(:,i), ...
-                    objective_function, options.obj_type);                
-            end
+        if strcmp(options.fmincon.GradObj,'off')
+            J_0 = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
+        elseif strcmp(options.fmincon.GradObj,'on') && ~strcmp(options.fmincon.Hessian,'user-supplied')
+            [J_0, grad_J_0] = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
         else
-            if strcmp(options.fmincon.GradObj,'off')
-                J_0 = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
-            elseif strcmp(options.fmincon.GradObj,'on') && ~strcmp(options.fmincon.Hessian,'user-supplied')
-                [J_0, grad_J_0] = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
-            else
-                [J_0, grad_J_0, H_J_0] = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
-            end
+            [J_0, grad_J_0, H_J_0] = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
         end
         parameters.MS.logPost0(i) = -J_0;
         
@@ -265,59 +170,33 @@ if strcmp(options.comp_type, 'sequential')
         t_cpu_fmincon = cputime;
         if J_0 < -options.init_threshold
             
-            if (strcmp(options.optimizer,'minibatch'))
-                if (options.optim_options.isMinibatch)
-                % Optimization using minibatch routines
-                    [theta, J_opt, parameters.MS.exitflag(i), ResultsOptim, gradient_opt] = ...
-                        performSGD(parameters, options.optim_options, subsets, ...
-                        @(theta, jOptions) obj_w_error_count(theta, ...
-                        objective_function, options.obj_type, jOptions), ...
-                        parameters.MS.par0(:,i));
-                else
-                % Optimization using minibatch routines on the whole dataset
-                    [theta, J_opt, parameters.MS.exitflag(i), ResultsOptim, gradient_opt] = ...
-                        performSGD(parameters, options.optim_options, ...
-                        @(theta) obj_w_error_count(theta, objective_function, ...
-                        options.obj_type), parameters.MS.par0(:,i));
-                end
-                parameters.MS.J(:,i) = -ResultsOptim.j;
-                parameters.MS.normG(:,i) = ResultsOptim.normG;
-                parameters.MS.changeTheta(:,i) = ResultsOptim.changeTheta;
-            else
-                % Optimization using fmincon
-                [theta,J_opt,parameters.MS.exitflag(i),results_fmincon,~,gradient_opt,hessian_opt] = ...
-                    fmincon(@(theta) obj_w_error_count(theta,objective_function,options.obj_type),...  % negative log-likelihood function
-                    parameters.MS.par0(:,i),...    % initial parameter
-                    parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
-                    parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
-                    parameters.min,...     % lower bound
-                    parameters.max,...     % upper bound
-                    [],options.fmincon);   % options
-            end
+            % Optimization using fmincon
+            [theta,J_opt,parameters.MS.exitflag(i),results_fmincon,~,gradient_opt,hessian_opt] = ...
+                fmincon(@(theta) obj_w_error_count(theta,objective_function,options.obj_type),...  % negative log-likelihood function
+                parameters.MS.par0(:,i),...    % initial parameter
+                parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
+                parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
+                parameters.min,...     % lower bound
+                parameters.max,...     % upper bound
+                [],options.fmincon);   % options
             
             % Assignment
             parameters.MS.J(1, i) = -J_0;
             parameters.MS.logPost(i) = -J_opt;
             parameters.MS.par(:,i) = theta;
             parameters.MS.gradient(:,i) = gradient_opt;
-            if (~strcmp(options.optimizer, 'minibatch'))
-                if isempty(hessian_opt)
-                    if strcmp(options.fmincon.Hessian,'user-supplied')
-                        [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
-                    end
-                elseif max(hessian_opt(:)) == 0
-                    if strcmp(options.fmincon.Hessian,'user-supplied')
-                        [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
-                    end
+            if isempty(hessian_opt)
+                if strcmp(options.fmincon.Hessian,'user-supplied')
+                    [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
                 end
-                parameters.MS.n_objfun(i) = results_fmincon.funcCount;
-                parameters.MS.n_iter(i) = results_fmincon.iterations;
-                parameters.MS.hessian(:,:,i) = full(hessian_opt);
-            else
-                parameters.MS.normG(1, i) = sqrt(sum(grad_J_0.^2));
-                parameters.MS.n_objfun(i) = options.optim_options.nOptimSteps;
-                parameters.MS.n_iter(i) = options.optim_options.nOptimSteps;
+            elseif max(hessian_opt(:)) == 0
+                if strcmp(options.fmincon.Hessian,'user-supplied')
+                    [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
+                end
             end
+            parameters.MS.n_objfun(i) = results_fmincon.funcCount;
+            parameters.MS.n_iter(i) = results_fmincon.iterations;
+            parameters.MS.hessian(:,:,i) = full(hessian_opt);
         end
         parameters.MS.t_cpu(i) = cputime - t_cpu_fmincon;
         
@@ -333,6 +212,7 @@ if strcmp(options.comp_type, 'sequential')
             case 'silent' % no output
         end
     end
+    
     % Check time
     % disp(sum(parameters.MS.t_cpu));
     
