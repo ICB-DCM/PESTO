@@ -10,10 +10,10 @@
 %
 % This example provides a model for the interconversion of two species 
 % (X_1 and X_2) following first-order mass action kinetics with the 
-% parameters k_1 and k_2 respectively:
+% parameters theta_1 and theta_2 respectively:
 %
-% * X_1 -> X_2, rate = k_1*[X_1]
-% * X_2 -> X_1, rate = k_2*[X_2]
+% * X_1 -> X_2, rate = theta_1 * [X_1]
+% * X_2 -> X_1, rate = theta_2 * [X_2]
 %
 % Measurement of [X_2] are provided as: Y = [X_2]
 %
@@ -32,7 +32,7 @@
 
 
 
-%% PRELIMINARY
+%% Preliminary
 clear all;
 close all;
 clc;
@@ -42,14 +42,7 @@ TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
 
-%% PROCESS
-% Definition of the biological process
-%
-% X_1 -> X_2, rate = k_1*[X_1]
-% X_2 -> X_1, rate = k_2*[X_2]
-% Y = X_2
-
-%% DATA
+%% Data
 % Artificial data is set. It was created from known parameter values
 
 % True parameters
@@ -57,11 +50,11 @@ theta_true = [-2.5;-2];
 
 t = (0:10)';        % time points
 sigma2 = 0.015^2;   % measurement noise
-Y = [0.0244; 0.0842; 0.1208; 0.1724; 0.2315; 0.2634; ... Measurement data
+y = [0.0244; 0.0842; 0.1208; 0.1724; 0.2315; 0.2634; ... Measurement data
     0.2831; 0.3084; 0.3079; 0.3097; 0.3324];
 
-%% DEFINITION OF PARAMETER ESTIMATION PROBLEM
-% In order tu run any PESTO routine, at least the parameters struct with 
+%% Definition of the Paramter Estimation Problem
+% In order to run any PESTO routine, at least the parameters struct with 
 % the fields shown here and the objective function need to be defined, 
 % since they are manadatory for getMultiStarts, which is usually the first 
 % routine needed for any parameter estimation problem
@@ -73,7 +66,7 @@ parameters.max = [ 3, 3];
 parameters.number = length(parameters.name);
 
 % Log-likelihood function
-objectiveFunction = @(theta) logLikelihood(theta, t, Y, sigma2, 'log');
+objectiveFunction = @(theta) logLikelihood(theta, t, y, sigma2, 'log');
 
 % properties
 properties.name = {'log_{10}(k_1)','log_{10}(k_2)',...
@@ -127,7 +120,7 @@ if strcmp(optionsMultistart.mode,'visual')
 
     % Plot: Fit
     figure;
-    plot(t,Y,'bo'); hold on;
+    plot(t,y,'bo'); hold on;
     plot(tsim,ysim,'r-'); 
     xlabel('time t');
     ylabel('output y');
