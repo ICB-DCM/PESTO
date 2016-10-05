@@ -216,11 +216,6 @@ if strcmp(options.comp_type, 'sequential')
     % Check time
     % disp(sum(parameters.MS.t_cpu));
     
-    % Postprocess data from minibatch optimization
-    if strcmp(options.optimizer, 'minibatch')
-        fg = figure();
-        fg = plotOptimHistory(parameters, fg, options);
-    end
     % Assignment
     parameters = sortMultiStarts(parameters);
     

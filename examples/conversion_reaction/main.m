@@ -30,6 +30,9 @@
 % getPropertyProfiles()
 % getPropertyConfidenceIntervals()
 
+
+
+%% PRELIMINARY
 clear all;
 close all;
 clc;
@@ -38,37 +41,41 @@ TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
+
 %% PROCESS
+% Definition of the biological process
+%
 % X_1 -> X_2, rate = k_1*[X_1]
 % X_2 -> X_1, rate = k_2*[X_2]
 % Y = X_2
 
 %% DATA
-sigma2 = 0.015^2;
-t = (0:10)';
-ym = [0.0244
-      0.0842
-      0.1208
-      0.1724
-      0.2315
-      0.2634
-      0.2831
-      0.3084
-      0.3079
-      0.3097
-      0.3324];
+% Artificial data is set. It was created from known parameter values
 
 % True parameters
 theta_true = [-2.5;-2];
 
+t = (0:10)';        % time points
+sigma2 = 0.015^2;   % measurement noise
+Y = [0.0244; 0.0842; 0.1208; 0.1724; 0.2315; 0.2634; ... Measurement data
+    0.2831; 0.3084; 0.3079; 0.3097; 0.3324];
+
 %% DEFINITION OF PARAMETER ESTIMATION PROBLEM
-% Parameters
+% In order tu run any PESTO routine, at least the parameters struct with 
+% the fields shown here and the objective function need to be defined, 
+% since they are manadatory for getMultiStarts, which is usually the first 
+% routine needed for any parameter estimation problem
+
+% parameters
 parameters.name = {'log_{10}(k_1)','log_{10}(k_2)'};
 parameters.min = [-7,-7];
 parameters.max = [ 3, 3];
 parameters.number = length(parameters.name);
 
-% Properties
+% Log-likelihood function
+objectiveFunction = @(theta) logLikelihood(theta, t, Y, sigma2, 'log');
+
+% properties
 properties.name = {'log_{10}(k_1)','log_{10}(k_2)',...
                    'log_{10}(k_1)-log_{10}(k_2)','log_{10}(k_1)^2',...
                    'x_2(t=3)','x_2(t=10)'};
@@ -82,39 +89,45 @@ properties.min = [-2.6;-2.2;-5;-10; 0; 0];
 properties.max = [-2.4;-1.7; 5; 10; 1; 1];
 properties.number = length(properties.name);
 
-% Log-likelihood function
-logL = @(theta) logLikelihood(theta,t,ym,sigma2,'log');
-
 %% Multi-start local optimization
+% A multi-start local optimization is performed within the bound defined in
+% parameters.min and .max in order to infer the unknown parameters from 
+% measurement data. Therefore, a PestoOptions object is created and
+% some of its properties are set accordingly.
+
 % Options
-options_par = PestoOptions();
-options_par.obj_type = 'log-posterior';
-options_par.n_starts = 10;
-options_par.comp_type = 'sequential'; options_par.mode = 'visual';
+optionsMultistart = PestoOptions();
+optionsMultistart.obj_type = 'log-posterior';
+optionsMultistart.n_starts = 10;
+optionsMultistart.comp_type = 'sequential'; optionsMultistart.mode = 'visual';
+optionsMultistart.plot_options.add_points.par = theta_true;
+optionsMultistart.plot_options.add_points.logPost = objectiveFunction(theta_true);
+
+% The example can also be run in parallel mode: Uncomment this, if wanted
 % options_par.comp_type = 'parallel'; options_par.mode = 'text'; n_workers = 1;
 % options_par.comp_type = 'parallel'; options_par.mode = 'text'; n_workers = 10;
 % options_par.save = 'true'; options_par.foldername = 'results';
-options_prop = options_par;
-options_par.plot_options.add_points.par = theta_true;
-options_par.plot_options.add_points.logPost = logL(theta_true);
 
-% Open matlabpool
-if strcmp(options_par.comp_type,'parallel') && (n_workers >= 2)
-    matlabpool(n_workers);
+% Open parpool
+if strcmp(optionsMultistart.comp_type,'parallel') && (n_workers >= 2)
+    parpool(n_workers);
 end
 
 % Optimization
-parameters = getMultiStarts(parameters,logL,options_par);
+parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
 
 %% Visualization of fit
-if strcmp(options_par.mode,'visual')
+% The measured data is visualized in plot, together with fit for the best
+% parameter value found during getMutliStarts
+
+if strcmp(optionsMultistart.mode,'visual')
     % Simulation
     tsim = linspace(t(1),t(end),100);
     ysim = simulateConversionReaction(exp(parameters.MS.par(:,1)),tsim);
 
     % Plot: Fit
     figure;
-    plot(t,ym,'bo'); hold on;
+    plot(t,Y,'bo'); hold on;
     plot(tsim,ysim,'r-'); 
     xlabel('time t');
     ylabel('output y');
@@ -122,9 +135,12 @@ if strcmp(options_par.mode,'visual')
 end
 
 %% Profile likelihood calculation -- Parameters
-parameters = getParameterProfiles(parameters,logL,options_par);
+% The uncertainty of the estimated parameters is visualized by computing
+% and plotting profile likelihoods. In getParameterProfiles, this is done
+% by using repeated reoptimization
+parameters = getParameterProfiles(parameters,objectiveFunction,optionsMultistart);
 
-%%
+%% Problem with getParameterSamples
 warning('Stopping example execution. Remove this block when getParameterSamples is working');
 return;
 
@@ -183,10 +199,11 @@ alpha = [0.9,0.95,0.99];
 parameters = getParameterConfidenceIntervals(parameters,alpha);
 
 %% Evaluation of properties for multi-start local optimization results -- Properties
-properties = getPropertyMultiStarts(properties,parameters,options_prop);
+optionsProperties = optionsMultistart;
+properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
 
 %% Profile likelihood calculation -- Properties
-properties = getPropertyProfiles(properties,parameters,logL,options_prop);
+properties = getPropertyProfiles(properties,parameters,objectiveFunction,optionsProperties);
 
 % %% Evaluation of properties for sampling results -- Properties
 % properties = getPropertySamples(properties,parameters,options);
@@ -212,7 +229,7 @@ if strcmp(options_par.mode,'visual')
     end
 end
 
-%
+% CLosing parpool
 if strcmp(options_par.comp_type,'parallel') && (n_workers >= 2)
-    matlabpool('close');
+    parpool('close');
 end
