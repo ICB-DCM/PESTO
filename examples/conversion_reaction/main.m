@@ -41,17 +41,22 @@ TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
+%% Model Definition
+% See logLikelihood.m for a detailed description
 
 %% Data
-% Artificial data is set. It was created from known parameter values
+% We fix an artificial data set. It consists of a vector of time points t
+% and a measurement vector Y. This data was created using the parameter 
+% values which are assigned to theta_true and by adding normaly distributed 
+% measurement noise with value sigma2. 
 
 % True parameters
 theta_true = [-2.5;-2];
 
 t = (0:10)';        % time points
 sigma2 = 0.015^2;   % measurement noise
-y = [0.0244; 0.0842; 0.1208; 0.1724; 0.2315; 0.2634; ... Measurement data
-    0.2831; 0.3084; 0.3079; 0.3097; 0.3324];
+y = [0.0244; 0.0842; 0.1208; 0.1724; 0.2315; 0.2634; ... 
+    0.2831; 0.3084; 0.3079; 0.3097; 0.3324]; % Measurement data
 
 %% Definition of the Paramter Estimation Problem
 % In order to run any PESTO routine, at least the parameters struct with 
