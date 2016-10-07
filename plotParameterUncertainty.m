@@ -167,8 +167,7 @@ end
 
 % Options
 % General plot options
-options.hold_on = 'false';
-options.interval = 'dynamic'; %'static';
+options = PestoPlottingOptions();
 
 % Default profile plotting options
 %   0 => no plot
@@ -179,9 +178,6 @@ if isfield(parameters,'P')
 else
     options.P.plot_type = 0; 
 end
-options.P.col = [1,0,0];
-options.P.lw = 2;
-options.P.name = 'P';
 
 % Default sample plotting options
 %   0 => no plot
@@ -216,7 +212,6 @@ if isfield(parameters,'S')
         options.S.PT.sp_col = options.S.PT.col;
     end
 end
-options.S.name = 'S';
 
 % Local optima
 %   0 => no plot
@@ -233,38 +228,12 @@ if isfield(parameters,'MS')
 else
     options.MS.plot_type = 0; 
 end
-options.MS.col = [1,0,0];
-options.MS.lw = 2;
-options.MS.name_conv = 'MS - conv.';
-options.MS.name_nconv = 'MS - not conv.';
-options.MS.only_optimum = false;
 
 % Default approxiamtion plotting options
 %   0 => no plot
 %   1 => likelihood ratio
 %   2 => negative log-likelihood
 options.A.plot_type = options.MS.plot_type;
-options.A.col = [0,0,1];
-options.A.lw = 2;
-options.A.sigma_level = 2;
-options.A.name = 'P_{app}';
-
-% Boundary detection
-options.boundary.mark = 1;
-options.boundary.eps = 1e-4;
-
-% Confidence level
-options.CL.plot_type = 0;%options.MS.plot_type;
-options.CL.alpha = 0.95;
-options.CL.type = 'point-wise'; % 'simultanous', {'point-wise','simultanous'}
-options.CL.col = [0,0,0];
-options.CL.lw = 2;
-options.CL.name = 'cut-off';
-
-% Settings for 2D plot
-options.op2D.b1 = 0.15;
-options.op2D.b2 = 0.02;
-options.op2D.r = 0.95;
 
 % Additional points
 options.add_points.par = [];
@@ -275,21 +244,11 @@ options.add_points.m = 's';
 options.add_points.ms = 4;
 options.add_points.name = 'add. point';
 
-% Legend
-options.legend.color = 'none';
-options.legend.box = 'on';
-options.legend.orientation = 'vertical';
-options.legend.position = [];
-
-% Labels
-options.labels.y_always = true;
-options.labels.y_name = [];
-
-% Fontsize
-options.fontsize.tick = 12;
-
 % Assignment of user-provided options
 if nargin == 5
+    if ~isa(varargin{5}, 'PestoPlottingOptions')
+        error('Argument 5 is not of type PestoPlottingOptions.')
+    end
     options = setdefault(varargin{5},options);
 end
 
@@ -299,21 +258,19 @@ if ~isfield(parameters,'P')
 end
 
 % Subplot arrangement
-if ~isfield(options,'subplot_size_1D')
+if isempty(options.subplot_size_1D)
     options.subplot_size_1D = round(sqrt(length(I))*[1,1]);
     if prod(options.subplot_size_1D) < length(I)
         options.subplot_size_1D(2) = options.subplot_size_1D(2) + 1;
     end
 end
-if ~isfield(options,'subplot_indexing_1D')
+if isempty(options.subplot_indexing_1D)
     options.subplot_indexing_1D = 1:length(I);
 end
 
 %% INITALIZATION
 % Maximum a posterior estimate
-if isfield(parameters,'MS')
-    logPost_max = max(parameters.MS.logPost);
-end
+logPost_max = max(parameters.MS.logPost);
 
 % Degrees of freedom (for chi^2 test)
 dof = 1;
@@ -382,7 +339,7 @@ for l = 1:length(I)
                 xl(2) = xl(2) + 1e-10;
             end
         case 'static'
-            if isfield(options,'bounds')
+            if ~isempty(options.bounds)
                 xl = [options.bounds.min(i),options.bounds.max(i)];
             else
                 xl = [parameters.min(i),parameters.max(i)];
@@ -773,7 +730,7 @@ for l2 = 1:length(I)
             end
 
         case 'static'
-            if isfield(options,bounds)
+            if ~isempty(options.bounds)
                 xl1 = [options.bounds.min(i1),options.bounds.max(i1)];
                 xl2 = [options.bounds.min(i2),options.bounds.max(i2)];
             else

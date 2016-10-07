@@ -1,4 +1,4 @@
-function fh = plotMultiStarts(varargin)
+function fh = plotMultiStarts(parameters, varargin)
 % plotMultiStarts plots the result of the multi-start 
 % optimization stored in parameters.
 %
@@ -12,49 +12,25 @@ function fh = plotMultiStarts(varargin)
 %   and log-posterior.
 % fh: handle of figure in which profile likelihood is plotted. If no
 %   figure handle is provided, a new figure is opened.
-% options: options of plotting<pre>
-%   .title ... switches plot title of (default = 'off').
-%   .add_points ... option used to add additional points, e.g. true
-%           parameter in the case of test examples
-%       .val ... n x m matrix of m additional points
-%       .col ... color used for additional points (default = [0,0,0]).
-%                  This can also be a m x 3 matrix of colors.
-%       .ls ... line style (default = '-')
-%       .lw ... line width (default = 2)
-%       .m ... marker style (default = 's')
-%       .ms ... line width (default = 8)
-%       .name ... name of legend entry (default = 'add. point')</pre>
+% options: options of plotting as instance of PestoPlottingOptions
 %
 % Return values:
 % fh: figure handle
 %
 % History: 
 % * 2012/05/31 Jan Hasenauer
+% * 2016/10/07 Daniel Weindl
 
 %% CHECK AND ASSIGN INPUTS
-% Assign parameters
-if nargin >= 1
-    parameters = varargin{1};
-else
-    error('plotMultiStarts requires a parameter object as input.');
-end
-
 % Open figure
-if nargin >= 2
-    if ~isempty(varargin{2})
-        if(isvalid(varargin{2}))
-            fh = figure(varargin{2});
-        else
-            fh = figure;
-        end
-    else
-        fh = figure;
-    end
+if nargin >= 1 && ~isempty(varargin{1}) && isvalid(varargin{1})
+    fh = figure(varargin{1});
 else
     fh = figure;
 end
 
 % Options
+options = PestoPlottingOptions();
 options.title = 'off';
 options.bounds = 'on';
 options.add_points.par = [];
@@ -66,8 +42,11 @@ options.add_points.m = 'd';
 options.add_points.ms = 8;
 options.add_points.name = 'add. point';
 
-if nargin == 3
-    options = setdefault(varargin{3},options);
+if nargin >= 2
+    if ~isa(varargin{2}, 'PestoPlottingOptions')
+        error('Third argument is not of type PestoPlottingOptions.')
+    end
+    options = setdefault(varargin{2}, options);
 end
 
 %% SORT RESULTS

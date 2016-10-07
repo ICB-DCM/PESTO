@@ -57,10 +57,6 @@ options.P.max = parameters.max;
 if isempty(options.parameter_index)
     options.parameter_index = 1:parameters.number;
 end
-%TODO: 
-options.plot_options.interval = 'dynamic';
-options.plot_options.mark_constraint = 'false';
-options.plot_options.hold_on = 'false';
 
 %% Initialization and figure generation
 fh = [];
