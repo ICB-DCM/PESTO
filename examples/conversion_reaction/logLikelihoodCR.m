@@ -1,4 +1,4 @@
-function [logL, dlogLdtheta, FIM] = logLikelihood(theta, t, Y, sigma2, scale)
+function [logL, dlogLdtheta, FIM] = logLikelihoodCR(theta, t, Y, sigma2, scale)
 % Objective function for examples/conversion_reaction
 %
 % logLikelihood.m provides the log-likelihood, its gradient and an 

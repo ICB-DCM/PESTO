@@ -70,7 +70,7 @@ parameters.max = [ 3, 3];
 parameters.number = length(parameters.name);
 
 % Log-likelihood function
-objectiveFunction = @(theta) logLikelihood(theta, t, y, sigma2, 'log');
+objectiveFunction = @(theta) logLikelihoodCR(theta, t, y, sigma2, 'log');
 
 % properties
 properties.name = {'log_{10}(k_1)','log_{10}(k_2)',...
@@ -226,7 +226,7 @@ if strcmp(options_par.mode,'visual')
     end
 end
 
-% CLosing parpool
+% Closing parpool
 if strcmp(options_par.comp_type,'parallel') && (n_workers >= 2)
     parpool('close');
 end
