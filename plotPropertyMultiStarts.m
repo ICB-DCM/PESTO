@@ -1,4 +1,4 @@
-function fh = plotPropertyMultiStarts(varargin)
+function fh = plotPropertyMultiStarts(properties, varargin)
 % plotPropertyMultiStarts plots the result of the multi-start optimization stored in properties.
 %
 % USAGE:
@@ -12,8 +12,7 @@ function fh = plotPropertyMultiStarts(varargin)
 %   and log-posterior.
 % fh: handle of figure in which profile likelihood is plotted. If no
 %   figure handle is provided, a new figure is opened.
-% options: options of plotting<pre>
-%   .title ... switches plot title of (default = 'off').</pre>
+% options: options of plotting as instance of PestoPlottingOptions
 %
 % Return values:
 % fh: figure handle
@@ -22,29 +21,17 @@ function fh = plotPropertyMultiStarts(varargin)
 % * 2015/03/03 Jan Hasenauer
 
 %% CHECK AND ASSIGN INPUTS
-% Assign parameters
-if nargin >= 1
-    properties = varargin{1};
-else
-    error('plotPropertyMultiStarts requires a property object as input.');
-end
-
 % Open figure
-if nargin >= 2
-    if ~isempty(varargin{2})
-        fh = figure(varargin{2});
-    else
-        fh = figure;
-    end
+if nargin >= 1 && ~isempty(varargin{1})
+    fh = figure(varargin{1});
 else
     fh = figure;
 end
 
 % Options
-options.title = 'off';
-options.bounds = 'on';
-if nargin == 3
-    options = setdefault(varargin{3},options);
+options = PestoPlottingOptions();
+if nargin >= 2
+    options = varargin{2};
 end
 
 %% ASSIGN COLORS
@@ -63,7 +50,7 @@ hold off;
 xlim([1-0.2,i+0.2]);
 xlabel('start');
 ylabel('log-likelihood');
-if strcmp(options.title,'on')
+if options.title
     title('all estimates');
 end
 
@@ -79,7 +66,7 @@ xlim([1-0.2,min(i,10)+0.2]);
 ylim([min(properties.MS.logPost(1),min(properties.MS.logPost(1:min(i,10)))-1),properties.MS.logPost(1)+1]);
 xlabel('start');
 ylabel('log-likelihood');
-if strcmp(options.title,'on')
+if options.title
     title('top 10 estimates');
 end
 
@@ -89,7 +76,7 @@ for j = i:-1:1
     plot(properties.MS.prop(:,j)',1:properties.number,'-o','color',Col(j,:),'linewidth',2); hold on;
 end
 plot(properties.MS.prop(:,1)',1:properties.number,'r-o','linewidth',2); hold on;
-if strcmp(options.bounds,'on')
+if options.draw_bounds
     plot(properties.min([1,1:properties.number,properties.number])',[0.99,1:properties.number,properties.number+0.01],'b--','linewidth',2); hold on;
     plot(properties.max([1,1:properties.number,properties.number])',[0.99,1:properties.number,properties.number+0.01],'b--','linewidth',2); hold on;
 end
@@ -99,7 +86,7 @@ ylabel(' ');
 xlabel('parameters values');
 set(gca,'ytick',1:properties.number,'yticklabel',properties.name)
 
-if strcmp(options.title,'on')
+if options.title
     title('estimated parameters');
 end
 drawnow;

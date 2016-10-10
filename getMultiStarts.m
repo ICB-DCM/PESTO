@@ -67,6 +67,9 @@ else
     options = PestoOptions();
 end
 
+if isempty(options.start_index)
+    options.start_index = 1:options.n_starts;
+end
 parameters = parametersSanityCheck(parameters);
 
 %% Initialization and figure generation
