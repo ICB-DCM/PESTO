@@ -47,7 +47,7 @@ classdef PestoOptions < hgsetget
         
         % vector of indices which starts should be performed.
         % default is 1:n_starts
-        start_index = 1:20;
+        start_index = [];
 
         % log-likelihood / log-posterior threshold for initialization of 
         % optimization (default = -inf).
@@ -80,7 +80,7 @@ classdef PestoOptions < hgsetget
         fh = [];
         
         % plot options for plotMultiStarts.m
-        plot_options = {};
+        plot_options = PestoPlottingOptions();
         
         % Determine whether results are saved or not.
         % * false (default): results are not saved
@@ -324,9 +324,9 @@ classdef PestoOptions < hgsetget
             if(isnumeric(value) && floor(value) == value && value > 0)
                 this.n_starts = value;
                 
-                if(~isempty(this.start_index))
-                    this.start_index = 1:this.n_starts;
-                end
+%                 if(~isempty(this.start_index))
+%                     this.start_index = 1:this.n_starts;
+%                 end
             else
                 error('PestoOptions.n_starts must be a positive integer value.');
             end
