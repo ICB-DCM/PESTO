@@ -141,10 +141,14 @@ if strcmp(options.comp_type, 'sequential')
     ftrace = options.trace;
     ftempsave  = options.tempsave;
     options.fmincon.OutputFcn = @outfun_fmincon;
-
+    
+    % initialize the waitbar
+    waitBar = waitbar(0, 'Parameter estimation in process, please wait...');
+    stringTimePrediction = updateWaitBar(0.004 * length(options.start_index) * options.fmincon.MaxIterations * parameters.number);
+    waitbar(0, waitBar, stringTimePrediction);
+    
     % Loop: Mutli-starts
     for i = 1 : length(options.start_index)
-        
         % reset the objective function
         if(options.resetobjective)
             fun = functions(objective_function);
@@ -155,7 +159,7 @@ if strcmp(options.comp_type, 'sequential')
         
         % Reset error count
         error_count = 0;
-
+        
         % Evaluation of objective function at starting point
         if strcmp(options.fmincon.GradObj,'off')
             J_0 = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
@@ -200,6 +204,7 @@ if strcmp(options.comp_type, 'sequential')
         end
         parameters.MS.t_cpu(i) = cputime - t_cpu_fmincon;
         
+        
         % Save
         if options.save
             saveResults(parameters,options,i)
@@ -211,6 +216,10 @@ if strcmp(options.comp_type, 'sequential')
             case 'text', disp(['  ' num2str(i,'%d') '/' num2str(length(options.start_index),'%d')]);
             case 'silent' % no output
         end
+        
+        % update the waitbar
+        stringTimePrediction = updateWaitBar((sum(parameters.MS.t_cpu(1:i)) / i) * (length(options.start_index) - i));
+        waitbar(i / length(options.start_index), waitBar, stringTimePrediction);
     end
     
     % Check time
@@ -218,8 +227,8 @@ if strcmp(options.comp_type, 'sequential')
     
     % Assignment
     parameters = sortMultiStarts(parameters);
-    
 end
+delete(waitBar);
 
 %% Multi-start local optimization -- PARALLEL
 if strcmp(options.comp_type,'parallel')
@@ -384,7 +393,7 @@ switch nargin
         theta   = varargin{1};
         fun     = varargin{2};
         type    = varargin{3};
-        options = varargin{4}
+        options = varargin{4};
         callFct = 'fun(theta, options)';
     otherwise
         error('Call to objective function giving too many inputs.')
@@ -506,6 +515,48 @@ catch error_msg
     end
 end
 
+end
+
+%% Waitbar Update
+function stringTimePrediction = updateWaitBar(timePredicted)
+% This function update the waitbar
+%
+% Parameters:
+% * timePredicted: Predicted time in seconds
+%   
+% Return Values:
+% * stringTimePrediction: String, Updating Message
+
+    if (timePredicted < 60)
+        stringTimePrediction = 'One minute or less...';
+    elseif (timePredicted >= 60 && timePredicted < 3600)
+        stringTimePrediction = ['About ' num2str(round(timePredicted/60)) + 1 ' minutes'];
+    elseif (timePredicted >= 3600 && timePredicted < 72000)
+        hours = floor(timePredicted/3600);
+        minutes = round((timePredicted - 3600*hours) / 600) * 10;
+        if (hours == 1)
+            stringTimePrediction = ['About 1 hour'];
+        else
+            stringTimePrediction = ['About ' num2str(hours) ' hours'];
+        end
+        if (minutes == 0)
+            stringTimePrediction = strcat(stringTimePrediction, '...');
+        else
+            stringTimePrediction = strcat(stringTimePrediction, [' and ' num2str(minutes) ' minutes...']);
+        end
+    elseif (timePredicted >= 72000 && timePredicted < 36 * 3600)
+        stringTimePrediction = 'Roughly 1 day...';
+    elseif (timePredicted >= 36 * 3600 && timePredicted < 2 * 365 * 24 * 3600)
+        stringTimePrediction = ['About ' num2str(round(timePredicted / 24 * 3600)) ' days...'];
+    elseif (timePredicted >= 2 * 365 * 24 * 3600 && timePredicted < 100 * 365 * 24 * 3600)
+        stringTimePrediction = ['Oh boy! Quite some years... Maybe about ' num2str(round(timePredicted / 365 * 24 * 3600)) ' of them...'];
+    elseif (timePredicted >= 100 * 365 * 24 * 3600 && timePredicted < 1e7 * 365 * 24 * 3600)
+        stringTimePrediction = 'Well... Maybe your children, or grand-children... No, not evem them...'; 
+    else
+        stringTimePrediction = 'Kingdoms will rise, civilization will decline, stars will fade - but your calculation...(!) ;)';
+    end
+    stringTimePrediction = ['Predicted waiting time: ', stringTimePrediction];
+    
 end
 
 function saveResults(parameters,options,i)

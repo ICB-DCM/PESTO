@@ -5,5 +5,6 @@ function runTestExamples()
 run conversion_reaction/main;
 run enzymatic_catalysis/main;
 run mRNA_transfection/main;
+run mRNA_transfection/main;
 
 end

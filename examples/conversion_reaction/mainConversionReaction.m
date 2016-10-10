@@ -95,7 +95,7 @@ properties.number = length(properties.name);
 % Options
 optionsMultistart = PestoOptions();
 optionsMultistart.obj_type = 'log-posterior';
-optionsMultistart.n_starts = 10;
+optionsMultistart.n_starts = 1000;
 optionsMultistart.comp_type = 'sequential'; optionsMultistart.mode = 'visual';
 optionsMultistart.plot_options.add_points.par = theta_true;
 optionsMultistart.plot_options.add_points.logPost = objectiveFunction(theta_true);
