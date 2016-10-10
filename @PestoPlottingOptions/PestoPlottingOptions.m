@@ -3,188 +3,223 @@
 % parameters
 
 classdef PestoPlottingOptions < hgsetget
-    %PestoPlottingOptions is class for checking and holding information on optimization
+    % PestoPlottingOptions is class for checking and holding information on optimization
     % parameters
     %
     % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
     
     properties
-    % Plot title
-    % * true: show
-    % * false: don't show
-    title = false;
-    
-%   .add_points ... option used to add additional points, e.g. true
-%           parameter in the case of test examples
-%       .val == par ... n x m matrix of m additional points
-%       .col ... color used for additional points (default = [0,0,0]).
-%                  This can also be a m x 3 matrix of colors.
-%       .ls ... line style (default = '-')
-%       .lw ... line width (default = 2)
-%       .m ... marker style (default = 's')
-%       .ms ... line width (default = 8)
-%       .name ... name of legend entry (default = 'add. point')
-%       .property_MS ... line width (default = 8).
-%  .logPost
-
-    add_points = struct('par', [], ...
-    'logPost', [], ...
-    'col', [0,0.8,0], ...
-    'ls', '-', ...
-    'lw', 1, ...
-    'm', 'd', ...
-    'ms', 8, ...
-    'name', 'add. point');
-
-    % from plitmultistarts
-    mark_contraint = false;
-    % from plotparameteruncertainty
-    subplot_size_1D = [];
-    subplot_indexing_1D = [];
-    labels = struct('y_always', true, 'y_name', []);
-    
-%   .hold_on ... indicates whether plots are redrawn or whether something
-%       is added to the plot
-%       = 'false' (default) ... new plot
-%       = 'true' ... extension of plot
-    hold_on = false;
-    
-%   .interval ... selection mechanism for x limits
-%       = 'dynamic' (default) ... x limits depending on analysis results
-%       = 'static' ... x limits depending on parameters.min and .max or on
-%          user-defined bound options.bounds.min and .max. The later are
-%          used if provided.
-    interval = 'dynamic';
-    
-%   .bounds ... bounds used for visualization if options.interval = 'static'
-%       .min ... lower bound
-%       .max ... upper bound
-    % vs:  bounds = 'on' in plotmultistarts; ->draw_bounds
-    draw_bounds = true;
-    bounds = {};
-    
-%   .P ... options for profile plots
-%       .plot_type ... plot type
-%           = 0 (default if no profiles are provided) ... no plot
-%           = 1 (default if profiles are provided) ... likelihood ratio
-%           = 2 ... negative log-likelihood
-%       .col ... color of profile lines (default: [1,0,0])
-%       .lw ... line width of profile lines (default: 1.5)
-    P = struct('plot_type', 1, 'col', [1,0,0], 'lw', 2, 'name', 'P');
-    
-%   .S ... options for sample plots
-%       .plot_type ... plot type
-%           = 0 (default if no samples are provided) ... no plot
-%           = 1 (default if samples are provided) ... histogram
-%           = 2 ... kernel-density estimates
-%       .col ... color of profile lines (default: [0.7,0.7,0.7])
-%       .hist_col ... color of histogram (default = [0.7,0.7,0.7])
-%       .bins ... number of histogram bins (default: 30)
-%           = 'optimal' ... selection using Scott's rule
-%           = 'conservative' ... selection using Scott's rule / 2
-%           = N (with N being an integer) ... N bins
-%       .sp_col ... color of scatter plot (default = [0.7,0.7,0.7])
-%       .sp_m ... marker for scatter plot (default = '.')
-%       .sp_ms ... marker size for scatter plot (default = 5)
-%       .name ... name of legend entry (default = 'S')
-    S = struct('plot_type', 0, ...
-    'bins', 'conservative', ...
-    'scaling', [], ...
-'hist_col',  [0.7,0.7,0.7], ...
-'sp_col', [0.7,0.7,0.7], ...
-'lin_col', [1,0,0], ...
-'lin_lw', 2, ...
-'sp_m', '.', ...
-'sp_ms', 5, ...
-    'col', [1,0,0], 'lw', 2, ...
-    'PT', struct('sp_m', '.', 'sp_ms', 5, 'lw', 1.5, 'ind', [], 'col', [], 'plot_type', 0), ...
-    'name', 'S');
-
-
-
-    
-%   .MS ... options for multi-start optimization plots
-%       .plot_type ... plot type
-%           = 0 (default if no MS are provided) ... no plot
-%           = 1 (default if MS are provided) ... likelihood ratio and
-%               position of optima above threshold
-%           = 2 ... negative log-likelihood and position of optima 
-%               above threshold
-%       .col ... color of local optima (default: [1,0,0])
-%       .lw ... line width of local optima (default: 1.5)
-%       .name_conv ... name of legend entry (default = 'MS - conv.')
-%       .name_nconv ... name of legend entry (default = 'MS - not conv.')
-%       .only_optimum ... only optimum is plotted
-
-    MS = struct('plot_type', 1, 'col', [1,0,0], 'lw' , 2, 'name_conv', 'MS - conv.', ...
-    'name_nconv', 'MS - not conv.', 'only_optimum', false);
-    
-%   .A ... options for distribution approximation plots
-%       .plot_type ... plot type
-%           = 0 (default if no MS are provided) ... no plot
-%           = 1 (default if MS are provided) ... likelihood ratio
-%           = 2 ... negative log-likelihood
-%       .col ... color of approximation lines (default: [0,0,1])
-%       .lw ... line width of approximation lines (default: 1.5)
-%       .sigma_level ... sigma-level which is visualized (default = 2)
-%       .name ... name of legend entry (default = 'P_{app}')
-
-    A = struct('plot_type', 1, 'col', [0,0,1], 'lw', 2, 'sigma_level', 2, 'name', 'P_{app}');
-
-    % Boundary detection
-%   .boundary ... options for boundary visualization
-%       .mark ... marking of profile points which are on the boundary
-%           = 0 ... no visualization
-%           = 1 (default) ... indicates points which ar close to the
-%               boundaries in one or more dimensions.
-%       .eps ... minimal distance from boundary for which points are
-%               consider to e close do the boundary (default = 1e-4). Note
-%               that a one-norm is used.
-    boundary = struct('mark', true, 'eps', 1e-4);
-    
-    % Confidence level
-%   .CL ... options for confidence level plots
-%       .plot_type ... plot type
-%           = 0 (default) ... no plot
-%           = 1 ... likelihood ratio
-%           = 2 ... negative log-likelihood
-%       .alpha ... visualized confidence level (default = 0.95)
-%       .type ... type of confidence interval
-%           = 'point-wise' (default) ... point-wise confidence interval
-%           = 'simultanous' ... point-wise confidence interval
-%           = {'point-wise','simultanous'} ... both
-%       .col ... color of profile lines (default: [0,0,0])
-%       .lw ... line width of profile lines (default: 1.5)
-%       .name ... name of legend entry (default = 'cut-off'):
-
-    CL = struct('plot_type', 0, ...
-        'alpha', 0.95, ...
-        'type', 'point-wise', ...
-        'col', [0,0,0], ...
-    'lw', 2,  ... 
-    'name', 'cut-off');
-    
-    % Settings for 2D plot
-
-%   .op2D ... options used for 2D plot to position subplot axes.
-%       .b1 ... offset from left and bottom border (default = 0.15)
-%       .b2 ... offset from left and bottom border (default = 0.02)
-%       .r ... relative width of subplots (default = 0.95)
-    op2D = struct('b1', 0.15, 'b2', 0.02, 'r', 0.95);
-    
-%   .legend ... legend options
-%       .color ... background color (default = 'none').
-%       .box ... legend outine (default = 'on').
-%       .orientation ... orientation of list (default = 'vertical').</pre>
-    legend = struct('color', 'none', ...
-        'box', 'on', ...
-        'orientation', 'vertical', ...
-        'position', []);
-
-%   .fontsize ... fontsize
-    %fontsize = 12;
-    fontsize = struct ('tick', 12);
-%       .tick ... fontsize for ticklabels (default = 12).</pre>
+        % Title of PESTO-generated plots
+        % * true: show
+        % * false: don't show
+        title = false;
+        
+        % Additional points to include in the plots, e.g. true
+        % parameter in the case of test examples
+        %
+        % Struct with the following fields
+        % * .par: n x m matrix of m additional points
+        % * .col: color used for additional points (default = [0,0,0]).
+        %                  This can also be a m x 3 matrix of colors.
+        % * .ls: line style (default = '-')
+        % * .lw: line width (default = 2)
+        % * .m: marker style (default = 's')
+        % * .ms: line width (default = 8)
+        % * .name: name of legend entry (default = 'add. point')
+        % * .property_MS: line width (default = 8).
+        % * .logPost
+        
+        add_points = struct('par', [], ...
+            'logPost', [], ...
+            'col', [0,0.8,0], ...
+            'ls', '-', ...
+            'lw', 1, ...
+            'm', 'd', ...
+            'ms', 8, ...
+            'name', 'add. point');
+        
+        % TODO: from plotmultistarts
+        mark_contraint = false;
+        
+        % TODO from plotparameteruncertainty
+        subplot_size_1D = [];
+        
+        % TODO
+        subplot_indexing_1D = [];
+        
+        % TODO 
+        labels = struct('y_always', true, ...
+            'y_name', []);
+        
+        % Indicates whether plots are redrawn or whether something
+        %  is added to the plot
+        % * true: extension of plot
+        % * false: new plot
+        hold_on = false;
+        
+        % Way of choosing x limits for plotting
+        % * 'dynamic': x limits depending on analysis results
+        % * 'static': x limits depending on parameters.min and .max or on
+        %          user-defined bound options.bounds.min and .max. The later are
+        %          used if provided.
+        interval = 'dynamic';
+        
+        % Draw bounds
+        % * true: yes
+        % * false: no
+        draw_bounds = true;
+        
+        % Bounds used for visualization if options.interval = 'static'
+        %
+        % struct with 
+        %  * .min: lower bound
+        %  * .max: upper bound
+        bounds = {};
+        
+        % Options for profile plots
+        %
+        % Struct with 
+        % * .plot_type: plot type
+        %   * = 0 (default if no profiles are provided) ... no plot
+        %   * = 1 (default if profiles are provided) ... likelihood ratio
+        %   * = 2 ... negative log-likelihood
+        % * .col: color of profile lines (default: [1,0,0])
+        % * .lw: line width of profile lines (default: 1.5)
+        P = struct('plot_type', 1, ...
+            'col', [1,0,0], ...
+            'lw', 2, ...
+            'name', 'P');
+        
+        % Options for sample plots
+        % * .plot_type: plot type
+        %   * = 0 (default if no samples are provided) ... no plot
+        %   * = 1 (default if samples are provided) ... histogram
+        %   * = 2 ... kernel-density estimates
+        % * .col ... color of profile lines (default: [0.7,0.7,0.7])
+        % * .hist_col ... color of histogram (default = [0.7,0.7,0.7])
+        % * .bins ... number of histogram bins (default: 30)
+        %   * = 'optimal' ... selection using Scott's rule
+        %   * = 'conservative' ... selection using Scott's rule / 2
+        %   * = N (with N being an integer) ... N bins
+        % * .sp_col: color of scatter plot (default = [0.7,0.7,0.7])
+        % * .sp_m: marker for scatter plot (default = '.')
+        % * .sp_ms: marker size for scatter plot (default = 5)
+        % * .name: name of legend entry (default = 'S')
+        S = struct('plot_type', 0, ...
+            'bins', 'conservative', ...
+            'scaling', [], ...
+            'hist_col',  [0.7,0.7,0.7], ...
+            'sp_col', [0.7,0.7,0.7], ...
+            'lin_col', [1,0,0], ...
+            'lin_lw', 2, ...
+            'sp_m', '.', ...
+            'sp_ms', 5, ...
+            'col', [1,0,0], 'lw', 2, ...
+            'PT', struct('sp_m', '.', ...
+                'sp_ms', 5, ...
+                'lw', 1.5, ...
+                'ind', [], ...
+                'col', [], ...
+                'plot_type', 0), ...
+            'name', 'S');
+        
+        % Options for multi-start optimization plots
+        %
+        % Struct with:
+        % * .plot_type: plot type
+        %   * = 0 (default if no MS are provided) ... no plot
+        %   * = 1 (default if MS are provided) ... likelihood ratio and
+        %               position of optima above threshold
+        %   * = 2 ... negative log-likelihood and position of optima
+        %               above threshold
+        % * .col: color of local optima (default: [1,0,0])
+        % * .lw: line width of local optima (default: 1.5)
+        % * .name_conv: name of legend entry (default = 'MS - conv.')
+        % * .name_nconv: name of legend entry (default = 'MS - not conv.')
+        % * .only_optimum: only optimum is plotted
+        
+        MS = struct('plot_type', 1, ...
+            'col', [1,0,0], ...
+            'lw' , 2, ...
+            'name_conv', 'MS - conv.', ...
+            'name_nconv', 'MS - not conv.', ...
+            'only_optimum', false);
+        
+        % Options for distribution approximation plots
+        % 
+        % Struct with:
+        % * .plot_type: plot type
+        %   * = 0 (default if no MS are provided) ... no plot
+        %   * = 1 (default if MS are provided) ... likelihood ratio
+        %   * = 2 ... negative log-likelihood
+        % * .col: color of approximation lines (default: [0,0,1])
+        % * .lw: line width of approximation lines (default: 1.5)
+        % * .sigma_level: sigma-level which is visualized (default = 2)
+        % * .name: name of legend entry (default = 'P_{app}')
+        
+        A = struct('plot_type', 1, ...
+            'col', [0,0,1], ...
+            'lw', 2, ...
+            'sigma_level', 2, ...
+            'name', 'P_{app}');
+        
+        % Options for boundary visualization
+        % 
+        % Struct with 
+        % * .mark: marking of profile points which are on the boundary
+        %   * = 0 ... no visualization
+        %   * = 1 (default) ... indicates points which ar close to the
+        %               boundaries in one or more dimensions.
+        % * .eps: minimal distance from boundary for which points are
+        %           consider to e close do the boundary (default = 1e-4). Note
+        %               that a one-norm is used.
+        boundary = struct('mark', true, ...
+            'eps', 1e-4);
+        
+        % Options for confidence level plots
+        % 
+        % Struct with
+        % * .plot_type: plot type
+        %   * = 0 (default) ... no plot
+        %   * = 1 ... likelihood ratio
+        %   * = 2 ... negative log-likelihood
+        % * .alpha: visualized confidence level (default = 0.95)
+        % * .type: type of confidence interval
+        %   * = 'point-wise' (default) ... point-wise confidence interval
+        %   * = 'simultanous' ... point-wise confidence interval
+        %   * = {'point-wise','simultanous'} ... both
+        % * .col: color of profile lines (default: [0,0,0])
+        % * .lw: line width of profile lines (default: 1.5)
+        % * .name: name of legend entry (default = 'cut-off')
+        
+        CL = struct('plot_type', 0, ...
+            'alpha', 0.95, ...
+            'type', 'point-wise', ...
+            'col', [0,0,0], ...
+            'lw', 2,  ...
+            'name', 'cut-off');
+        
+        % Settings for 2D plot to position subplot axes.
+        % 
+        % Struct with:
+        % * .b1 ... offset from left and bottom border (default = 0.15)
+        % * .b2 ... offset from left and bottom border (default = 0.02)
+        % * .r ... relative width of subplots (default = 0.95)
+        op2D = struct('b1', 0.15, 'b2', 0.02, 'r', 0.95);
+        
+        % Legend options
+        % * .color: background color (default = 'none').
+        % * .box: legend outine (default = 'on').
+        % * .orientation: orientation of list (default = 'vertical')
+        
+        legend = struct('color', 'none', ...
+            'box', 'on', ...
+            'orientation', 'vertical', ...
+            'position', []);
+        
+        % Fontsize for labels
+        % * .tick: fontsize for ticklabels (default = 12)
+        fontsize = struct ('tick', 12);
     end
     
     properties (Hidden)
@@ -208,7 +243,7 @@ classdef PestoPlottingOptions < hgsetget
             
             % adapted from SolverOptions
             
-            if nargin > 0 
+            if nargin > 0
                 
                 % Deal with the case where the first input to the
                 % constructor is a amioptions/struct object.
@@ -298,10 +333,7 @@ classdef PestoPlottingOptions < hgsetget
                         obj.(optionSet{1}) = ip.Results.(optionSet{1});
                     end
                 end
-            end            
-        end
-        
-
+            end
+        end        
     end
-    
 end
