@@ -31,8 +31,6 @@ end
 
 % Options
 options = PestoPlottingOptions();
-options.title = 'off';
-options.bounds = 'on';
 options.add_points.par = [];
 options.add_points.logPost = [];
 options.add_points.col = [0,0.8,0];
@@ -109,7 +107,7 @@ hold off;
 xlim([1-0.2,i+0.2]);
 xlabel('start');
 ylabel('log-likelihood');
-if strcmp(options.title,'on')
+if options.title
     title('all estimates');
 end
 
@@ -138,7 +136,7 @@ if(any(~isnan(parameters.MS.logPost(1:min(i,10)))))
 end
 xlabel('start');
 ylabel('log-likelihood');
-if strcmp(options.title,'on')
+if options.title
     title('top 10 estimates');
 end
 
@@ -148,7 +146,7 @@ for j = i:-1:1
     plot(parameters.MS.par(:,j)',1:parameters.number,'-o','color',Col(j,:),'linewidth',2); hold on;
 end
 plot(parameters.MS.par(:,1)',1:parameters.number,'r-o','linewidth',2); hold on;
-if strcmp(options.bounds,'on')
+if options.draw_bounds
     plot(parameters.min([1,1:parameters.number,parameters.number])',[0.99,1:parameters.number,parameters.number+0.01],'b--','linewidth',2); hold on;
     plot(parameters.max([1,1:parameters.number,parameters.number])',[0.99,1:parameters.number,parameters.number+0.01],'b--','linewidth',2); hold on;
 end
@@ -165,7 +163,7 @@ ylabel(' ');
 xlabel('parameters values');
 set(gca,'ytick',1:parameters.number,'yticklabel',parameters.name)
 
-if strcmp(options.title,'on')
+if options.title
     title('estimated parameters');
 end
 drawnow;

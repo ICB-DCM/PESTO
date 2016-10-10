@@ -296,7 +296,7 @@ for l = 1:length(I)
     subplot(options.subplot_size_1D(1),options.subplot_size_1D(2),options.subplot_indexing_1D(l));
     
     % Hold on/off
-    if strcmp(options.hold_on,'true')
+    if options.hold_on
         hold on;
     else
         hold off;
@@ -691,7 +691,7 @@ for l2 = 1:length(I)
                         options.op2D.r*d,options.op2D.r*d]);
     
     % Hold on/off
-    if strcmp(options.hold_on,'true')
+    if options.hold_on
         hold on;
     else
         hold off;

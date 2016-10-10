@@ -59,8 +59,8 @@ classdef PestoPlottingOptions < hgsetget
 %   .bounds ... bounds used for visualization if options.interval = 'static'
 %       .min ... lower bound
 %       .max ... upper bound
-    % vs:  bounds = 'on' in plotmultistarts;
-
+    % vs:  bounds = 'on' in plotmultistarts; ->draw_bounds
+    draw_bounds = true;
     bounds = {};
     
 %   .P ... options for profile plots
@@ -70,7 +70,7 @@ classdef PestoPlottingOptions < hgsetget
 %           = 2 ... negative log-likelihood
 %       .col ... color of profile lines (default: [1,0,0])
 %       .lw ... line width of profile lines (default: 1.5)
-    P = struct('plot_type', 0, 'col', [1,0,0], 'lw', 2, 'name', 'P');
+    P = struct('plot_type', 1, 'col', [1,0,0], 'lw', 2, 'name', 'P');
     
 %   .S ... options for sample plots
 %       .plot_type ... plot type
