@@ -70,7 +70,7 @@ parameters.max = [ 3, 3];
 parameters.number = length(parameters.name);
 
 % Log-likelihood function
-objectiveFunction = @(theta) logLikelihood(theta, t, y, sigma2, 'log');
+objectiveFunction = @(theta) logLikelihoodCR(theta, t, y, sigma2, 'log');
 
 % properties
 properties.name = {'log_{10}(k_1)','log_{10}(k_2)',...
