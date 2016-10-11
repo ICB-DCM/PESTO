@@ -3,24 +3,27 @@
 
 classdef PestoOptions < hgsetget
     %PestoOptions provides an option container to pass options to various
-    %PESTO functions. Not all options are used by all functions.
+    %PESTO functions. Not all options are used by all functions, consult the respective function documentation for details.
     %
     % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
     
     properties
         % Type of objective function provided:
         % 'log-posterior' (default) or 'negative log-posterior'
-        % Tells the algorithm that log-posterior or log-likelihood are provided so it perfroms
+        %
+        % Tells the algorithm that log-posterior or log-likelihood are provided so it performs
         % a maximization of the objective function or that the negative
         % log-posterior or negative log-likelihood are provided so that
         % a minimization of the objective function is performed.
-        % Needed in
+
         obj_type = 'log-posterior';
         
         % Perform calculations sequantially (''sequential'', default), or
         % in parallel (''parallel''). Parallel mode will speed-up the
-        % calculations on multi-core systems, but requires the parallel
-        % toolbox to be installed.
+        % calculations on multi-core systems, but requires the 
+        % [MATLAB Parallel Computing Toolbox](https://mathworks.com/products/parallel-computing/) 
+        % to be installed.
+        
         comp_type = 'sequential';
         
         % Options for the fmincon local optimizer. See
@@ -42,7 +45,7 @@ classdef PestoOptions < hgsetget
         %                   'MaxSQPIter',100*parameters.number);
 
         
-        % (getMultiStarts) Number of local optimizations (default = 20).
+        % Number of local optimizations.
         n_starts = 20;
         
         % vector of indices which starts should be performed.
@@ -154,7 +157,8 @@ classdef PestoOptions < hgsetget
         %           too small.
         options_getNextPoint = struct('mode', 'multi-dimensional', ...
             'guess', 1e-2, ...
-            'min', 1e-6, 'max', 1e2, ...
+            'min', 1e-6, ...
+            'max', 1e2, ...
             'update', 1.25);
         
         % flag for profile calculation

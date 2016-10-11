@@ -3,6 +3,7 @@ function fh = plotPropertySamples(properties, varargin)
 % Note: This routine provides an interface for plotPropertyUncertainty.m.
 %
 % USAGE:
+% fh = plotPropertySamples(properties)
 % fh = plotPropertySamples(properties,type)
 % fh = plotPropertySamples(properties,type,fh)
 % fh = plotPropertySamples(properties,type,fh,I)
@@ -46,25 +47,21 @@ end
 
 % Index of subplot which is updated
 I = 1:parameters.number;
-if nargin >= 3
-    if ~isempty(varargin{3})
-        I = varargin{3};
-        if ~isnumeric(I) || max(abs(I - round(I)) > 0)
-            error('I is not an integer vector.');
-        end
+if nargin >= 3 && ~isempty(varargin{3})
+    I = varargin{3};
+    if ~isnumeric(I) || max(abs(I - round(I)) > 0)
+        error('I is not an integer vector.');
     end
 end
-
-% Options
-% General plot options
-options = PestoPlottingOptions();
 
 % Assignment of user-provided options
 if nargin >= 4
     if ~isa(varargin{4}, 'PestoPlottingOptions')
         error('Argument 4 is not of type PestoPlottingOptions.')
     end
-    options = setdefault(varargin{4},options);
+    options = varargin{4};
+else
+    options = PestoPlottingOptions();
 end
 
 %% Call plotUncertainty.m

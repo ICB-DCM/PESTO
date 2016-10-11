@@ -10,6 +10,27 @@ function [properties,fh] = getPropertyProfiles(properties, parameters, objective
 % [...] = getPropertyProfiles(properties,parameters,objective_function,property_name,options)
 % [parameters,fh] = getPropertyProfiles(...)
 %
+% % getPropertyProfiles() uses the following PestoOptions members:
+%  * PestoOptions::plot_options
+%  * PestoOptions::property_index
+%  * PestoOptions::mode
+%  * PestoOptions::fh
+%  * PestoOptions::fmincon
+%  * PestoOptions::save
+%  * PestoOptions::foldername
+%  * PestoOptions::comp_type
+%  * PestoOptions::obj_type
+%  * PestoOptions::MAP_index
+%  * PestoOptions::boundary
+%  * PestoOptions::options_getNextPoint .guess .min .max .update .mode
+%  * PestoOptions::R_min
+%  * PestoOptions::calc_profiles
+%  * PestoOptions::dR_max
+%  * PestoOptions::dJ
+%
+% and sets:
+% * PestoOptions::P .min .max
+%
 % Parameters:
 % varargin:
 % properties: property struct containing at least:<pre>
