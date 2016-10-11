@@ -7,6 +7,11 @@ function fh = plotMultiStarts(parameters, varargin)
 % fh = plotMultiStarts(parameters,fh)
 % fh = plotMultiStarts(parameters,fh,options)
 %
+% plotMultiStarts() uses the following PestoPlottingOptions members:
+%  * PestoPlottingOptions::add_points
+%  * PestoPlottingOptions::title
+%  * PestoPlottingOptions::draw_bounds
+%
 % Parameters:
 % parameters: parameter struct containing information about parameters
 %   and log-posterior.

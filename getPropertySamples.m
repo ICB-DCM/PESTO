@@ -6,6 +6,16 @@ function [properties,fh] = getPropertySamples(properties, parameters, varargin)
 % [...] = getPropertySamples(properties,parameters,options)
 % [parameters,fh] = getPropertySamples(...)
 %
+% getPropertySamples() uses the following PestoOptions members:
+%  * PestoOptions::property_index
+%  * PestoOptions::mode
+%  * PestoOptions::fh
+%  * PestoOptions::thinning
+%  * PestoOptions::save
+%  * PestoOptions::foldername
+%  * PestoOptions::comp_type
+%  * PestoOptions::plot_options
+%
 % Parameters:
 % properties: property struct containing at least:<pre>
 %   .number ... number of parameter

@@ -9,6 +9,24 @@ function fh = plotParameterUncertainty(parameters, varargin)
 % fh = plotParameterUncertainty(parameters,type,fh,I)
 % fh = plotParameterUncertainty(parameters,type,fh,I,options)
 %
+% plotMultiStarts() uses the following PestoPlottingOptions members:
+%  * PestoPlottingOptions::P
+%  * PestoPlottingOptions::S
+%  * PestoPlottingOptions::MS
+%  * PestoPlottingOptions::boundary
+%  * PestoPlottingOptions::subplot_size_1D
+%  * PestoPlottingOptions::subplot_indexing_1D
+%  * PestoPlottingOptions::CL
+%  * PestoPlottingOptions::hold_on
+%  * PestoPlottingOptions::interval
+%  * PestoPlottingOptions::bounds
+%  * PestoPlottingOptions::A
+%  * PestoPlottingOptions::add_points
+%  * PestoPlottingOptions::labels
+%  * PestoPlottingOptions::legend
+%  * PestoPlottingOptions::op2D
+%  * PestoPlottingOptions::fontsize
+%
 % Parameters:
 % varargin:
 % parameters: parameter struct containing information about parameters

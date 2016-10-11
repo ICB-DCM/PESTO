@@ -10,6 +10,26 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
 % [...] = getParameterProfiles(parameters,objective_function,options)
 % [parameters,fh] = getParameterProfiles(...)
 %
+% % getParameterProfiles() uses the following PestoOptions members:
+%  * PestoOptions::parameter_index
+%  * PestoOptions::mode
+%  * PestoOptions::fh
+%  * PestoOptions::fmincon
+%  * PestoOptions::save
+%  * PestoOptions::foldername
+%  * PestoOptions::comp_type
+%  * PestoOptions::obj_type
+%  * PestoOptions::plot_options
+%  * PestoOptions::MAP_index
+%  * PestoOptions::options_getNextPoint .guess .min .max .update .mode
+%  * PestoOptions::R_min
+%  * PestoOptions::calc_profiles
+%  * PestoOptions::dR_max
+%  * PestoOptions::dJ
+%
+% and sets:
+% * PestoOptions::P .min .max
+%
 % Parameters:
 % varargin:
 %  parameters: parameter struct containing at least
@@ -89,7 +109,7 @@ if options.save
 end
 
 %% Profile calculation -- SEQUENTIAL
-if strcmp(options.comp_type,'sequential') && strcmp(options.calc_profiles,'true')
+if strcmp(options.comp_type,'sequential') && options.calc_profiles
 
 % Profile calculation
 for i = options.parameter_index
@@ -195,7 +215,7 @@ end
 end
 
 %% Profile calculation -- PARALLEL
-if strcmp(options.comp_type,'parallel') && strcmp(options.calc_profiles,'true')
+if strcmp(options.comp_type,'parallel') && options.calc_profiles
 
 % Assignement of profile
 P = parameters.P;
@@ -400,15 +420,17 @@ end
 end
 
 
-%% Objetive function interface
+%% Objective function interface
+function varargout = obj(theta,fun,type,I)
 % This function is used as interface to the user-provided objective
 % function. It adapts the sign and supplies the correct number of outputs.
 % Furthermore, it catches errors in the user-supplied objective function.
-%   theta ... parameter vector
-%   fun ... user-supplied objective function
-%   type ... type of user-supplied objective function
-%   I ... index set of optimized parameters
-function varargout = obj(theta,fun,type,I)
+%
+% Parameters:
+%   theta: parameter vector
+%   fun: user-supplied objective function
+%   type: type of user-supplied objective function
+%   I: index set of optimized parameters
 
 try
     switch nargout
