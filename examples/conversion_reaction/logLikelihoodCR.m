@@ -6,16 +6,16 @@ function [logL, dlogLdtheta, FIM] = logLikelihoodCR(theta, t, Y, sigma2, scale)
 % (FIM) for the conversion reaction process.
 % 
 % Parameters:
-% * theta: Model parameters [theta_1, theta_2]'
-% * t: vector of time points
-% * Y: measurement vector
-% * sigma2: variance of the measurements (noise)
-% * scale: 'lin' or 'log'
+%  theta: Model parameters [theta_1, theta_2]'
+%  t: vector of time points
+%  Y: measurement vector
+%  sigma2: variance of the measurements (noise)
+%  scale: 'lin' or 'log'
 %
 % Return values:
-% * logL: double, value of log-likelihood
-% * dlogLdtheta: double vector, gradient of log-likelihood
-% * FIM: double array, negative Fisher information matrix, 
+%  logL: double, value of log-likelihood
+%  dlogLdtheta: double vector, gradient of log-likelihood
+%  FIM: double array, negative Fisher information matrix, 
 %   an approximation of Hessian of log-likelihood
 
 
