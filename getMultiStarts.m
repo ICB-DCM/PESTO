@@ -30,7 +30,6 @@ function [parameters,fh] = getMultiStarts(parameters, objective_function, vararg
 %  * PestoOptions::plot_options
 %
 % Parameters:
-%  varargin: 
 %  parameters: parameter struct containing at least
 %    * .number: Number of parameters
 %    * .guess: Initial guess for each parameter
@@ -44,6 +43,7 @@ function [parameters,fh] = getMultiStarts(parameters, objective_function, vararg
 %       be used by setting the respective PestoOption
 % objective_function: objective function to be optimized. 
 %     This function should accept exactly one input, the parameter vector.
+%  varargin: 
 % options: A PestoOptions object holding various options for the algorithm.
 %
 % Return values:
@@ -61,7 +61,7 @@ function [parameters,fh] = getMultiStarts(parameters, objective_function, vararg
 %       * .exitflag(i): exitflag the optimizer returned for ith MAP
 %       * .par_trace(:,:,i): parameter trace for ith MAP
 %       * .fval_trace(:,i): objective function value trace for ith MAP
-%       * .time_trace(:,i): computation time trace for ith MAP</pre>
+%       * .time_trace(:,i): computation time trace for ith MAP
 % fh: figure handle
 %
 % History:

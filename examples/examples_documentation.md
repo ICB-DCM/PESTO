@@ -1,7 +1,9 @@
 Examples  {#examples}
 ========
 
-## Overview ##          {#overview}
+# Examples {#examples}
+
+## Overview {#overview}
 
 PESTO comes with a number of ready-to-run examples to demonstrate its usage and functionality. All examples come from the life science field. The are examples based on ordinary and partial differential equation (ODE / PDE), and Gaussian mixture models. More background information is provided in the respective example folder in the `main.m` script.
 

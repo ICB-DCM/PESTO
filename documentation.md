@@ -47,7 +47,7 @@ The end-user interface is provided by the MATLAB functions and classes in the to
 
 PESTO implements a number of state-of-the-art algorithms related to parameter estimations. The main features are described below. Various [Examples](@ref examples) demonstrate their application.
 
-## Global optimization ###
+## Global optimization ### {#global-optimization}
 
 Non-linear optimization problems can have multiple optima. Their number, location and values are usually not known in advance. Usually the user is interested in obtaining the global optimum. However, this would mean, that the whole parameter space has to be searched, which is computationally prohibitive.
 
@@ -55,15 +55,21 @@ One strategy for obtaining the global optimum is multi-start local optimization:
 
 This functionality is provided in getMultiStarts.m, getPropertyMultiStarts.m and the respective plotting routines plotMultiStarts.m and plotPropertyMultiStarts.m.
 
-## Sensitivity analysis / Confidence Intervals ### 
+## Sensitivity analysis / Confidence Intervals ### {#confidence-intervals}
 
 TODO: Explain Sensitivity analysis 
 
-## Profile likelihood ### 
+getParameterConfidenceIntervals()
+* Threshold based confidence intervals using profile likelihood or local approximation and the probability mass
+* Mass based confidence intervals from local approximation.
+* Bayesian confidence interval Confidence intervals computed using [profile likelihood](@ref profile-likelihood)
+
+
+## Profile likelihood ### {#profile-likelihood}
 
 TODO
 
-## Parameter sampling ### 
+## Parameter sampling ### {#parameter-sampling}
 
 TODO
 

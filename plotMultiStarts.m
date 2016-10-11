@@ -15,6 +15,7 @@ function fh = plotMultiStarts(parameters, varargin)
 % Parameters:
 % parameters: parameter struct containing information about parameters
 %   and log-posterior.
+% varargin:
 % fh: handle of figure in which profile likelihood is plotted. If no
 %   figure handle is provided, a new figure is opened.
 % options: options of plotting as instance of PestoPlottingOptions

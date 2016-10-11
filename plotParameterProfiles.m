@@ -14,6 +14,7 @@ function fh = plotParameterProfiles(parameters, varargin)
 %       and results of optimization (.MS) and uncertainty analysis
 %       (.P and .S). This structures is the output of plotMultiStarts.m,
 %       getProfiles.m or plotSamples.m.
+% varargin:
 % type: string indicating the type of visualization: '1D' or '2D'
 % fh: handle of figure. If no figure handle is provided, a new figure
 %       is opened.
