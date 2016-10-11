@@ -17,32 +17,38 @@ function [properties,fh] = getPropertySamples(properties, parameters, varargin)
 %  * PestoOptions::plot_options
 %
 % Parameters:
-% properties: property struct containing at least:<pre>
-%   .number ... number of parameter
-%   .min ... lower bound for property values       
-%   .max ... upper bound for property values       
-%   .name = {'name1',...} ... names of the parameters       
-%   .function = {'function1',...} ... functions to evaluate property  
+% properties: property struct
+% parameters: parameter struct
+% varargin:
+% options: A PestoOptions object holding various options for the algorithm.
+%
+% Required fields of properties:
+%  number: number of parameter
+%  min: lower bound for property values       
+%  max: upper bound for property values       
+%  name: = {'name1',...} ... names of the parameters       
+%  function: = {'function1',...} ... functions to evaluate property  
 %       values. These functions provide the values of the respective  
 %       properties and the corresponding 1st and 2nd order
-%       derivatives.</pre>
-% parameters: parameter struct containing at least:<pre>
-%   .S ... parameter and posterior sample.
-%       .logPost ... log-posterior function along chain
-%       .par  ... parameters along chain
-%   Note: This struct is obtained using getSamples.m.</pre>
-% options: A PestoOptions object holding various options for the algorithm.
-%  
+%       derivatives.
+%
+% Required fields of parameters:
+%   S: parameter and posterior sample.
+%        * logPost ... log-posterior function along chain
+%        * par  ... parameters along chain
+%   *Note* This struct is obtained using getSamples.m.
+%
 % Return values:
-% properties: updated parameter object containing:<pre>
-%   .S ... properties for sampling results
-%       .par(*,i) ... ith samples parameter vector
-%       .logPost(i) ... log-posterior for ith samples parameter vector
-%       .prop(j,i) ... values of jth property for ith samples parameter 
-%           vector
-%       .prop_Sigma(*,*,i) ... covariance of properties for ith samples 
-%           parameter vector</pre>
+% properties: updated parameter object
 % fh: figure handle
+%
+% Generated fields of properties:
+%  S: properties for sampling results
+%     * par(*,i): ith samples parameter vector
+%     * logPost(i): log-posterior for ith samples parameter vector
+%     * prop(j,i): values of jth property for ith samples parameter vector
+%     * prop_Sigma(*,*,i): covariance of properties for ith samples 
+%           parameter vector
 %
 % History:
 % * 2015/04/01 Jan Hasenauer

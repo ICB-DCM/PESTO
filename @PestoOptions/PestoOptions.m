@@ -25,25 +25,15 @@ classdef PestoOptions < hgsetget
         % to be installed.
         
         comp_type = 'sequential';
-        
-        % Options for the fmincon local optimizer. See
-        % ```help('fmincon')```.
+
+        % Options for the fmincon local optimizer. See *help('fmincon')*
+        % MaxIter: fmincon default, necessary to be set for tracing
         fmincon = optimoptions('fmincon',...
             'algorithm','interior-point',...
             'Display','off', ...
             'SpecifyObjectiveGradient',true, ...
             'PrecondBandWidth', inf, ...
-            'SpecifyConstraintGradient', false); % MaxIter: fmincon default, necessary to be set for tracing
-        % from getPropertyProfiles: 
-        % options.fmincon = optimset('algorithm','active-set',...
-        %                   'display','off',...
-        %                   'GradObj','on',...
-        %                  'GradConstr','on',...
-        %                   'MaxIter',300,...
-        %                   'MaxFunEvals',300*parameters.number,...
-        %                   'TolCon',1e-4,...
-        %                   'MaxSQPIter',100*parameters.number);
-
+            'SpecifyConstraintGradient', false); 
         
         % Number of local optimizations.
         n_starts = 20;
@@ -86,13 +76,13 @@ classdef PestoOptions < hgsetget
         plot_options = PestoPlottingOptions();
         
         % Determine whether results are saved or not.
-        % * false (default): results are not saved
+        % * false: results are not saved
         % * true: results are stored to an extra folder
         save = false;
        
         % determine whether objective function, parameter values and
         % computation time are stored over iterations
-        % * false (default):  not saved
+        % * false:  not saved
         % * true: stored in fields par_trace, fval_trace and time_trace
         trace = false;
         
