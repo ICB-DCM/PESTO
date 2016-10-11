@@ -1,24 +1,26 @@
-function parameters = getParameterConfidenceIntervals(parameters,alpha)
+function parameters = getParameterConfidenceIntervals(parameters, alpha)
 % getParameterConfidenceIntervals() calculates the confidence intervals based on
 %   the Hessian at the maximum a posteriori estimate or profiles.
 %
 % USAGE:
-% parameters = getParameterConfidenceIntervals(parameters,alpha)
+% parameters = getParameterConfidenceIntervals(parameters, alpha)
 %
 % Parameters:
-% parameters: parameter struct
+% parameters: parameter struct (see e.g. getMultiStarts())
 % alpha: vector of confidence levels
 %
 % Return values:
-% parameters: <pre>
-%     .CI ... Information about confidence levels
-%   Threshold based confidence intervals:
-%     .local_PL ... from local approximation.
-%     .PL ... from profiles.
-%   Mass based confidence intervals:
-%     .local_B ... from local approximation.
-%   Bayesian confidence interval:
-%     .S ... using percentiles.</pre>
+% parameters
+%
+% Generated fields of parameters:
+%   * .CI: Information about confidence levels
+% * Threshold based confidence intervals:
+%   * .local_PL: from local approximation (requires parameters.MS to be set, e.g. by getMultiStarts())
+%   * .PL: from profiles (requires parameters.P to be set, e.g. by getParameterProfiles())
+% * Mass based confidence intervals:
+%   * .local_B: from local approximation (requires parameters.MS to be set, e.g. by getMultiStarts())
+% * Bayesian confidence interval:
+%   * .S: using percentiles (requires parameters.S to be set, e.g. by getParameterSamples())
 %
 % History:
 % * 2013/11/29 Jan Hasenauer

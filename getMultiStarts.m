@@ -11,6 +11,24 @@ function [parameters,fh] = getMultiStarts(parameters, objective_function, vararg
 % * [...] = getMultiStarts(parameters,objective_function,options)
 % * [parameters,fh] = getMultiStarts(...)
 %
+% getMultiStarts() uses the following PestoOptions members:
+%  * PestoOptions::start_index
+%  * PestoOptions::n_starts
+%  * PestoOptions::mode
+%  * PestoOptions::fh
+%  * PestoOptions::fmincon
+%  * PestoOptions::rng
+%  * PestoOptions::proposal
+%  * PestoOptions::save
+%  * PestoOptions::foldername
+%  * PestoOptions::trace
+%  * PestoOptions::comp_type
+%  * PestoOptions::tempsave
+%  * PestoOptions::resetobjective
+%  * PestoOptions::obj_type
+%  * PestoOptions::init_threshold
+%  * PestoOptions::plot_options
+%
 % Parameters:
 %  varargin: 
 %  parameters: parameter struct containing at least

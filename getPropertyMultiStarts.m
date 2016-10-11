@@ -7,6 +7,13 @@ function [properties,fh] = getPropertyMultiStarts(properties, parameters, vararg
 % [...] = getPropertyMultiStarts(properties,parameters,options)
 % [parameters,fh] = getPropertyMultiStarts(...)
 %
+% getPropertyMultiStarts() uses the following PestoOptions members:
+%  * PestoOptions::mode
+%  * PestoOptions::fh
+%  * PestoOptions::save
+%  * PestoOptions::foldername
+%  * PestoOptions::comp_type
+%
 % Parameters:
 % varargin:
 % properties: property struct containing at least:
