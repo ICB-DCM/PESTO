@@ -89,7 +89,7 @@ if options.save
 end
 
 %% Profile calculation -- SEQUENTIAL
-if strcmp(options.comp_type,'sequential') && strcmp(options.calc_profiles,'true')
+if strcmp(options.comp_type,'sequential') && options.calc_profiles
 
 % Profile calculation
 for i = options.parameter_index
@@ -195,7 +195,7 @@ end
 end
 
 %% Profile calculation -- PARALLEL
-if strcmp(options.comp_type,'parallel') && strcmp(options.calc_profiles,'true')
+if strcmp(options.comp_type,'parallel') && options.calc_profiles
 
 % Assignement of profile
 P = parameters.P;

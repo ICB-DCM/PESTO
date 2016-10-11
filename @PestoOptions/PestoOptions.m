@@ -158,9 +158,9 @@ classdef PestoOptions < hgsetget
             'update', 1.25);
         
         % flag for profile calculation
-        % * 'true' (default): profiles are calculated
-        % * 'false': profiles are not calculated
-        calc_profiles = 'true';
+        % * true: profiles are calculated
+        % * false: profiles are not calculated
+        calc_profiles = true;
         
         % flag for profile reoptimization
         % * 'true': profiles are reoptimized
