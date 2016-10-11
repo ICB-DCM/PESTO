@@ -5,13 +5,13 @@ function [f, grad_f] = propertyFunction_x2(theta, T, scale)
 % derivatives
 %
 % Parameters: 
-% * theta: Model parameters [theta_1, theta_2]'
-% * T: stopping time for simulation
-% * scale: 'lin' or 'log'
+%  theta: Model parameters [theta_1, theta_2]'
+%  T: stopping time for simulation
+%  scale: 'lin' or 'log'
 %
 % Return values:
-% * f: double, value of property function
-% * grad_f: double vector, gradient of property function
+%  f: double, value of property function
+%  grad_f: double vector, gradient of property function
 
 
 

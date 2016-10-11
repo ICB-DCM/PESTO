@@ -5,11 +5,11 @@ function [y] = simulateConversionReaction(theta, t)
 % reaction model for the given timepoints t and parameters theta
 %
 % Parameters:
-% * theta: Model parameters [theta_1, theta_2]'
-% * t: vector of time points
+%  theta: Model parameters [theta_1, theta_2]'
+%  t: vector of time points
 %
 % Return values:
-% * y: double vector, values of the observable Y = [x_2] at time points t
+%  y: double vector, values of the observable Y = [x_2] at time points t
 
 
 
