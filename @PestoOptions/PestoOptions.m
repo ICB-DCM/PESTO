@@ -161,12 +161,7 @@ classdef PestoOptions < hgsetget
         % * true: profiles are calculated
         % * false: profiles are not calculated
         calc_profiles = true;
-        
-        % flag for profile reoptimization
-        % * 'true': profiles are reoptimized
-        % * 'false' (default): profiles are not reoptimized
-        reopt_profile = 'false';
-        
+                
         % index MAP parameter vector starting from which the
         %       profile is calculated. This option is helpful if local
         %       optima are present.
