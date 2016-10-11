@@ -1,5 +1,5 @@
-PESTO 1.0 Documentation {#doc}
-=======================
+PESTO Documentation {#doc}
+===================
 
 # Introduction         {#intro}
 
@@ -7,41 +7,51 @@ Computational models are commonly used in diverse disciplines such as computatio
 
 PESTO is a freely available Parameter EStimation TOolbox for MATLAB (MathWorks) implementing a number of state-of-the-art algorithms for parameter estimation. It provides the following features, which are explained in more detail [below](@ref features):
 
-* Global optimization based on multi-start optimization
-* Visualization routines for ... 
-* Sampling routines for ....
+* Global optimization based on multi-start local optimization
+* Parameter sampling
 * Profile-likelihood analysis ...
-* Parallel processing (requires MATLAB Parallel Toolbox) 
+* Visualization routines for all above analysis
+* Parallel processing (requires [MATLAB Parallel Computing Toolbox](https://mathworks.com/products/parallel-computing/)) 
 * ...
 
-PESTO functions can be applied to any user-provided model with an objective function that can be evaluated in MATLAB. The user needs to provide such an objective function as well as bounds for the function parameters and may specify a number of additional options.
-
+PESTO functions can be applied to any user-provided formulation of an optimization problem with an objective function that can be evaluated in MATLAB. Besides the objective function, upper and lower bounds for the function parameters need to be specified.
 
 # Availability         {#availability}
 
-PESTO can be freely obtained from https://github.com/ICB-DCM/PESTO/ by downloading the an .... archive or cloning the `git` repository.
+PESTO can be freely obtained from https://github.com/ICB-DCM/PESTO/ by downloading the zip archive at https://github.com/ICB-DCM/PESTO/archive/master.zip or cloning the `git` repository via `
+```
+git clone git@github.com:ICB-DCM/PESTO.git
+```
 
 # Installation         {#installation}
 
-If the packed archive was downloaded, it needs to be unzipped and the main folder has to added to the matlab path. 
+If the zip archive was downloaded, it needs to be unzipped and the main folder has to added to the MATLAB search path. 
 
-If the repository was cloned, only the main folder needs to be added to the MATLAB path
+If the repository was cloned, the main folder needs to be added to the MATLAB search path.
+
+Detailed instructions on how to modify your MATLAB search path are provided here: https://de.mathworks.com/help/matlab/matlab_env/add-remove-or-reorder-folders-on-the-search-path.html
 
 # Licensing         {#licensing}
 
+**TODO**
+
 # How to cite         {#citation}
+
+This section will be updated upon publication of PESTO.
 
 # Code organisation         {#org}
 
-The end-user interface is provided by the MATLAB functions and classes in the top-level directory. PESTO examples application are provided in `/examples/`. All other folders contain files used internally in PESTO.
+The end-user interface is provided by the MATLAB functions and classes in the top-level directory. PESTO examples application are provided in `/examples/`. All other folders only contain files used internally in PESTO.
 
 # Features ## {#features}
 
-## Global optimization ### 
+PESTO implements a number of state-of-the-art algorithms related to parameter estimations. The main features are described below. Various [Examples](@ref examples) demonstrate their application.
+
+## Global optimization ###
 
 Non-linear optimization problems can have multiple optima. Their number, location and values are usually not known in advance. Usually the user is interested in obtaining the global optimum. However, this would mean, that the whole parameter space has to be searched, which is computationally prohibitive.
 
-One strategy for obtaining global optima is the multi-start local optimization: Here random points from across the parameter space are chosen as starting points for local optimization. If an adequate number of starting points spanning the whole parameter space has been chosen, the lowest/highest minimum/maximum is the global minimum/maximum.
+One strategy for obtaining the global optimum is multi-start local optimization: Here, random points from across the parameter space are chosen as starting points for local optimization. If an adequate number of starting points spanning the whole parameter space has been chosen, the lowest/highest minimum/maximum is the global minimum/maximum.
 
 This functionality is provided in getMultiStarts.m, getPropertyMultiStarts.m and the respective plotting routines plotMultiStarts.m and plotPropertyMultiStarts.m.
 
@@ -50,6 +60,10 @@ This functionality is provided in getMultiStarts.m, getPropertyMultiStarts.m and
 TODO: Explain Sensitivity analysis 
 
 ## Profile likelihood ### 
+
+TODO
+
+## Parameter sampling ### 
 
 TODO
 
