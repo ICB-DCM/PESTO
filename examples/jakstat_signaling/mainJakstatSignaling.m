@@ -1,4 +1,4 @@
-% Main file of the JAkstat signaling example
+% Main file of the JakStat signaling example
 %
 % Demonstrates the use of:
 % * getMultiStarts()
@@ -15,7 +15,7 @@
 % The data used is measurement data provided in the publications.
 %
 % This file performs a multistart local optimization based on measured data 
-% from ..., demonstrating the use of getMultiStarts().
+% from the referenced papers, demonstrating the use of getMultiStarts().
 
 
 %% Preliminary
@@ -35,7 +35,7 @@ set(0,TextSizes);
 % al.
 
 [exdir,~,~]=fileparts(which('mainJakstatSignaling.m'));
-% amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 0);
+amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 0);
 
 %% Data
 % Experimental data is read out from an .xls-file and written to an AMICI
@@ -75,7 +75,7 @@ objectiveFunction = @(theta) logLikelihoodJakstat(theta, amiData);
 
 % PestoOptions
 optionsMultistart           = PestoOptions();
-optionsMultistart.n_starts  = 5;
+optionsMultistart.n_starts  = 20;
 optionsMultistart.trace     = true;
 optionsMultistart.mode      = 'visual';
 optionsMultistart.fmincon   = optimoptions('fmincon',...

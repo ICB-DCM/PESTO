@@ -1,17 +1,12 @@
 function [model] = jakstat_pesto_syms()
-% propertyFunction_x2 for examples/conversion_reaction
+% jakstat_pesto_syns for examples/jakstat_signaling
 %
-% returns the value of x_2 at time T as defined in logLikelihood.m with 
-% derivatives
+% creates an amimodel-object for the AMICI solver
 %
 % Parameters: 
-% * theta: Model parameters [theta_1, theta_2]'
-% * T: stopping time for simulation
-% * scale: 'lin' or 'log'
-%
+% 
 % Return values:
-% * f: double, value of property function
-% * grad_f: double vector, gradient of property function
+%  model: amimodel object
 
 
 

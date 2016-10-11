@@ -6,13 +6,13 @@ function performNewMeasurement(theta, nMeasure, nTimepoints, sigma2)
 % measurements with different initial conditions of the chemical species.
 % 
 % Parameters:
-% * theta: Model parameters [theta_1, theta_2, theta_3, theta_4]'
-% * nMeasure: number of experiments
-% * nTimepoints: number of Time points (equidistad between 0 and 5)
-% * sigma2: variance of the measurements (noise)
+%  theta: Model parameters [theta_1, theta_2, theta_3, theta_4]'
+%  nMeasure: number of experiments
+%  nTimepoints: number of Time points (equidistad between 0 and 5)
+%  sigma2: variance of the measurements (noise)
 %
 % Return values:
-% * No return values, but the files getInitialConcentrations.m and
+%  No return values, but the files getInitialConcentrations.m and
 %   getMeasuredData.m are written to the folder of this example
     
 

@@ -6,15 +6,15 @@ function varargout = logLikelihoodJakstat(theta, amiData)
 % defined in jakstat_pesto_syms.m
 % 
 % Parameters:
-% * theta: Model parameters 
-% * amiData: an amidata object for the AMICI solver
+%  theta: Model parameters 
+%  amiData: an amidata object for the AMICI solver
 %
 % Return values:
-% * [llh] = ... : Only the LogLikelihood will be returned, no sensitivity
+%  [llh] = ... : Only the LogLikelihood will be returned, no sensitivity
 %   analysis is performed
-% * [llh, sllh] = ... : The LogLikelihood and its gradient will be 
+%  [llh, sllh] = ... : The LogLikelihood and its gradient will be 
 %   returned, first order adjoint sensitivity analysis is performed
-% * [llh, sllh, s2llh] = ... : The LogLikelihood, its gradient and the 
+%  [llh, sllh, s2llh] = ... : The LogLikelihood, its gradient and the 
 %   Hessian matrix will be returned, second order adjoint sensitivity 
 %   analysis is performed
 
