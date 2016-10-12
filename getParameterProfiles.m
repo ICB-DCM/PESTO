@@ -1,16 +1,20 @@
 function [parameters,fh] = getParameterProfiles(parameters, objective_function, varargin)
-% getParameterProfiles.m calculates the profiles of a user-supplied function,
-%   starting from the maximum a posteriori estimate.
+% getParameterProfiles.m calculates the profiles of a user-supplied 
+% function, starting from the maximum a posteriori estimate. This
+% calculation is done by fixing the i-th parameter and repeatedly
+% reoptimizing the likelihood/posterior estimate (for all i). The initial 
+% guess for the next reoptimization point is computed by extrapolation from
+% the previous points to ensure a quick optimization.
 %
 % Note: This function can exploit up to (n_theta + 1) workers when running
 % in 'parallel' mode.
 %
 % USAGE:
-% [...] = getParameterProfiles(parameters,objective_function)
-% [...] = getParameterProfiles(parameters,objective_function,options)
-% [parameters,fh] = getParameterProfiles(...)
+% [...] = getParameterProfiles(parameters, objective_function)
+% [...] = getParameterProfiles(parameters, objective_function, options)
+% [parameters, fh] = getParameterProfiles(...)
 %
-% % getParameterProfiles() uses the following PestoOptions members:
+% getParameterProfiles() uses the following PestoOptions members:
 %  * PestoOptions::parameter_index
 %  * PestoOptions::mode
 %  * PestoOptions::fh
@@ -27,39 +31,47 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
 %  * PestoOptions::dR_max
 %  * PestoOptions::dJ
 %
-% and sets:
+% and sets the following PestoOptions members:
 % * PestoOptions::P .min .max
 %
 % Parameters:
-% varargin:
-%  parameters: parameter struct containing at least
-%    * .number: Number of parameters
-%    * .guess: Initial guess for each parameter
-%    * .min: Lower bound for each parameter
-%    * .max: upper bound for each parameter
-%    * .name = {'name1',...}: names of the parameters
-%    * .MS: results of global optimization, obtained using for instance 
+%   parameters: parameter struct containing
+%   objective_function: objective function to be optimized. 
+%       This function should accept exactly one input, the parameter 
+%       vector.
+%   varargin:
+%     options: A PestoOptions object holding various options for the 
+%         algorithm.
+%
+% Required fields of parameters:
+%   number: Number of parameters
+%   guess: Initial guess for each parameter
+%   min: Lower bound for each parameter
+%   max: upper bound for each parameter
+%   name = {'name1',...}: names of the parameters
+%   MS: results of global optimization, obtained using for instance 
 %       the routine 'getMultiStarts.m'. MS has to contain at least
-%    * .par: sorted list n_theta x n_starts of parameter estimates.
-%                The first entry is assumed to be the best one.
-%    * .logPost: sorted list n_starts x 1 of of log-posterior values
-%                corresponding to the parameters listed in .par.
-% objective_function: objective function to be optimized. 
-%     This function should accept exactly one input, the parameter vector.
-% options: A PestoOptions object holding various options for the algorithm.
+%     * par: sorted list n_theta x n_starts of parameter estimates.
+%          The first entry is assumed to be the best one.
+%     * logPost: sorted list n_starts x 1 of of log-posterior values
+%          corresponding to the parameters listed in .par.
+%     * hessian: Hessian matrix (or approximation) at the optimal point
 %
 % Return values:
-% parameters: updated parameter object containing:
-%   * .P(i): profile for i-th parameter
-%   * .par: MAPs along profile
-%   * .logPost: maximum log-posterior along profile
-%   * .R: ratio
-% fh: figure handle
+%   properties: updated parameter object
+%   fh: figure handle
+%
+% Generated fields of parameters:
+%   P(i): profile for i-th parameter
+%   par: MAPs along profile
+%   logPost: maximum log-posterior along profile
+%   R: ratio
 %
 % History:
 % * 2012/05/16 Jan Hasenauer
 % * 2014/06/12 Jan Hasenauer
 % * 2016/10/04 Daniel Weindl
+% * 2016/10/12 Paul Stapor
 
 %% Check and assign inputs
 if nargin >= 1

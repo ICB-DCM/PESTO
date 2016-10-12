@@ -17,30 +17,31 @@ function [properties,fh] = getPropertySamples(properties, parameters, varargin)
 %  * PestoOptions::plot_options
 %
 % Parameters:
-% properties: property struct
-% parameters: parameter struct
-% varargin:
-% options: A PestoOptions object holding various options for the algorithm.
+%   properties: property struct
+%   parameters: parameter struct
+%   varargin:
+%     options: A PestoOptions object holding various options for the 
+%         algorithm.
 %
 % Required fields of properties:
-%  number: number of parameter
-%  min: lower bound for property values       
-%  max: upper bound for property values       
-%  name: = {'name1',...} ... names of the parameters       
-%  function: = {'function1',...} ... functions to evaluate property  
+%   number: number of parameter
+%   min: lower bound for property values       
+%   max: upper bound for property values       
+%   name: = {'name1',...} ... names of the parameters       
+%   function: = {'function1',...} ... functions to evaluate property  
 %       values. These functions provide the values of the respective  
 %       properties and the corresponding 1st and 2nd order
 %       derivatives.
 %
 % Required fields of parameters:
 %   S: parameter and posterior sample.
-%        * logPost ... log-posterior function along chain
-%        * par  ... parameters along chain
+%     * logPost ... log-posterior function along chain
+%     * par  ... parameters along chain
 %   *Note* This struct is obtained using getSamples.m.
 %
 % Return values:
-% properties: updated parameter object
-% fh: figure handle
+%   properties: updated parameter object
+%   fh: figure handle
 %
 % Generated fields of properties:
 %  S: properties for sampling results
