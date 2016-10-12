@@ -438,6 +438,7 @@ classdef MatlabDocMaker
             % GLIBSTD libraries than doxygen/mtoc++
             ldpath = '';
             if isunix
+                setenv('PATH', [getenv('PATH'), ':/usr/local/mtocpp/bin/'])
                 ldpath = 'LD_LIBRARY_PATH= ';
             end
             % Call doxygen
