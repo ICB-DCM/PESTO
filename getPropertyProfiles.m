@@ -1,74 +1,87 @@
 function [properties,fh] = getPropertyProfiles(properties, parameters, objective_function, varargin)
-% getPropertyProfiles.m calculates the profiles of a user-supplied function,
-%   starting from the maximum a posteriori estimate.
+% getPropertyProfiles.m calculates the profiles of user-supplied property
+% functions, starting from the maximum a posteriori estimate. This
+% calculation is done by varying the value of each property function
+% respectively, starting from the value of this function at the global
+% optimum and by reoptimizing the likelihood/posterior estimate in each 
+% variational step of the property. The initial guess for the next 
+% reoptimization point is computed by extrapolation from the previous 
+% points to ensure a quick optimization.
 %
 % Note: This function can exploit up to (n_theta + 1) workers when running
 % in 'parallel' mode.
 %
 % USAGE:
-% [...] = getPropertyProfiles(properties,parameters,objective_function)
-% [...] = getPropertyProfiles(properties,parameters,objective_function,property_name,options)
-% [parameters,fh] = getPropertyProfiles(...)
+% [...] = getPropertyProfiles(properties, parameters, objective_function)
+% [...] = getPropertyProfiles(properties, parameters, objective_function, options)
+% [parameters, fh] = getPropertyProfiles(...)
 %
 % % getPropertyProfiles() uses the following PestoOptions members:
-%  * PestoOptions::plot_options
-%  * PestoOptions::property_index
-%  * PestoOptions::mode
+%  * PestoOptions::boundary
+%  * PestoOptions::calc_profiles
+%  * PestoOptions::comp_type
+%  * PestoOptions::dJ
+%  * PestoOptions::dR_max
 %  * PestoOptions::fh
 %  * PestoOptions::fmincon
-%  * PestoOptions::save
 %  * PestoOptions::foldername
-%  * PestoOptions::comp_type
-%  * PestoOptions::obj_type
 %  * PestoOptions::MAP_index
-%  * PestoOptions::boundary
+%  * PestoOptions::mode
+%  * PestoOptions::obj_type
 %  * PestoOptions::options_getNextPoint .guess .min .max .update .mode
+%  * PestoOptions::plot_options
+%  * PestoOptions::property_index
 %  * PestoOptions::R_min
-%  * PestoOptions::calc_profiles
-%  * PestoOptions::dR_max
-%  * PestoOptions::dJ
-%
-% and sets:
-% * PestoOptions::P .min .max
+%  * PestoOptions::save
 %
 % Parameters:
-% varargin:
-% properties: property struct containing at least:<pre>
-%   .number ... number of parameter
-%   .min ... lower bound for property values       
-%   .max ... upper bound for property values       
-%   .name = {'name1',...} ... names of the parameters       
-%   .function = {'function1',...} ... functions to evaluate property  
+%   properties: property struct
+%   parameters: parameter struct
+%   objective_function: objective function to be optimized. 
+%       This function should accept one input, the parameter vector.
+%   varargin:
+%     options: A PestoOptions object holding various options for the 
+%         algorithm.
+%
+% Required fields of properties:
+%   number: Number of properties
+%   min: Lower bound for each properties
+%   max: upper bound for each properties    
+%   name = {'name1', ...}: names of the properties   
+%   function = {'function1', ...}: functions to evaluate property  
 %       values. These functions provide the values of the respective  
 %       properties and the corresponding 1st and 2nd order
-%       derivatives.</pre>
-% parameters: parameter struct containing at least:<pre>
-%   .number ... number of parameter
-%   .min ... lower bound for parameter values       
-%   .max ... upper bound for parameter values       
-%   .name = {'name1',...} ... names of the parameters       
-%   .MS ... results of global optimization, obtained using for instance 
+%       derivatives.
+%
+% Required fields of parameters:
+%   number: Number of parameters
+%   min: Lower bound for each parameter
+%   max: upper bound for each parameter    
+%   name = {'name1', ...}: names of the parameters       
+%   MS: results of global optimization, obtained using for instance 
 %       the routine 'getMultiStarts.m'. MS has to contain at least
-%       .par ... sorted list n_theta x n_starts of parameter estimates.
-%                The first entry is assumed to be the best one.
-%       .logPost ... sorted list n_starts x 1 of of log-posterior values
-%                corresponding to the parameters listed in .par.</pre>
-% objective_function: objective function to be optimized. This function
-%       should possess exactly one input, the parameter vector.
-% options: A PestoOptions object holding various options for the algorithm.
+%     * par: sorted list n_theta x n_starts of parameter estimates.
+%          The first entry is assumed to be the best one.
+%     * logPost: sorted list n_starts x 1 of of log-posterior values
+%          corresponding to the parameters listed in .par.
+%     * hessian: Hessian matrix (or approximation) at the optimal point
+% 
 %
 % Return values:
-% properties: updated parameter object containing
-%   * .P(i): profile for i-th parameter
-%   * .prop: MAPs along profile
-%   * .par: MAPs along profile
-%   * .logPost: maximum log-posterior along profile
-%   * .R: ratio
-% fh: figure handle
+%   properties: updated property struct
+%   fh: figure handle
+%
+% Generated fields of properties:
+%   P(i): profile for i-th parameter
+%     * prop: MAPs along profile
+%     * par: MAPs along profile
+%     * logPost: maximum log-posterior along profile
+%     * R: ratio
 %
 % History:
 % * 2012/03/02 Jan Hasenauer
 % * 2016/04/10 Daniel Weindl
+% * 2016/10/12 Paul Stapor
 
 %% Check and assign inputs
 if nargin >= 1

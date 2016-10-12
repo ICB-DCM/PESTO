@@ -9,17 +9,17 @@ function fh = plotPropertyUncertainty(properties, varargin)
 % fh = plotPropertyUncertainty(properties,type,fh,I,options)
 %
 % Parameters:
-% varargin:
-% properties: properties struct.
-% type: string indicating the type of visualization: '1D'
-% fh: handle of figure. If no figure handle is provided, a new figure
-%       is opened.
-% I: index of properties which are updated. If no index is provided
-%       all parameters are updated.
-% options: options of plotting as instance of PestoPlottingOptions
+%   properties: properties struct.
+%   varargin:
+%     type: string indicating the type of visualization: '1D'
+%     fh: handle of figure. If no figure handle is provided, a new figure
+%         is opened.
+%     I: index of properties which are updated. If no index is provided
+%         all parameters are updated.
+%     options: options of plotting as instance of PestoPlottingOptions
 %
 % Return values:
-% fh: figure handle
+%   fh: figure handle
 %
 % History:
 % * 2012/05/31 Jan Hasenauer

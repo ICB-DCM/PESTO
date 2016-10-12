@@ -10,19 +10,19 @@ function fh = plotPropertyProfiles(properties, varargin)
 % fh = plotPropertyProfiles(properties,type,fh,I,options)
 %
 % Parameters:
-% varargin:
-% properties: property struct containing information about properties
+%   properties: property struct containing information about properties
 %       and results of optimization (.MS) and uncertainty analysis
 %       (.P and .S).
-% type: string indicating the type of visualization: '1D' or '2D'
-% fh: handle of figure. If no figure handle is provided, a new figure
-%       is opened.
-% I: index of properties which are updated. If no index is provided
-%       all properties are updated.
-% options: options of plotting as instance of PestoPlottingOptions
+%   varargin:
+%     type: string indicating the type of visualization: '1D' or '2D'
+%     fh: handle of figure. If no figure handle is provided, a new figure
+%         is opened.
+%     I: index of properties which are updated. If no index is provided
+%         all properties are updated.
+%     options: options of plotting as instance of PestoPlottingOptions
 %
 % Return values:
-% fh: figure handle
+%   fh: figure handle
 %
 % History:
 % * 2015/03/02 Jan Hasenauer
