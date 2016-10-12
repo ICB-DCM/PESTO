@@ -1,23 +1,35 @@
 function properties = getPropertyConfidenceIntervals(properties, alpha)
 % getPropertyConfidenceIntervals.m calculates the confidence intervals 
-%   of the given properties based on the Hessian at the maximum 
-%   a posteriori estimate or profiles.
+% for the model properties. This is done by three approaches:
+% The values of CI.local_PL and CI.PL are determined by the point on which 
+% a threshold according to the confidence level alpha (calculated by a 
+% chi2-distribution) is reached. local_PL computes this point by a local
+% approximation around the MAP estimate using the Hessian matrix, PL uses 
+% the profile likelihoods instead.
+% The value of CI.local_B is computed by using the cummulative distribution
+% function of a local approximation of the profile based on the Hessian
+% matrix at the MAP estimate.
 %
 % USAGE:
-% properties = getPropertyConfidenceIntervals(properties, alpha)
+% * properties = getPropertyConfidenceIntervals(properties, alpha)
 %
-% Parameters: 
-% properties: properties struct, see getPropertyMultiStarts
-% alpha: vector of confidence levels
+% Parameters:
+%   properties: property struct
+%   alpha: vector with desired confidence levels for the intervals
 %
 % Return values:
-% properties: Updated properties containing:
-%   * .CI: Information about confidence levels
-%   * Threshold based confidence intervals:
-%     * .local_PL: from local approximation.
-%     * .PL: from profiles.
-%   * Mass based confidence intervals:
-%     * .local_B: from local approximation.
+%   properties: updated properties struct
+%
+% Generated fields of properties:
+%   CI: Information about confidence levels
+%     * local_PL: Threshold based approach, uses a local approximation by
+%         the Hessian matrix at the MAP estimate
+%         (requires parameters.MS, e.g. from getMultiStarts)
+%     * PL: Threshold based approach, uses profile likelihoods 
+%         (requires parameters.P, e.g. from getParameterProfiles)
+%     * local_B: Mass based approach, uses a local approximation by
+%         the Hessian matrix at the MAP estimate
+%         (requires parameters.MS, e.g. from getMultiStarts)
 %
 % History:
 % * 2013/11/29 Jan Hasenauer
