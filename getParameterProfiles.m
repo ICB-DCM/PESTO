@@ -1,6 +1,6 @@
 function [parameters,fh] = getParameterProfiles(parameters, objective_function, varargin)
-% getParameterProfiles.m calculates the profiles of a user-supplied 
-% function, starting from the maximum a posteriori estimate. This
+% getParameterProfiles.m calculates the profiles likelihoods for the model 
+% parameters, starting from the maximum a posteriori estimate. This
 % calculation is done by fixing the i-th parameter and repeatedly
 % reoptimizing the likelihood/posterior estimate (for all i). The initial 
 % guess for the next reoptimization point is computed by extrapolation from
@@ -15,40 +15,34 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
 % [parameters, fh] = getParameterProfiles(...)
 %
 % getParameterProfiles() uses the following PestoOptions members:
-%  * PestoOptions::parameter_index
-%  * PestoOptions::mode
+%  * PestoOptions::calc_profiles
+%  * PestoOptions::comp_type
+%  * PestoOptions::dJ
+%  * PestoOptions::dR_max
 %  * PestoOptions::fh
 %  * PestoOptions::fmincon
-%  * PestoOptions::save
-%  * PestoOptions::foldername
-%  * PestoOptions::comp_type
+%  * PestoOptions::foldername%  * PestoOptions::MAP_index
+%  * PestoOptions::mode
 %  * PestoOptions::obj_type
-%  * PestoOptions::plot_options
-%  * PestoOptions::MAP_index
 %  * PestoOptions::options_getNextPoint .guess .min .max .update .mode
+%  * PestoOptions::parameter_index
+%  * PestoOptions::plot_options
 %  * PestoOptions::R_min
-%  * PestoOptions::calc_profiles
-%  * PestoOptions::dR_max
-%  * PestoOptions::dJ
-%
-% and sets the following PestoOptions members:
-% * PestoOptions::P .min .max
+%  * PestoOptions::save
 %
 % Parameters:
-%   parameters: parameter struct containing
+%   parameters: parameter struct
 %   objective_function: objective function to be optimized. 
-%       This function should accept exactly one input, the parameter 
-%       vector.
+%       This function should accept one input, the parameter vector.
 %   varargin:
 %     options: A PestoOptions object holding various options for the 
 %         algorithm.
 %
 % Required fields of parameters:
 %   number: Number of parameters
-%   guess: Initial guess for each parameter
 %   min: Lower bound for each parameter
 %   max: upper bound for each parameter
-%   name = {'name1',...}: names of the parameters
+%   name = {'name1', ...}: names of the parameters
 %   MS: results of global optimization, obtained using for instance 
 %       the routine 'getMultiStarts.m'. MS has to contain at least
 %     * par: sorted list n_theta x n_starts of parameter estimates.
@@ -58,14 +52,14 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
 %     * hessian: Hessian matrix (or approximation) at the optimal point
 %
 % Return values:
-%   properties: updated parameter object
+%   properties: updated parameter struct
 %   fh: figure handle
 %
 % Generated fields of parameters:
 %   P(i): profile for i-th parameter
-%   par: MAPs along profile
-%   logPost: maximum log-posterior along profile
-%   R: ratio
+%     * par: MAPs along profile
+%     * logPost: maximum log-posterior along profile
+%     * R: ratio
 %
 % History:
 % * 2012/05/16 Jan Hasenauer

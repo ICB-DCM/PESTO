@@ -1,7 +1,13 @@
 function [parameters,fh] = getMultiStarts(parameters, objective_function, varargin)
 % getMultiStarts() computes the maximum a posterior estimate of the
-%   parameters of a user-supplied posterior function. Therefore, a
-%   multi-start local optimization is used.
+% parameters of a user-supplied posterior function. Therefore, a
+% multi-start local optimization is used. The parameters from the best 
+% value of the posterior function arethen used as the global optimum.
+% To ensure that the found maximum is a global one, a sufficiently high
+% number of multistarts must be done. Those starts can be initialized with
+% either randomly sampled parameter values, following either a uniform
+% distribution or a latin hypercube, or they can be sampled by a user
+% provided initial function (provided as option.init_fun).
 %
 % Note: This function can exploit up to (n_start + 1) workers when running
 % in 'parallel' mode.
@@ -30,39 +36,46 @@ function [parameters,fh] = getMultiStarts(parameters, objective_function, vararg
 %  * PestoOptions::plot_options
 %
 % Parameters:
-%  parameters: parameter struct containing at least
-%    * .number: Number of parameters
-%    * .guess: Initial guess for each parameter
-%    * .min: Lower bound for each parameter
-%    * .max: upper bound for each parameter
-%    * .name = {'name1',...}: names of the parameters
-%    * .init_fun: function to draw starting points for local optimization. 
-%           The function has to have the input structure
-%            .init_fun(theta_0,theta_min,theta_max).
-%       Alternatively, a latin hypercube or a uniform random sampling can
-%       be used by setting the respective PestoOption
-% objective_function: objective function to be optimized. 
-%     This function should accept exactly one input, the parameter vector.
-%  varargin: 
-% options: A PestoOptions object holding various options for the algorithm.
+%   parameters: parameter struct
+%   objective_function: objective function to be optimized. 
+%       This function should accept one input, the parameter vector.
+%   varargin:
+%     options: A PestoOptions object holding various options for the 
+%         algorithm.
+%
+% Required fields of parameters:
+%   number: Number of parameters
+%   min: Lower bound for each parameter
+%   max: upper bound for each parameter
+%   name = {'name1', ...}: names of the parameters
+%   guess: initial guess for the parameters (Optional, will be initialized 
+%       empty if not provided)
+%   init_fun: function to draw starting points for local optimization, must
+%       have the structure init_fun(theta_0, theta_min, theta_max).
+%       (Only required if proposal == 'user-supplied')
 %
 % Return values:
-% parameters: updated parameter object containing
-%       * .MS: information about multi-start optimization
-%       * .par(:,i): ith MAP
-%       * .par0(:,i): starting point yielding ith MAP
-%       * .logPost(i): log-posterior for ith MAP
-%       * .logPost0(i): log-posterior for starting point yielding ith MAP
-%       * .gradient(_,i): gradient of log-posterior at ith MAP
-%       * .hessian(:,:,i): hessian of log-posterior at ith MAP
-%       * .n_objfun(i): # objective evaluations used to calculate ith MAP
-%       * .n_iter(i): # iterations used to calculate ith MAP
-%       * .t_cpu(i): CPU time for calculation of ith MAP
-%       * .exitflag(i): exitflag the optimizer returned for ith MAP
-%       * .par_trace(:,:,i): parameter trace for ith MAP
-%       * .fval_trace(:,i): objective function value trace for ith MAP
-%       * .time_trace(:,i): computation time trace for ith MAP
-% fh: figure handle
+%   parameters: updated parameter object
+%   fh: figure handle
+%
+% Generated fields of parameters:
+%   MS: information about multi-start optimization
+%     * par0(:,i): starting point yielding ith MAP
+%     * par(:,i): ith MAP
+%     * logPost(i): log-posterior for ith MAP
+%     * logPost0(i): log-posterior for starting point yielding ith MAP
+%     * gradient(_,i): gradient of log-posterior at ith MAP
+%     * hessian(:,:,i): hessian of log-posterior at ith MAP
+%     * n_objfun(i): # objective evaluations used to calculate ith MAP
+%     * n_iter(i): # iterations used to calculate ith MAP
+%     * t_cpu(i): CPU time for calculation of ith MAP
+%     * exitflag(i): exitflag the optimizer returned for ith MAP
+%     * par_trace(:,:,i): parameter trace for ith MAP
+%         (if options.trace == true)
+%     * fval_trace(:,i): objective function value trace for ith MAP
+%         (if options.trace == true)
+%     * time_trace(:,i): computation time trace for ith MAP
+%         (if options.trace == true)
 %
 % History:
 % * 2012/05/31 Jan Hasenauer
@@ -72,6 +85,7 @@ function [parameters,fh] = getMultiStarts(parameters, objective_function, vararg
 % * 2015/11/10 Fabian Froehlich
 % * 2016/06/07 Paul Stapor
 % * 2016/10/04 Daniel Weindl
+% * 2016/06/10 Paul Stapor
 
 global error_count
 
