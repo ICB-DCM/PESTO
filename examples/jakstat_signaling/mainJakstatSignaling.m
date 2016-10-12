@@ -1,15 +1,21 @@
-% Main file of the enzymatic catalysis example
+% Main file of the JakStat signaling example
 %
 % Demonstrates the use of:
 % * getMultiStarts()
 %
 % This example provides a model for the JakStat signaling pathway with an
-% time resolved input of EPO. See ... for more detail.
+% time resolved input of the drug EPO. The model has been taken from the
+% papers "Identification of nucleocytoplasmic cycling as a remote sensor in 
+% cellular signaling by databased modeling" by Swameye et al. in 2003, 
+% PNAS, vol.100, no.3 (see http://www.pnas.org/content/100/3/1028.long) and
+% "Comprehensive estimation of input signals and dynamics in biochemical 
+% reaction networks" by Schelker et al. in 2012, Bioinformatics, vol.28 
+% (see http://bioinformatics.oxfordjournals.org/content/28/18/i529.full).
 %
-% Measurements of ...
+% The data used is measurement data provided in the publications.
 %
 % This file performs a multistart local optimization based on measured data 
-% from ..., demonstrating the use of getMultiStarts().
+% from the referenced papers, demonstrating the use of getMultiStarts().
 
 
 %% Preliminary
@@ -24,10 +30,12 @@ set(0,TextSizes);
 %% Model Definition
 % The ODE model is set up using the AMICI toolbox. To access the AMICI
 % model setup, see jakstat_pesto_syms.m
-% For a detailed description for the biological model see ...
+% For a detailed description for the biological model see the referenced
+% papers on the JakStat signaling pathway by Swameye et al. and Schelker et
+% al.
 
 [exdir,~,~]=fileparts(which('mainJakstatSignaling.m'));
-% amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 0);
+amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 0);
 
 %% Data
 % Experimental data is read out from an .xls-file and written to an AMICI
@@ -67,7 +75,7 @@ objectiveFunction = @(theta) logLikelihoodJakstat(theta, amiData);
 
 % PestoOptions
 optionsMultistart           = PestoOptions();
-optionsMultistart.n_starts  = 5;
+optionsMultistart.n_starts  = 20;
 optionsMultistart.trace     = true;
 optionsMultistart.mode      = 'visual';
 optionsMultistart.fmincon   = optimoptions('fmincon',...

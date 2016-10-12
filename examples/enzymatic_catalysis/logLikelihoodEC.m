@@ -6,19 +6,19 @@ function [J, gradJ, FIM] = logLikelihoodEC(theta, yMeasured, sigma2, con0, nTime
 % (FIM) for the conversion reaction process.
 % 
 % Parameters:
-% * theta: Model parameters [theta_1, theta_2, theta_3, theta_4]'
-% * yMeasured: measurement array returned from getMeasuredData()
-% * sigma2: variance of the measurements (noise)
-% * con0: inititial concentrations of the experiments returnd 
-%         from getInitialConcentrations()
-% * nTimepoints: number of Time points (equidistad between 0 and 5)
-% * nMeasure: number of experiments
+%  theta: Model parameters [theta_1, theta_2, theta_3, theta_4]'
+%  yMeasured: measurement array returned from getMeasuredData()
+%  sigma2: variance of the measurements (noise)
+%  con0: inititial concentrations of the experiments returnd 
+%   from getInitialConcentrations()
+%  nTimepoints: number of Time points (equidistad between 0 and 5)
+%  nMeasure: number of experiments
 %
 % Return values:
-% * J: double, value of log-likelihood
-% * gradJ: double vector, gradient of log-likelihood
-% * FIM: double array, negative Fisher information matrix, 
-%        an approximation of Hessian of log-likelihood
+%  J: double, value of log-likelihood
+%  gradJ: double vector, gradient of log-likelihood
+%  FIM: double array, negative Fisher information matrix, 
+%   an approximation of Hessian of log-likelihood
 
 
 

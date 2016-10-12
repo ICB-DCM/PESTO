@@ -5,12 +5,12 @@ function [f, grad_f, hess_f] = propertyFunction_theta1_minus_theta2(theta)
 % logLikelihood.m with derivatives
 %
 % Parameters: 
-% * theta: Model parameters [theta_1, theta_2]'
+%  theta: Model parameters [theta_1, theta_2]'
 %
 % Return values:
-% * f: double, value of property function
-% * grad_f: double vector, gradient of property function
-% * hess_f: double array, hessian of property function
+%  f: double, value of property function
+%  grad_f: double vector, gradient of property function
+%  hess_f: double array, hessian of property function
 
 
 
