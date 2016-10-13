@@ -55,11 +55,13 @@ One strategy for obtaining the global optimum is multi-start local optimization:
 
 This functionality is provided in getMultiStarts.m, getPropertyMultiStarts.m and the respective plotting routines plotMultiStarts.m and plotPropertyMultiStarts.m.
 
-## Sensitivity analysis / Confidence Intervals ### {#confidence-intervals}
+## Uncertainty analysis ### {#uncertainty-analysis}
+
 
 TODO: Explain Sensitivity analysis 
 
-getParameterConfidenceIntervals()
+see getParameterConfidenceIntervals() for details
+
 * Threshold based confidence intervals using profile likelihood or local approximation and the probability mass
 * Mass based confidence intervals from local approximation.
 * Bayesian confidence interval Confidence intervals computed using [profile likelihood](@ref profile-likelihood)
@@ -69,15 +71,32 @@ getParameterConfidenceIntervals()
 
 TODO
 
+see getParameterProfiles.m for details
+
 ## Parameter sampling ### {#parameter-sampling}
 
 TODO
 
-## Plotting ### 
+see getParameterSamples() for details
+
+## Plotting ### {#plotting}
 
 TODO
 
-## Properties ### 
+TODO add some sample figures
+
+More details are provided in the documentation of the specific plotting functions:
+* plotMultiStarts.m
+* plotParameterProfiles.m
+* plotParameterSamples.m
+* plotParameterUncertainty.m
+* plotPropertyMultiStarts.m
+* plotPropertyProfiles.m
+* plotPropertySamples.m
+* plotPropertyUncertainty.m
+
+
+## Properties ### {#properties}
 
 Explain concept of "properties"
 A property is any function g(theta) ... could also be expressed as state variable, but... 

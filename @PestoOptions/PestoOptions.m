@@ -156,7 +156,7 @@ classdef PestoOptions < hgsetget
         % * false: profiles are not calculated
         calc_profiles = true;
                 
-        % index MAP parameter vector starting from which the
+        % index MAP - parameter vector starting from which the
         %       profile is calculated. This option is helpful if local
         %       optima are present.
         MAP_index = [];

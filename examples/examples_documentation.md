@@ -1,4 +1,4 @@
-Examples  {#examples}
+Examples
 ========
 
 # Examples {#examples}
