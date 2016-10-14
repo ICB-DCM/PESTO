@@ -35,7 +35,7 @@ set(0,TextSizes);
 % al.
 
 [exdir,~,~]=fileparts(which('mainJakstatSignaling.m'));
-amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 0);
+% amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 0);
 
 %% Data
 % Experimental data is read out from an .xls-file and written to an AMICI

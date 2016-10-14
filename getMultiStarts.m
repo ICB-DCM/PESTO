@@ -168,6 +168,9 @@ if(options.trace)
     parameters.MS.fval_trace = nan(options.fmincon.MaxIter+1,length(options.start_index));
     parameters.MS.time_trace = nan(options.fmincon.MaxIter+1,length(options.start_index));
 end
+waitbarFields1 = {'logPost', 'logPost0', 'n_objfun', 'n_iter', 't_cpu', 'exitflag'};
+waitbarFields2 = {'par', 'par0', 'gradient', 'fval_trace', 'time_trace'};
+waitbarFields3 = {'hessian', 'par_trace'};
 
 %% Multi-start local optimization -- SEQUENTIAL
 if strcmp(options.comp_type, 'sequential')
@@ -178,9 +181,10 @@ if strcmp(options.comp_type, 'sequential')
     options.fmincon.OutputFcn = @outfun_fmincon;
     
     % initialize the waitbar
-    waitBar = waitbar(0, 'Parameter estimation in process, please wait...');
+    waitBar = waitbar(0, '1', 'name', 'Parameter estimation in process, please wait...', 'CreateCancelBtn', 'setappdata(gcbf, ''canceling'', 1)');
     stringTimePrediction = updateWaitBar(0.004 * length(options.start_index) * options.fmincon.MaxIterations * parameters.number);
     waitbar(0, waitBar, stringTimePrediction);
+    setappdata(waitBar, 'canceling', 0);
     
     % Loop: Mutli-starts
     for i = 1 : length(options.start_index)
@@ -250,6 +254,29 @@ if strcmp(options.comp_type, 'sequential')
             case 'visual', fh = plotMultiStarts(parameters,fh,options.plot_options);
             case 'text', disp(['  ' num2str(i,'%d') '/' num2str(length(options.start_index),'%d')]);
             case 'silent' % no output
+        end
+        
+        % Abort the calculation if the waitbar is cancelled
+        if getappdata(waitBar, 'canceling')
+            parameters.MS.n_starts = i;
+            for iWaitbarField = 1:6
+                parameters.MS.(waitbarFields1{iWaitbarField}) = ...
+                     parameters.MS.(waitbarFields1{iWaitbarField})(1:i, :);
+            end
+            for iWaitbarField = 1:5
+                if (isfield(parameters.MS, waitbarFields2{iWaitbarField}))
+                    parameters.MS.(waitbarFields2{iWaitbarField}) = ...
+                        parameters.MS.(waitbarFields2{iWaitbarField})(:, 1:i);
+                end
+            end
+            for iWaitbarField = 1:2
+                if (isfield(parameters.MS, waitbarFields3{iWaitbarField}))
+                    parameters.MS.(waitbarFields3{iWaitbarField}) = ...
+                        parameters.MS.(waitbarFields3{iWaitbarField})(:, :, 1:i);
+                end
+            end
+            
+            break;
         end
         
         % update the waitbar

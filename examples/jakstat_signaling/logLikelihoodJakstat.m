@@ -5,18 +5,24 @@ function varargout = logLikelihoodJakstat(theta, amiData)
 % the Hessian matrix for the model for the JakStat signaling pathway as
 % defined in jakstat_pesto_syms.m
 % 
+% USAGE:
+% [llh] = getParameterProfiles(theta, amiData)
+% [llh, sllh] = getParameterProfiles(theta, amiData)
+% [llh, sllh, s2llh] = getParameterProfiles(theta, amiData)
+%
 % Parameters:
 %  theta: Model parameters 
 %  amiData: an amidata object for the AMICI solver
 %
 % Return values:
-%  [llh] = ... : Only the LogLikelihood will be returned, no sensitivity
-%   analysis is performed
-%  [llh, sllh] = ... : The LogLikelihood and its gradient will be 
-%   returned, first order adjoint sensitivity analysis is performed
-%  [llh, sllh, s2llh] = ... : The LogLikelihood, its gradient and the 
-%   Hessian matrix will be returned, second order adjoint sensitivity 
-%   analysis is performed
+%   varargout:
+%     llh: Log-Likelihood, only the LogLikelihood will be returned, no 
+%         sensitivity analysis is performed
+%     sllh: Gradient of llh, The LogLikelihood and its gradient will be 
+%         returned, first order adjoint sensitivity analysis is performed
+%     s2llh: Hessian of llh, The LogLikelihood, its gradient and the 
+%         Hessian matrix will be returned, second order adjoint sensitivity 
+%         analysis is performed
 
 
 
