@@ -3,6 +3,5 @@
 *.mexa64
 *.mexmaci64
 doc/out/
-getParameterSamples.m
 examples/Chen2009/simulate_Chen2009.m
 examples/enzymatic_catalysis/simulate_enzymaticCatalysis.m
