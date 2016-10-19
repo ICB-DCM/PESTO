@@ -22,7 +22,7 @@ function fh = plotPropertyMultiStarts(properties, varargin)
 
 %% CHECK AND ASSIGN INPUTS
 % Open figure
-if nargin >= 1 && ~isempty(varargin{1})
+if length(varargin) >= 1 && ~isempty(varargin{1})
     fh = figure(varargin{1});
 else
     fh = figure;
@@ -30,7 +30,7 @@ end
 
 % Options
 options = PestoPlottingOptions();
-if nargin >= 2
+if length(varargin) >= 2
     options = varargin{2};
 end
 

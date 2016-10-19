@@ -42,7 +42,7 @@ function [parameters,fh_logPost_trace,fh_par_trace,fh_par_dis_1D,fh_par_dis_2D] 
 %% Check and assign inputs
 parameters = parametersSanityCheck(parameters);
 
-if nargin >= 1
+if length(varargin) >= 1
     options = varargin{1};
     if ~isa(options, 'PestoOptions')
         error('Third argument is not of type PestoOptions.')

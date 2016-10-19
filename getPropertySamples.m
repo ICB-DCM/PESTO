@@ -56,7 +56,7 @@ function [properties,fh] = getPropertySamples(properties, parameters, varargin)
 % * 2016/10/04 Daniel Weindl
 
 %% Check and assign inputs
-if nargin >= 1
+if length(varargin) >= 1
     options = varargin{1};
     if ~isa(options, 'PestoOptions')
         error('Third argument is not of type PestoOptions.')
@@ -94,7 +94,7 @@ properties.S.logPost = parameters.S.logPost(1:options.thinning:end);
 properties.S.prop = nan(properties.number,length(properties.S.logPost));
 
 %% Preperation of folder
-if strcmp(options.save,'true')
+if options.save
     try
        rmdir(options.foldername,'s'); 
     end
@@ -113,7 +113,7 @@ for j = 1:length(properties.S.logPost)
     end
     
     % Save
-    if strcmp(options.save,'true')
+    if options.save
         dlmwrite([options.foldername '/properties_S' num2str(i,'%d') '__prop.csv'],properties.S.prop(:,j),'delimiter',',','precision',12);
     end
     
@@ -151,7 +151,7 @@ parfor i = 1:length(properties.S.logPost)
     prop(:,i) = P;
     
     % Save
-    if strcmp(options.save,'true')
+    if options.save
         dlmwrite([options.foldername '/properties_S' num2str(i,'%d') '__prop.csv'],prop(:,i),'delimiter',',','precision',12);
     end
 end

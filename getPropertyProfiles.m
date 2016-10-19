@@ -84,7 +84,7 @@ function [properties,fh] = getPropertyProfiles(properties, parameters, objective
 % * 2016/10/12 Paul Stapor
 
 %% Check and assign inputs
-if nargin >= 1
+if length(varargin) >= 1
     options = varargin{1};
     if ~isa(options, 'PestoOptions')
         error('Third argument is not of type PestoOptions.')
@@ -95,7 +95,6 @@ end
 
 % Check and assign options
 %TODO
-options.plot_options.interval = 'dynamic';
 options.plot_options.mark_constraint = 'false';
 options.property_index = 1:properties.number;
 options.P.min = parameters.min;

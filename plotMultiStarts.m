@@ -29,28 +29,29 @@ function fh = plotMultiStarts(parameters, varargin)
 
 %% CHECK AND ASSIGN INPUTS
 % Open figure
-if nargin >= 1 && ~isempty(varargin{1}) && isvalid(varargin{1})
+if length(varargin) >= 1 && ~isempty(varargin{1}) && isvalid(varargin{1})
     fh = figure(varargin{1});
 else
     fh = figure;
 end
 
 % Options
-options = PestoPlottingOptions();
-options.add_points.par = [];
-options.add_points.logPost = [];
-options.add_points.col = [0,0.8,0];
-options.add_points.ls = '-';
-options.add_points.lw = 1;
-options.add_points.m = 'd';
-options.add_points.ms = 8;
-options.add_points.name = 'add. point';
+defaultOptions = PestoPlottingOptions();
+defaultOptions.add_points.par = [];
+defaultOptions.add_points.logPost = [];
+defaultOptions.add_points.col = [0,0.8,0];
+defaultOptions.add_points.ls = '-';
+defaultOptions.add_points.lw = 1;
+defaultOptions.add_points.m = 'd';
+defaultOptions.add_points.ms = 8;
+defaultOptions.add_points.name = 'add. point';
 
-if nargin >= 2
+if length(varargin) >= 2
     if ~isa(varargin{2}, 'PestoPlottingOptions')
         error('Third argument is not of type PestoPlottingOptions.')
     end
-    options = setdefault(varargin{2}, options);
+    options = setdefault(varargin{2}, defaultOptions);
+    options.add_points = setdefault(options.add_points, defaultOptions.add_points);
 end
 
 %% SORT RESULTS

@@ -68,7 +68,7 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
 % * 2016/10/12 Paul Stapor
 
 %% Check and assign inputs
-if nargin >= 1
+if length(varargin) >= 1
     options = varargin{1};
     if ~isa(options, 'PestoOptions')
         error('Third argument is not of type PestoOptions.')

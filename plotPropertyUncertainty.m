@@ -29,7 +29,7 @@ function fh = plotPropertyUncertainty(properties, varargin)
 %% Check and assign inputs
 % Plot type
 type = '1D';
-if nargin >= 1 && ~isempty(varargin{2})
+if length(varargin) >= 1 && ~isempty(varargin{1})
     type = varargin{1};
     if ~max(strcmp({'1D','2D'},type))
         error('The ''type'' of plot is unknown.')
@@ -37,15 +37,15 @@ if nargin >= 1 && ~isempty(varargin{2})
 end
 
 % Open figure
-if nargin >= 2 && ~isempty(varargin{2})
+if length(varargin) >= 2 && ~isempty(varargin{2})
     fh = figure(varargin{2});
 else
     fh = figure;
 end
 
 % Index of subplot which is updated
-I = 1:length(properties.P);
-if nargin >= 3 && ~isempty(varargin{3})
+I = 1:properties.number;
+if length(varargin) >= 3 && ~isempty(varargin{3})
     I = varargin{3};
     if ~isnumeric(I) || max(abs(I - round(I)) > 0)
         error('I is not an integer vector.');
@@ -68,7 +68,8 @@ if ~isfield(properties,'MS')
 end
 
 % Assignment of user-provided options
-if nargin >= 4
+options = PestoPlottingOptions();
+if length(varargin) >= 4
     if ~isa(varargin{4}, 'PestoPlottingOptions')
         error('Argument 4 is not of type PestoPlottingOptions.')
     end
@@ -267,7 +268,7 @@ for l = 1:length(I)
     
     % Plot: Additional points
     h = [];
-    if ~isempty(options.add_points.par)
+    if ~isempty(options.add_points)
         % Check dimension:
         if size(options.add_points.par,1) ~= properties.number
             warning(['The matrix options.add_points.par should possess ' num2str(properties.number) ' rows.']);

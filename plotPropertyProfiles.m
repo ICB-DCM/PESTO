@@ -31,7 +31,7 @@ function fh = plotPropertyProfiles(properties, varargin)
 %% Check and assign inputs
 % Plot type
 type = '1D';
-if nargin >= 1 && ~isempty(varargin{1})
+if length(varargin) >= 1 && ~isempty(varargin{1})
     type = varargin{1};
     if ~max(strcmp({'1D','2D'},type))
         error('The ''type'' of plot is unknown.')
@@ -39,15 +39,15 @@ if nargin >= 1 && ~isempty(varargin{1})
 end
 
 % Open figure
-if nargin >= 2 && ~isempty(varargin{2})
+if length(varargin) >= 2 && ~isempty(varargin{2})
         fh = figure(varargin{2});
 else
     fh = figure;
 end
 
 % Index of subplot which is updated
-I = 1:parameters.number;
-if nargin >= 3
+I = 1:properties.number;
+if length(varargin) >= 3
     if ~isempty(varargin{3})
         I = varargin{3};
         if ~isnumeric(I) || max(abs(I - round(I)) > 0)
@@ -61,7 +61,7 @@ end
 options = PestoPlottingOptions();
 
 % Assignment of user-provided options
-if nargin >= 4
+if length(varargin) >= 4
     if ~isa(varargin{4}, 'PestoPlottingOptions')
         error('Argument 4 is not of type PestoPlottingOptions.')
     end

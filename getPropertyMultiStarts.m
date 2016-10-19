@@ -50,7 +50,7 @@ function [properties,fh] = getPropertyMultiStarts(properties, parameters, vararg
 % * 2016/04/10 Daniel Weindl
 
 %% Check and assign inputs
-if nargin >= 1
+if length(varargin) >= 1
     options = varargin{1};
     if ~isa(options, 'PestoOptions')
         error('Third argument is not of type PestoOptions.')
