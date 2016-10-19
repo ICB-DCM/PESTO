@@ -31,7 +31,7 @@ function [fh] = plotMCMCdiagnosis(parameters, varargin)
 %% Check and assign inputs
 % Plot type
 type = 'parameters';
-if nargin >= 1 && ~isempty(varargin{1})
+if nargin >= 2 && ~isempty(varargin{1})
     type = varargin{1};
     if ~max(strcmp({'parameters','log-posterior'},type))
         error('The ''type'' of plot is unknown. ''type'' can only be ''parameter'' or ''log-posterior''.')
@@ -39,7 +39,7 @@ if nargin >= 1 && ~isempty(varargin{1})
 end
 
 % Figure handle
-if nargin >= 2 && ~isempty(varargin{2})
+if nargin >= 3 && ~isempty(varargin{2})
     fh = figure(varargin{2});
 else
     fh = figure;
@@ -47,12 +47,12 @@ end
 
 % Index of subplot which is updated
 I = 1:parameters.number;
-if nargin >= 3 && ~isempty(varargin{3})
+if nargin >= 4 && ~isempty(varargin{3})
     I = varargin{3};
 end
 
 % Options
-% General plot options
+options = PestoPlottingOptions();
 options.plot_type = {'parameter','posterior'};
 options.n_max = 1e4;
 
@@ -87,10 +87,13 @@ options.CL.type = 'point-wise'; % 'simultanous', {'point-wise','simultanous'}
 options.CL.col = [1,0,0];
 options.CL.lw = 1.5;
 
-% Assignment of user-provided options
-if nargin == 5
-    options = setdefault(varargin{5},options);
+if nargin >= 6
+    if ~isa(varargin{5}, 'PestoPlottingOptions')
+        error('Third argument is not of type PestoPlottingOptions.')
+    end
+    options = setdefault(varargin{5}, options);
 end
+
 
 %% Initialization
 % Number of MCMC samples
@@ -119,7 +122,7 @@ for l = 1:length(I)
     subplot(s(1),s(2),l);
     
     % Hold on/off
-    if strcmp(options.hold_on,'true')
+    if options.hold_on
         hold on;
     else
         hold off;
@@ -173,7 +176,7 @@ end
 if strcmp(type,'log-posterior')
 
     % Hold on/off
-    if strcmp(options.hold_on,'true')
+    if options.hold_on
         hold on;
     else
         hold off;

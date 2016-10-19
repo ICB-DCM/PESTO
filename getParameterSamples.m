@@ -1,155 +1,79 @@
+function [parameters,fh_logPost_trace,fh_par_trace,fh_par_dis_1D,fh_par_dis_2D] = getParameterSamples(parameters, objective_function, varargin)
 % getParameterSamples.m performs adaptive MCMC sampling of the posterior
-%   distribution using the DRAM tooparameters.minox. The main purpose of
-%   this routine is to provide a nice interface.
+%   distribution. The DRAM library routine tooparameters.minox is used internally.
 %
 % USAGE:
 % ======
-% [...] = getParameterSamples(parameters,logPosterior)
-% [...] = getParameterSamples(parameters,logPosterior,options)
+% [...] = getParameterSamples(parameters,objective_function)
+% [...] = getParameterSamples(parameters,objective_function,options)
 % [parameters] = getParameterSamples(...)
 % [parameters,fh_logPost_trace] = getParameterSamples(...)
 % [parameters,fh_logPost_trace,fh_par_trace] = getParameterSamples(...)
 % [parameters,fh_logPost_trace,fh_par_trace,fh_par_dis] = getParameterSamples(...)
 %
-% INPUTS:
-% =======
-% parameters ... parameter struct containing at least:
-%   .number ... number of parameter
-%   .ml .. maximum likelihood estimate
-%   .min ... lower bound for parameter values
-%   .max ... upper bound for parameter values
-% logPosterior ... log-posterior of model as function of the parameters.
-% options ... options of algorithm
-%   .nsimu_warmup ... length of MCMC warm-up run (default = 1e4).
-%   .nsimu_run ... length of MCMC run(default = 5e4).
-%   .algorithm ... MCMC sampling scheme (default = 'dram')
-%   .qcov ... initial covariance matrix for MCMC sampling
-%       (default = 0.001*eye(parameters.number)).
-%   .adaptint ... number of function evaluations between adaptation of
-%       the MCMC transition kernel (default = 20*parameters.number).
-%   .plot ... visualization of the results after the computation (default = 'true').
-%   .plot_options ... plot options:
-%       .interval ... method uses to determine plot bounds (default = 'dynamic').
-%       .hold_on ... conserve of current plot content (default = 'false').
-%   .fh_logPost_trace ... figure handle for log-posterior trace plot.
-%   .fh_par_trace ... figure handle for parameter trace plots.
-%   .fh_par_dis ... figure handle for the parameter distribution plot.
-%   .rng ... initialization of random number generator (default = 0).
-%       = any ral number r => random generator is initialized with r.
-%       = [] ... random number generator is not initialized.
-%       (Initializing the random number generator can be helpfult to
-%       understand problems.)
-%   .plot_options ... plot options for plotPropertyProfiles.m.
+% Parameters:
+%   parameters: parameter struct
+%   logPosterior: log-posterior of model as function of the parameters.
+%   varargin:
+%     options: A PestoOptions object holding various options for the 
 %
-% Outputs:
-% ========
-% parameters ... updated parameter object containing:
-%   .S ... parameter and posterior sample.
-%       .logPost ... log-posterior function along chain
-%       .par  ... parameters along chain
-% fh_logPost_trace .. figure handle for log-posterior trace
-% fh_par_trace .. figure handle for parameter traces
-% fh_par_dis .. figure handle for parameter distribution
+% Required fields of parameters:
+%   number: Number of parameters
+%   min: Lower bound for each parameter
+%   max: upper bound for each parameter
+%   ml: maximum likelihood estimate
+%
+% Return values:
+%   parameters: updated parameter object
+%   fh_logPost_trace: figure handle for log-posterior trace
+%   fh_par_trace: figure handle for parameter traces
+%   fh_par_dis: figure handle for parameter distribution
+%
+% Generated fields of parameters:
+%   S: parameter and posterior sample.
+%     * logPost: log-posterior function along chain
+%     * par: parameters along chain
 %
 % 2012/07/11 Jan Hasenauer
 % 2015/04/29 Jan Hasenauer
 % 2016/10/17 Benjamin Ballnus
-
-% function [parameters,fh_logPost_trace,fh_par_trace,fh_par_dis] = getParameterSamples(parameters,logLikelihood,options)
-function [parameters,fh_logPost_trace,fh_par_trace,fh_par_dis_1D,fh_par_dis_2D] = getParameterSamples_minimalistisch(varargin)
-
+% 2016/10/19 Daniel Weindl
 
 %% Check and assign inputs
-if nargin >= 2
-    parameters = varargin{1};
-    objective_function = varargin{2};
+parameters = parametersSanityCheck(parameters);
+
+if nargin >= 1
+    options = varargin{1};
+    if ~isa(options, 'PestoOptions')
+        error('Third argument is not of type PestoOptions.')
+    end
 else
-    error('getParameterSamples requires at least three inputs.')
+    options = PestoOptions();
 end
 
-% CHANGE JH:
-% Check dimension of parameters.min and parameters.max
-parameters.min = parameters.min(:);
-parameters.max = parameters.max(:);
-if ~isfield(parameters,'number')
-    parameters.number = length(parameters.min);
+if isempty(options.MCMC.nsimu_warmup)
+    options.MCMC.nsimu_warmup = 1e3 * parameters.number;
 end
-if    (length(parameters.min) ~= parameters.number) ...
-        || (length(parameters.max) ~= parameters.number)
-    error('Dimension of parameters.min, parameters.max and parameters.number is inconsistent.');
+if isempty(options.MCMC.nsimu_run)
+    options.MCMC.nsimu_run = 1e4 * parameters.number;
 end
-
-% % % % % Set options % % % % %
-% ---- General options ---- %
-options.parallelization.comp_type = 'sequential'; % 'parallel';
-options.parallelization.n_proposals = 10;
-
-options.obj_type = 'log-posterior'; % 'negative log-posterior'
-options.mode = 'text';%,'silent','visual';
-options.save = 'false'; % 'true'
-options.rng = 'shuffle';
-
-options.plot_options.interval = 'dynamic';
-options.fh.logPost_trace = [];
-options.fh.par_trace = [];
-options.fh.par_dis_1D = [];
-options.fh.par_dis_2D = [];
-
-options.report_interval = 100;
-options.show_warning = true;
-
-% ---- General Sampling options ---- %
-% options.theta_0 = zeros(parameters.number,1);
-% options.Sigma_0 = 0.001*eye(parameters.number);
-
-options.thinning = 1;
-options.nsimu_warmup = 1e3 * parameters.number;
-options.nsimu_run    = 1e4 * parameters.number;
-options.sampling_scheme = 'single-chain';
-
-% --- Random Walk Options --- %
-options.SC.proposal_scheme = 'AM';
-
-% -- DRAM options -- %
-options.SC.DRAM.algorithm = 'dram';
-options.SC.DRAM.ntry = 3;
-
-% -- MALA options -- %
-options.SC.MALA.min_regularisation = 1e-5; % minimal regularistion for hessian matrix
-options.SC.MALA.w_hist = 0; % interpolation between MALA and AM proposal
-
-% -- AM options -- %
-options.SC.AM.min_regularisation = 1e-5; % minimal regularistion for covariance matrix
-options.SC.AM.init_memory_length = 20*parameters.number;
-options.SC.AM.adaption_interval = 1;
-options.SC.AM.proposal_scaling_scheme = 'Lacki'; %'Haario'
-
-% - Adaption + scaling options - %
-options.SC.AM.Haario.min_acc = 0.15;
-options.SC.AM.Haario.max_acc = 0.30;
-options.SC.AM.Haario.adap_sigma_scale = 0.95;
-
-options.SC.AM.Lacki.alpha_update = 1;
-options.SC.AM.Lacki.alpha_scale = 0.51;
-
-if nargin == 3
-    options = setdefault(varargin{3},options);
+if isempty(options.SC.AM.init_memory_length)
+    options.SC.AM.init_memory_length = 20*parameters.number;
 end
 
 rng(options.rng);
-
 
 % Use MS distribution to find sufficient start values and inital covariances for tempered
 % chains. To do so, we take into account both - the height and basin of the modes in our target
 if isfield(parameters,'MS')
     tossed_idx = 1;
-    if ~isfield(parameters.options,'theta_0')
-        options.theta_0 = parameters.MS.par(:,tossed_idx);
+    if ~isfield(parameters, 'options') || ~isfield(parameters.options,'theta_0')
+        options.MCMC.theta_0 = parameters.MS.par(:,tossed_idx);
         parameters.options.theta_0 = parameters.MS.par(:,tossed_idx);
     else
-        options.theta_0 = parameters.options.theta_0;
+        options.MCMC.theta_0 = parameters.options.theta_0;
     end
-    if ~isfield(parameters.options,'Sigma_0')
+    if ~isfield(parameters, 'options') || ~isfield(parameters.options,'Sigma_0')
         Sigma_0 = zeros([size(parameters.MS.hessian(:,:,1)),length(tossed_idx)]);
         for i = 1:length(tossed_idx)
             Sigma_0(:,:,i) = inv(parameters.MS.hessian(:,:,tossed_idx(i)));
@@ -164,11 +88,11 @@ if isfield(parameters,'MS')
                 Sigma_0(:,:,1) = 1e-3 * eye(size(parameters.MS.hessian(:,:,1)));
             end
         end
-        options.Sigma_0 = Sigma_0;
+        options.MCMC.Sigma_0 = Sigma_0;
         parameters.options.Sigma_0 = Sigma_0;
     else
-        options.Sigma_0 = options.Sigma_0;
-        parameters.options.Sigma_0 = options.Sigma_0;
+        options.MCMC.Sigma_0 = options.MCMC.Sigma_0;
+        parameters.options.Sigma_0 = options.MCMC.Sigma_0;
     end
 else
      if ~isfield(parameters.options,'theta_0') || ~isfield(parameters.options,'Sigma_0')
@@ -180,8 +104,8 @@ else
      else
          options.Sigma_0 = parameters.options.Sigma_0;
          options.theta_0 = parameters.options.theta_0;
-         Sigma_0 = options.Sigma_0;
-         theta_0 = options.theta_0;
+         Sigma_0 = options.MCMC.Sigma_0;
+         theta_0 = options.MCMC.theta_0;
      end
     
     for i = 1:size(Sigma_0,3)
@@ -194,7 +118,7 @@ else
             Sigma_0(:,:,1) = 1e-3 * eye(size(Sigma_0(:,:,1)));
         end
     end
-    options.Sigma_0 = Sigma_0;
+    options.MCMC.Sigma_0 = Sigma_0;
     parameters.options.Sigma_0 = Sigma_0;
     
     logP = nan(size(theta_0,2),1);
@@ -202,7 +126,7 @@ else
         success = 0;
         j = 1;
         while success == 0
-            logP(i) = logPost(theta_0(:,i),objective_function,options.obj_type,'positive',options.show_warning);
+            logP(i) = logPost(theta_0(:,i),objective_function,options.obj_type,'positive',options.MCMC.show_warning);
             if (isnan(logP(i))) || (logP(i) == -inf)
                 disp(['WARNING: Some of your initital parameter vecotrs theta_0 are ill conditioned! Therefore' ...
                     ' randomize theta_0 and test it again. Temperature number: ' num2str(i) ...
@@ -214,7 +138,7 @@ else
             end
         end
     end
-    options.theta_0 = theta_0;
+    options.MCMC.theta_0 = theta_0;
     parameters.options.theta_0 = theta_0;
     
 end
@@ -226,27 +150,27 @@ fh_par_dis_1D = [];
 switch options.mode
     case 'visual'
         % logL trace
-        if isempty(options.fh.logPost_trace)
+        if isempty(options.plot_options.fh_logPost_trace)
             fh_logPost_trace = figure;
         else
-            fh_logPost_trace = figure(options.fh.logPost_trace);
+            fh_logPost_trace = figure(options.plot_options.fh_logPost_trace);
         end
         % parameter traces
-        if isempty(options.fh.par_trace)
+        if isempty(options.plot_options.fh_par_trace)
             fh_par_trace = figure;
         else
-            fh_par_trace = figure(options.fh.par_trace);
+            fh_par_trace = figure(options.plot_options.fh_par_trace);
         end
         % parameter distribution
-        if isempty(options.fh.par_dis_1D)
+        if isempty(options.plot_options.fh_par_dis_1D)
             fh_par_dis_1D = figure;
         else
-            fh_par_dis_1D = figure(options.fh.par_dis_1D);
+            fh_par_dis_1D = figure(options.plot_options.fh_par_dis_1D);
         end
-        if isempty(options.fh.par_dis_2D)
+        if isempty(options.plot_options.fh_par_dis_2D)
             fh_par_dis_2D = figure;
         else
-            fh_par_dis_2D = figure(options.fh.par_dis_2D);
+            fh_par_dis_2D = figure(options.plot_options.fh_par_dis_2D);
         end
     case 'text'
         fprintf(' \nSampling:\n=========\n');
@@ -255,9 +179,8 @@ end
 
 
 
-%% Selection of sampling proceedure
-switch options.sampling_scheme
-    
+%% Selection of sampling procedure
+switch options.MCMC.sampling_scheme    
     %% DRAM
     case 'DRAM'
         % This section provides the interface to the MATLAB tooparameters.minox for
@@ -270,7 +193,7 @@ switch options.sampling_scheme
             params{i} = {parameters.name{i},options.theta_0(i),parameters.min(i),parameters.max(i)};
         end
         
-        model.ssfun = @(theta,dummi) 2*logPost(theta,objective_function,options.obj_type,'negative',options.show_warning);
+        model.ssfun = @(theta,dummi) 2*logPost(theta,objective_function,options.obj_type,'negative',options.MCMC.show_warning);
         model.sigma2 = 1;
         model.N = 1;
         
@@ -283,9 +206,10 @@ switch options.sampling_scheme
         
         % Options
         options_dram.method      = options.SC.DRAM.algorithm; % adaptation method (mh,am,dr,dram)
-        options_dram.qcov        = options.Sigma_0;      % proposal covariance
+        options_dram.qcov        = options.MCMC.Sigma_0;      % proposal covariance
         options_dram.adaptint    = options.SC.AM.adaption_interval;  % adaptation interval
         options_dram.printint    = 0;  % how often to show info on acceptance ratios
+        options_dram.waitbar     = 0;
         switch options.mode
             case 'silent'
                 options_dram.verbosity   = 0;  % how much to show output in Matlab window
@@ -293,6 +217,9 @@ switch options.sampling_scheme
                 options_dram.verbosity   = 1;  % how much to show output in Matlab window
             case 'debug'
                 options_dram.verbosity   = 2;  % how much to show output in Matlab window
+            case 'visual'
+                options_dram.verbosity   = 0;
+                options_dram.waitbar     = 1;
         end
         options_dram.updatesigma = 0;  % update error variance
         options_dram.stats       = 0;  % save extra statistics in results
@@ -304,18 +231,12 @@ switch options.sampling_scheme
 %         adascale
 %         etaparam
         
-        if strcmp(options.mode,'visual')
-            options_dram.waitbar     = 1;  % show garphical waitbar
-        else
-            options_dram.waitbar     = 0;
-        end
-        
         % Warm-up
-        options_dram.nsimu = options.nsimu_warmup; % # simulations
+        options_dram.nsimu = options.MCMC.nsimu_warmup; % # simulations
         [results] = mcmcrun(model,[],params,options_dram);
         
         % Sampling
-        options_dram.nsimu = options.nsimu_run; % # simulations
+        options_dram.nsimu = options.MCMC.nsimu_run; % # simulations
         % B: More information
         [results,Theta,~,Obj] = mcmcrun(model,[],params,options_dram,results);
         
@@ -327,28 +248,28 @@ switch options.sampling_scheme
     case 'single-chain'
         
         % Initialization
-        parameters.S.par = nan(parameters.number,length(1:options.thinning:options.nsimu_run));
-        parameters.S.logPost = nan(length(1:options.thinning:options.nsimu_run),1);
+        parameters.S.par = nan(parameters.number,length(1:options.thinning:options.MCMC.nsimu_run));
+        parameters.S.logPost = nan(length(1:options.thinning:options.MCMC.nsimu_run),1);
         j = 0;
         acc = 0;
         
-        theta = options.theta_0;
-        mu_hist = options.theta_0;
-        Sigma_hist = options.Sigma_0;
+        theta = options.MCMC.theta_0;
+        mu_hist = options.MCMC.theta_0;
+        Sigma_hist = options.MCMC.Sigma_0;
         
         sigma_scale = 1;
         
         % Initialization and testing of starting point
         switch options.SC.proposal_scheme
             case {'MH','AM'}
-                [logP] = logPost(theta,objective_function,options.obj_type,'positive',options.show_warning);
+                [logP] = logPost(theta,objective_function,options.obj_type,'positive',options.MCMC.show_warning);
                 mu = theta;
-                Sigma = options.Sigma_0;
+                Sigma = options.MCMC.Sigma_0;
             case 'MALA'
-                [logP,G,H] = logPost(theta,objective_function,options.obj_type,'positive',options.show_warning);
+                [logP,G,H] = logPost(theta,objective_function,options.obj_type,'positive',options.MCMC.show_warning);
                 if logP < inf
                     [mu,Sigma] = getProposal(theta,G,H,options.SC.MALA.min_regularisation,options.SC.MALA.w_hist,...
-                        options.theta_0,options.Sigma_0,parameters.min,parameters.max);
+                        options.MCMC.theta_0,options.MCMC.Sigma_0,parameters.min,parameters.max);
                 end
         end
         if isnan(logP) || (logP == -inf)
@@ -363,17 +284,17 @@ switch options.sampling_scheme
         
         % Initialization of waitbar
         if strcmp(options.mode,'visual')
-            h = waitbar(0,['Sampling completed to 0 % (acc = 0 %)']);
+            h = waitbar(0, 'Sampling completed to 0 % (acc = 0 %)');
         end
         
         % Generate Markov chain
-        for i = 1:(options.nsimu_run+options.nsimu_warmup)
+        for i = 1:(options.MCMC.nsimu_run+options.MCMC.nsimu_warmup)
             % Report of progress
-            if mod(i,options.report_interval) == 0
-                str = ['Sampling completed to ' num2str(100*i/(options.nsimu_run + options.nsimu_warmup),'%.2f')...
+            if mod(i,options.MCMC.report_interval) == 0
+                str = ['Sampling completed to ' num2str(100*i/(options.MCMC.nsimu_run + options.MCMC.nsimu_warmup),'%.2f')...
                     ' % (acc = ' num2str(100*acc/i,'%.2f') ' % )'];
                 switch options.mode
-                    case 'visual', waitbar(i/(options.nsimu_run + options.nsimu_warmup),h,str);
+                    case 'visual', waitbar(i/(options.MCMC.nsimu_run + options.MCMC.nsimu_warmup),h,str);
                     case 'text'
                         clc
                         disp(str);
@@ -391,14 +312,14 @@ switch options.sampling_scheme
                 switch options.SC.proposal_scheme
                     case {'MH','AM'}
                         % Compute log-posterior
-                        [logP_i] = logPost(theta_i,objective_function,options.obj_type,'positive',options.show_warning);
+                        [logP_i] = logPost(theta_i,objective_function,options.obj_type,'positive',options.MCMC.show_warning);
                         
                         % Update mu and Sigma of proposal
                         mu_i = theta_i;
                         Sigma_i = Sigma;
                     case 'MALA'
                         % Compute log-posterior, gradient and hessian
-                        [logP_i,G_i,H_i] = logPost(theta_i,objective_function,options.obj_type,'positive',options.show_warning);
+                        [logP_i,G_i,H_i] = logPost(theta_i,objective_function,options.obj_type,'positive',options.MCMC.show_warning);
                         
                         % Update mu and Sigma of proposal
                         if logP_i < inf
@@ -467,7 +388,7 @@ switch options.sampling_scheme
             end
             
             % Store
-            if (mod(i-options.nsimu_warmup,options.thinning) == 0) && (i > options.nsimu_warmup)
+            if (mod(i-options.MCMC.nsimu_warmup,options.thinning) == 0) && (i > options.MCMC.nsimu_warmup)
                 j = j + 1;
                 parameters.S.par(:,j) = theta;
                 parameters.S.logPost(j) = logP;
@@ -490,8 +411,8 @@ switch options.sampling_scheme
         K_set = [];
         
         % Initialization
-        parameters.S.par = nan(parameters.number,length(1:options.thinning:options.nsimu_run));
-        parameters.S.logPost = nan(length(1:options.thinning:options.nsimu_run),1);
+        parameters.S.par = nan(parameters.number,length(1:options.thinning:options.MCMC.nsimu_run));
+        parameters.S.logPost = nan(length(1:options.thinning:options.MCMC.nsimu_run),1);
         j = 0;
         acc = 0;
         K = 0;
@@ -505,11 +426,11 @@ switch options.sampling_scheme
         % Initialization and testing of starting point
         switch options.SC.proposal_scheme
             case {'MH','AM'}
-                [logP] = logPost(theta,objective_function,options.obj_type,'positive',options.show_warning);
+                [logP] = logPost(theta,objective_function,options.obj_type,'positive',options.MCMC.show_warning);
                 mu = theta;
                 Sigma = options.Sigma_0;
             case 'MALA'
-                [logP,G,H] = logPost(theta,objective_function,options.obj_type,'positive',options.show_warning);
+                [logP,G,H] = logPost(theta,objective_function,options.obj_type,'positive',options.MCMC.show_warning);
                 if logP < inf
                     [mu,Sigma] = getProposal(theta,G,H,options.SC.MALA.min_regularisation,options.SC.MALA.w_hist,...
                         options.theta_0,options.Sigma_0,parameters.min,parameters.max);
@@ -521,20 +442,19 @@ switch options.sampling_scheme
         
         % Initialization of waitbar
         if strcmp(options.mode,'visual')
-            h = waitbar(0,['Sampling completed to 0 % (acc = 0 %)']);
+            h = waitbar(0,'Sampling completed to 0 % (acc = 0 %)');
         end
         
         % Generate Markov chain
         i = 1;
-        while i <= (options.nsimu_run+options.nsimu_warmup)
+        while i <= (options.MCMC.nsimu_run+options.MCMC.nsimu_warmup)
             % Report of progress
             if min(mod([i-K:i],100)) == 0
-                str = ['Sampling completed to ' num2str(100*i/(options.nsimu_run + options.nsimu_warmup),'%.2f')...
+                str = ['Sampling completed to ' num2str(100*i/(options.MCMC.nsimu_run + options.MCMC.nsimu_warmup),'%.2f')...
                     ' % (acc = ' num2str(100*acc/i,'%.2f') ' % )'];
                 switch options.mode
-                    case 'visual', waitbar(i/(options.nsimu_run + options.nsimu_warmup),h,str);
+                    case 'visual', waitbar(i/(options.MCMC.nsimu_run + options.MCMC.nsimu_warmup),h,str);
                     case 'text', disp(str);
-                    case 'silent' % no output
                 end
             end
             
@@ -548,14 +468,14 @@ switch options.sampling_scheme
                     switch options.SC.proposal_scheme
                         case {'MH','AM'}
                             % Compute log-posterior
-                            [logP_i(k)] = logPost(theta_i(:,k),objective_function,options.obj_type,'positive',options.show_warning);
+                            [logP_i(k)] = logPost(theta_i(:,k),objective_function,options.obj_type,'positive',options.MCMC.show_warning);
                             
                             % Update mu and Sigma of proposal
                             mu_i(:,k) = theta_i(:,k);
                             Sigma_i(:,:,k) = Sigma;
                         case 'MALA'
                             % Compute log-posterior, gradient and hessian
-                            [logP_i(k),G_i,H_i] = logPost(theta_i(:,k),objective_function,options.obj_type,'positive',options.show_warning);
+                            [logP_i(k),G_i,H_i] = logPost(theta_i(:,k),objective_function,options.obj_type,'positive',options.MCMC.show_warning);
                             
                             % Update mu and Sigma of proposal
                             if logP_i(k) < inf
@@ -640,7 +560,7 @@ switch options.sampling_scheme
                 end
                 
                 % Store
-                if (mod(i-options.nsimu_warmup,options.thinning) == 0) && (i > options.nsimu_warmup)
+                if (mod(i-options.MCMC.nsimu_warmup,options.thinning) == 0) && (i > options.MCMC.nsimu_warmup)
                     j = j + 1;
                     parameters.S.par(:,j) = theta;
                     parameters.S.logPost(j) = logP;
@@ -680,7 +600,6 @@ end
 %% Output
 switch options.mode
     case {'visual','text'}, disp('-> Sampling FINISHED.');
-    case 'silent' % no output
 end
 
 end

@@ -12,7 +12,7 @@ classdef PestoPlottingOptions < hgsetget
         % Title of PESTO-generated plots
         % * true: show
         % * false: don't show
-        title = false;
+        title = true;
         
         % Additional points to include in the plots, e.g. true
         % parameter in the case of test examples
@@ -220,6 +220,22 @@ classdef PestoPlottingOptions < hgsetget
         % Fontsize for labels
         % * .tick: fontsize for ticklabels (default = 12)
         fontsize = struct ('tick', 12);
+        
+        % figure handle for log-posterior trace plot
+        fh_logPost_trace = [];
+        
+        % figure handle for parameter trace plots.
+        fh_par_trace = [];
+        
+        % figure handle for the parameter distribution plot.
+        %fh_par_dis = [];
+        fh_par_dis_1D = [];
+        fh_par_dis_2D = [];
+        
+        plot_type = {'parameter','posterior'};
+        n_max = 1e4;
+        mark_constraint = false;
+
     end
     
     properties (Hidden)

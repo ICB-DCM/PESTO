@@ -137,59 +137,17 @@ end
 % by using repeated reoptimization
 parameters = getParameterProfiles(parameters,objectiveFunction,optionsMultistart);
 
-%% Problem with getParameterSamples
-warning('Stopping example execution. Remove this block when getParameterSamples is working');
-return;
-
 %% Single-chain Monte-Carlo sampling -- Parameters
+options_par = optionsMultistart;
 % options.sampling_scheme = 'DRAM';
-options_par.sampling_scheme = 'single-chain';
-options_par.proposal_scheme = 'AM';
+options_par.MCMC.sampling_scheme = 'single-chain';
+options_par.SC.proposal_scheme = 'AM';
 
-options_par.nsimu_warmup = 1e2;
-options_par.nsimu_run    = 1e3;
+options_par.MCMC.nsimu_warmup = 1e2;
+options_par.MCMC.nsimu_run    = 1e3;
 options_par.plot_options.S.bins = 20;
 
-parameters = getParameterSamples(parameters,logL,options_par);
-
-%% Multi-chain Monte-Carlo sampling -- Parameters
-% Transition kernels
-options.sampling_scheme = 'multi-chain'; 
-options.proposal_scheme = 'AM';% 'MH';
-options.MC.swapStrategy  = 'PTEE';
-% options.MC.swapStrategy  = 'all_adjacents';
-
-% Adaptation of temperature
-options.AM.adapt_temperatures = false;
-
-% Adaptation ot the number of temperatures
-options.MC.n_temps = 4;
-options.AM.adapt_temperature_value = true;
-
-% Adaptation of the number of temperatures
-options.AM.adapt_temperature_number = false;
-options.AM.adapt_temperature_number_inter_update_time = 1e3;
-
-% In-chain adaptation
-options.AM.proposal_scaling_scheme = 'Lacki';
-% options.AM.proposal_scaling_scheme = 'Haario';
-
-% Initialization
-beta = linspace(1,1/options.MC.n_temps,options.MC.n_temps).^5;
-
-options.report_interval = 100;
-options.show_warning = false;
-options.mode = 'text';  
-
-parameters = getParameterSamples(parameters,logL,options);
-
-% Visualiztaion
-% Histograms
-op.S.bins = 30;
-
-% Scatter plots
-plotParameterUncertainty(parameters,'1D',[],[],op);
-plotParameterUncertainty(parameters,'2D',[],[],op);
+parameters = getParameterSamples(parameters,objectiveFunction,options_par);
 
 %% Confidence interval evaluation -- Parameters
 alpha = [0.9,0.95,0.99];
@@ -200,10 +158,17 @@ optionsProperties = optionsMultistart;
 properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
 
 %% Profile likelihood calculation -- Properties
-properties = getPropertyProfiles(properties,parameters,objectiveFunction,optionsProperties);
+properties.name = {'log_{10}(k_1)'};
+properties.function = {@propertyFunction_theta1};
+properties.min = [-2.6];
+properties.max = [-2.4];
+properties.number = length(properties.name);
 
-% %% Evaluation of properties for sampling results -- Properties
-% properties = getPropertySamples(properties,parameters,options);
+
+properties = getPropertyProfiles(properties, parameters, objectiveFunction, optionsProperties);
+
+%% Evaluation of properties for sampling results -- Properties
+properties = getPropertySamples(properties,parameters,optionsProperties);
 
 %% Confidence interval evaluation -- Properties
 properties = getPropertyConfidenceIntervals(properties,alpha);
@@ -214,7 +179,7 @@ if strcmp(options_par.mode,'visual')
     figure
     
     % Loop: parameters
-    for i = 1:parameters.number
+    for i = 1:min(parameters.number, properties.number)
         subplot(ceil(parameters.number/ceil(sqrt(parameters.number))),ceil(sqrt(parameters.number)),i);
         plot(parameters.P(i).par(i,:),parameters.P(i).R,'bx-'); hold on;
         plot(properties.P(i).prop,properties.P(i).R,'r-o');
