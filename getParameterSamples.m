@@ -151,24 +151,24 @@ switch options.mode
     case 'visual'
         % logL trace
         if isempty(options.plot_options.fh_logPost_trace)
-            fh_logPost_trace = figure;
+            fh_logPost_trace = figure('Name','getParameterSamples logL trace');
         else
             fh_logPost_trace = figure(options.plot_options.fh_logPost_trace);
         end
         % parameter traces
         if isempty(options.plot_options.fh_par_trace)
-            fh_par_trace = figure;
+            fh_par_trace = figure('Name','getParameterSamples parameter traces');
         else
             fh_par_trace = figure(options.plot_options.fh_par_trace);
         end
         % parameter distribution
         if isempty(options.plot_options.fh_par_dis_1D)
-            fh_par_dis_1D = figure;
+            fh_par_dis_1D = figure('Name','getParameterSamples parameter distribution');
         else
             fh_par_dis_1D = figure(options.plot_options.fh_par_dis_1D);
         end
         if isempty(options.plot_options.fh_par_dis_2D)
-            fh_par_dis_2D = figure;
+            fh_par_dis_2D = figure('Name','getParameterSamples parameter distribution');
         else
             fh_par_dis_2D = figure(options.plot_options.fh_par_dis_2D);
         end

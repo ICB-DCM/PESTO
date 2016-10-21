@@ -109,7 +109,7 @@ fh = [];
 switch options.mode
     case 'visual'
         if isempty(options.fh)
-            fh = figure;
+            fh = figure('Name','getMultiStarts');
         else
             fh = figure(options.fh);
         end

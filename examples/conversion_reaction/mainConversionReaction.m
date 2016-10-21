@@ -123,7 +123,7 @@ if strcmp(optionsMultistart.mode,'visual')
     ysim = simulateConversionReaction(exp(parameters.MS.par(:,1)),tsim);
 
     % Plot: Fit
-    figure;
+    figure('Name','Conversion reaction: Visualization of fit');
     plot(t,y,'bo'); hold on;
     plot(tsim,ysim,'r-'); 
     xlabel('time t');
@@ -176,7 +176,7 @@ properties = getPropertyConfidenceIntervals(properties,alpha);
 %% Comparison of calculated parameter profiles
 if strcmp(options_par.mode,'visual')
     % Open figure
-    figure
+    figure('Name','Conversion reaction: Comparison of parameter profiles');
     
     % Loop: parameters
     for i = 1:min(parameters.number, properties.number)
