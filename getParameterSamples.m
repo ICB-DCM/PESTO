@@ -394,13 +394,14 @@ switch options.MCMC.sampling_scheme
                 parameters.S.logPost(j) = logP;
             end
         end
+        
         % Reduction
         parameters.S.par = parameters.S.par(:,1:j);
         parameters.S.logPost = parameters.S.logPost(1:j);
         
         % Close waitbar
         if strcmp(options.mode,'visual')
-            close(h)
+            close(h);
         end
         
     case 'single-chain multi-core'
@@ -449,7 +450,7 @@ switch options.MCMC.sampling_scheme
         i = 1;
         while i <= (options.MCMC.nsimu_run+options.MCMC.nsimu_warmup)
             % Report of progress
-            if min(mod([i-K:i],100)) == 0
+            if min(mod((i-K:i),100)) == 0
                 str = ['Sampling completed to ' num2str(100*i/(options.MCMC.nsimu_run + options.MCMC.nsimu_warmup),'%.2f')...
                     ' % (acc = ' num2str(100*acc/i,'%.2f') ' % )'];
                 switch options.mode
@@ -571,13 +572,14 @@ switch options.MCMC.sampling_scheme
             end
             
         end
+        
         % Reduction
         parameters.S.par = parameters.S.par(:,1:j);
         parameters.S.logPost = parameters.S.logPost(1:j);
         
         % Close waitbar
         if strcmp(options.mode,'visual')
-            close(h)
+            close(h);
         end
         
 end
