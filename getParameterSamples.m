@@ -85,7 +85,7 @@ if isfield(parameters,'MS')
                 Sigma_0(:,:,i) = Sigma_0(:,:,i-1);
             elseif p ~= 0
                 disp('WARNING: Your Posterior Sigma_0 is ill conditioned! Setting it to 1e-3*eye.');
-                Sigma_0(:,:,1) = 1e-3 * eye(size(parameters.MS.hessian(:,:,1)));
+                Sigma_0(:,:,1) = options.SC.AM.min_regularisation * eye(size(parameters.MS.hessian(:,:,1)));
             end
         end
         options.MCMC.Sigma_0 = Sigma_0;
@@ -95,9 +95,6 @@ if isfield(parameters,'MS')
         parameters.options.Sigma_0 = options.MCMC.Sigma_0;
     end
 else
-     if ~isfield(parameters.options,'theta_0') || ~isfield(parameters.options,'Sigma_0')
-        error('You either have to specify theta0 and Sigma0 or perform a MS-optimization.')
-     end
      if ~isfield(parameters.options,'theta_0') || ~isfield(parameters.options,'Sigma_0')
          error(['You have to specify an initial parameters vector theta_0 and covariance matrix Sigma_0' ...
              ' or perform a optimization first.']);
@@ -334,8 +331,8 @@ switch options.MCMC.sampling_scheme
             % Determine acceptance probability
             if (inbounds == 1) && (logP_i < inf)
                 % Transition probabilities
-                log_p_forward  = 1;%logmvnpdf(theta_i,mu  ,Sigma  );
-                log_p_backward = 1;%logmvnpdf(theta  ,mu_i,Sigma_i);
+                log_p_forward  = 1; %logmvnpdf(theta_i,mu  ,Sigma  );
+                log_p_backward = 1; %logmvnpdf(theta  ,mu_i,Sigma_i);
                 
                 % Acceptance probability
                 pacc = min( 0, logP_i - logP + log_p_backward - log_p_forward);
@@ -490,8 +487,8 @@ switch options.MCMC.sampling_scheme
                 % Determine acceptance probability
                 if (inbounds(k) == 1) && (logP_i(k) < inf)
                     % Transition probabilities
-                    log_p_forward(k)  = 1;%logmvnpdf(theta_i(:,k),mu       ,Sigma         );
-                    log_p_backward(k) = 1;%logmvnpdf(theta       ,mu_i(:,k),Sigma_i(:,:,k));
+                    log_p_forward(k)  = 1; %logmvnpdf(theta_i(:,k),mu       ,Sigma         );
+                    log_p_backward(k) = 1; %logmvnpdf(theta       ,mu_i(:,k),Sigma_i(:,:,k));
                     
                     % Acceptance probability
                     pacc(k) = min( 0, logP_i(k) - logP + log_p_backward(k) - log_p_forward(k));
