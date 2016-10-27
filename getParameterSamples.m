@@ -49,6 +49,7 @@ if length(varargin) >= 1
     end
 else
     options = PestoOptions();
+    % Implement a check for the sample-subclass here...
 end
 
 if isempty(options.MCMC.nsimu_warmup)
@@ -67,33 +68,67 @@ rng(options.rng);
 % chains. To do so, we take into account both - the height and basin of the modes in our target
 if isfield(parameters,'MS')
     tossed_idx = 1;
-    if ~isfield(parameters, 'options') || ~isfield(parameters.options,'theta_0')
+
+% ======= NEW PART STARTS
+    if(~isfield(options.MCMC, 'theta_0'))
         options.MCMC.theta_0 = parameters.MS.par(:,tossed_idx);
-        parameters.options.theta_0 = parameters.MS.par(:,tossed_idx);
-    else
-        options.MCMC.theta_0 = parameters.options.theta_0;
     end
-    if ~isfield(parameters, 'options') || ~isfield(parameters.options,'Sigma_0')
-        Sigma_0 = zeros([size(parameters.MS.hessian(:,:,1)),length(tossed_idx)]);
+    if(~isfield(options.MCMC, 'Sigma_0'))
+        Sigma_0 = nan([size(parameters.MS.hessian(:,:,1)),length(tossed_idx)]);
         for i = 1:length(tossed_idx)
-            Sigma_0(:,:,i) = inv(parameters.MS.hessian(:,:,tossed_idx(i)));
+            if( ~isfield(parameters.MS, 'hessian') || (size(parameters.MS.hessian,3) < 1) )
+                error('No value in options.MCMC.Sigma_0 found (neither user-provided nor computed by getMultiStarts()).');
+            end
+            if (rcond(Sigma_0(:,:,i)) < 1e-12)
+                warning(['The ' num2str(i) '-th Hessian is ill-conditioned. Using pseudo-inverse instead!']);
+                Sigma_0(:,:,i) = pinv(parameters.MS.hessian(:,:,tossed_idx(i)), 1e-12);
+            else
+                Sigma_0(:,:,i) = inv(parameters.MS.hessian(:,:,tossed_idx(i)));
+            end
             Sigma_0(:,:,i) = Sigma_0(:,:,i) + options.SC.AM.min_regularisation*eye(parameters.number);
             Sigma_0(:,:,i) = (Sigma_0(:,:,i)+Sigma_0(:,:,i)')/2;
             [~,p] = cholcov(Sigma_0(:,:,i),0);
-            if i > 1 && p ~= 0  % It might happen, that the hessian is ill conditioned (e.g. mRNA example)
-                disp('WARNING: Some of your Sigma_0 are ill conditioned!');
-                Sigma_0(:,:,i) = Sigma_0(:,:,i-1);
-            elseif p ~= 0
-                disp('WARNING: Your Posterior Sigma_0 is ill conditioned! Setting it to 1e-3*eye.');
-                Sigma_0(:,:,1) = options.SC.AM.min_regularisation * eye(size(parameters.MS.hessian(:,:,1)));
+            if (p~=0)
+                if (i==1)
+                    warning('The Sigma_0 for the best value of your Posterior has negative eigenvalues! Setting it to options.SC.AM.min_regularisation * Identity!');
+                    Sigma_0(:,:,1) = options.SC.AM.min_regularisation * eye(size(parameters.MS.hessian(:,:,1)));
+                else
+                    warning('Sigma_0[' num2str(i) '] has negative eigenvalues! Using previous Sigma_0 again!');
+                    Sigma_0(:,:,i) = Sigma_0(:,:,i-1);
+                end
             end
         end
         options.MCMC.Sigma_0 = Sigma_0;
-        parameters.options.Sigma_0 = Sigma_0;
-    else
-        options.MCMC.Sigma_0 = options.MCMC.Sigma_0;
-        parameters.options.Sigma_0 = options.MCMC.Sigma_0;
     end
+    
+% === KILL   if ~isfield(parameters, 'options') || ~isfield(parameters.options,'theta_0')
+% === KILL        options.MCMC.theta_0 = parameters.MS.par(:,tossed_idx);
+% === KILL        parameters.options.theta_0 = parameters.MS.par(:,tossed_idx);
+% === KILL    else
+% === KILL        options.MCMC.theta_0 = parameters.options.theta_0;
+% === KILL    end
+% === KILL    if ~isfield(parameters, 'options') || ~isfield(parameters.options,'Sigma_0')
+% === KILL        Sigma_0 = zeros([size(parameters.MS.hessian(:,:,1)),length(tossed_idx)]);
+% === KILL        for i = 1:length(tossed_idx)
+% === KILL            Sigma_0(:,:,i) = inv(parameters.MS.hessian(:,:,tossed_idx(i)));
+% === KILL            Sigma_0(:,:,i) = Sigma_0(:,:,i) + options.SC.AM.min_regularisation*eye(parameters.number);
+% === KILL            Sigma_0(:,:,i) = (Sigma_0(:,:,i)+Sigma_0(:,:,i)')/2;
+% === KILL            [~,p] = cholcov(Sigma_0(:,:,i),0);
+% === KILL            if i > 1 && p ~= 0  % It might happen, that the hessian is ill conditioned (e.g. mRNA example)
+% === KILL                disp('WARNING: Some of your Sigma_0 are ill conditioned!');
+% === KILL                Sigma_0(:,:,i) = Sigma_0(:,:,i-1);
+% === KILL            elseif p ~= 0
+% === KILL                disp('WARNING: Your Posterior Sigma_0 is ill conditioned! Setting it to 1e-3*eye.');
+% === KILL                Sigma_0(:,:,1) = options.SC.AM.min_regularisation * eye(size(parameters.MS.hessian(:,:,1)));
+% === KILL            end
+% === KILL        end
+% === KILL        options.MCMC.Sigma_0 = Sigma_0;
+% === KILL        parameters.options.Sigma_0 = Sigma_0;
+% === KILL    else
+% === KILL        options.MCMC.Sigma_0 = options.MCMC.Sigma_0;
+% === KILL        parameters.options.Sigma_0 = options.MCMC.Sigma_0;
+% === KILL    end
+
 else
      if ~isfield(parameters.options,'theta_0') || ~isfield(parameters.options,'Sigma_0')
          error(['You have to specify an initial parameters vector theta_0 and covariance matrix Sigma_0' ...
