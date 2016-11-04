@@ -10,11 +10,11 @@ function [properties,fh] = getPropertySamples(properties, parameters, varargin)
 %  * PestoOptions::property_index
 %  * PestoOptions::mode
 %  * PestoOptions::fh
-%  * PestoOptions::thinning
 %  * PestoOptions::save
 %  * PestoOptions::foldername
 %  * PestoOptions::comp_type
 %  * PestoOptions::plot_options
+%  * PestoOptions::MCMC.thinning
 %
 % Parameters:
 %   properties: property struct
@@ -89,8 +89,8 @@ switch options.mode
 end
 
 %% Initialization
-properties.S.par = parameters.S.par(:,1:options.thinning:end);
-properties.S.logPost = parameters.S.logPost(1:options.thinning:end);
+properties.S.par = parameters.S.par(:,1:options.MCMC.thinning:end);
+properties.S.logPost = parameters.S.logPost(1:options.MCMC.thinning:end);
 properties.S.prop = nan(properties.number,length(properties.S.logPost));
 
 %% Preperation of folder

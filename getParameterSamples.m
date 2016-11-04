@@ -160,11 +160,11 @@ switch options.MCMC.sampling_scheme
    
     % DRAM
     case 'DRAM'
-        parameters = computeSamplesDram(parameters, objective_function, options, logPost);
+        parameters = computeSamplesDram(parameters, objective_function, options, @(theta,fun,type,sign,flag_warning) logPost(theta,fun,type,sign,flag_warning));
     
     % Single-Chain
     case 'single-chain'
-        parameters = computeSamplesSinglechain(parameters, objective_function, options, logPost);
+        parameters = computeSamplesSinglechain(parameters, objective_function, options, @(theta,fun,type,sign,flag_warning) logPost(theta,fun,type,sign,flag_warning));
           
 end
 
@@ -269,7 +269,7 @@ end
 %% Call the visual ouput routine
 function [fh_logPost_trace,fh_par_trace,fh_par_dis_1D,fh_par_dis_2D] = visualizeResults(parameters, options)
 
-    figure generation
+    % figure generation
     fh_logPost_trace = [];
     fh_par_trace = [];
     fh_par_dis_1D = [];

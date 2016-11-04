@@ -81,9 +81,9 @@ for i = 1:(options.MCMC.nsimu_run+options.MCMC.nsimu_warmup)
         switch options.mode
             case 'visual', waitbar(i/(options.MCMC.nsimu_run + options.MCMC.nsimu_warmup),h,str);
             case 'text'
-                clc
+                clc;
                 disp(str);
-                disp(['Par = ( ' num2str(theta',' %1.2f' ) ' )'])
+                disp(['Par = ( ' num2str(theta',' %1.2f' ) ' )']);
             case 'silent' % no output
         end
     end
@@ -246,9 +246,57 @@ function [mu,Sigma] = getProposal(theta, grad, H, beta, w_hist, mu_hist, Sigma_h
         mu = mu_hist;
     else
         % c) Hybrid of MALA and AM
-        Sigma = inv((1-w_hist)*inv(Sigma_MALA) + w_hist*inv(Sigma_hist));
-        Sigma = 0.5*(Sigma+Sigma');
-        mu = Sigma*((1-w_hist)*inv(Sigma_MALA)*mu_MALA + w_hist*inv(Sigma_hist)*mu_hist);
+        
+        % Check for invertibility
+        if ((rcond(Sigma_MALA) < 1e-12) && (rcond(Sigma_hist) < 1e-12))
+            SigmaInv = (1-w_hist) * pinv(Sigma_MALA, 1e-12) + w_hist * pinv(Sigma_hist, 1e-12);
+            SigmaInv = 0.5 * (SigmaInv + SigmaInv');
+            if (rcond(SigmaInv) < 1e-12)
+                Sigma = pinv(SigmaInv, 1e-12);
+                mu = Sigma * ((1-w_hist) * pinv(Sigma_MALA, 1e-12) * mu_MALA ...
+                    + w_hist * pinv(Sigma_hist, 1e-12) * mu_hist);
+            else
+                Sigma = inv(SigmaInv);
+                mu = SigmaInv \ ((1-w_hist) * pinv(Sigma_MALA, 1e-12) * mu_MALA ...
+                    + w_hist * pinv(Sigma_hist, 1e-12) * mu_hist);
+            end
+        elseif ((rcond(Sigma_MALA) < 1e-12) && (rcond(Sigma_hist) >= 1e-12))
+            SigmaInv = (1-w_hist) * pinv(Sigma_MALA, 1e-12) + w_hist * inv(Sigma_hist);
+            SigmaInv = 0.5 * (SigmaInv + SigmaInv');
+            if (rcond(SigmaInv) < 1e-12)
+                Sigma = pinv(SigmaInv, 1e-12);
+                mu = Sigma * ((1-w_hist) * pinv(Sigma_MALA, 1e-12) * mu_MALA ...
+                    + w_hist * Sigma_hist \ mu_hist);
+            else
+                Sigma = inv(SigmaInv);
+                mu = SigmaInv \ ((1-w_hist) * pinv(Sigma_MALA, 1e-12) * mu_MALA ...
+                    + w_hist * Sigma_hist \ mu_hist);
+            end
+        elseif ((rcond(Sigma_MALA) >= 1e-12) && (rcond(Sigma_hist) < 1e-12))
+            SigmaInv = (1-w_hist) * inv(Sigma_MALA) + w_hist * pinv(Sigma_hist, 1e-12);
+            SigmaInv = 0.5 * (SigmaInv + SigmaInv');
+            if (rcond(SigmaInv) < 1e-12)
+                Sigma = pinv(SigmaInv, 1e-12);
+                mu = Sigma * ((1-w_hist) * Sigma_MALA \ mu_MALA ...
+                    + w_hist * pinv(Sigma_hist, 1e-12) * mu_hist);
+            else
+                Sigma = inv(SigmaInv);
+                mu = SigmaInv \ ((1-w_hist) * Sigma_MALA \ mu_MALA ...
+                    + w_hist * pinv(Sigma_hist, 1e-12) * mu_hist);
+            end
+        else
+            SigmaInv = (1-w_hist) * inv(Sigma_MALA) + w_hist * inv(Sigma_hist);
+            SigmaInv = 0.5 * (SigmaInv + SigmaInv');
+            if (rcond(SigmaInv) < 1e-12)
+                Sigma = pinv(SigmaInv, 1e-12);
+                mu = Sigma * ((1-w_hist) * Sigma_MALA \ mu_MALA ...
+                    + w_hist * Sigma_hist \ mu_hist);
+            else
+                Sigma = inv(SigmaInv);
+                mu = SigmaInv \ ((1-w_hist) * Sigma_MALA \ mu_MALA ...
+                    + w_hist * Sigma_hist \ mu_hist);
+            end
+        end
     end
 
 end

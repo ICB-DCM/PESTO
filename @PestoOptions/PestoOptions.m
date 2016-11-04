@@ -183,10 +183,6 @@ classdef PestoOptions < hgsetget
                       'nsimu_warmup', [], ... % length of MCMC warm-up run (default 1e3 * parameters.number)
                       'nsimu_run', [], ... % length of MCMC run (default 1e4 * parameters.number)
                       'algorithm', 'dram', ... MCMC sampling scheme (default = 'dram')
-                      'qcov', [], ... initial covariance matrix for MCMC sampling (default = 0.001*eye(parameters.number)).
-                      'adaptint', [], ... number of function evaluations between adaptation of the MCMC transition kernel (default = 20*parameters.number).
-                      'plot', true, ... visualization of the results after the computation (default = 'true').
-                      'n_proposals', 10, ...
                       'report_interval', 100, ...
                       'show_warning', true, ...
                       'thinning', 10 ... In the default setting only the properties for every 10th parameter vector is evaluated
