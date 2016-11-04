@@ -8,6 +8,8 @@ classdef PestoOptions < hgsetget
     % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
     
     properties
+        %% General options
+        
         % Type of objective function provided:
         % 'log-posterior' (default) or 'negative log-posterior'
         %
@@ -28,6 +30,7 @@ classdef PestoOptions < hgsetget
 
         % Options for the fmincon local optimizer. See *help('fmincon')*
         % MaxIter: fmincon default, necessary to be set for tracing
+        
         fmincon = optimoptions('fmincon',...
             'algorithm','interior-point',...
             'Display','off', ...
@@ -35,6 +38,45 @@ classdef PestoOptions < hgsetget
             'PrecondBandWidth', inf, ...
             'GradConstr','on', ...
             'SpecifyConstraintGradient', false); 
+        
+        % Initialization of random number generator (default = 0).
+        % * Any real number r: random generator is initialized with r.
+        % * []: random number generator is not initialized.
+        % (Initializing the random number generator with a specific seed can be
+        % helpful to reproduce problems.)
+        
+        rng = 0;
+        
+        % Output mode of algorithm: 
+        % * 'visual' (default): plots showing the progress are generated
+        % * 'text': optimization results for multi-start are printed on screen
+        % * 'silent': no output during the multi-start local optimization
+        % * 'debug': print extra debug information (only available in
+        % certain functions
+        
+        mode = 'visual';
+        
+        % Figure handle in which results are printed. If no handle is 
+        % provided, a new figure is used. TODO: move to plot options
+        
+        fh = [];
+        
+        % Plotting options of class PestoPlottingOptions.m
+        
+        plot_options = PestoPlottingOptions();
+        
+        % Determine whether results are saved or not.
+        % * false: results are not saved
+        % * true: results are stored to an extra folder
+        
+        save = false;
+        
+        % Name of the folder in which results are stored. If no folder is 
+        % provided, a random foldername is generated.
+        
+        foldername = strrep(datestr(now,31),' ','__'); 
+
+        %% Multi-start options
         
         % Number of local optimizations.
         n_starts = 20;
@@ -55,34 +97,7 @@ classdef PestoOptions < hgsetget
         
         % TODO
         init_fun = NaN;
-        
-        % Initialization of random number generator (default = 0).
-        % * Any real number r: random generator is initialized with r.
-        % * []: random number generator is not initialized.
-        % (Initializing the random number generator with a specific seed can be
-        % helpful to reproduce problems.)
-        rng = 0;
-        
-        % Output mode of algorithm: 
-        % * 'visual' (default): plots showing the progress are generated
-        % * 'text': optimization results for multi-start are printed on screen
-        % * 'silent': no output during the multi-start local optimization
-        % * 'debug': print extra debug information (only available in
-        % certain functions
-        mode = 'visual';
-        
-        % Figure handle in which results are printed. If no handle is 
-        % provided, a new figure is used.
-        fh = [];
-        
-        % plot options for plotMultiStarts.m
-        plot_options = PestoPlottingOptions();
-        
-        % Determine whether results are saved or not.
-        % * false: results are not saved
-        % * true: results are stored to an extra folder
-        save = false;
-       
+                       
         % determine whether objective function, parameter values and
         % computation time are stored over iterations
         % * false:  not saved
@@ -94,20 +109,15 @@ classdef PestoOptions < hgsetget
         % * false (default): not saved
         % * true: results are stored to an extra folder
         tempsave = false;
-          
-        % name of the folder in which results are stored. If no folder is 
-        % provided, a random foldername is generated.
-        foldername = strrep(datestr(now,31),' ','__'); 
-               
+                         
         % clears the objective function before every multi-start.
         % * false: (default) persistent variables are preserved.
         % * true: remove all temporary/persistent variables.
         % 
         % WHEN TRUE THIS OPTION REMOVES ALL OBJECTIVE FUNCTION BREAK POINTS
         resetobjective = false;
-        
-        % String with the model name for AMICI, may be left empty
-        model = '';
+
+        %% get(Parameter|Property)Profiles options        
         
         % The following options are for getParameterProfiles only:
         % index of the parameters for which the profile

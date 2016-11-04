@@ -25,7 +25,7 @@ function fh = plotPropertyMultiStarts(properties, varargin)
 if length(varargin) >= 1 && ~isempty(varargin{1})
     fh = figure(varargin{1});
 else
-    fh = figure;
+    fh = figure('Name','plotPropertyMultiStarts');
 end
 
 % Options

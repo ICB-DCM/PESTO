@@ -153,7 +153,6 @@ else
     options.MCMC.theta_0 = theta_0;
 end
 
-
 %% Selection of sampling procedure
 % Main part of getParameterSamples()
 

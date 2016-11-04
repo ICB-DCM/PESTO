@@ -42,7 +42,7 @@ end
 if nargin >= 3 && ~isempty(varargin{2})
     fh = figure(varargin{2});
 else
-    fh = figure;
+    fh = figure('Name','MCMC diagnosis');
 end
 
 % Index of subplot which is updated
