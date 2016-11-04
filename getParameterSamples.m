@@ -278,24 +278,24 @@ function [fh_logPost_trace,fh_par_trace,fh_par_dis_1D,fh_par_dis_2D] = visualize
         case 'visual'
             % logL trace
             if isempty(options.plot_options.fh_logPost_trace)
-                fh_logPost_trace = figure;
+                fh_logPost_trace = figure('Name','plotParameterSamples - Posterior Trace');
             else
                 fh_logPost_trace = figure(options.plot_options.fh_logPost_trace);
             end
             % parameter traces
             if isempty(options.plot_options.fh_par_trace)
-                fh_par_trace = figure;
+                fh_par_trace = figure('Name','plotParameterSamples - Parameter Trace');
             else
                 fh_par_trace = figure(options.plot_options.fh_par_trace);
             end
             % parameter distribution
             if isempty(options.plot_options.fh_par_dis_1D)
-                fh_par_dis_1D = figure;
+                fh_par_dis_1D = figure('Name','plotParameterSamples - Parameter Distribution 1D');
             else
                 fh_par_dis_1D = figure(options.plot_options.fh_par_dis_1D);
             end
             if isempty(options.plot_options.fh_par_dis_2D)
-                fh_par_dis_2D = figure;
+                fh_par_dis_2D = figure('Name','plotParameterSamples - Parameter Distribution 2D');
             else
                 fh_par_dis_2D = figure(options.plot_options.fh_par_dis_2D);
             end
