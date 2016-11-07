@@ -1,29 +1,31 @@
-function model = Chen2009_syms()
+function model = Chen2009_pesto_syms()
+% Chen2009_pesto_syms for examples/Chen2009
+%
+% creates an amimodel-object for the AMICI solver
+%
+% Parameters: 
+% 
+% Return values:
+%  model: amimodel object
 
-time = sym('t');
-model.param = 'log10';
 
 
-%%
-% STATES
+%% STATES
 syms c2 c3 c288 c335 c117 c336 c286 c499 c500 c501 c4 c10 c11 c141 c145 c140 c146 c143 c147 c155 c159 c154 c160 c156 c161 c492 c493 c494 c502 c504 c503 c505 c506 c507 c105 c123 c124 c125 c126 c116 c122 c127 c128 c284 c129 c427 c130 c428 c131 c429 c132 c436 c133 c439 c134 c442 c135 c483 c136 c516 c137 c517 c138 c345 c139 c355 c168 c421 c169 c422 c170 c23 c12 c7 c25 c88 c27 c89 c29 c90 c34 c91 c35 c92 c36 c93 c37 c94 c189 c195 c190 c196 c191 c197 c198 c204 c199 c205 c200 c206 c207 c213 c208 c214 c209 c215 c216 c222 c217 c223 c218 c224 c225 c231 c226 c232 c227 c233 c243 c249 c244 c250 c245 c251 c252 c258 c253 c259 c254 c260 c234 c240 c235 c241 c236 c242 c300 c301 c303 c304 c306 c307 c309 c310 c312 c313 c315 c316 c318 c319 c321 c322 c357 c358 c360 c361 c366 c367 c369 c370 c372 c373 c375 c376 c378 c379 c381 c382 c363 c364 c384 c385 c387 c388 c390 c391 c393 c394 c396 c397 c399 c400 c402 c403 c9 c404 c401 c398 c395 c392 c389 c386 c365 c383 c380 c377 c374 c371 c368 c362 c359 c323 c320 c317 c314 c311 c308 c305 c302 c239 c238 c237 c257 c256 c255 c248 c247 c246 c230 c229 c228 c221 c220 c219 c212 c211 c210 c203 c202 c201 c194 c193 c192 c68 c67 c66 c65 c21 c20 c18 c19 c6 c5 c8 c15 c17 c32 c63 c33 c64 c347 c349 c348 c350 c351 c353 c508 c512 c354 c356 c148 c162 c149 c163 c150 c164 c289 c290 c337 c338 c291 c293 c294 c296 c297 c299 c14 c165 c166 c167 c151 c152 c153 c341 c344 c343 c346 c16 c157 c22 c40 c39 c180 c181 c182 c183 c184 c185 c24 c26 c28 c69 c43 c71 c31 c171 c172 c173 c174 c175 c176 c41 c42 c70 c72 c45 c38 c30 c44 c73 c46 c75 c76 c47 c74 c48 c49 c50 c51 c77 c53 c78 c52 c54 c79 c55 c56 c57 c58 c80 c81 c82 c59 c83 c60 c61 c84 c62 c85 c86 c425 c13 c518 c519 c339 c340 c95 c96 c97 c98 c101 c102 c99 c419 c103 c100 c420 c287 c486 c104 c447 c263 c445 c261 c446 c262 c454 c324 c457 c405 c460 c408 c106 c453 c452 c448 c449 c450 c451 c467 c468 c469 c470 c471 c107 c108 c112 c495 c109 c496 c110 c111 c497 c113 c498 c114 c280 c281 c282 c415 c283 c417 c418 c416 c87 c531 c330 c331 c332 c509 c510 c511 c513 c461 c444 c462 c279 c482 c426 c455 c463 c464 c465 c466 c473 c476 c479 c489 c431 c432 c433 c434 c435 c437 c438 c440 c474 c475 c477 c478 c480 c481 c491 c490 c410 c409 c430 c488 c487 c264 c265 c266 c267 c268 c269 c325 c472 c484 c485 c520 c521 c522 c523 c411 c412 c456 c424 c407 c142 c144 c158 c532 c525 c526 c527 c528 c524 c529 c530 c115 c121 c550 c551 c552 c553 c554 c555 c556 c557 c558
 model.sym.x = [c2,c3,c288,c335,c117,c336,c286,c499,c500,c501,c4,c10,c11,c141,c145,c140,c146,c143,c147,c155,c159,c154,c160,c156,c161,c492,c493,c494,c502,c504,c503,c505,c506,c507,c105,c123,c124,c125,c126,c116,c122,c127,c128,c284,c129,c427,c130,c428,c131,c429,c132,c436,c133,c439,c134,c442,c135,c483,c136,c516,c137,c517,c138,c345,c139,c355,c168,c421,c169,c422,c170,c23,c12,c7,c25,c88,c27,c89,c29,c90,c34,c91,c35,c92,c36,c93,c37,c94,c189,c195,c190,c196,c191,c197,c198,c204,c199,c205,c200,c206,c207,c213,c208,c214,c209,c215,c216,c222,c217,c223,c218,c224,c225,c231,c226,c232,c227,c233,c243,c249,c244,c250,c245,c251,c252,c258,c253,c259,c254,c260,c234,c240,c235,c241,c236,c242,c300,c301,c303,c304,c306,c307,c309,c310,c312,c313,c315,c316,c318,c319,c321,c322,c357,c358,c360,c361,c366,c367,c369,c370,c372,c373,c375,c376,c378,c379,c381,c382,c363,c364,c384,c385,c387,c388,c390,c391,c393,c394,c396,c397,c399,c400,c402,c403,c9,c404,c401,c398,c395,c392,c389,c386,c365,c383,c380,c377,c374,c371,c368,c362,c359,c323,c320,c317,c314,c311,c308,c305,c302,c239,c238,c237,c257,c256,c255,c248,c247,c246,c230,c229,c228,c221,c220,c219,c212,c211,c210,c203,c202,c201,c194,c193,c192,c68,c67,c66,c65,c21,c20,c18,c19,c6,c5,c8,c15,c17,c32,c63,c33,c64,c347,c349,c348,c350,c351,c353,c508,c512,c354,c356,c148,c162,c149,c163,c150,c164,c289,c290,c337,c338,c291,c293,c294,c296,c297,c299,c14,c165,c166,c167,c151,c152,c153,c341,c344,c343,c346,c16,c157,c22,c40,c39,c180,c181,c182,c183,c184,c185,c24,c26,c28,c69,c43,c71,c31,c171,c172,c173,c174,c175,c176,c41,c42,c70,c72,c45,c38,c30,c44,c73,c46,c75,c76,c47,c74,c48,c49,c50,c51,c77,c53,c78,c52,c54,c79,c55,c56,c57,c58,c80,c81,c82,c59,c83,c60,c61,c84,c62,c85,c86,c425,c13,c518,c519,c339,c340,c95,c96,c97,c98,c101,c102,c99,c419,c103,c100,c420,c287,c486,c104,c447,c263,c445,c261,c446,c262,c454,c324,c457,c405,c460,c408,c106,c453,c452,c448,c449,c450,c451,c467,c468,c469,c470,c471,c107,c108,c112,c495,c109,c496,c110,c111,c497,c113,c498,c114,c280,c281,c282,c415,c283,c417,c418,c416,c87,c531,c330,c331,c332,c509,c510,c511,c513,c461,c444,c462,c279,c482,c426,c455,c463,c464,c465,c466,c473,c476,c479,c489,c431,c432,c433,c434,c435,c437,c438,c440,c474,c475,c477,c478,c480,c481,c491,c490,c410,c409,c430,c488,c487,c264,c265,c266,c267,c268,c269,c325,c472,c484,c485,c520,c521,c522,c523,c411,c412,c456,c424,c407,c142,c144,c158,c532,c525,c526,c527,c528,c524,c529,c530,c115,c121,c550,c551,c552,c553,c554,c555,c556,c557,c558];
 
-
-%%
-% PARAMETERS
+%% PARAMETERS
+model.param = 'log10';
 syms EGFR_t ERK_t AKT_t k1d k2 kd2 k2b kd2b k3 kd3 k4 kd4 k4b kd4b k5 kd5 k5b kd5b kd5c k6 k8 kd8 kd8b k8b k10 k10b kd10 k13 kd13 k14 kd14 k15 kd15 k16 k16b k17 kd17 k18 kd18 k19 kd19 k20 kd20 k21 kd21 k22 kd22 k23 kd23 kd24 k25 kd25 k28 kd28 k28b kd28b k29 kd29 kd32 k32 kd33 k33 kd34 k34 kd35 k35 k36 kd36 kd37 k37 k40 kd40 k41 kd41 k42 kd42 kd43 k43 kd44 kd45 k45 kd47 k47 k48 kd48 kd49 k49 k50 kd50 kd52 kd53 k53 kd55 k55 kd56 k56 kd57 k57 k58 kd58 k52 k44 k60 kd60 k61 kd61 kd63 k64 kd64 kd65 k65 k66 kd66 k67 kd67 kd68 k68 kd68b k69 kd69 k70 kd70 k71 kd71 k72 kd72 k73 kd73 k74 kd74 kd75 k75 k76 kd76 kd60d k22b kd22b kd34b k34b k94b k94 kd94 k95 kd95 k96 kd96 kd6b k7 kd7 k62b kd60b k60c k60b KD_iressa_wt kd97 KD_iressa_mt kd97c Kinh2 kd98 k98 Kinh4 kd99 k99 Kinh3 kd100 k100 k101 kd101 k102 kd102 k103 kd103 k104 kd104 k105 kd105 k106 kd106 k106b kd106b k107 kd107 k108 kd108 k109 kd109 k110 kd110 kd111 k111 k112 kd112 k113 kd113 k114 kd114 k115 kd115 kd116 k117 kd117 k118 kd118 kd119 k120 kd120 k120b kd120b Ks k121 kd121 k123 kd123 k6b KD_ATP k123h kd123h KD kd_v853
 model.sym.p = [EGFR_t,ERK_t,AKT_t,k1d,k2,kd2,k2b,kd2b,k3,kd3,k4,kd4,k4b,kd4b,k5,kd5,k5b,kd5b,kd5c,k6,k8,kd8,kd8b,k8b,k10,k10b,kd10,k13,kd13,k14,kd14,k15,kd15,k16,k16b,k17,kd17,k18,kd18,k19,kd19,k20,kd20,k21,kd21,k22,kd22,k23,kd23,kd24,k25,kd25,k28,kd28,k28b,kd28b,k29,kd29,kd32,k32,kd33,k33,kd34,k34,kd35,k35,k36,kd36,kd37,k37,k40,kd40,k41,kd41,k42,kd42,kd43,k43,kd44,kd45,k45,kd47,k47,k48,kd48,kd49,k49,k50,kd50,kd52,kd53,k53,kd55,k55,kd56,k56,kd57,k57,k58,kd58,k52,k44,k60,kd60,k61,kd61,kd63,k64,kd64,kd65,k65,k66,kd66,k67,kd67,kd68,k68,kd68b,k69,kd69,k70,kd70,k71,kd71,k72,kd72,k73,kd73,k74,kd74,kd75,k75,k76,kd76,kd60d,k22b,kd22b,kd34b,k34b,k94b,k94,kd94,k95,kd95,k96,kd96,kd6b,k7,kd7,k62b,kd60b,k60c,k60b,KD_iressa_wt,kd97,KD_iressa_mt,kd97c,Kinh2,kd98,k98,Kinh4,kd99,k99,Kinh3,kd100,k100,k101,kd101,k102,kd102,k103,kd103,k104,kd104,k105,kd105,k106,kd106,k106b,kd106b,k107,kd107,k108,kd108,k109,kd109,k110,kd110,kd111,k111,k112,kd112,k113,kd113,k114,kd114,k115,kd115,kd116,k117,kd117,k118,kd118,kd119,k120,kd120,k120b,kd120b,Ks,k121,kd121,k123,kd123,k6b,KD_ATP,k123h,kd123h,KD,kd_v853];
 
-
-%%
-% CONDITIONS
+%% CONDITIONS
 syms c1 c515 c285 c514
 model.sym.k = [c1,c515,c285,c514];
 
-
 %%
 % DYNAMICS
+time = sym('t');
 
 model.sym.xdot = [c516*kd120 - c2*k6 + c517*kd120 - c2*stepfunc(time, 1799.99, 0, 1800, 1) + c6*stepfunc(time, 1799.99, 0, 1800, 0.00005) + c3*stepfunc(time, 1799.99, 0, 1800, 0.0033) + c105*c531*stepfunc(time, 1799.99, 0, 1800, 0.000000018704) - c2*c142*k120b - c2*c144*k120b - c1*c2*stepfunc(time, 1799.99, 0, 1800, 10000000), ...
 c4*kd2 + c145*kd2b + c146*kd2b + c147*kd2b + c500*kd2 + c527*kd2 + c550*kd2 + c504*kd2b + c505*kd2b + c507*kd2b - c3^2*k2 - c3*stepfunc(time, 1799.99, 0, 1800, 0.0033) - c3*c499*k2 - c3*c526*k2 - c3*c529*k2 - c3*c140*k2b - c3*c141*k2b - c3*c143*k2b - c3*c502*k2b - c3*c503*k2b - c3*c506*k2b + c1*c2*stepfunc(time, 1799.99, 0, 1800, 10000000), ...
@@ -1030,40 +1032,36 @@ model.sym.x0 = [0, ...
 0, ...
 0];
 
-%%
-% OBSERVABLES
+%% Observables
 
-% ERB_B1_P_tot
- % ERK_PP
- % AKT_PP
+% [ERB_B1_P_tot; ERK_PP; AKT_PP]
 model.sym.y = [(2*c5 + 2*c7 + 2*c8 + 2*c15 + 2*c17 + 2*c18 + 2*c19 + 2*c20 + 2*c21 + 2*c23 + 2*c25 + 2*c27 + 2*c29 + 2*c32 + 2*c33 + 2*c34 + 2*c35 + 2*c36 + 2*c37 + 2*c63 + 2*c64 + 2*c65 + 2*c66 + 2*c67 + 2*c68 + 2*c88 + 2*c89 + 2*c90 + 2*c91 + 2*c92 + 2*c93 + 2*c94 + 2*c95 + 2*c96 + 2*c97 + 2*c98 + 2*c99 + 2*c100 + 2*c104 + c130 + c131 + c132 + 2*c136 + c148 + c149 + c150 + c151 + c152 + c153 + c162 + c163 + c164 + c165 + c166 + c167 + c171 + c172 + c173 + c174 + c175 + c176 + c180 + c181 + c182 + c183 + c184 + c185 + c189 + c190 + c191 + c192 + c193 + c194 + c195 + c196 + c197 + c198 + c199 + c200 + c201 + c202 + c203 + c204 + c205 + c206 + c207 + c208 + c209 + c210 + c211 + c212 + c213 + c214 + c215 + c216 + c217 + c218 + c219 + c220 + c221 + c222 + c223 + c224 + c225 + c226 + c227 + c228 + c229 + c230 + c231 + c232 + c233 + c234 + c235 + c236 + c237 + c238 + c239 + c240 + c241 + c242 + c243 + c244 + c245 + c246 + c247 + c248 + c249 + c250 + c251 + c252 + c253 + c254 + c255 + c256 + c257 + c258 + c259 + c260 + c261 + c262 + c263 + 2*c264 + c265 + c266 + c267 + c281 + c282 + c409 + c410 + c411 + c412 + 2*c415 + c416 + 2*c419 + 2*c420 + c427 + c428 + c429 + 2*c431 + 2*c432 + c433 + c434 + c435 + c437 + c438 + c440 + c445 + c446 + c447 + 2*c448 + c449 + c450 + c451 + c464 + c465 + c466 + 2*c483 + 2*c486 + 2*c489)/EGFR_t, ...
 (c59 + c61 + c83 + c84 + c95 + c96 + c97 + c98 + c101 + c102 + c431 + c432 + c433 + c434 + c435 + c437 + c438 + c440 + c474 + c475 + c477 + c478 + c480 + c481)/ERK_t, ...
 (c472 + c484 + c497 + c498)/AKT_t];
 
-
 end
+
+
 
 function r = pow(x,y)
-
     r = x^y;
-
 end
+
+
 
 function r = power(x,y)
-
     r = x^y;
-
 end
+
+
 
 function r = stepfunc2(t,t_start,v_start,t_end,v_end)
-
     r = am_piecewise(v_start,am_lt(t,t_start),v_end,am_gt(t,t_end),(v_end-v_start)/(t_end-t_start)*(t-t_start)+v_start);
-
 end
 
+
+
 function r = stepfunc(t,t_start,v_start,t_end,v_end)
-
     r = am_piecewise(v_start,am_lt(t,t_start),am_piecewise(v_end,am_gt(t,t_end),(v_start+v_end)/2+(v_end-v_start)/2*sin(3.14/2*(2*t-t_end-t_start)/(t_end-t_start))));
-
 end
 

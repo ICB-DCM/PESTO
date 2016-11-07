@@ -19,6 +19,8 @@
 
 
 %% Preliminary
+% Clean up
+
 clear all;
 close all;
 clc;
