@@ -26,9 +26,7 @@
 %
 % Multi-chain Monte-Carlo sampling is performed by getParameterSamples() 
 % and plotted using plotParameterUncertainty().
-%
-% getPropertyProfiles()
-% getPropertyConfidenceIntervals()
+
 
 
 %% Preliminary
@@ -41,7 +39,7 @@ TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
 %% Model Definition
-% See logLikelihood.m for a detailed description
+% See logLikelihoodCR.m for a detailed description
 
 %% Data
 % We fix an artificial data set. It consists of a vector of time points t
@@ -101,13 +99,17 @@ optionsMultistart.plot_options.add_points.par = theta_true;
 optionsMultistart.plot_options.add_points.logPost = objectiveFunction(theta_true);
 
 % The example can also be run in parallel mode: Uncomment this, if wanted
-% options_par.comp_type = 'parallel'; options_par.mode = 'text'; n_workers = 1;
-% options_par.comp_type = 'parallel'; options_par.mode = 'text'; n_workers = 10;
-% options_par.save = 'true'; options_par.foldername = 'results';
+% optionsMultistart.comp_type = 'parallel'; 
+% optionsMultistart.mode = 'text'; n_workers = 1;
+% optionsMultistart.comp_type = 'parallel'; 
+% optionsMultistart.mode = 'text';
+% optionsMultistart.save = 'true'; 
+% optionsMultistart.foldername = 'results';
+% n_workers = 10;
 
 % Open parpool
-if strcmp(optionsMultistart.comp_type,'parallel') && (n_workers >= 2)
-    parpool(n_workers);
+if strcmp(optionsMultistart.comp_type, 'parallel') && (n_workers >= 2)
+    parpool(n_workers); 
 end
 
 % Optimization
@@ -135,7 +137,7 @@ end
 % The uncertainty of the estimated parameters is visualized by computing
 % and plotting profile likelihoods. In getParameterProfiles, this is done
 % by using repeated reoptimization
-parameters = getParameterProfiles(parameters,objectiveFunction,optionsMultistart);
+parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultistart);
 
 %% Single-chain Monte-Carlo sampling -- Parameters
 options_par = optionsMultistart;

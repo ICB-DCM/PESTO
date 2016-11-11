@@ -30,7 +30,7 @@ function [logL, dlogLdtheta, FIM] = logLikelihoodCR(theta, t, Y, sigma2, scale)
 % X_2 -> X_1, rate = theta_2 * [X_2]
 %
 % State of the system:
-% x = [x_1, x_2]
+% x   = [x_1, x_2] with
 % x_1 = [X_1]
 % x_2 = [X_2]
 %
@@ -76,6 +76,7 @@ dhdx = @(x,theta) [0, 1];
 
 %% Simulation and ODE Integration
 % Initialization of observable sensitivities
+
 dydtheta = zeros(length(t), n_theta * n_y);
 switch scale
     case 'lin'

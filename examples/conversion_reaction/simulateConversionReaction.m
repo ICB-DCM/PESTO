@@ -26,6 +26,6 @@ h = @(x,theta) x(:,2);
 
 %% Simulation and Assignment
 [~,X] = ode15s(@(t,x) f(t,x,theta),t,x0(theta));
-y = h(X,theta);
+y = h(X, theta);
 
 end
