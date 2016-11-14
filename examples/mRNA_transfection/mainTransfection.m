@@ -242,7 +242,8 @@ properties = getPropertySamples(properties, parameters, optionsMultistart);
 properties = getPropertyConfidenceIntervals(properties, alpha);
 
 %% Comparison of calculated parameter profiles
-if strcmp(optionsMultistart.mode,'visual')
+
+if strcmp(optionsMultistart.mode, 'visual')
     % Open figure
     figure
     
@@ -260,6 +261,7 @@ if strcmp(optionsMultistart.mode,'visual')
 end
 
 %% Close the pools of parallel working threads
-if strcmp(optionsMultistart.comp_type,'parallel')
+
+if strcmp(optionsMultistart.comp_type, 'parallel')
     parpool('close');
 end

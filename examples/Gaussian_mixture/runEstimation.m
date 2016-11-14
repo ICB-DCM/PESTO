@@ -23,15 +23,27 @@ mu = rand(2,20)*10;
 sig = 0.05;
 logP = @(theta) simulate_Gauss_LLH(theta,mu,sig);
 
+options = PestoOptions();
+options.fmincon   = optimoptions('fmincon',...
+    'SpecifyObjectiveGradient', false,...
+    'Display', 'iter-detailed', ...
+    'MaxIterations', 500);
+options.obj_type = 'negative log-posterior';
+options.n_starts = 20;
+options.comp_type = 'sequential';
+options.mode = 'visual';
+
+parameters = getMultiStarts(parameters, logP, options);
+
 %% MARKOV CHAIN MONTE-CARLO SAMPLING
 % Sample size
-options.nsimu_warmup = 1e4;
-options.nsimu_run    = 1e4;
+options.MCMC.nsimu_warmup = 1e4;
+options.MCMC.nsimu_run    = 1e4;
 
 % Transition kernels
-options.proposal_scheme = 'AM';% 'MH';
-options.sampling_scheme = 'multi-chain'; 
-options.MC.swapStrategy  = 'PTEE';
+options.SC.proposal_scheme = 'AM';% 'MH';
+options.MCMC.sampling_scheme = 'single-chain'; 
+options.MCMC.swapStrategy  = 'PTEE';
 % options.MC.swapStrategy  = 'all_adjacents';
 
 % Adaptation of temperature
@@ -39,26 +51,26 @@ options.MC.swapStrategy  = 'PTEE';
 % options.AM.start_iter_temp_adaption = 1e4;
 
 % Adaptation ot the number of temperatures
-options.MC.n_temps = 5;
-options.AM.adapt_temperature_value = true;
-options.AM.start_iter_temp_adaption = 5e3;
+% options.MCMC.n_temps = 5;
+% options.AM.adapt_temperature_value = true;
+% options.AM.start_iter_temp_adaption = 5e3;
 
 % Adaptation of the number of temperatures
-options.AM.adapt_temperature_number = true;
-options.AM.adapt_temperature_number_inter_update_time = 1e3;
+% options.AM.adapt_temperature_number = true;
+% options.AM.adapt_temperature_number_inter_update_time = 1e3;
 
 % In-chain adaptation
-options.AM.proposal_scaling_scheme = 'Lacki';
+options.SC.AM.proposal_scaling_scheme = 'Lacki';
 % options.AM.proposal_scaling_scheme = 'Haario';
-options.AM.adaption_interval = 1;
+options.SC.AM.adaption_interval = 1;
 
 % Reporting
-options.mode = 'text';  
-options.report_interval = 100;
+options.mode = 'visual';  
+options.MCMC.report_interval = 100;
 
 % Initialization
-options.theta_0 = [0;0];
-options.Sigma_0 = 1e-4 * diag([1,1]);
+options.MCMC.theta_0 = [0;0];
+options.MCMC.Sigma_0 = 1e-4 * diag([1,1]);
 
 % Output options
 

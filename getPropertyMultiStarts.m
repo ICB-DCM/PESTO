@@ -15,34 +15,28 @@ function [properties,fh] = getPropertyMultiStarts(properties, parameters, vararg
 %  * PestoOptions::comp_type
 %
 % Parameters:
-% varargin:
-% properties: property struct containing at least:
-%    * .number: Number of properties
-%    * .min: lower bound for property values       
-%    * .max: upper bound for property values       
-%    * .name = {'name1',...}: names of the properties 
-%    * .function = {'function1',...}: functions to evaluate property  
-%       values. These functions provide the values of the respective  
-%       properties and the corresponding 1st and 2nd order
-%       derivatives.
-% parameters: parameter struct containing at least:
-%   * .MS: information about multi-start optimization
-%   * .par(*,i): ith MAP
-%   * .logPost(i): log-posterior for ith MAP
-%   * .gradient(*,i): gradient of log-posterior at ith MAP
-%   * .hessian(*,*,i): hessian of log-posterior at ith MAP
-%   * .exitflag: exitflag the optimizer returned
-%   Note: This struct is obtained using getMultiStarts.m.
-% options: A PestoOptions object holding various options for the algorithm.
+%   parameters: parameter struct containing at least:
+%      MS: information about multi-start optimization
+%   properties: property struct containing at least:
+%     number: Number of properties
+%     min: lower bound for property values       
+%     max: upper bound for property values       
+%     name = {'name1',...}: names of the properties 
+%     function = {'function1',...}: functions to evaluate property  
+%         values. These functions provide the values of the respective  
+%         properties and the corresponding 1st and 2nd order
+%         derivatives.
+%   varargin:
+%     options: A PestoOptions object holding the options for the algorithm.
 %
 % Return values:
-% properties: updated parameter object containing:
-%   * .MS: properties for multi-start optimization results
-%   * .par(:,i): ith MAP
-%   * .logPost(i): log-posterior for ith MAP
-%   * .exitflag(i): exit flag of ith MAP
-%   * .prop(j,i): values of jth property for ith MAP
-%   * .prop_Sigma(:,:,i): covariance of properties for ith MAP
+%   properties: updated parameter object containing:
+%     MS: properties for multi-start optimization results
+%       * par(:,i): ith MAP
+%       * logPost(i): log-posterior for ith MAP
+%       * exitflag(i): exit flag of ith MAP
+%       * prop(j,i): values of jth property for ith MAP
+%       * prop_Sigma(:,:,i): covariance of properties for ith MAP
 % fh: figure handle
 %
 % History:
@@ -60,11 +54,6 @@ else
 end
 
 properties = propertySanityCheck(properties);
-
-% Check initial guess
-if ~isfield(parameters,'guess')
-    parameters.guess = [];
-end
 
 %% Initialization and figure generation
 fh = [];
@@ -88,9 +77,7 @@ properties.MS.prop_Sigma = nan(properties.number,properties.number,length(proper
 
 %% Preperation of folder
 if options.save
-    try
-       rmdir(options.foldername,'s'); 
-    end
+    rmdir(options.foldername,'s'); 
     mkdir(options.foldername);
     save([options.foldername '/properties_init'],'properties');
 end
@@ -102,7 +89,7 @@ if strcmp(options.comp_type,'sequential')
 for j = 1:length(properties.MS.logPost)
     % Loop: Properties
     G = nan(parameters.number,properties.number);
-    if ~isnan(properties.MS.logPost(j))
+    if (~isnan(properties.MS.logPost(j)))
         for i = 1:properties.number
             try
                 [properties.MS.prop(i,j),G(:,i)] = properties.function{i}(properties.MS.par(:,j));
@@ -139,28 +126,38 @@ if strcmp(options.comp_type,'parallel')
 prop = nan(properties.number,length(properties.MS.logPost));
 prop_Sigma = nan(properties.number,properties.number,length(properties.MS.logPost));
 
+% Create local partial copies of the parameter and the propertry struct
+para_num = parameters.number;
+para_hes = parameters.MS.hessian;
+para_MS_par = parameters.MS.par;
+prop_num = properties.number;
+prop_fun = properties.function;
+prop_logPost = properties.MS.logPost(i);
+opt_save = options.save;
+opt_folder = options.foldername;
+
 % Loop: Multi-start results
-parfor i = 1:length(properties.MS.logPost)
+parfor i = 1:length(prop_logPost)
     % Loop: Properties
-    P = nan(properties.number,1);
-    G = nan(parameters.number,properties.number);
-    if ~isnan(properties.MS.logPost(i))
-        for j = 1:properties.number
+    P = nan(prop_num, 1);
+    G = nan(para_num, prop_num);
+    if (~isnan(prop_logPost(i)))
+        for j = 1 : prop_num
             try
-                [P(j),G(:,j)] = properties.function{j}(properties.MS.par(:,i));
+                [P(j),G(:,j)] = prop_fun{j}(para_MS_par(:,i));
             catch
-                P(j) = properties.function{j}(properties.MS.par(:,i));
+                P(j) = prop_fun{j}(para_MS_par(:,i));
             end
         end
         % Assignment
         prop(:,i) = P;
-        prop_Sigma(:,:,i) = G'*pinv(squeeze(parameters.MS.hessian(:,:,i)))*G;
+        prop_Sigma(:,:,i) = G' * pinv(squeeze(para_hes(:,:,i))) * G;
     end
     
     % Save
-    if options.save
-        dlmwrite([options.foldername '/properties_MS' num2str(i,'%d') '__prop.csv'],prop(:,i),'delimiter',',','precision',12);
-        dlmwrite([options.foldername '/properties_MS' num2str(i,'%d') '__prop_Sigma.csv'],prop_Sigma(:,:,i),'delimiter',',','precision',12);
+    if (opt_save)
+        dlmwrite([opt_folder '/properties_MS' num2str(i,'%d') '__prop.csv'],prop(:,i),'delimiter',',','precision',12);
+        dlmwrite([opt_folder '/properties_MS' num2str(i,'%d') '__prop_Sigma.csv'],prop_Sigma(:,:,i),'delimiter',',','precision',12);
     end
 end
 

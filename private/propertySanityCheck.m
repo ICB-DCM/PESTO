@@ -1,4 +1,4 @@
-function [ properties ] = propertiesAreValid( properties )
+function [ properties ] = propertySanityCheck( properties )
 %propertiesAreValid Checks if the provided properties are okay.
 
 % Check properties:

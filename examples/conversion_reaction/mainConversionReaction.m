@@ -94,7 +94,8 @@ properties.number = length(properties.name);
 optionsMultistart = PestoOptions();
 optionsMultistart.obj_type = 'log-posterior';
 optionsMultistart.n_starts = 20;
-optionsMultistart.comp_type = 'sequential'; optionsMultistart.mode = 'visual';
+optionsMultistart.comp_type = 'sequential';
+optionsMultistart.mode = 'visual';
 optionsMultistart.plot_options.add_points.par = theta_true;
 optionsMultistart.plot_options.add_points.logPost = objectiveFunction(theta_true);
 
@@ -140,43 +141,64 @@ end
 parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultistart);
 
 %% Single-chain Monte-Carlo sampling -- Parameters
-options_par = optionsMultistart;
-% options.sampling_scheme = 'DRAM';
-options_par.MCMC.sampling_scheme = 'single-chain';
-options_par.SC.proposal_scheme = 'AM';
+% Values for the parameters are sampled by using an adapted Metropolis (AM)
+% algorithm. This way, the underlying probability density of the parameter 
+% distribution can be captured. The proposal scheme of the Markov chain 
+% Monte Carlo algorithm is chosen to be 'Haario', but also other ones can
+% be used.
 
-options_par.MCMC.nsimu_warmup = 1e2;
-options_par.MCMC.nsimu_run    = 1e3;
-options_par.plot_options.S.bins = 20;
+optionsMultistart.MCMC.sampling_scheme = 'single-chain';
+optionsMultistart.SC.proposal_scheme   = 'AM';
+optionsMultistart.MCMC.nsimu_warmup    = 1e2;
+optionsMultistart.MCMC.nsimu_run       = 1e3;
+optionsMultistart.plot_options.S.bins  = 20;
 
-parameters = getParameterSamples(parameters,objectiveFunction,options_par);
+parameters = getParameterSamples(parameters, objectiveFunction, optionsMultistart);
 
 %% Confidence interval evaluation -- Parameters
+% Confidence intervals to the confidence levels fixed in the array alpha
+% are computed based on local approximations from the Hessian matrix at the
+% optimum, based on the profile likelihoods and on the parameter sampling.
+
 alpha = [0.9,0.95,0.99];
-parameters = getParameterConfidenceIntervals(parameters,alpha);
+parameters = getParameterConfidenceIntervals(parameters, alpha);
 
 %% Evaluation of properties for multi-start local optimization results -- Properties
+% The values of the properties are evaluated at the end points of the
+% multi-start optimization runs by getPropertyMultiStarts.
+
 optionsProperties = optionsMultistart;
 properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
 
 %% Profile likelihood calculation -- Properties
-properties.name = {'log_{10}(k_1)'};
-properties.function = {@propertyFunction_theta1};
-properties.min = [-2.6];
-properties.max = [-2.4];
-properties.number = length(properties.name);
+% Profile likelihoods are computed for the properties in the same fashion,
+% as they were computed for the parameters.
 
+properties.name     = {'log_{10}(k_1)'};
+properties.function = {@propertyFunction_theta1};
+properties.min      = -2.6;
+properties.max      = -2.4;
+properties.number   = length(properties.name);
 
 properties = getPropertyProfiles(properties, parameters, objectiveFunction, optionsProperties);
 
 %% Evaluation of properties for sampling results -- Properties
-properties = getPropertySamples(properties,parameters,optionsProperties);
+% From the smaples of the parameters, the properties are calculated and
+% hence a probabality distribution for the properties can be reconstructed
+% from that.
+
+properties = getPropertySamples(properties, parameters, optionsProperties);
 
 %% Confidence interval evaluation -- Properties
-properties = getPropertyConfidenceIntervals(properties,alpha);
+% As for the parameters, confidence intervals are computed for the
+% properties in different fashion, based on local approxiamations, profile
+% likelihoods and samples.
+
+properties = getPropertyConfidenceIntervals(properties, alpha);
 
 %% Comparison of calculated parameter profiles
-if strcmp(options_par.mode,'visual')
+
+if strcmp(optionsMultistart.mode, 'visual')
     % Open figure
     figure('Name','Conversion reaction: Comparison of parameter profiles');
     
@@ -193,7 +215,8 @@ if strcmp(options_par.mode,'visual')
     end
 end
 
-% Closing parpool
-if strcmp(options_par.comp_type,'parallel') && (n_workers >= 2)
+%% Close the pools of parallel working threads
+
+if strcmp(optionsMultistart.comp_type, 'parallel') && (n_workers >= 2)
     parpool('close');
 end

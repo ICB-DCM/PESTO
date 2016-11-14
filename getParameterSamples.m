@@ -75,10 +75,10 @@ if isfield(parameters,'MS')
     % tossed_idx will be important for multi-chains
     tossed_idx = 1;
 
-    if(~isfield(options.MCMC, 'theta_0'))
+    if ((~isfield(options.MCMC, 'theta_0')) || isempty(options.MCMC.theta_0))
         options.MCMC.theta_0 = parameters.MS.par(:,tossed_idx);
     end
-    if(~isfield(options.MCMC, 'Sigma_0'))
+    if ((~isfield(options.MCMC, 'Sigma_0')) || isempty(options.MCMC.Sigma_0))
         Sigma_0 = nan([size(parameters.MS.hessian(:,:,1)),length(tossed_idx)]);
         for i = 1:length(tossed_idx)
             if( ~isfield(parameters.MS, 'hessian') || (size(parameters.MS.hessian,3) < 1) )

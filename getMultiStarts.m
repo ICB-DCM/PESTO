@@ -200,9 +200,9 @@ if strcmp(options.comp_type, 'sequential')
         error_count = 0;
         
         % Evaluation of objective function at starting point
-        if strcmp(options.fmincon.GradObj,'off')
+        if (~options.fmincon.SpecifyObjectiveGradient)
             J_0 = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
-        elseif strcmp(options.fmincon.GradObj,'on') && ~strcmp(options.fmincon.Hessian,'user-supplied')
+        elseif ((options.fmincon.SpecifyObjectiveGradient) && ~strcmp(options.fmincon.Hessian,'user-supplied'))
             [J_0, grad_J_0] = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
         else
             [J_0, grad_J_0, H_J_0] = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
@@ -316,9 +316,9 @@ if strcmp(options.comp_type,'parallel')
     parfor i = options.start_index
         
         % Evaluation of objective function at starting point
-        if strcmp(options.fmincon.GradObj,'off')
+        if (~options.fmincon.SpecifyObjectiveGradient)
             J_0 = obj(parameters.MS.par0(:,i),objective_function,options.obj_type);
-        elseif strcmp(options.fmincon.GradObj,'on') && ~strcmp(options.fmincon.Hessian,'user-supplied')
+        elseif ((options.fmincon.SpecifyObjectiveGradient) && ~strcmp(options.fmincon.Hessian,'user-supplied'))
             [J_0,grad_J_0] = obj(parameters.MS.par0(:,i),objective_function,options.obj_type);
         else
             [J_0,grad_J_0,H_J_0] = obj(parameters.MS.par0(:,i),objective_function,options.obj_type);

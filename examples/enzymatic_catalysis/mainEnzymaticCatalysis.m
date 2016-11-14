@@ -94,4 +94,5 @@ parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
 % and plotting profile likelihoods. In getParameterProfiles, this is done
 % by using repeated reoptimization
 
-parameters = getParameterProfiles(parameters,objectiveFunction,optionsMultistart);
+fprintf('\n Perform Profile Computation...');
+parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultistart);
