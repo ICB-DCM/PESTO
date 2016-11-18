@@ -103,67 +103,70 @@ end
 %% Evaluation of properties for multi-start results -- SEQUENTIAL
 if strcmp(options.comp_type,'sequential')
 
-% Loop: Multi-start results
-for j = 1:length(properties.S.logPost)
-    % Loop: Properties
-    for i = options.property_index
-        properties.S.prop(i,j) = properties.function{i}(properties.S.par(:,j));
-    end
-    
-    % Save
-    if options.save
-        dlmwrite([options.foldername '/properties_S' num2str(i,'%d') '__prop.csv'],properties.S.prop(:,j),'delimiter',',','precision',12);
-    end
-    
-    % Output
-    if (mod(j,100) == 0) || (j == length(properties.S.logPost))
-        str = ['Property evaluation for MCMC sampling completed to ' num2str(100*j/length(properties.S.logPost),'%d') ' %'];
-        switch options.mode
-            case 'visual', fh = plotPropertySamples(properties,'1D',fh,options.property_index,options.plot_options); disp(str);
-            case 'text', disp(str);
-            case 'silent' % no output
+    % Loop: Multi-start results
+    for j = 1:length(properties.S.logPost)
+        % Loop: Properties
+        for i = options.property_index
+            properties.S.prop(i,j) = properties.function{i}(properties.S.par(:,j));
+        end
+
+        % Save
+        if options.save
+            dlmwrite([options.foldername '/properties_S' num2str(i,'%d') '__prop.csv'],properties.S.prop(:,j),'delimiter',',','precision',12);
+        end
+
+        % Output
+        if (mod(j,100) == 0) || (j == length(properties.S.logPost))
+            str = ['Property evaluation for MCMC sampling completed to ' num2str(100*j/length(properties.S.logPost),'%d') ' %'];
+            switch options.mode
+                case 'visual', fh = plotPropertySamples(properties,'1D',fh,options.property_index,options.plot_options); disp(str);
+                case 'text', disp(str);
+                case 'silent' % no output
+            end
         end
     end
-end
 
-% Output
-switch options.mode
-    case 'visual', fh = plotPropertySamples(properties,'1D',fh,options.property_index);
-end
+    % Output
+    switch options.mode
+        % Set the correct options        
+        case 'visual' 
+            options.plot_options.S.plot_type = 1;
+            fh = plotPropertySamples(properties,'1D',fh,options.property_index,options.plot_options);
+    end
 
 end
 
 %% Evaluation of properties for multi-start results -- PARALLEL
 if strcmp(options.comp_type, 'parallel')
 
-% Initialization
-prop = nan(properties.number,length(properties.S.logPost));
+    % Initialization
+    prop = nan(properties.number,length(properties.S.logPost));
 
-% Create local partial copies of the propertry struct
-prop_num = properties.number;
-prop_fun = properties.function;
-prop_S_par = properties.S.par;
-opt_save = options.save;
-opt_ind = options.property_index;
-opt_folder = options.foldername;
+    % Create local partial copies of the propertry struct
+    prop_num = properties.number;
+    prop_fun = properties.function;
+    prop_S_par = properties.S.par;
+    opt_save = options.save;
+    opt_ind = options.property_index;
+    opt_folder = options.foldername;
 
-% Loop: Multi-start results
-parfor i = 1:length(properties.S.logPost)
-    % Loop: Properties
-    P = nan(prop_num, 1);
-    for j = opt_ind
-        P(j) = prop_fun{j}(prop_S_par(:,i));
+    % Loop: Multi-start results
+    parfor i = 1:length(properties.S.logPost)
+        % Loop: Properties
+        P = nan(prop_num, 1);
+        for j = opt_ind
+            P(j) = prop_fun{j}(prop_S_par(:,i));
+        end
+        prop(:,i) = P;
+
+        % Save
+        if (opt_save)
+            dlmwrite([opt_folder '/properties_S' num2str(i,'%d') '__prop.csv'],prop(:,i),'delimiter',',','precision',12);
+        end
     end
-    prop(:,i) = P;
-    
-    % Save
-    if (opt_save)
-        dlmwrite([opt_folder '/properties_S' num2str(i,'%d') '__prop.csv'],prop(:,i),'delimiter',',','precision',12);
-    end
-end
 
-% Assignment
-properties.S.prop = prop;
+    % Assignment
+    properties.S.prop = prop;
 
 end
 

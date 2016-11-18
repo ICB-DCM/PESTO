@@ -90,7 +90,20 @@ for k = 1:length(alpha)
         
         % Confidence intervals computed using sample
         if isfield(parameters,'S')
-            parameters.CI.S(i,:,k) = prctile(parameters.S.par(i,:),100*[alpha(k)/2,1-alpha(k)/2]);
+            if(isfield(parameters, 'MS'))
+                numPar = alpha(k) * size(parameters.S.par, 2) / 2;
+                optPar = parameters.MS.par(i,1);
+                tempPar = sort(parameters.S.par(i,:), 'ascend');
+                tempParUp = tempPar(tempPar > optPar);
+                tempParDown = tempPar(tempPar < optPar);
+                parameters.CI.S(i,:,k) = [prctile(tempParDown, 100*(1 - alpha(k))), prctile(tempParUp, 100*alpha(k))];
+            else
+                parameters.CI.S(i,:,k) = prctile(parameters.S.par(i,:),100*[alpha(end+1-k)/2, 1-alpha(end+1-k)/2]);
+            end
         end
     end
+end
+
+plotConfidenceIntervals(parameters);
+
 end

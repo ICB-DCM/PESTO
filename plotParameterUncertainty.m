@@ -125,7 +125,11 @@ end
 
 %% INITALIZATION
 % Maximum a posterior estimate
-logPost_max = max(parameters.MS.logPost);
+if (isfield(parameters, 'MS'))
+    logPost_max = max(parameters.MS.logPost);
+else
+    logPost_max = max(parameters.S.logPost);
+end
 
 % Degrees of freedom (for chi^2 test)
 dof = 1;
@@ -167,7 +171,7 @@ for l = 1:length(I)
                     L = find(parameters.MS.logPost(:) > (parameters.MS.logPost(1)-chi2inv(options.CL.alpha,1)/2));
                 end
                 if max(strcmp(options.CL.type,'simultanous'))
-                    L = find(parameters.MS.logPost(:) > (parameters.MS.logPost(1)-chi2inv(options.CL.alpha,parameters.numbe)/2));
+                    L = find(parameters.MS.logPost(:) > (parameters.MS.logPost(1)-chi2inv(options.CL.alpha,parameters.number)/2));
                 end
                 xl(1) = min(xl(1),min(parameters.MS.par(i,L)));
                 xl(2) = max(xl(2),max(parameters.MS.par(i,L)));
@@ -177,8 +181,8 @@ for l = 1:length(I)
             if options.P.plot_type >= 1
                 if length(parameters.P) >= i
                     if ~isempty(parameters.P(i).par)
-                        xl(1) = min(xl(1),min(parameters.P(i).par(i,:)));
-                        xl(2) = max(xl(2),max(parameters.P(i).par(i,:)));
+                        xl(1) = min(xl(1), min(parameters.P(i).par(i,:)));
+                        xl(2) = max(xl(2), max(parameters.P(i).par(i,:)));
                         flag_plot_P = 1;
                     end
                 end
@@ -283,33 +287,37 @@ for l = 1:length(I)
         case 0
             % no plot
         case 1
-            if isfield(parameters.MS,'hessian')
-                % likelihood ratio
-                Sigma = pinv(parameters.MS.hessian(:,:,1));
-                sigma = sqrt(Sigma(i,i));
-                % Get grid
-                par_grid = parameters.MS.par(i,1) + sigma*linspace(-4,4,100);
-                par_grid = par_grid(find((parameters.min(i) <= par_grid).*(par_grid <= parameters.max(i))));
-                % Calculation of objectiev function approximation
-                % - with non-zero gradient
-%                 ind_I = [1:i-1,i+1:parameters.number];
-%                 dtheta_i = -parameters.MS.par(i,1)+par_grid;
-%                 dtheta_ind_I = -pinv(parameters.MS.hessian(ind_I,ind_I,1))*bsxfun(@plus,parameters.MS.hessian(ind_I,i,1)*dtheta_i,parameters.MS.gradient(ind_I,1));
-%                 dtheta = [dtheta_ind_I(1:i-1,:);dtheta_i;dtheta_ind_I(i:end,:)];
-%                 for l = 1:size(dtheta,2)
-%                     dtheta(:,l) = max(min(parameters.MS.par(:,1)+dtheta(:,l),parameters.max),parameters.min)-parameters.MS.par(:,1);
-%                 end
-%                 J = nan(1,size(dtheta,2));
-%                 for l = 1:size(dtheta,2)
-%                     J(l) = parameters.MS.gradient(:,1)'*dtheta(:,l) + 0.5*dtheta(:,l)'*parameters.MS.hessian(:,:,1)*dtheta(:,l);
-%                 end
-                J = parameters.MS.gradient(i,1)*(par_grid-parameters.MS.par(i,1)) + 0.5*((par_grid-parameters.MS.par(i,1))/sigma).^2;
-                % - with zero gradient
-%                 J = 0.5*((par_grid-parameters.MS.par(i,1))/sigma).^2;
-                % Plot
-                h = plot(par_grid,exp(-J),'-','linewidth',options.A.lw,'color',options.A.col); hold on;
+            if (isfield(parameters, 'MS'))
+                if isfield(parameters.MS,'hessian')
+                    % likelihood ratio
+                    Sigma = pinv(parameters.MS.hessian(:,:,1));
+                    sigma = sqrt(Sigma(i,i));
+                    % Get grid
+                    par_grid = parameters.MS.par(i,1) + sigma*linspace(-4,4,100);
+                    par_grid = par_grid(find((parameters.min(i) <= par_grid).*(par_grid <= parameters.max(i))));
+                    % Calculation of objectiev function approximation
+                    % - with non-zero gradient
+    %                 ind_I = [1:i-1,i+1:parameters.number];
+    %                 dtheta_i = -parameters.MS.par(i,1)+par_grid;
+    %                 dtheta_ind_I = -pinv(parameters.MS.hessian(ind_I,ind_I,1))*bsxfun(@plus,parameters.MS.hessian(ind_I,i,1)*dtheta_i,parameters.MS.gradient(ind_I,1));
+    %                 dtheta = [dtheta_ind_I(1:i-1,:);dtheta_i;dtheta_ind_I(i:end,:)];
+    %                 for l = 1:size(dtheta,2)
+    %                     dtheta(:,l) = max(min(parameters.MS.par(:,1)+dtheta(:,l),parameters.max),parameters.min)-parameters.MS.par(:,1);
+    %                 end
+    %                 J = nan(1,size(dtheta,2));
+    %                 for l = 1:size(dtheta,2)
+    %                     J(l) = parameters.MS.gradient(:,1)'*dtheta(:,l) + 0.5*dtheta(:,l)'*parameters.MS.hessian(:,:,1)*dtheta(:,l);
+    %                 end
+                    J = parameters.MS.gradient(i,1)*(par_grid-parameters.MS.par(i,1)) + 0.5*((par_grid-parameters.MS.par(i,1))/sigma).^2;
+                    % - with zero gradient
+    %                 J = 0.5*((par_grid-parameters.MS.par(i,1))/sigma).^2;
+                    % Plot
+                    h = plot(par_grid,exp(-J),'-','linewidth',options.A.lw,'color',options.A.col); hold on;
+                else
+                    warning('No hessian provided in .MS. Approximation in not plotted.');
+                end
             else
-                warning('No hessian provided in .MS. Approximation in not plotted.');
+                
             end
         case 2
             if isfield(parameters.MS,'hessian')

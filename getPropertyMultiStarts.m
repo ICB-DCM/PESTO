@@ -132,7 +132,7 @@ para_hes = parameters.MS.hessian;
 para_MS_par = parameters.MS.par;
 prop_num = properties.number;
 prop_fun = properties.function;
-prop_logPost = properties.MS.logPost(i);
+prop_logPost = properties.MS.logPost;
 opt_save = options.save;
 opt_folder = options.foldername;
 

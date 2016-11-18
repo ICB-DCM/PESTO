@@ -134,6 +134,9 @@ classdef PestoOptions < hgsetget
         % .P.max ... lower bound for profiling parameters, having same
         %   dimension as the parameter vector (default = parameters.max).
         P = {};
+
+        % sampling parameters
+        S = {};
         
         % minimal ratio down to which the profile is calculated
         % (default = 0.03).

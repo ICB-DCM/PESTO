@@ -111,6 +111,8 @@ optionsMultistart.plot_options.add_points.logPost = objectiveFunction(theta_true
 % Open parpool
 if strcmp(optionsMultistart.comp_type, 'parallel') && (n_workers >= 2)
     parpool(n_workers); 
+else
+    optionsMultistart.comp_type = 'sequential';
 end
 
 % Optimization
@@ -149,8 +151,9 @@ parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultista
 
 optionsMultistart.MCMC.sampling_scheme = 'single-chain';
 optionsMultistart.SC.proposal_scheme   = 'AM';
-optionsMultistart.MCMC.nsimu_warmup    = 1e2;
-optionsMultistart.MCMC.nsimu_run       = 1e3;
+optionsMultistart.MCMC.nsimu_warmup    = 1e3;
+optionsMultistart.MCMC.thinning        = 5;
+optionsMultistart.MCMC.nsimu_run       = 1e4;
 optionsMultistart.plot_options.S.bins  = 20;
 
 parameters = getParameterSamples(parameters, objectiveFunction, optionsMultistart);

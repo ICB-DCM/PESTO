@@ -309,7 +309,10 @@ function [fh_logPost_trace,fh_par_trace,fh_par_dis_1D,fh_par_dis_2D] = visualize
         % Diagnosis plots
         plotMCMCdiagnosis(parameters, 'log-posterior', fh_logPost_trace);
         plotMCMCdiagnosis(parameters, 'parameters', fh_par_trace);
-
+        
+        % Set the correct options
+        options.plot_options.S.plot_type = 1;
+        
         % Parameter distribution
         plotParameterSamples(parameters, '1D', fh_par_dis_1D, [], options.plot_options);
         plotParameterSamples(parameters, '2D', fh_par_dis_2D, [], options.plot_options);

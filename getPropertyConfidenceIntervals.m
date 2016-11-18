@@ -84,5 +84,22 @@ for k = 1:length(alpha)
                 end
             end
         end
+        
+        % Confidence intervals computed using sample
+        if isfield(properties,'S')
+            if(isfield(properties, 'MS'))
+                optPar = properties.MS.par(i,1);
+                tempPar = sort(properties.S.par(i,:), 'ascend');
+                tempParUp = tempPar(tempPar > optPar);
+                tempParDown = tempPar(tempPar < optPar);
+                properties.CI.S(i,:,k) = [prctile(tempParDown, 100*(1 - alpha(k))), prctile(tempParUp, 100*alpha(k))];
+            else
+                properties.CI.S(i,:,k) = prctile(properties.S.par(i,:),100*[alpha(end+1-k)/2, 1-alpha(end+1-k)/2]);
+            end
+        end
     end
+end
+
+plotConfidenceIntervals(properties);
+
 end

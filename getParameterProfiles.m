@@ -83,6 +83,9 @@ options.P.max = parameters.max;
 if isempty(options.parameter_index)
     options.parameter_index = 1:parameters.number;
 end
+if (isempty(options.MAP_index))
+    options.MAP_index = 1;
+end
 
 %% Initialization and figure generation
 fh = [];

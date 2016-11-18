@@ -23,20 +23,21 @@ mu = rand(2,20)*10;
 sig = 0.05;
 logP = @(theta) simulate_Gauss_LLH(theta,mu,sig);
 
-options = PestoOptions();
-options.fmincon   = optimoptions('fmincon',...
-    'SpecifyObjectiveGradient', false,...
-    'Display', 'iter-detailed', ...
-    'MaxIterations', 500);
-options.obj_type = 'negative log-posterior';
-options.n_starts = 20;
-options.comp_type = 'sequential';
-options.mode = 'visual';
-
-parameters = getMultiStarts(parameters, logP, options);
+% options = PestoOptions();
+% options.fmincon   = optimoptions('fmincon',...
+%     'SpecifyObjectiveGradient', false,...
+%     'Display', 'iter-detailed', ...
+%     'MaxIterations', 500);
+% options.obj_type = 'negative log-posterior';
+% options.n_starts = 20;
+% options.comp_type = 'sequential';
+% options.mode = 'visual';
+% 
+% parameters = getMultiStarts(parameters, logP, options);
 
 %% MARKOV CHAIN MONTE-CARLO SAMPLING
 % Sample size
+options = PestoOptions();
 options.MCMC.nsimu_warmup = 1e4;
 options.MCMC.nsimu_run    = 1e4;
 
