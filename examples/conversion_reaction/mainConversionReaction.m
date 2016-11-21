@@ -179,8 +179,8 @@ properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
 
 properties.name     = {'log_{10}(k_1)'};
 properties.function = {@propertyFunction_theta1};
-properties.min      = -2.6;
-properties.max      = -2.4;
+properties.min      = -3;
+properties.max      = -1;
 properties.number   = length(properties.name);
 
 properties = getPropertyProfiles(properties, parameters, objectiveFunction, optionsProperties);

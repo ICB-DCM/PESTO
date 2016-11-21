@@ -98,24 +98,27 @@ for iP = 1 : numP
     set(gca, 'ytick', 1:methods.num, 'yticklabel', methods.name)
     box on;
     
+    ax = gca;
     for j = 1 : numConf
         CI = pStruct.CI.(methods.type{j});
         for k = methods.numLevels : -1 : 1;
             h = methods.bars(k);
+            if (CI(iP,1,k) == -inf)
+                CI(iP,1,k) = XLim(1);
+            end
+            if ((CI(iP,2,k)) == inf)
+                CI(iP,1,k) = XLim(2);
+            end
             patch([CI(iP,1,k), CI(iP,2,k), CI(iP,2,k), CI(iP,1,k)], [j-h, j-h, j+h, j+h], 'k', 'FaceColor', methods.colors(j,:,k), 'EdgeColor', 'k');
-            %plot([min(pStruct.min), max(pStruct.max)], [j-0.5, j-0.5], 'k:', 'linewidth', 2);
         end
         plot([pStruct.MS.par(iP,1), pStruct.MS.par(iP,1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
     end
     
-    if (strcmp(type, 'Parameters'))
-        ax = gca;
-        if (options.draw_bounds)
-            if (ax.XLim(1) <= pStruct.min(iP) && ax.XLim(2) >= pStruct.min(iP))
-                plot([pStruct.min(iP), pStruct.min(iP)], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
-            elseif (ax.XLim(1) <= pStruct.max(iP) && ax.XLim(2) >= pStruct.max(iP))
-                plot([pStruct.max(iP), pStruct.max(iP)], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
-            end
+    if (options.draw_bounds)
+        if (ax.XLim(1) <= pStruct.min(iP) && ax.XLim(2) >= pStruct.min(iP))
+            plot([pStruct.min(iP), pStruct.min(iP)], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
+        elseif (ax.XLim(1) <= pStruct.max(iP) && ax.XLim(2) >= pStruct.max(iP))
+            plot([pStruct.max(iP), pStruct.max(iP)], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
         end
     end
     hold off;
