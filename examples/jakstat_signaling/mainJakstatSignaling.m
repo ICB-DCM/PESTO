@@ -37,7 +37,12 @@ set(0,TextSizes);
 % al.
 
 [exdir,~,~]=fileparts(which('mainJakstatSignaling.m'));
-% amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 0);
+try
+    amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 0);
+catch ME
+    warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
+    rethrow(ME);
+end
 
 %% Data
 % Experimental data is read out from an .xls-file and written to an AMICI
@@ -77,7 +82,7 @@ objectiveFunction = @(theta) logLikelihoodJakstat(theta, amiData);
 
 % PestoOptions
 optionsMultistart           = PestoOptions();
-optionsMultistart.n_starts  = 20;
+optionsMultistart.n_starts  = 10;
 optionsMultistart.trace     = true;
 optionsMultistart.mode      = 'visual';
 optionsMultistart.fmincon   = optimoptions('fmincon',...

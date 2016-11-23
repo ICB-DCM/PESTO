@@ -35,7 +35,12 @@ set(0,TextSizes);
 % papers on .........
 
 [exdir,~,~] = fileparts(which('mainChen2009.m'));
-amiwrap('Chen2009_pesto', 'Chen2009_pesto_syms', exdir);
+try
+    amiwrap('Chen2009_pesto', 'Chen2009_pesto_syms', exdir);
+catch ME
+    warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
+    rethrow(ME);
+end
 
 %% Data
 % Experimental data is read out and written to an AMICI-data object which 

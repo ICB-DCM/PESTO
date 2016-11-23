@@ -284,13 +284,12 @@ if strcmp(options.comp_type, 'sequential')
         waitbar(i / length(options.start_index), waitBar, stringTimePrediction);
     end
     
-    % Check time
-    % disp(sum(parameters.MS.t_cpu));
+    % Close the waitbar
+    delete(waitBar);
     
     % Assignment
     parameters = sortMultiStarts(parameters);
 end
-delete(waitBar);
 
 %% Multi-start local optimization -- PARALLEL
 if strcmp(options.comp_type,'parallel')
@@ -384,7 +383,7 @@ if strcmp(options.comp_type,'parallel')
     
     % Output
     switch options.mode
-        case 'visual', fh = plotMultiStarts(parameters,fh);
+        case 'visual', fh = plotMultiStarts(parameters,fh,options.plot_options);
         case {'text','silent'} % no output
     end
     
@@ -395,6 +394,9 @@ switch options.mode
     case {'visual','text'}, disp('-> Multi-start optimization FINISHED.');
     case 'silent' % no output
 end
+
+% Clear Output Function
+options.fmincon.OutputFcn = [];
 
 %% Nested function for storing of objective function and parameter values
     function stop = outfun_fmincon(x,optimValues,state)
