@@ -44,7 +44,7 @@ function [parameters] = computeSamplesDram(parameters, objective_function, optio
 
 % Model
 for i = 1:parameters.number
-    params{i} = {parameters.name{i},options.theta_0(i),parameters.min(i),parameters.max(i)};
+    params{i} = {parameters.name{i},parameters.user.theta_0(i),parameters.min(i),parameters.max(i)};
 end
 
 model.ssfun = @(theta,dummi) 2*logPost(theta, objective_function, ...
@@ -58,7 +58,7 @@ dram_options.method      = options.SC.DRAM.algorithm;       % adaptation method 
 dram_options.nsimu       = options.MCMC.nsimu_run;          % # simulations
 dram_options.ntry        = options.SC.DRAM.ntry;
 dram_options.printint    = 0;                               % how often show info on accept. ratios
-dram_options.qcov        = options.MCMC.Sigma_0;            % proposal covariance
+dram_options.qcov        = parameters.user.Sigma_0;         % proposal covariance
 dram_options.stats       = 0;                               % save extra statistics in results
 dram_options.updatesigma = 0;                               % update error variance
 dram_options.waitbar     = 0;

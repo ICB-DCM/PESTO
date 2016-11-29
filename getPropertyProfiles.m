@@ -122,6 +122,11 @@ switch options.mode
         options.fmincon = optimset(options.fmincon,'display','off');
 end
 
+% Check, if MultiStart was launched before
+if(~isfield(parameters, 'MS'))
+    error('No information from multi-start local optimization available. Please run getMultiStarts() before getParameterProfiles.');
+end
+
 %% Initialization of property struct
 for i = options.property_index
     properties.P(i).prop = properties.MS.prop(i,options.MAP_index);

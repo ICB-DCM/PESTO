@@ -163,6 +163,14 @@ classdef PestoPlottingOptions < hgsetget
             'sigma_level', 2, ...
             'name', 'P_{app}');
         
+        % Option if a user provided sampling initialization should be used
+        % for plotting an approximation of the distribution
+        %
+        % * 'user-provided'
+        % * 'multistart' (default)
+        
+        MCMC = 'multistart';
+        
         % Options for boundary visualization
         % 
         % Struct with 

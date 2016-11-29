@@ -77,6 +77,11 @@ else
     options = PestoOptions();
 end
 
+% Check, if MultiStart was launched before
+if(~isfield(parameters, 'MS'))
+    error('No information from multi-start local optimization available. Please run getMultiStarts() before getParameterProfiles.');
+end
+
 % Check and assign options
 options.P.min = parameters.min;
 options.P.max = parameters.max;

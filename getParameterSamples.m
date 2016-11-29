@@ -75,15 +75,39 @@ if isfield(parameters,'MS')
     % tossed_idx will be important for multi-chains
     tossed_idx = 1;
 
-    if ((~isfield(options.MCMC, 'theta_0')) || isempty(options.MCMC.theta_0))
-        options.MCMC.theta_0 = parameters.MS.par(:,tossed_idx);
-    end
-    if ((~isfield(options.MCMC, 'Sigma_0')) || isempty(options.MCMC.Sigma_0))
-        Sigma_0 = nan([size(parameters.MS.hessian(:,:,1)),length(tossed_idx)]);
-        for i = 1:length(tossed_idx)
-            if( ~isfield(parameters.MS, 'hessian') || (size(parameters.MS.hessian,3) < 1) )
-                error('No value in options.MCMC.Sigma_0 found (neither user-provided nor computed by getMultiStarts()).');
+    % Checking for user-provided intialization of Markoc Chain
+    if strcmp(options.MCMC.initialization, 'user-provided')
+        if isfield(parameters, 'user')
+            userProv = 'all';
+            
+            if ((~isfield(parameters.user, 'theta_0')) || isempty(parameters.user.theta_0))
+                warning('Options for user provided sampling initialization is set, but parameters.user.theta_0 is empty! Trying to use information from Multistart.');
+                userProv = 'sigmaOnly';
             end
+            if ((~isfield(parameters.user, 'Sigma_0')) || isempty(parameters.user.Sigma_0))
+                warning('Options for user provided sampling initialization is set, but parameters.user.Sigma_0 is empty! Trying to use information from Multistart.');
+                userProv = 'no';
+            end
+        else
+            warning('Options for user provided sampling initialization is set, but parameters.user is not set! Trying to use information from Multistart.');
+            userProv = 'no';
+        end
+    else
+        userProv = 'no';
+    end
+    
+    if (strcmp(userProv, 'no') || strcmp(userProv, 'sigmaOnly'))
+        parameters.user.theta_0 = parameters.MS.par(:,tossed_idx);
+    end
+    if strcmp(userProv, 'no')
+        % Check if Hessian was calculated
+        if ( (~isfield(parameters.MS, 'hessian')) || (size(parameters.MS.hessian,3) < 1) )
+            error('No value for Sigma_0 found (neither user-provided nor computed by getMultiStarts()).');
+        else
+            Sigma_0 = nan([size(parameters.MS.hessian(:,:,1)),length(tossed_idx)]);
+        end
+        
+        for i = 1:length(tossed_idx)
             if (rcond(Sigma_0(:,:,i)) < 1e-12)
                 warning(['The ' num2str(i) '-th Hessian is ill-conditioned. Using pseudo-inverse instead!']);
                 Sigma_0(:,:,i) = pinv(parameters.MS.hessian(:,:,tossed_idx(i)), 1e-12);
@@ -103,18 +127,20 @@ if isfield(parameters,'MS')
                 end
             end
         end
-        options.MCMC.Sigma_0 = Sigma_0;
+        parameters.user.Sigma_0 = Sigma_0;
     end
 
 else
     % if no multi-start local optimization was done, we need an input for
-    % Sigma_0 and theta_0, to do sampling
-    if (~isfield(options.MCMC, 'theta_0') || ~isfield(options.MCMC, 'Sigma_0'))
+    % Sigma_0 and theta_0 to do sampling
+    if (~isfield(parameters, 'user') || isempty(parameters.user))
+        if (~isfield(parameters.user, 'Sigma_0') || ~isfield(parameters.user, 'theta_0') || isempty(parameters.user.Sigma_0) || isempty(parameters.user.theta_0))
         error(['You have to specify an initial parameters vector theta_0 and covariance matrix Sigma_0' ...
              ' or perform a optimization first.']);
+        end
     else
-        Sigma_0 = options.MCMC.Sigma_0;
-        theta_0 = options.MCMC.theta_0;
+        Sigma_0 = parameters.user.Sigma_0;
+        theta_0 = parameters.user.theta_0;
     end
     
     % Checking in Sigma_0 for eigenvalues and condition
@@ -130,7 +156,7 @@ else
             end
         end
     end
-    options.MCMC.Sigma_0 = Sigma_0;
+    parameters.user.Sigma_0 = Sigma_0;
     
     % Checking the input parameter vectors for correctness
     logP = nan(size(theta_0,2),1);
@@ -150,7 +176,7 @@ else
             end
         end
     end
-    options.MCMC.theta_0 = theta_0;
+    parameters.user.theta_0 = theta_0;
 end
 
 %% Selection of sampling procedure

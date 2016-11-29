@@ -70,8 +70,10 @@ options.mode = 'visual';
 options.MCMC.report_interval = 100;
 
 % Initialization
-options.MCMC.theta_0 = [0;0];
-options.MCMC.Sigma_0 = 1e-4 * diag([1,1]);
+options.MCMC.initialization = 'user-provided';
+options.plot_options.MCMC = 'user-provided';
+parameters.user.theta_0 = [0;0];
+parameters.user.Sigma_0 = 1e-4 * diag([1,1]);
 
 % Output options
 
@@ -82,12 +84,12 @@ toc
 
 %% Visualiztaion
 % Histograms
-op.S.bins = 50;
-op.add_points.par = mu;
+options.plot_options.S.bins = 50;
+options.plot_options.add_points.par = mu;
 
 % Scatter plots
-plotParameterSamples(parameters,'1D',[],[],op);
-plotParameterSamples(parameters,'2D',[],[],op);
+plotParameterSamples(parameters,'1D',[],[],options.plot_options);
+plotParameterSamples(parameters,'2D',[],[],options.plot_options);
 
 %% Chain statistics
-chainstats(parameters.S.par')
+chainstats(parameters.S.par');

@@ -44,9 +44,9 @@ parameters.S.logPost = nan(length(1:options.MCMC.thinning:options.MCMC.nsimu_run
 j = 0;
 acc = 0;
 
-theta = options.MCMC.theta_0;
-mu_hist = options.MCMC.theta_0;
-Sigma_hist = options.MCMC.Sigma_0;
+theta = parameters.user.theta_0;
+mu_hist = parameters.user.theta_0;
+Sigma_hist = parameters.user.Sigma_0;
 
 sigma_scale = 1;
 
@@ -55,12 +55,12 @@ switch options.SC.proposal_scheme
     case {'MH','AM'}
         [logP] = logPost(theta,objective_function,options.obj_type,'positive',options.MCMC.show_warning);
         mu = theta;
-        Sigma = options.MCMC.Sigma_0;
+        Sigma = parameters.user.Sigma_0;
     case 'MALA'
         [logP,G,H] = logPost(theta,objective_function,options.obj_type,'positive',options.MCMC.show_warning);
         if logP < inf
             [mu,Sigma] = getProposal(theta,G,H,options.SC.MALA.min_regularisation,options.SC.MALA.w_hist,...
-                options.MCMC.theta_0,options.MCMC.Sigma_0,parameters.min,parameters.max);
+                parameters.user.theta_0,parameters.user.Sigma_0,parameters.min,parameters.max);
         end
 end
 if (isnan(logP) || (logP == -inf))

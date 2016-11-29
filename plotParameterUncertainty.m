@@ -60,7 +60,7 @@ end
 
 % Open figure
 if length(varargin) >= 2 && ~isempty(varargin{2})
-        fh = figure(varargin{2});
+    fh = figure(varargin{2});
 else
     fh = figure('Name','plotParameterUncertainty');
 end
@@ -85,7 +85,7 @@ if length(varargin) >= 4
     if ~isa(varargin{4}, 'PestoPlottingOptions')
         error('Argument 4 is not of type PestoPlottingOptions.')
     end
-    options = setdefault(varargin{4},options);
+    options = varargin{4};
 end
 
 if ~isfield(parameters,'P')
@@ -94,14 +94,8 @@ if ~isfield(parameters,'P')
 end
 
 if ~isfield(parameters,'S')
-    options.S.plot_type = 0; 
-end
-
-if ~isfield(parameters,'MS')
-    options.MS.plot_type = 0; 
-end
-
-if isfield(parameters,'S')
+    options.S.plot_type = 0;
+else
     if isfield(parameters.S,'PT');
         options.S.PT.plot_type = options.S.plot_type;
         options.S.PT.ind = size(parameters.S.PT.par,3):-1:1;
@@ -110,6 +104,10 @@ if isfield(parameters,'S')
                             linspace(1,0,size(parameters.S.PT.par,3))'];
         options.S.PT.sp_col = options.S.PT.col;
     end
+end
+
+if ~isfield(parameters,'MS')
+    options.MS.plot_type = 0; 
 end
 
 % Subplot arrangement
@@ -635,6 +633,7 @@ for l2 = 1:length(I)
         otherwise
             error('Selected value for ''options.S.plot_type'' is not available.');
     end
+    
     if ~isempty(h)
         legh(end+1) = h;
         legs{end+1} = options.S.name;
@@ -646,14 +645,52 @@ for l2 = 1:length(I)
         case 0
             % no plot
         case {1,2}
-            if isfield(parameters.MS,'hessian')
-                Sigma = pinv(parameters.MS.hessian(:,:,1));
-                % plot
-                X = getEllipse(parameters.MS.par([i1,i2],1),Sigma([i1,i2],[i1,i2]),options.A.sigma_level);
-                h = plot(X(1,:),X(2,:),'-','linewidth',options.A.lw/1.5,'color',options.A.col); hold on;
+            if strcmp(options.MCMC, 'user-provided')
+                if isfield(parameters, 'user')
+                    userProv = 'all';
+                    if ((~isfield(parameters.user, 'theta_0')) || isempty(parameters.user.theta_0))
+                        userProv = 'sigmaOnly';
+                    end
+                    if ((~isfield(parameters.user, 'Sigma_0')) || isempty(parameters.user.Sigma_0))
+                        userProv = 'no';
+                    end
+                else
+                    userProv = 'no';
+                end
             else
-                warning('No hessian provided in .MS. Approximation in not plotted.');
+                userProv = 'no';
             end
+            
+            plot_appr = false;
+            
+            switch userProv
+                case 'no'
+                    if (~isfield(parameters, 'MS') || ~isfield(parameters.MS, 'hessian') || (size(parameters.MS.hessian,3) < 1))
+                        Sigma = pinv(parameters.MS.hessian(:,:,1));
+                        theta_0 = parameters.MS.par([i1,i2],1);
+                        plot_appr = true;
+                    else
+                        warning('No valid values for sigma found! Not plotting approximation.');
+                    end
+                case 'sigmaOnly'
+                    if (~isfield(parameters, 'MS') || ~isfield(parameters.MS, 'par') || isempty(parameters.MS.par,3))
+                        Sigma = parameters.user.Sigma_0;
+                        theta_0 = parameters.MS.par([i1,i2],1);
+                        plot_appr = true;
+                    else
+                        warning('No valid values for theta found! Not plotting approximation.');
+                    end
+                case 'all'
+                    Sigma = parameters.user.Sigma_0;
+                    theta_0 = parameters.user.theta_0;
+                    plot_appr = true;
+            end
+            
+            if plot_appr
+                X = getEllipse(theta_0([i1,i2],1),Sigma([i1,i2],[i1,i2]),options.A.sigma_level);
+                h = plot(X(1,:),X(2,:),'-','linewidth',options.A.lw/1.5,'color',options.A.col); hold on;
+            end
+            
         otherwise
             error('Selected value for ''options.A.plot_type'' is not available.');
     end
