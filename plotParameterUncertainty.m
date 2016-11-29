@@ -239,7 +239,7 @@ for l = 1:length(I)
             if isfield(parameters.S,'PT') && options.S.PT.plot_type
                 for k = options.S.PT.ind
                     x_grid = linspace(min(parameters.S.PT.par(i,:,k)),max(parameters.S.PT.par(i,:,k)),100);
-                    [KDest] = kde_simple(squeeze(parameters.S.PT.par(i,:,k)),x_grid);
+                    [KDest] = getKernelDensityEstimate(squeeze(parameters.S.PT.par(i,:,k)),x_grid);
                     plot(x_grid,KDest/max(KDest),'-','color',options.S.PT.col(k,:),'linewidth',options.S.PT.lw); hold on;
                 end
             end
@@ -269,7 +269,7 @@ for l = 1:length(I)
         case 2
             % kernel-density estimate
             x_grid = linspace(min(parameters.S.par(i,:)),max(parameters.S.par(i,:)),100);
-            [KDest] = kde_simple(squeeze(parameters.S.par(i,:)),x_grid);
+            [KDest] = getKernelDensityEstimate(squeeze(parameters.S.par(i,:)),x_grid);
             h = plot(x_grid,KDest/max(KDest),'-','color',options.S.lin_col,'linewidth',options.S.lin_lw); hold on;
         otherwise
             error('Selected value for ''options.S.plot_type'' is not available.');

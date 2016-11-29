@@ -1,4 +1,4 @@
-function [KDest,Sigma] = kde_simple(varargin)
+function [KDest,Sigma] = getKernelDensityEstimate(varargin)
 % kde_simple.m computes the kernel density estimate KDest at X given the sample P.
 % The bandwidth can be determined using different methods (see below).
 %

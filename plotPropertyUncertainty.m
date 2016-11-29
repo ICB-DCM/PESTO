@@ -202,7 +202,7 @@ for l = 1:length(I)
         case 2
             % kernel-density estimate
             x_grid = linspace(min(properties.S.prop(i,:)),max(properties.S.prop(i,:)),100);
-            [KDest] = kde_simple(squeeze(properties.S.prop(i,:)),x_grid);
+            [KDest] = getKernelDensityEstimate(squeeze(properties.S.prop(i,:)),x_grid);
             h = plot(x_grid,KDest/max(KDest),'-','color',options.S.lin_col,'linewidth',options.S.lin_lw); hold on;
         otherwise
             error('Selected value for ''options.S.plot_type'' is not available.');

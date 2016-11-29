@@ -1,4 +1,4 @@
-function [ parameters ] = parametersAreValid( parameters )
+function [ parameters ] = parametersSanityCheck( parameters )
 % parametersAreValid Checks if the provided parameters are okay.
 
 % Check parameters:
