@@ -266,8 +266,8 @@ I  = [I1;I2];
 % Compute profile for in- and decreasing theta_i
 for s = [-1,1]
     % Starting point
-    theta  = parameters.MS.par(:,1);
-    logPost = parameters.MS.logPost(1);
+    theta  = parameters.MS.par(:,options.MAP_index);
+    logPost = parameters.MS.logPost(options.MAP_index);
     
     % Lower and upper bounds for profiles
     theta_min = [parameters.min(I1);options.P.min(i);parameters.min(I2)];

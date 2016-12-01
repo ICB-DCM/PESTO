@@ -84,12 +84,17 @@ end
 %         adascale
 %         etaparam
 
-% Warm-up
-dram_options.nsimu = options.MCMC.nsimu_warmup; % # simulations
-[results] = mcmcrun(model, [], params, dram_options);
+try
+    % Warm-up
+    dram_options.nsimu = options.MCMC.nsimu_warmup; % # simulations
+    [results] = mcmcrun(model, [], params, dram_options);
 
-% Sampling, B: More information
-[results, Theta, ~, Obj] = mcmcrun(model, [], params, dram_options, results);
+    % Sampling, B: More information
+    [results, Theta, ~, Obj] = mcmcrun(model, [], params, dram_options, results);
+catch ME
+    warning('There was a problem with calling the DRAM toolbox. The original error message was:');
+    rethrow(ME);
+end
 
 % Reassignment
 parameters.S         = results;

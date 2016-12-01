@@ -42,22 +42,17 @@ for k = 1:length(alpha)
     % Loop: properties
     for i = 1:properties.number
         % Hessian
-        hessian = pinv(properties.MS.prop_Sigma(:,:,1));
+        Sigma = properties.MS.prop_Sigma(:,:,1);
         
         % Confidence intervals computed using local approximation and a
         % threshold (-> similar to PL-based confidence intervals)
-        properties.CI.local_PL(i,1,k) = properties.MS.prop(i) - sqrt(icdf('chi2',alpha(k),1)/hessian(i,i));
-        properties.CI.local_PL(i,2,k) = properties.MS.prop(i) + sqrt(icdf('chi2',alpha(k),1)/hessian(i,i));
+        properties.CI.local_PL(i,1,k) = properties.MS.prop(i) - sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
+        properties.CI.local_PL(i,2,k) = properties.MS.prop(i) + sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
 
         % Confidence intervals computed using local approximation and the
         % probability mass (-> similar to Bayesian confidence intervals)
-        if hessian(i,i) > 1e-16
-            properties.CI.local_B(i,1,k)  = icdf('norm',  (1-alpha(k))/2,properties.MS.prop(i),inv(sqrt(hessian(i,i))));
-            properties.CI.local_B(i,2,k)  = icdf('norm',1-(1-alpha(k))/2,properties.MS.prop(i),inv(sqrt(hessian(i,i))));
-        else
-            properties.CI.local_B(i,1,k) = -inf;
-            properties.CI.local_B(i,2,k) =  inf;
-        end
+        properties.CI.local_B(i,1,k)  = icdf('norm',  (1-alpha(k))/2,properties.MS.prop(i),sqrt(Sigma(i,i)));
+        properties.CI.local_B(i,2,k)  = icdf('norm',1-(1-alpha(k))/2,properties.MS.prop(i),sqrt(Sigma(i,i)));
 
         % Confidence intervals computed using profile likelihood
         if isfield(properties,'P')
@@ -87,15 +82,7 @@ for k = 1:length(alpha)
         
         % Confidence intervals computed using sample
         if isfield(properties,'S')
-            if(isfield(properties, 'MS'))
-                optPar = properties.MS.par(i,1);
-                tempPar = sort(properties.S.par(i,:), 'ascend');
-                tempParUp = tempPar(tempPar > optPar);
-                tempParDown = tempPar(tempPar < optPar);
-                properties.CI.S(i,:,k) = [prctile(tempParDown, 100*(1 - alpha(k))), prctile(tempParUp, 100*alpha(k))];
-            else
-                properties.CI.S(i,:,k) = prctile(properties.S.par(i,:),100*[alpha(end+1-k)/2, 1-alpha(end+1-k)/2]);
-            end
+            properties.CI.S(i,:,k) = prctile(properties.S.par(i,:),50 + 100*[-alpha(k)/2, alpha(k)/2]);
         end
     end
 end

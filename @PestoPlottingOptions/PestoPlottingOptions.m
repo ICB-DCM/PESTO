@@ -207,6 +207,15 @@ classdef PestoPlottingOptions < hgsetget
             'lw', 2,  ...
             'name', 'cut-off');
         
+        % Options for the way to plot confidence intervals
+        %
+        % Either all confidence intervals of one method are plotted to one
+        % window 'params', or the confidence intervals for one parameter 
+        % from all methods are plotted to one window 'methods', or 
+        % everthing is grouped together 'all'.
+        
+        group_CI_by = 'params';
+        
         % Settings for 2D plot to position subplot axes.
         % 
         % Struct with:
@@ -243,6 +252,7 @@ classdef PestoPlottingOptions < hgsetget
         plot_type = {'parameter','posterior'};
         n_max = 1e4;
         mark_constraint = false;
+        
 
     end
     

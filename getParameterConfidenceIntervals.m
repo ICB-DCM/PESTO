@@ -37,6 +37,7 @@ function parameters = getParameterConfidenceIntervals(parameters, alpha)
 %
 % History:
 % * 2013/11/29 Jan Hasenauer
+% * 2016/12/01 Paul Stapor
 
 % Initialization
 parameters.CI.alpha_levels = alpha;
@@ -48,18 +49,14 @@ for k = 1:length(alpha)
         if isfield(parameters,'MS')
             % Confidence intervals computed using local approximation and a
             % threshold (-> similar to PL-based confidence intervals)
-            parameters.CI.local_PL(i,1,k) = parameters.MS.par(i) - sqrt(icdf('chi2',alpha(k),1)/parameters.MS.hessian(i,i));
-            parameters.CI.local_PL(i,2,k) = parameters.MS.par(i) + sqrt(icdf('chi2',alpha(k),1)/parameters.MS.hessian(i,i));
+            Sigma = pinv(parameters.MS.hessian(:,:,1));
+            parameters.CI.local_PL(i,1,k) = parameters.MS.par(i) - sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
+            parameters.CI.local_PL(i,2,k) = parameters.MS.par(i) + sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
 
             % Confidence intervals computed using local approximation and the
             % probability mass (-> similar to Bayesian confidence intervals)
-            if parameters.MS.hessian(i,i) > 1e-16
-                parameters.CI.local_B(i,1,k)  = icdf('norm',  (1-alpha(k))/2,parameters.MS.par(i),inv(sqrt(parameters.MS.hessian(i,i))));
-                parameters.CI.local_B(i,2,k)  = icdf('norm',1-(1-alpha(k))/2,parameters.MS.par(i),inv(sqrt(parameters.MS.hessian(i,i))));
-            else
-                parameters.CI.local_B(i,1,k) = -inf;
-                parameters.CI.local_B(i,2,k) =  inf;
-            end
+            parameters.CI.local_B(i,1,k)  = icdf('norm',  (1-alpha(k))/2,parameters.MS.par(i),sqrt(Sigma(i,i)));
+            parameters.CI.local_B(i,2,k)  = icdf('norm',1-(1-alpha(k))/2,parameters.MS.par(i),sqrt(Sigma(i,i)));
         end
         
         % Confidence intervals computed using profile likelihood
@@ -90,16 +87,7 @@ for k = 1:length(alpha)
         
         % Confidence intervals computed using sample
         if isfield(parameters,'S')
-            if(isfield(parameters, 'MS'))
-                numPar = alpha(k) * size(parameters.S.par, 2) / 2;
-                optPar = parameters.MS.par(i,1);
-                tempPar = sort(parameters.S.par(i,:), 'ascend');
-                tempParUp = tempPar(tempPar > optPar);
-                tempParDown = tempPar(tempPar < optPar);
-                parameters.CI.S(i,:,k) = [prctile(tempParDown, 100*(1 - alpha(k))), prctile(tempParUp, 100*alpha(k))];
-            else
-                parameters.CI.S(i,:,k) = prctile(parameters.S.par(i,:),100*[alpha(end+1-k)/2, 1-alpha(end+1-k)/2]);
-            end
+            parameters.CI.S(i,:,k) = prctile(parameters.S.par(i,:),50 + 100*[-alpha(k)/2, alpha(k)/2]);
         end
     end
 end
