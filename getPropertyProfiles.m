@@ -119,7 +119,7 @@ switch options.mode
         fprintf(' \nProfile likelihood caclulation:\n===============================\n');
     case 'silent' % no output
         % Force fmincon to be silent.
-        options.fmincon = optimset(options.fmincon,'display','off');
+        options.fmincon.Display = 'off';
 end
 
 % Check, if MultiStart was launched before

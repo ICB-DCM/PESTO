@@ -214,7 +214,7 @@ classdef PestoPlottingOptions < hgsetget
         % from all methods are plotted to one window 'methods', or 
         % everthing is grouped together 'all'.
         
-        group_CI_by = 'params';
+        group_CI_by = 'parprop';
         
         % Settings for 2D plot to position subplot axes.
         % 

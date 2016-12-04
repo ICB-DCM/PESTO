@@ -1,4 +1,4 @@
-function fh = plotConfidenceIntervals(pStruct, varargin)
+function fh = plotConfidenceIntervals(pStruct, alpha, varargin)
 % plotConfidenceIntervals.m visualizes confidence itervals stored in either
 % the parameters or properties struct .CI
 %
@@ -41,11 +41,7 @@ function fh = plotConfidenceIntervals(pStruct, varargin)
 % History:
 % * 2016/11/14 Paul Stapor
 
-%% Check and assign inputs
-
-% Options
-% General plot options
-options = PestoPlottingOptions();
+%% Check and assign input
 
 % Check which methods should be used to plot Confidence Intervals
 if (length(varargin) >= 1)
@@ -62,66 +58,139 @@ numConf = methods.num;
 
 % Assignment of user-provided options
 if (length(varargin) >= 2)
-    if (~isa(varargin{4}, 'PestoPlottingOptions'))
-        error('Argument 4 is not of type PestoPlottingOptions.')
+    if (~isa(varargin{2}, 'PestoOptions'))
+        error('Argument 2 is not of type PestoOptions.')
     end
-    options = setdefault(varargin{4}, options);
+    allOptions = varargin{2};
+    options = allOptions.plot_options;
+else
+    allOptions = PestoOptions();
+    options = PestoPlottingOptions();
 end
 
+%% Check what exaclty should be plotted
+
+if isfield(pStruct, 'function')
+    type = 'Properties';
+    if isempty(allOptions.property_index)
+        pIndexSet = 1 : pStruct.number;
+    else
+        pIndexSet = allOptions.property_index;
+    end
+else
+    type = 'Parameters';
+    if isempty(allOptions.parameter_index)
+        pIndexSet = 1 : pStruct.number;
+    else
+        pIndexSet = allOptions.parameter_index;
+    end
+end
+numP = length(pIndexSet);
+
+switch options.group_CI_by
+    case 'parprop'
+        indexSet = pIndexSet;
+        indexLen = length(pIndexSet);
+    case 'methods'
+        indexSet = 1 : numConf;
+        indexLen = numConf;
+    case 'all'
+        indexLen = 1;
+    otherwise
+        error('Call to undefinded grouping method plot plot of confidence intervals.');
+end
+        
 %% Initialize the figure generation
-sqrtPlots = ceil(sqrt(pStruct.number));
-if ((sqrtPlots-1)*sqrtPlots >= pStruct.number)
+sqrtPlots = ceil(sqrt(indexLen));
+if ((sqrtPlots-1)*sqrtPlots >= indexLen)
     plots = [sqrtPlots-1, sqrtPlots];
 else
     plots = [sqrtPlots, sqrtPlots];
 end
-numP = pStruct.number;
-
-%% Generate the Plots
 
 % Open figure
-if isfield(pStruct, 'function')
-    type = 'Properties';
-else
-    type = 'Parameters';
-end
 fh = figure('Name', strcat('plotConfidenceIntervals - ', type));
 
-for iP = 1 : numP
-    subplot(plots(1), plots(2), iP);
-    hold on;
-    
-    set(gca, 'YLim', [0.5, numConf + 0.5]);
-    title(pStruct.name{iP});
-    ylabel(' ');
-    xlabel('parameters values');
-    set(gca, 'ytick', 1:methods.num, 'yticklabel', methods.name)
-    box on;
-    
-    ax = gca;
-    for j = 1 : numConf
-        CI = pStruct.CI.(methods.type{j});
-        for k = methods.numLevels : -1 : 1;
-            h = methods.bars(k);
-            if (CI(iP,1,k) == -inf)
-                CI(iP,1,k) = XLim(1);
+
+%% Generate the Plots
+switch options.group_CI_by
+    case 'parprop'
+        for iP = indexSet
+            subplot(plots(1), plots(2), iP);
+            hold on;
+
+            set(gca, 'YLim', [0.5, numConf + 0.5]);
+            title(pStruct.name{iP});
+            ylabel(' ');
+            xlabel('parameters values');
+            set(gca, 'ytick', 1 : numConf, 'yticklabel', methods.name)
+            box on;
+
+            ax = gca;
+            for j = 1 : numConf
+                CI = pStruct.CI.(methods.type{j});
+                for k = methods.numLevels : -1 : 1;
+                    h = methods.bars(k);
+                    if (CI(iP,1,k) == -inf)
+                        CI(iP,1,k) = xlim(1);
+                    end
+                    if ((CI(iP,2,k)) == inf)
+                        CI(iP,1,k) = xlim(2);
+                    end
+                    patch([CI(iP,1,k), CI(iP,2,k), CI(iP,2,k), CI(iP,1,k)], [j-h, j-h, j+h, j+h], 'k', 'FaceColor', methods.colors(j,:,k), 'EdgeColor', 'k');
+                end
+                plot([pStruct.MS.par(iP,1), pStruct.MS.par(iP,1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
             end
-            if ((CI(iP,2,k)) == inf)
-                CI(iP,1,k) = XLim(2);
+
+            if (options.draw_bounds)
+                if (ax.XLim(1) <= pStruct.min(iP) && ax.XLim(2) >= pStruct.min(iP))
+                    plot([pStruct.min(iP), pStruct.min(iP)], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
+                elseif (ax.XLim(1) <= pStruct.max(iP) && ax.XLim(2) >= pStruct.max(iP))
+                    plot([pStruct.max(iP), pStruct.max(iP)], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
+                end
             end
-            patch([CI(iP,1,k), CI(iP,2,k), CI(iP,2,k), CI(iP,1,k)], [j-h, j-h, j+h, j+h], 'k', 'FaceColor', methods.colors(j,:,k), 'EdgeColor', 'k');
+            hold off;
         end
-        plot([pStruct.MS.par(iP,1), pStruct.MS.par(iP,1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
-    end
-    
-    if (options.draw_bounds)
-        if (ax.XLim(1) <= pStruct.min(iP) && ax.XLim(2) >= pStruct.min(iP))
-            plot([pStruct.min(iP), pStruct.min(iP)], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
-        elseif (ax.XLim(1) <= pStruct.max(iP) && ax.XLim(2) >= pStruct.max(iP))
-            plot([pStruct.max(iP), pStruct.max(iP)], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
+        
+    case 'methods'
+        for iM = indexSet
+            subplot(plots(1), plots(2), iM);
+            hold on;
+
+            set(gca, 'YLim', [0.5, numP + 0.5]);
+            title(methods.name{iM});
+            ylabel(' ');
+            xlabel('parameters values');
+            set(gca, 'ytick', 1 : numP, 'yticklabel', pStruct.name(pIndexSet))
+            box on;
+
+            XMin = min(pStruct.min);
+            XMax = min(pStruct.max);
+            ax = gca;
+            for j = 1 : numP
+                CI = pStruct.CI.(methods.type{iM});
+                for k = methods.numLevels : -1 : 1;
+                    h = methods.bars(k);
+                    CI(iM,1,k) = max(CI(iM,1,k), XMin);
+                    CI(iM,1,k) = min(CI(iM,1,k), XMax);
+                    patch([CI(j,1,k), CI(j,2,k), CI(j,2,k), CI(j,1,k)], [j-h, j-h, j+h, j+h], 'k', 'FaceColor', methods.colors(iM,:,k), 'EdgeColor', 'k');
+                end
+                plot([pStruct.MS.par(j,1), pStruct.MS.par(j,1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+            end
+
+            if (options.draw_bounds)
+                limits = [ax.XLim(1), ax.XLim(2)];
+                pIndex1 = [pStruct.min(pIndexSet(1)); pStruct.min(pIndexSet); pStruct.min(pIndexSet(end))];
+                pIndex2 = [pStruct.max(pIndexSet(1)); pStruct.max(pIndexSet); pStruct.max(pIndexSet(end))];
+                plot(pIndex1, 0 : numP+1, 'b--', 'linewidth', 2);
+                plot(pIndex2, 0 : numP+1, 'b--', 'linewidth', 2);
+                set(gca, 'XLim', limits);
+            end
+            hold off;
         end
-    end
-    hold off;
+        
+    case 'all'
+        
 end
 
 end

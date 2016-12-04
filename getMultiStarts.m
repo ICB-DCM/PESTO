@@ -85,7 +85,7 @@ function [parameters,fh] = getMultiStarts(parameters, objective_function, vararg
 % * 2015/11/10 Fabian Froehlich
 % * 2016/06/07 Paul Stapor
 % * 2016/10/04 Daniel Weindl
-% * 2016/06/10 Paul Stapor
+% * 2016/12/04 Paul Stapor
 
 global error_count
 
@@ -109,7 +109,7 @@ fh = [];
 switch options.mode
     case 'visual'
         if isempty(options.fh)
-            fh = figure('Name','getMultiStarts');
+            fh = figure('Name', 'getMultiStarts');
         else
             fh = figure(options.fh);
         end
@@ -117,7 +117,7 @@ switch options.mode
         fprintf(' \nOptimization:\n=============\n');
     case 'silent' % no output
         % Force fmincon to be silent.
-        options.fmincon = optimset(options.fmincon,'display','off');
+        options.fmincon.Display = 'off';
 end
 
 %% Initialization of random number generator
@@ -306,10 +306,12 @@ if strcmp(options.comp_type,'parallel')
     exitflag = nan(length(options.start_index),1);
     
     % reset the objective function
-    fun = functions(objective_function);
-    s_start = strfind(fun.function,')')+1;
-    s_end = strfind(fun.function,'(')-1;
-    clear(fun.function(s_start(1):s_end(2)));
+    if(options.resetobjective)
+        fun = functions(objective_function);
+        s_start = strfind(fun.function,')')+1;
+        s_end = strfind(fun.function,'(')-1;
+        clear(fun.function(s_start(1):s_end(2)));
+    end
     
     % Loop: Mutli-starts
     parfor i = options.start_index
@@ -329,7 +331,7 @@ if strcmp(options.comp_type,'parallel')
         if J_0 < -options.init_threshold
             % Optimization using fmincon
             [theta,J_opt,exitflag(i),results_fmincon,~,gradient_opt,hessian_opt] = ...
-                fmincon(@(theta) obj(theta,objective_function,options.obj_type,[]),...  % negative log-posterior function
+                fmincon(@(theta) obj(theta,objective_function,options.obj_type),...  % negative log-posterior function
                 parameters.MS.par0(:,i),...    % initial parameter
                 parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
                 parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
@@ -343,11 +345,11 @@ if strcmp(options.comp_type,'parallel')
             gradient(:,i) = gradient_opt;
             if isempty(hessian_opt)
                 if strcmp(options.fmincon.Hessian,'user-supplied')
-                    [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type,[]);
+                    [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
                 end
             elseif max(abs(hessian_opt(:))) == 0
                 if strcmp(options.fmincon.Hessian,'user-supplied')
-                    [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type,[]);
+                    [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
                 end
             end
             hessian(:,:,i) = full(hessian_opt);
@@ -450,15 +452,9 @@ switch nargin
         error('Call to objective function giving not enough inputs.')
     case 3
         theta   = varargin{1};
-        fun     = varargin{2};
+        fun     = varargin{2}; %#ok<NASGU>
         type    = varargin{3};
         callFct = 'fun(theta)';
-    case 4
-        theta   = varargin{1};
-        fun     = varargin{2};
-        type    = varargin{3};
-        options = varargin{4};
-        callFct = 'fun(theta, options)';
     otherwise
         error('Call to objective function giving too many inputs.')
 end

@@ -1,4 +1,4 @@
-function properties = getPropertyConfidenceIntervals(properties, alpha)
+function properties = getPropertyConfidenceIntervals(properties, alpha, varargin)
 % getPropertyConfidenceIntervals.m calculates the confidence intervals 
 % for the model properties. This is done by three approaches:
 % The values of CI.local_PL and CI.PL are determined by the point on which 
@@ -33,6 +33,18 @@ function properties = getPropertyConfidenceIntervals(properties, alpha)
 %
 % History:
 % * 2013/11/29 Jan Hasenauer
+% * 2016/12/01 Paul Stapor
+
+%% Checking and assigning inputs
+% Options
+if (length(varargin) >= 1)
+    if (~isa(varargin{1}, 'PestoOptions'))
+        error('Argument 3 is not of type PestoOptions.')
+    end
+    options = varargin{1};
+else
+    options = PestoOptions();
+end
 
 % Initialization
 properties.CI.alpha_levels = alpha;
@@ -87,6 +99,6 @@ for k = 1:length(alpha)
     end
 end
 
-plotConfidenceIntervals(properties);
+plotConfidenceIntervals(properties, alpha, [], options);
 
 end

@@ -1,4 +1,4 @@
-function parameters = getParameterConfidenceIntervals(parameters, alpha)
+function parameters = getParameterConfidenceIntervals(parameters, alpha, varargin)
 % getParameterConfidenceIntervals() calculates the confidence intervals 
 % for the model parameters. This is done by four approaches:
 % The values of CI.local_PL and CI.PL are determined by the point on which 
@@ -38,6 +38,17 @@ function parameters = getParameterConfidenceIntervals(parameters, alpha)
 % History:
 % * 2013/11/29 Jan Hasenauer
 % * 2016/12/01 Paul Stapor
+
+%% Checking and assigning inputs
+% Options
+if (length(varargin) >= 1)
+    if (~isa(varargin{1}, 'PestoOptions'))
+        error('Argument 3 is not of type PestoOptions.')
+    end
+    options = varargin{1};
+else
+    options = PestoOptions();
+end
 
 % Initialization
 parameters.CI.alpha_levels = alpha;
@@ -92,6 +103,6 @@ for k = 1:length(alpha)
     end
 end
 
-plotConfidenceIntervals(parameters);
+plotConfidenceIntervals(parameters, alpha, [], options);
 
 end
