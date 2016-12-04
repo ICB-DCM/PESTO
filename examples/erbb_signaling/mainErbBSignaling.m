@@ -1,4 +1,4 @@
-% Main file of the Chen2009 example
+% Main file of the erbb_signaling example
 %
 % Demonstrates the use of:
 % * getMultiStarts()
@@ -30,13 +30,13 @@ set(0,TextSizes);
 
 %% Model Definition
 % The ODE model is set up using the AMICI toolbox. To access the AMICI
-% model setup, see Chen2009_pesto_syms.m
+% model setup, see erbb_signaling_pesto_syms.m
 % For a detailed description of the biological model see the referenced
-% papers on .........
+% papers on the ErbB signaling pathways by Chen et al.
 
-[exdir,~,~] = fileparts(which('mainChen2009.m'));
+[exdir,~,~] = fileparts(which('mainErbBSignaling.m'));
 try
-    amiwrap('Chen2009_pesto', 'Chen2009_pesto_syms', exdir);
+    amiwrap('erbb_pesto', 'erbb_signaling_pesto_syms', exdir);
 catch ME
     warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
     rethrow(ME);
@@ -46,7 +46,7 @@ end
 % Experimental data is read out and written to an AMICI-data object which 
 % is used for the ODE integration
 
-load('Chen2009_pnom.mat');
+load('erbb_signaling_pnom.mat');
 D = getData();
 
 %% Generation of the structs and options for PESTO
@@ -78,7 +78,7 @@ optionsMultistart.fmincon   = optimoptions('fmincon',...
     'MaxFunctionEvaluations', 500);
 
 % Set the objective function
-objectiveFunction = @(theta) logLikelihoodChen2009(theta, D(1), options);
+objectiveFunction = @(theta) logLikelihoodErbBSignaling(theta, D(1), options);
 
 %% Perform Multistart optimization
 % A multi-start local optimization is performed within the bound defined in

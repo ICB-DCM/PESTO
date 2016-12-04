@@ -1,8 +1,8 @@
-function [ DD ] = getDataChen2009()
-% getDataChen2009.m for examples/Chen2009
+function [ DD ] = getData_erbb_signaling()
+% getData_erbb_signaling.m for examples/Chen2009
 %
-% getDataChen2009.m provides measurement data for the parameter estimation 
-% of the Chen2009 example file. 
+% getData_erbb_signaling.m provides measurement data for the parameter 
+% estimation of the erbb_signaling example file. 
 %
 % Parameters:
 %  void

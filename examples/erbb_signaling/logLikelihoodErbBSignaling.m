@@ -1,12 +1,12 @@
-function varargout = logLikelihoodChen2009(theta, D, optionsAmici)
-% Objective function for examples/Chen2009
+function varargout = logLikelihoodErbBSignaling(theta, D, optionsAmici)
+% Objective function for examples/erbb_signaling
 %
-% logLikelihoodChen2009.m provides the log-likelihood and its gradient for 
-% the model defined in Chen2009_pesto_syms.m
+% logLikelihoodErbBSignaling.m provides the log-likelihood and its gradient 
+% for the model defined in erbb_signaling_pesto_syms.m
 % 
 % USAGE:
-% [llh] = logLikelihoodChen2009(theta, amiData)
-% [llh, sllh] = logLikelihoodChen2009(theta, amiData)
+% [llh] = logLikelihoodErbBSignaling(theta, amiData)
+% [llh, sllh] = logLikelihoodErbBSignaling(theta, amiData)
 %
 % Parameters:
 %  theta: Model parameters 
@@ -23,7 +23,7 @@ function varargout = logLikelihoodChen2009(theta, D, optionsAmici)
 
 %% Model Definition
 % The ODE model is set up using the AMICI toolbox. To access the AMICI
-% model setup, see Chen2009_pesto_syms.m
+% model setup, see erbb_signaling_pesto_syms.m
 % For a detailed description for the biological model see the referenced
 % papers on the ErbB signaling pathways by Chen et al.
 
@@ -36,7 +36,7 @@ optionsAmici.interpType = 2;
 if(nargout > 1)
     optionsAmici.sensi = 1;
     optionsAmici.sensi_meth = 'adjoint';
-    sol = simulate_Chen2009_pesto(D.t, theta, D.condition, D, optionsAmici);
+    sol = simulate_erbb_pesto(D.t, theta, D.condition, D, optionsAmici);
     if(sol.status < 0)
         error('integration error');
     else
@@ -45,7 +45,7 @@ if(nargout > 1)
     end
 else
     optionsAmici.sensi = 0;
-    sol = simulate_Chen2009_pesto(D.t, theta, D.condition, D, optionsAmici);
+    sol = simulate_erbb_pesto(D.t, theta, D.condition, D, optionsAmici);
     if(sol.status<0)
         error('integration error');
     else

@@ -1,5 +1,5 @@
-function model = Chen2009_pesto_syms()
-% Chen2009_pesto_syms for examples/Chen2009
+function model = erbb_signaling_pesto_syms()
+% erbb_signaling_pesto_syms for examples/erbb_signaling
 %
 % creates an amimodel-object for the AMICI solver
 %
