@@ -142,6 +142,7 @@ optionsMultistart           = PestoOptions();
 optionsMultistart.obj_type  = 'log-posterior';
 optionsMultistart.comp_type = 'sequential'; 
 optionsMultistart.mode      = 'visual';
+optionsMultistart.n_starts  = 20;
 
 % The example can also be run in parallel mode: Uncomment this, if wanted
 % optionsMultistart.comp_type = 'parallel'; 
@@ -157,6 +158,22 @@ end
 
 % Optimization
 parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
+
+%% Collection of results, check for bimodality
+
+% Check if a second mode was found
+for iMode = 2 : optionsMultistart.n_starts
+    if (parameters.MS.logPost(iMode) > 39.99)
+        if (abs(parameters.MS.par(3,iMode) - parameters.MS.par(3,1)) > 0.1)
+            index2MAP = iMode;
+            break;
+        end
+    end
+end
+
+% Create information for a second options struct
+MAP_index2 = iMode;
+parametersAlt = parameters;
 
 %% Visualization of fit
 % The measured data is visualized in a plot, together with fit for the best
@@ -184,6 +201,11 @@ end
 
 parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultistart);
 
+% Computation for the second mode
+optionsMultistart.MAP_index = MAP_index2;
+optionsMultistart.parameter_index = [3, 4];
+parametersAlt = getParameterProfiles(parametersAlt, objectiveFunction, optionsMultistart);
+
 %% Single-chain Markov chain Monte-Carlo sampling -- Parameters
 % Values for the parameters are sampled by using an adapted Metropolis (AM)
 % algorithm. This way, the underlying probability density of the parameter 
@@ -205,7 +227,15 @@ optionsMultistart.SC.AM.memory_length = 10 * parameters.number;
 % options.MALA.w_hist = 0.5;
 % options.MALA.w_hist = 1;
 
+% Computation for the first mode
+optionsMultistart.MAP_index = 1;
+optionsMultistart.parameter_index = 1 : parameters.number;
 parameters = getParameterSamples(parameters, objectiveFunction, optionsMultistart);
+
+% Computation for the second mode
+optionsMultistart.MAP_index = MAP_index2;
+optionsMultistart.parameter_index = [3, 4];
+parametersAlt = getParameterSamples(parametersAlt, objectiveFunction, optionsMultistart);
 
 %% Confidence interval evaluation -- Parameters
 % Confidence intervals to the confidence levels fixed in the array alpha
@@ -213,12 +243,25 @@ parameters = getParameterSamples(parameters, objectiveFunction, optionsMultistar
 % optimum, based on the profile likelihoods and on the parameter sampling.
 
 alpha = [0.9,0.95,0.99];
-parameters = getParameterConfidenceIntervals(parameters, alpha);
+
+% Computation for the first mode
+optionsMultistart.MAP_index = 1;
+optionsMultistart.parameter_index = 1 : parameters.number;
+parameters = getParameterConfidenceIntervals(parameters, alpha, optionsMultistart);
+
+% Computation for the second mode
+optionsMultistart.MAP_index = MAP_index2;
+optionsMultistart.parameter_index = [3, 4];
+optionsMultistart.plot_options.group_CI_by = 'methods';
+parametersAlt = getParameterConfidenceIntervals(parametersAlt, alpha, optionsMultistart);
 
 %% Evaluation of properties for multi-start local optimization results -- Properties
 % The values of the properties are evaluated at the end points of the
 % multi-start optimization runs by getPropertyMultiStarts.
 
+optionsMultistart.MAP_index = 1;
+optionsMultistart.parameter_index = 1 : parameters.number;
+optionsMultistart.plot_options.group_CI_by = 'parprop';
 properties = getPropertyMultiStarts(properties, parameters, optionsMultistart);
 
 %% Profile likelihood calculation -- Properties

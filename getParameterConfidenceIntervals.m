@@ -56,7 +56,7 @@ parameters.CI.alpha_levels = alpha;
 % Loop: alpha levels
 for k = 1:length(alpha)
     % Loop: Parameters
-    for i = 1:parameters.number
+    for i = options.parameter_index
         if isfield(parameters,'MS')
             % Confidence intervals computed using local approximation and a
             % threshold (-> similar to PL-based confidence intervals)
