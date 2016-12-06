@@ -52,6 +52,10 @@ end
 
 % Initialization
 parameters.CI.alpha_levels = alpha;
+iMAP = options.MAP_index;
+if (isempty(iMAP))
+    iMAP = 1;
+end
 
 % Loop: alpha levels
 for k = 1:length(alpha)
@@ -60,14 +64,14 @@ for k = 1:length(alpha)
         if isfield(parameters,'MS')
             % Confidence intervals computed using local approximation and a
             % threshold (-> similar to PL-based confidence intervals)
-            Sigma = pinv(parameters.MS.hessian(:,:,1));
-            parameters.CI.local_PL(i,1,k) = parameters.MS.par(i) - sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
-            parameters.CI.local_PL(i,2,k) = parameters.MS.par(i) + sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
+            Sigma = pinv(parameters.MS.hessian(:,:,iMAP));
+            parameters.CI.local_PL(i,1,k) = parameters.MS.par(i,iMAP) - sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
+            parameters.CI.local_PL(i,2,k) = parameters.MS.par(i,iMAP) + sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
 
             % Confidence intervals computed using local approximation and the
             % probability mass (-> similar to Bayesian confidence intervals)
-            parameters.CI.local_B(i,1,k)  = icdf('norm',  (1-alpha(k))/2,parameters.MS.par(i),sqrt(Sigma(i,i)));
-            parameters.CI.local_B(i,2,k)  = icdf('norm',1-(1-alpha(k))/2,parameters.MS.par(i),sqrt(Sigma(i,i)));
+            parameters.CI.local_B(i,1,k)  = icdf('norm',  (1-alpha(k))/2,parameters.MS.par(i,iMAP),sqrt(Sigma(i,i)));
+            parameters.CI.local_B(i,2,k)  = icdf('norm',1-(1-alpha(k))/2,parameters.MS.par(i,iMAP),sqrt(Sigma(i,i)));
         end
         
         % Confidence intervals computed using profile likelihood
@@ -75,7 +79,7 @@ for k = 1:length(alpha)
             if i <= length(parameters.P)
                 if ~isempty(parameters.P(i).par)
                     % left bound
-                    ind  = find(parameters.P(i).par(i,:) <= parameters.MS.par(i));
+                    ind  = find(parameters.P(i).par(i,:) <= parameters.MS.par(i,iMAP));
                     j = find(parameters.P(i).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'last');
                     if ~isempty(j)
                         parameters.CI.PL(i,1,k) = interp1(parameters.P(i).R(ind([j,j+1])),...
@@ -84,7 +88,7 @@ for k = 1:length(alpha)
                         parameters.CI.PL(i,1,k) = -inf;
                     end
                     % right bound
-                    ind  = find(parameters.P(i).par(i,:) >= parameters.MS.par(i));
+                    ind  = find(parameters.P(i).par(i,:) >= parameters.MS.par(i,iMAP));
                     j = find(parameters.P(i).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'first');
                     if ~isempty(j)
                         parameters.CI.PL(i,2,k) = interp1(parameters.P(i).R(ind([j-1,j])),...

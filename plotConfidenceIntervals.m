@@ -86,6 +86,7 @@ else
     end
 end
 numP = length(pIndexSet);
+iMAP = allOptions.MAP_index;
 
 switch options.group_CI_by
     case 'parprop'
@@ -165,17 +166,19 @@ switch options.group_CI_by
             box on;
 
             XMin = min(pStruct.min);
-            XMax = min(pStruct.max);
+            XMax = max(pStruct.max);
             ax = gca;
-            for j = 1 : numP
+            iP = 1;
+            for j = pIndexSet
                 CI = pStruct.CI.(methods.type{iM});
                 for k = methods.numLevels : -1 : 1;
                     h = methods.bars(k);
                     CI(iM,1,k) = max(CI(iM,1,k), XMin);
                     CI(iM,1,k) = min(CI(iM,1,k), XMax);
-                    patch([CI(j,1,k), CI(j,2,k), CI(j,2,k), CI(j,1,k)], [j-h, j-h, j+h, j+h], 'k', 'FaceColor', methods.colors(iM,:,k), 'EdgeColor', 'k');
+                    patch([CI(j,1,k), CI(j,2,k), CI(j,2,k), CI(j,1,k)], [iP-h, iP-h, iP+h, iP+h], 'k', 'FaceColor', methods.colors(iM,:,k), 'EdgeColor', 'k');
                 end
-                plot([pStruct.MS.par(j,1), pStruct.MS.par(j,1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                plot([pStruct.MS.par(j,iMAP), pStruct.MS.par(j,iMAP)], [iP-0.4, iP+0.4], 'k-', 'linewidth', 2);
+                iP = iP + 1;
             end
 
             if (options.draw_bounds)

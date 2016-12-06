@@ -69,11 +69,13 @@ rng(options.rng);
 % Use MS distribution to find sufficient start values and inital 
 % covariances for tempered chains. To do so, we take into account both 
 % - the height and basin of the modes in our target
+iMAP = options.MAP_index;
+
 if isfield(parameters,'MS')
     % If multi-start local optimization was performed, use the results
     
     % tossed_idx will be important for multi-chains
-    tossed_idx = 1;
+    tossed_idx = iMAP;
 
     % Checking for user-provided intialization of Markoc Chain
     if strcmp(options.MCMC.initialization, 'user-provided')
