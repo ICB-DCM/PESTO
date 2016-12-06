@@ -50,12 +50,20 @@ else
     options = PestoOptions();
 end
 
-% Initialization
-parameters.CI.alpha_levels = alpha;
+% Maximum posterior index
 iMAP = options.MAP_index;
 if (isempty(iMAP))
     iMAP = 1;
 end
+
+% parameter index
+if isempty(options.parameter_index)
+    options.parameter_index = 1 : parameters.number;
+end
+
+% Initialization
+parameters.CI.alpha_levels = alpha;
+
 
 % Loop: alpha levels
 for k = 1:length(alpha)
