@@ -143,6 +143,7 @@ optionsMultistart.obj_type  = 'log-posterior';
 optionsMultistart.comp_type = 'sequential'; 
 optionsMultistart.mode      = 'visual';
 optionsMultistart.n_starts  = 20;
+optionsMultistart.plot_options.group_CI_by = 'methods';
 
 % The example can also be run in parallel mode: Uncomment this, if wanted
 % optionsMultistart.comp_type = 'parallel'; 
@@ -252,7 +253,6 @@ parameters = getParameterConfidenceIntervals(parameters, alpha, optionsMultistar
 % Computation for the second mode
 optionsMultistart.MAP_index = MAP_index2;
 optionsMultistart.parameter_index = [3, 4];
-optionsMultistart.plot_options.group_CI_by = 'methods';
 parametersAlt = getParameterConfidenceIntervals(parametersAlt, alpha, optionsMultistart);
 
 %% Evaluation of properties for multi-start local optimization results -- Properties
@@ -261,7 +261,6 @@ parametersAlt = getParameterConfidenceIntervals(parametersAlt, alpha, optionsMul
 
 optionsMultistart.MAP_index = 1;
 optionsMultistart.parameter_index = 1 : parameters.number;
-optionsMultistart.plot_options.group_CI_by = 'parprop';
 properties = getPropertyMultiStarts(properties, parameters, optionsMultistart);
 
 %% Profile likelihood calculation -- Properties

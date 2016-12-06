@@ -87,6 +87,9 @@ else
 end
 numP = length(pIndexSet);
 iMAP = allOptions.MAP_index;
+if isempty(iMAP)
+    iMAP = 1;
+end
 
 switch options.group_CI_by
     case 'parprop'
