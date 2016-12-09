@@ -84,6 +84,14 @@ end
 %         adascale
 %         etaparam
 
+if ~exist('mcmcrun.m', 'file')
+    if ~exist('DRAM', 'dir')
+        error('The file mcmcrun  and the folder DRAM were not found in the MATLAB search path. It seems like the DRAM toolbox is not properly installed.');
+    else
+        error('The file mcmcrun was not found in the MATLAB search path, although a DRAM folder is there. Maybe the DRAM toolbox is not properly installed.');
+    end
+end
+
 try
     % Warm-up
     dram_options.nsimu = options.MCMC.nsimu_warmup; % # simulations
@@ -92,7 +100,7 @@ try
     % Sampling, B: More information
     [results, Theta, ~, Obj] = mcmcrun(model, [], params, dram_options, results);
 catch ME
-    warning('There was a problem with calling the DRAM toolbox. The original error message was:');
+    warning('There was a problem with calling the DRAM toolbox, maybe it is not properly installed. The original error message was:');
     rethrow(ME);
 end
 

@@ -39,7 +39,7 @@ classdef PestoPlottingOptions < hgsetget
             'name', 'add. point');
         
         % TODO: from plotmultistarts
-        mark_contraint = false;
+        mark_constraint = false;
         
         % TODO from plotparameteruncertainty
         subplot_size_1D = [];
@@ -251,7 +251,6 @@ classdef PestoPlottingOptions < hgsetget
         
         plot_type = {'parameter','posterior'};
         n_max = 1e4;
-        mark_constraint = false;
         
 
     end
@@ -368,6 +367,73 @@ classdef PestoPlottingOptions < hgsetget
                     end
                 end
             end
-        end        
+        end
+        
+        %% Part for checking the correct setting of options
+        
+        function set.MCMC(this, value)
+            if (strcmp(value, 'multistart') || strcmp(value, 'user-provided'))
+                this.MCMC = value;
+            else
+                error('PestoOptions.MCMC must be set to either "multistart" or "user-provided".');
+            end
+        end
+        
+        function set.interval(this, value)
+            if (strcmp(value, 'dynamic') || strcmp(value, 'static'))
+                this.interval = value;
+            else
+                error('PestoOptions.interval must be set to either "dynamic" or "static".');
+            end
+        end
+        
+        function set.plot_type(this, value)
+            if (strcmp(value, 'parameter') || strcmp(value, 'posterior'))
+                this.plot_type = value;
+            else
+                error('PestoOptions.plot_type must be set to either "parameter" or "posterior".');
+            end
+        end
+
+        function set.group_CI_by(this, value)
+            if (strcmp(value, 'parprop') || strcmp(value, 'methods') || strcmp(value, 'all'))
+                this.group_CI_by = value;
+            else
+                error('PestoOptions.group_CI_by must be set to either "parprop", "methods" or "all".');
+            end
+        end
+        
+        function set.n_max(this, value)
+            if(isnumeric(value) && value > 0)
+                this.n_max = value;
+            else
+                error('PestoOptions.n_max must be a positive number.');
+            end
+        end
+        
+        function set.title(this, value)
+            checkLogical(this, value, 'title');
+        end
+        
+        function set.draw_bounds(this, value)
+            checkLogical(this, value, 'draw_bounds');
+        end
+        
+        function set.mark_constraint(this, value)
+            checkLogical(this, value, 'mark_constraint');
+        end
+        
+        function set.hold_on(this, value)
+            checkLogical(this, value, 'hold_on');
+        end
+
+        function checkLogical(this, value, name)
+            if islogical(value)
+                this.(name) = value;
+            else
+                error(['PestoOptions.' name ' must ba a logical value.']);
+            end
+        end
+        
     end
 end

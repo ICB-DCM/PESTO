@@ -353,6 +353,8 @@ classdef PestoOptions < hgsetget
             end            
         end
         
+        %% Part for checking the correct setting of options
+        
         function set.obj_type(this, value)
             if(strcmpi(value, 'log-posterior') || strcmpi(value, 'negative log-posterior'))
                 this.obj_type = lower(value);
@@ -372,15 +374,98 @@ classdef PestoOptions < hgsetget
         function set.n_starts(this, value)
             if(isnumeric(value) && floor(value) == value && value > 0)
                 this.n_starts = value;
-                
-%                 if(~isempty(this.start_index))
-%                     this.start_index = 1:this.n_starts;
-%                 end
             else
                 error('PestoOptions.n_starts must be a positive integer value.');
             end
         end
         
+        function set.mode(this, value)
+            if (strcmp(value, 'visual') || strcmp(value, 'text') || strcmp(value, 'silent') || strcmp(value, 'debug'))
+                this.mode = value;
+            else
+                error('PestoOptions.mode must be set to either "visual", "text", "silent" or "debug".');
+            end
+        end
+        
+        function set.proposal(this, value)
+            if (strcmp(value, 'latin hypercube') || strcmp(value, 'uniform') || strcmp(value, 'user-supplied'))
+                this.proposal = value;
+            else
+                error('PestoOptions.proposal must be set to either "latin hypercube", "uniform" or "user-supplied".');
+            end
+        end
+        
+        function set.save(this, value)
+            checkLogical(this, value, 'save');
+        end
+        
+        function set.tempsave(this, value)
+            checkLogical(this, value, 'tempsave');
+        end
+
+        function set.trace(this, value)
+            checkLogical(this, value, 'trace');
+        end
+        
+        function set.calc_profiles(this, value)   
+            checkLogical(this, value, 'calc_profiles');
+        end
+        
+        function set.resetobjective(this, value)
+            checkLogical(this, value, 'resetobjective');
+        end
+        
+        function set.start_index(this, value)
+            checkVector(this, value, 'start_index');
+        end
+        
+        function set.parameter_index(this, value)
+            checkVector(this, value, 'parameter_index');
+        end
+        
+        function set.property_index(this, value)
+            checkVector(this, value, 'property_index');
+        end
+        
+        function set.MAP_index(this, value)
+            if(isnumeric(value) && floor(value) == value && value > 0)
+                this.MAP_index = value;
+            else
+                error('PestoOptions.MAP_index must be a positive integer value.');
+            end
+        end
+        
+        function set.dR_max(this, value)
+            if(isnumeric(value) && value >= 0 && value <= 1)
+                this.dR_max = value;
+            else
+                error('PestoOptions.dR_max positive numeric value between 0 and 1.');
+            end
+        end
+
+        function set.R_min(this, value)
+            if(isnumeric(value) && value >= 0 && value <= 1)
+                this.R_min = value;
+            else
+                error('PestoOptions.R_min positive numeric value between 0 and 1.');
+            end
+        end
+        
+        function checkLogical(this, value, name)
+            if islogical(value)
+                this.(name) = value;
+            else
+                error(['PestoOptions.' name ' must ba a logical value.']);
+            end
+        end
+        
+        function checkVector(this, value, name)
+            if isvector(value)
+                this.(name) = value;
+            else
+                error(['PestoOptions.' name ' must ba a numeric vector.']);
+            end
+        end
+        
     end
-    
 end
