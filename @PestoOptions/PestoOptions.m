@@ -396,23 +396,43 @@ classdef PestoOptions < hgsetget
         end
         
         function set.save(this, value)
-            checkLogical(this, value, 'save');
+            if islogical(value)
+                this.save = value;
+            else
+                error('PestoOptions.save must ba a logical value.');
+            end
         end
         
         function set.tempsave(this, value)
-            checkLogical(this, value, 'tempsave');
-        end
-
-        function set.trace(this, value)
-            checkLogical(this, value, 'trace');
+            if islogical(value)
+                this.tempsave = value;
+            else
+                error('PestoOptions.tempsave must ba a logical value.');
+            end
         end
         
-        function set.calc_profiles(this, value)   
-            checkLogical(this, value, 'calc_profiles');
+        function set.trace(this, value)
+            if islogical(value)
+                this.trace = value;
+            else
+                error('PestoOptions.trace must ba a logical value.');
+            end
+        end
+
+        function set.calc_profiles(this, value)
+            if islogical(value)
+                this.calc_profiles = value;
+            else
+                error('PestoOptions.calc_profiles must ba a logical value.');
+            end
         end
         
         function set.resetobjective(this, value)
-            checkLogical(this, value, 'resetobjective');
+            if islogical(value)
+                this.resetobjective = value;
+            else
+                error('PestoOptions.resetobjective must ba a logical value.');
+            end
         end
         
         function set.start_index(this, value)
@@ -460,14 +480,6 @@ classdef PestoOptions < hgsetget
                 this.R_min = value;
             else
                 error('PestoOptions.R_min positive numeric value between 0 and 1.');
-            end
-        end
-        
-        function checkLogical(this, value, name)
-            if islogical(value)
-                this.(name) = value;
-            else
-                error(['PestoOptions.' name ' must ba a logical value.']);
             end
         end
         

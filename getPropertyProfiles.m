@@ -95,7 +95,7 @@ end
 
 % Check and assign options
 %TODO
-options.plot_options.mark_constraint = 'false';
+options.plot_options.mark_constraint = false;
 options.property_index = 1:properties.number;
 options.P.min = parameters.min;
 options.P.max = parameters.max;

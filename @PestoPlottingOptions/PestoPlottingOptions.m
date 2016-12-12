@@ -386,14 +386,6 @@ classdef PestoPlottingOptions < hgsetget
                 error('PestoOptions.interval must be set to either "dynamic" or "static".');
             end
         end
-        
-        function set.plot_type(this, value)
-            if (strcmp(value, 'parameter') || strcmp(value, 'posterior'))
-                this.plot_type = value;
-            else
-                error('PestoOptions.plot_type must be set to either "parameter" or "posterior".');
-            end
-        end
 
         function set.group_CI_by(this, value)
             if (strcmp(value, 'parprop') || strcmp(value, 'methods') || strcmp(value, 'all'))
@@ -412,26 +404,34 @@ classdef PestoPlottingOptions < hgsetget
         end
         
         function set.title(this, value)
-            checkLogical(this, value, 'title');
+            if islogical(value)
+                this.title = value;
+            else
+                error('PestoOptions.title must ba a logical value.');
+            end
         end
         
         function set.draw_bounds(this, value)
-            checkLogical(this, value, 'draw_bounds');
+            if islogical(value)
+                this.draw_bounds = value;
+            else
+                error('PestoOptions.draw_bounds must ba a logical value.');
+            end
         end
         
         function set.mark_constraint(this, value)
-            checkLogical(this, value, 'mark_constraint');
+            if islogical(value)
+                this.mark_constraint = value;
+            else
+                error('PestoOptions.mark_constraint must ba a logical value.');
+            end
         end
         
         function set.hold_on(this, value)
-            checkLogical(this, value, 'hold_on');
-        end
-
-        function checkLogical(this, value, name)
             if islogical(value)
-                this.(name) = value;
+                this.hold_on = value;
             else
-                error(['PestoOptions.' name ' must ba a logical value.']);
+                error('PestoOptions.hold_on must ba a logical value.');
             end
         end
         
