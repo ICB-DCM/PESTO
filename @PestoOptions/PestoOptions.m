@@ -416,15 +416,27 @@ classdef PestoOptions < hgsetget
         end
         
         function set.start_index(this, value)
-            checkVector(this, value, 'start_index');
+            if isvector(value)
+                this.start_index = value;
+            else
+                error(['PestoOptions.start_index must ba a numeric vector.']);
+            end
         end
         
         function set.parameter_index(this, value)
-            checkVector(this, value, 'parameter_index');
+            if isvector(value)
+                this.parameter_index = value;
+            else
+                error(['PestoOptions.parameter_index must ba a numeric vector.']);
+            end
         end
         
         function set.property_index(this, value)
-            checkVector(this, value, 'property_index');
+            if isvector(value)
+                this.property_index = value;
+            else
+                error(['PestoOptions.property_index must ba a numeric vector.']);
+            end
         end
         
         function set.MAP_index(this, value)
@@ -456,14 +468,6 @@ classdef PestoOptions < hgsetget
                 this.(name) = value;
             else
                 error(['PestoOptions.' name ' must ba a logical value.']);
-            end
-        end
-        
-        function checkVector(this, value, name)
-            if isvector(value)
-                this.(name) = value;
-            else
-                error(['PestoOptions.' name ' must ba a numeric vector.']);
             end
         end
         
