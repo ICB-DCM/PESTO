@@ -77,11 +77,9 @@ See getParameterSamples() for details and mainConversionReaction.m for examples.
 
 ## Plotting ### {#plotting}
 
-TODO
+An integral part of PESTO are its highly customizable plotting functions for each type of analysis.
 
-TODO add some sample figures
-
-More details are provided in the documentation of the specific plotting functions:
+Details are provided in the documentation of the specific plotting functions:
 * plotMultiStarts.m
 * plotParameterProfiles.m
 * plotParameterSamples.m
@@ -91,7 +89,25 @@ More details are provided in the documentation of the specific plotting function
 * plotPropertySamples.m
 * plotPropertyUncertainty.m
 
-See mainConversionReaction.m for examples.
+Here some examples: 
+
+Plot of model fit using plotMultiStarts.m:
+
+![](../images/fig_fit.jpg "Plot of model fit using plotMultiStarts.m")
+
+Plot of different variants of parameter confidence intervals using plotParameterUncertainty.m:
+![](../images/fig_par_confint.jpg "Plot of different variants of parameter confidence intervals using plotParameterUncertainty.m")
+
+2D plot of parameter samples using plotParameterSamples.m:
+![](../images/fig_par_samples2d.jpg "2D plot of parameter samples using plotParameterSamples.m")
+
+Plot of parameter samples using plotParameterSamples.m:
+![](../images/fig_par_samples.jpg "Plot of parameter samples using plotParameterSamples.m")
+
+Plot of property samples using plotPropertySamples.m:
+![](../images/fig_prop_samples.jpg "Plot of property samples using plotPropertySamples.m")
+
+See mainConversionReaction.m for live examples.
 
 ## Properties ### {#properties}
 
