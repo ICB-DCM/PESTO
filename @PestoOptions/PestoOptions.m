@@ -1,7 +1,7 @@
 % @file PestoOptions
 % @brief A class for checking and holding options for PESTO functions
 
-classdef PestoOptions < hgsetget
+classdef PestoOptions < matlab.mixin.SetGet
     %PestoOptions provides an option container to pass options to various
     %PESTO functions. Not all options are used by all functions, consult the respective function documentation for details.
     %
@@ -353,6 +353,15 @@ classdef PestoOptions < hgsetget
             end            
         end
         
+        function new = copy(this)
+            new = feval(class(this));
+            
+            p = properties(this);
+            for i = 1:length(p)
+                new.(p{i}) = this.(p{i});
+            end
+        end
+
         %% Part for checking the correct setting of options
         
         function set.obj_type(this, value)
@@ -436,7 +445,7 @@ classdef PestoOptions < hgsetget
         end
         
         function set.start_index(this, value)
-            if isvector(value)
+            if isvector(value) || isempty(value)
                 this.start_index = value;
             else
                 error(['PestoOptions.start_index must ba a numeric vector.']);
@@ -444,7 +453,7 @@ classdef PestoOptions < hgsetget
         end
         
         function set.parameter_index(this, value)
-            if isvector(value)
+            if isvector(value) || isempty(value)
                 this.parameter_index = value;
             else
                 error(['PestoOptions.parameter_index must ba a numeric vector.']);
@@ -452,7 +461,7 @@ classdef PestoOptions < hgsetget
         end
         
         function set.property_index(this, value)
-            if isvector(value)
+            if isvector(value) || isempty(value)
                 this.property_index = value;
             else
                 error(['PestoOptions.property_index must ba a numeric vector.']);
@@ -460,7 +469,7 @@ classdef PestoOptions < hgsetget
         end
         
         function set.MAP_index(this, value)
-            if(isnumeric(value) && floor(value) == value && value > 0)
+            if(isempty(value) || isnumeric(value) && floor(value) == value && value > 0)
                 this.MAP_index = value;
             else
                 error('PestoOptions.MAP_index must be a positive integer value.');

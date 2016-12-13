@@ -2,7 +2,7 @@
 % @brief A class for checking and holding information on optimization
 % parameters
 
-classdef PestoPlottingOptions < hgsetget
+classdef PestoPlottingOptions < matlab.mixin.SetGet
     % PestoPlottingOptions is class for checking and holding information on optimization
     % parameters
     %
@@ -259,7 +259,7 @@ classdef PestoPlottingOptions < hgsetget
     end
     
     methods
-        function obj = PestoPlottingOptions(varargin)
+    function obj = PestoPlottingOptions(varargin)
             %PestoPlottingOptions Construct a new PestoPlottingOptions object
             %
             %   OPTS = PestoPlottingOptions() creates a set of options with each option set to its
@@ -367,8 +367,17 @@ classdef PestoPlottingOptions < hgsetget
                     end
                 end
             end
-        end
+    end
+    
+    function new = copy(this)
+        new = feval(class(this));
         
+        p = properties(this);
+        for i = 1:length(p)
+            new.(p{i}) = this.(p{i});
+        end
+    end
+
         %% Part for checking the correct setting of options
         
         function set.MCMC(this, value)
