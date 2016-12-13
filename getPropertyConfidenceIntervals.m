@@ -94,7 +94,7 @@ for k = 1:length(alpha)
         
         % Confidence intervals computed using sample
         if isfield(properties,'S')
-            properties.CI.S(i,:,k) = prctile(properties.S.par(i,:),50 + 100*[-alpha(k)/2, alpha(k)/2]);
+            properties.CI.S(i,:,k) = prctile(properties.S.prop(i,:),50 + 100*[-alpha(k)/2, alpha(k)/2]);
         end
     end
 end
