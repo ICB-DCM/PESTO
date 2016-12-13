@@ -144,268 +144,266 @@ end
 
 %% Profile calculation -- SEQUENTIAL
 if strcmp(options.comp_type,'sequential') && options.calc_profiles
-
-% Profile calculation
-for i = options.property_index
-    % Initialization
-    P_prop = properties.MS.prop(i,options.MAP_index);
-    P_par = parameters.MS.par(:,options.MAP_index);
-    P_logPost = parameters.MS.logPost(options.MAP_index);
-    P_R = exp(parameters.MS.logPost(options.MAP_index)-parameters.MS.logPost(1));
-    if isfield(parameters.MS,'exitflag') 
-        P_exitflag = parameters.MS.exitflag(options.MAP_index);
-    else
-        P_exitflag = NaN;
-    end
     
-    switch(i)
-        case 1
-            ordstr = 'st';
-        case 2
-            ordstr = 'nd';
-        case 3
-            ordstr = 'rd';
-        otherwise
-            ordstr = '-th';
-    end
-    
-    if ((P_prop <= properties.min(i)) || (properties.max(i) <= P_prop)) && ~strcmp(options.mode,'silent')
-        warning(['MAP of ' num2str(i) ordstr ' property not between respective minimum and maximum.']);
-    end
-
-    % Compute profile for in- and decreasing property
-    for s = [-1,1]
-        % Starting point
-        prop = properties.MS.prop(i,options.MAP_index);
-        theta  = parameters.MS.par(:,options.MAP_index);
-        logPost = parameters.MS.logPost(options.MAP_index);
+    % Profile calculation
+    for i = options.property_index
+        % Initialization
+        P_prop = properties.MS.prop(i,options.MAP_index);
+        P_par = parameters.MS.par(:,options.MAP_index);
+        P_logPost = parameters.MS.logPost(options.MAP_index);
+        P_R = exp(parameters.MS.logPost(options.MAP_index)-parameters.MS.logPost(1));
+        if isfield(parameters.MS,'exitflag')
+            P_exitflag = parameters.MS.exitflag(options.MAP_index);
+        else
+            P_exitflag = NaN;
+        end
         
-        % Sequential update
-        while (logPost >= (log(options.R_min) + parameters.MS.logPost(1))) && ...
-              (~(prop <= (properties.min(i)+options.boundary_tol)) || (s == +1)) && ...
-              (~((properties.max(i)-options.boundary_tol) <= prop) || (s == -1))
-          
-            % Proposal of next profile point
-            J_exp = -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost);
+        switch(i)
+            case 1
+                ordstr = 'st';
+            case 2
+                ordstr = 'nd';
+            case 3
+                ordstr = 'rd';
+            otherwise
+                ordstr = '-th';
+        end
+        
+        if ((P_prop <= properties.min(i)) || (properties.max(i) <= P_prop)) && ~strcmp(options.mode,'silent')
+            warning(['MAP of ' num2str(i) ordstr ' property not between respective minimum and maximum.']);
+        end
+        
+        % Compute profile for in- and decreasing property
+        for s = [-1,1]
+            % Starting point
+            prop = properties.MS.prop(i,options.MAP_index);
+            theta  = parameters.MS.par(:,options.MAP_index);
+            logPost = parameters.MS.logPost(options.MAP_index);
             
-            % Optimization
-            [theta,prop,exitflag] = ...
-                fmincon(@(theta) prop_fun(theta,properties.function{i},properties.min(i),properties.max(i),s),...
-                                    theta,...
-                                    parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
-                                    parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
-                                    parameters.min,...   % lower bound
-                                    parameters.max,...   % upper bound
-                                    @(theta) obj_con(theta,objective_function,-J_exp,options.obj_type),...
-                                    options.fmincon);    % options
-            
-            % Adaptation of signs                    
-            if s == +1
-                prop = -prop;
-            end
-            
-            % Reoptimization at boundary
-            if (prop <= properties.min(i)) || (properties.max(i) <= prop)
-                [theta,J_opt] = ...
-                    fmincon(@(theta) obj(theta,objective_function,options.obj_type),...
-                                        theta,...
-                                        parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
-                                        parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
-                                        parameters.min,...   % lower bound
-                                        parameters.max,...   % upper bound
-                                        @(theta) prop_con_fun(theta,properties.function{i},properties.min(i),properties.max(i),s),...
-                                        options.fmincon);    % options
-            else
-                J_opt = obj(theta,objective_function,options.obj_type);
-            end
-            
-            % Assignment of log-posterior
-            logPost = -J_opt;
-
-            % Sorting
-            switch s
-                case -1
-                    P_prop = [prop,P_prop];
-                    P_par = [theta,P_par];
-                    P_logPost = [logPost,P_logPost]; 
-                    P_R = [exp(logPost - parameters.MS.logPost(1)),P_R];
-                    P_exitflag = [exitflag,P_exitflag];
-                case +1
-                    P_prop = [P_prop,prop];
-                    P_par = [P_par,theta];
-                    P_logPost = [P_logPost,logPost];
-                    P_R = [P_R,exp(logPost - parameters.MS.logPost(1))];
-                    P_exitflag = [P_exitflag,exitflag];
-            end
-            
-            % Assignment
-            properties.P(i).prop = P_prop;
-            properties.P(i).par = P_par;
-            properties.P(i).logPost = P_logPost;
-            properties.P(i).R = P_R;
-            properties.P(i).exitflag = P_exitflag;
-
-            % Save
-            if options.save
-                dlmwrite([options.foldername '/properties_P' num2str(i,'%d') '__prop.csv'],P_prop,'delimiter',',','precision',12);
-                dlmwrite([options.foldername '/properties_P' num2str(i,'%d') '__par.csv'],P_par,'delimiter',',','precision',12);
-                dlmwrite([options.foldername '/properties_P' num2str(i,'%d') '__logPost.csv'],P_logPost,'delimiter',',','precision',12);
-                dlmwrite([options.foldername '/properties_P' num2str(i,'%d') '__R.csv'],P_R,'delimiter',',','precision',12);
-                dlmwrite([options.foldername '/properties_P' num2str(i,'%d') '__exitflag.csv'],P_exitflag,'delimiter',',','precision',12);
-            end
-            
-            switch(i)
-                case 1
-                    ordstr = 'st';
-                case 2
-                    ordstr = 'nd';
-                case 3
-                    ordstr = 'rd';
-                otherwise
-                    ordstr = '-th';
-            end
-            
-            % Output
-            str = [num2str(i,'%d') ordstr ' P: point ' num2str(length(properties.P(i).R)-1,'%d') ', R = ' ...
-                   num2str(exp(- J_opt - properties.MS.logPost(1)),'%.3e')];
-            switch options.mode
-                case 'visual', fh = plotPropertyProfiles(properties,'1D',fh,options.property_index,options.plot_options); disp(str);
-                case 'text', disp(str);
-                case 'silent' % no output
+            % Sequential update
+            while (logPost >= (log(options.R_min) + parameters.MS.logPost(1))) && ...
+                    (~(prop <= (properties.min(i)+options.boundary_tol)) || (s == +1)) && ...
+                    (~((properties.max(i)-options.boundary_tol) <= prop) || (s == -1))
+                
+                % Proposal of next profile point
+                J_exp = -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost);
+                
+                % Optimization
+                [theta,prop,exitflag] = ...
+                    fmincon(@(theta) prop_fun(theta,properties.function{i},properties.min(i),properties.max(i),s),...
+                    theta,...
+                    parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
+                    parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
+                    parameters.min,...   % lower bound
+                    parameters.max,...   % upper bound
+                    @(theta) obj_con(theta,objective_function,-J_exp,options.obj_type),...
+                    options.fmincon);    % options
+                
+                % Adaptation of signs
+                if s == +1
+                    prop = -prop;
+                end
+                
+                % Reoptimization at boundary
+                if (prop <= properties.min(i)) || (properties.max(i) <= prop)
+                    [theta,J_opt] = ...
+                        fmincon(@(theta) obj(theta,objective_function,options.obj_type),...
+                        theta,...
+                        parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
+                        parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
+                        parameters.min,...   % lower bound
+                        parameters.max,...   % upper bound
+                        @(theta) prop_con_fun(theta,properties.function{i},properties.min(i),properties.max(i),s),...
+                        options.fmincon);    % options
+                else
+                    J_opt = obj(theta,objective_function,options.obj_type);
+                end
+                
+                % Assignment of log-posterior
+                logPost = -J_opt;
+                
+                % Sorting
+                switch s
+                    case -1
+                        P_prop = [prop,P_prop];
+                        P_par = [theta,P_par];
+                        P_logPost = [logPost,P_logPost];
+                        P_R = [exp(logPost - parameters.MS.logPost(1)),P_R];
+                        P_exitflag = [exitflag,P_exitflag];
+                    case +1
+                        P_prop = [P_prop,prop];
+                        P_par = [P_par,theta];
+                        P_logPost = [P_logPost,logPost];
+                        P_R = [P_R,exp(logPost - parameters.MS.logPost(1))];
+                        P_exitflag = [P_exitflag,exitflag];
+                end
+                
+                % Assignment
+                properties.P(i).prop = P_prop;
+                properties.P(i).par = P_par;
+                properties.P(i).logPost = P_logPost;
+                properties.P(i).R = P_R;
+                properties.P(i).exitflag = P_exitflag;
+                
+                % Save
+                if options.save
+                    dlmwrite([options.foldername '/properties_P' num2str(i,'%d') '__prop.csv'],P_prop,'delimiter',',','precision',12);
+                    dlmwrite([options.foldername '/properties_P' num2str(i,'%d') '__par.csv'],P_par,'delimiter',',','precision',12);
+                    dlmwrite([options.foldername '/properties_P' num2str(i,'%d') '__logPost.csv'],P_logPost,'delimiter',',','precision',12);
+                    dlmwrite([options.foldername '/properties_P' num2str(i,'%d') '__R.csv'],P_R,'delimiter',',','precision',12);
+                    dlmwrite([options.foldername '/properties_P' num2str(i,'%d') '__exitflag.csv'],P_exitflag,'delimiter',',','precision',12);
+                end
+                
+                switch(i)
+                    case 1
+                        ordstr = 'st';
+                    case 2
+                        ordstr = 'nd';
+                    case 3
+                        ordstr = 'rd';
+                    otherwise
+                        ordstr = '-th';
+                end
+                
+                % Output
+                str = [num2str(i,'%d') ordstr ' P: point ' num2str(length(properties.P(i).R)-1,'%d') ', R = ' ...
+                    num2str(exp(- J_opt - properties.MS.logPost(1)),'%.3e')];
+                switch options.mode
+                    case 'visual', fh = plotPropertyProfiles(properties,'1D',fh,options.property_index,options.plot_options); disp(str);
+                    case 'text', disp(str);
+                    case 'silent' % no output
+                end
             end
         end
-    end    
-end
-end
-
-%% Profile calculation -- PARALLEL
-if strcmp(options.comp_type,'parallel') && options.calc_profiles
-
-% Assignement of profile
-P = properties.P;
-
-% Profile calculation
-parfor i = options.property_index
-    % Initialization
-    P_prop = properties.MS.prop(i,options.MAP_index);
-    P_par = parameters.MS.par(:,options.MAP_index);
-    P_logPost = parameters.MS.logPost(options.MAP_index);
-    P_R = exp(parameters.MS.logPost(options.MAP_index)-parameters.MS.logPost(1));
-    if isfield(parameters.MS,'exitflag') 
-        P_exitflag = parameters.MS.exitflag(options.MAP_index);
-    else
-        P_exitflag = NaN;
     end
+elseif strcmp(options.comp_type,'parallel') && options.calc_profiles
+    %% Profile calculation -- PARALLEL
     
-    switch(i)
-        case 1
-            ordstr = 'st';
-        case 2
-            ordstr = 'nd';
-        case 3
-            ordstr = 'rd';
-        otherwise
-            ordstr = '-th';
-    end
+    % Assignement of profile
+    P = properties.P;
     
-    if ((P_prop <= properties.min(i)) || (properties.max(i) <= P_prop)) && ~strcmp(options.mode,'silent')
-        warning(['MAP of ' num2str(i) ordstr ' property not between respective minimum and maximum.']);
-    end
-
-    % Compute profile for in- and decreasing property
-    for s = [-1,1]
-        % Starting point
-        prop = properties.MS.prop(i,options.MAP_index);
-        theta  = parameters.MS.par(:,options.MAP_index);
-        logPost = parameters.MS.logPost(options.MAP_index);
+    % Profile calculation
+    parfor i = options.property_index
+        % Initialization
+        P_prop = properties.MS.prop(i,options.MAP_index);
+        P_par = parameters.MS.par(:,options.MAP_index);
+        P_logPost = parameters.MS.logPost(options.MAP_index);
+        P_R = exp(parameters.MS.logPost(options.MAP_index)-parameters.MS.logPost(1));
+        if isfield(parameters.MS,'exitflag')
+            P_exitflag = parameters.MS.exitflag(options.MAP_index);
+        else
+            P_exitflag = NaN;
+        end
         
-        % Sequential update
-        while (logPost >= (log(options.R_min) + parameters.MS.logPost(1))) && ...
-              (~(prop <= (properties.min(i)+options.boundary_tol)) || (s == +1)) && ...
-              (~((properties.max(i)-options.boundary_tol) <= prop) || (s == -1))
-          
-            % Proposal of next profile point
-            J_exp = -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost);
-
-            % Optimization
-            [theta,prop,exitflag] = ...
-                fmincon(@(theta) prop_fun(theta,properties.function{i},properties.min(i),properties.max(i),s),...
-                                    theta,...
-                                    parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
-                                    parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
-                                    parameters.min,...   % lower bound
-                                    parameters.max,...   % upper bound
-                                    @(theta) obj_con(theta,objective_function,-J_exp,options.obj_type),...
-                                    options.fmincon);    % options
+        switch(i)
+            case 1
+                ordstr = 'st';
+            case 2
+                ordstr = 'nd';
+            case 3
+                ordstr = 'rd';
+            otherwise
+                ordstr = '-th';
+        end
+        
+        if ((P_prop <= properties.min(i)) || (properties.max(i) <= P_prop)) && ~strcmp(options.mode,'silent')
+            warning(['MAP of ' num2str(i) ordstr ' property not between respective minimum and maximum.']);
+        end
+        
+        % Compute profile for in- and decreasing property
+        for s = [-1,1]
+            % Starting point
+            prop = properties.MS.prop(i,options.MAP_index);
+            theta  = parameters.MS.par(:,options.MAP_index);
+            logPost = parameters.MS.logPost(options.MAP_index);
             
-            % Adaptation of signs                    
-            if s == +1
-                prop = -prop;
-            end
-            
-            % Reoptimization at boundary
-            if (prop <= properties.min(i)) || (properties.max(i) <= prop)
-                [theta,J_opt] = ...
-                    fmincon(@(theta) obj(theta,objective_function,options.obj_type),...
-                                        theta,...
-                                        parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
-                                        parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
-                                        parameters.min,...   % lower bound
-                                        parameters.max,...   % upper bound
-                                        @(theta) prop_con_fun(theta,properties.function{i},properties.min(i),properties.max(i),s),...
-                                        options.fmincon);    % options
-            else
-                J_opt = obj(theta,objective_function,options.obj_type);
-            end
-            
-            % Assignment of log-posterior
-            logPost = -J_opt;
-
-            % Sorting
-            switch s
-                case -1
-                    P_prop = [prop,P_prop];
-                    P_par = [theta,P_par];
-                    P_logPost = [logPost,P_logPost]; 
-                    P_R = [exp(logPost - parameters.MS.logPost(1)),P_R];
-                    P_exitflag = [exitflag,P_exitflag];
-                case +1
-                    P_prop = [P_prop,prop];
-                    P_par = [P_par,theta];
-                    P_logPost = [P_logPost,logPost];
-                    P_R = [P_R,exp(logPost - parameters.MS.logPost(1))];
-                    P_exitflag = [P_exitflag,exitflag];
-            end
-            
-            % Assignment
-            P(i).prop = P_prop;
-            P(i).par = P_par;
-            P(i).logPost = P_logPost;
-            P(i).R = P_R;
-            P(i).exitflag = P_exitflag;
-
-            % Save
-            if options.save
-                dlmwrite([options.foldername '/property_P' num2str(i,'%d') '__prop.csv'],P_prop,'delimiter',',','precision',12);
-                dlmwrite([options.foldername '/property_P' num2str(i,'%d') '__par.csv'],P_par,'delimiter',',','precision',12);
-                dlmwrite([options.foldername '/property_P' num2str(i,'%d') '__logPost.csv'],P_logPost,'delimiter',',','precision',12);
-                dlmwrite([options.foldername '/property_P' num2str(i,'%d') '__R.csv'],P_R,'delimiter',',','precision',12);
-                dlmwrite([options.foldername '/property_P' num2str(i,'%d') '__exitflag.csv'],P_exitflag,'delimiter',',','precision',12);
+            % Sequential update
+            while (logPost >= (log(options.R_min) + parameters.MS.logPost(1))) && ...
+                    (~(prop <= (properties.min(i)+options.boundary_tol)) || (s == +1)) && ...
+                    (~((properties.max(i)-options.boundary_tol) <= prop) || (s == -1))
+                
+                % Proposal of next profile point
+                J_exp = -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost);
+                
+                % Optimization
+                [theta,prop,exitflag] = ...
+                    fmincon(@(theta) prop_fun(theta,properties.function{i},properties.min(i),properties.max(i),s),...
+                    theta,...
+                    parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
+                    parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
+                    parameters.min,...   % lower bound
+                    parameters.max,...   % upper bound
+                    @(theta) obj_con(theta,objective_function,-J_exp,options.obj_type),...
+                    options.fmincon);    % options
+                
+                % Adaptation of signs
+                if s == +1
+                    prop = -prop;
+                end
+                
+                % Reoptimization at boundary
+                if (prop <= properties.min(i)) || (properties.max(i) <= prop)
+                    [theta,J_opt] = ...
+                        fmincon(@(theta) obj(theta,objective_function,options.obj_type),...
+                        theta,...
+                        parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
+                        parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
+                        parameters.min,...   % lower bound
+                        parameters.max,...   % upper bound
+                        @(theta) prop_con_fun(theta,properties.function{i},properties.min(i),properties.max(i),s),...
+                        options.fmincon);    % options
+                else
+                    J_opt = obj(theta,objective_function,options.obj_type);
+                end
+                
+                % Assignment of log-posterior
+                logPost = -J_opt;
+                
+                % Sorting
+                switch s
+                    case -1
+                        P_prop = [prop,P_prop];
+                        P_par = [theta,P_par];
+                        P_logPost = [logPost,P_logPost];
+                        P_R = [exp(logPost - parameters.MS.logPost(1)),P_R];
+                        P_exitflag = [exitflag,P_exitflag];
+                    case +1
+                        P_prop = [P_prop,prop];
+                        P_par = [P_par,theta];
+                        P_logPost = [P_logPost,logPost];
+                        P_R = [P_R,exp(logPost - parameters.MS.logPost(1))];
+                        P_exitflag = [P_exitflag,exitflag];
+                end
+                
+                % Assignment
+                P(i).prop = P_prop;
+                P(i).par = P_par;
+                P(i).logPost = P_logPost;
+                P(i).R = P_R;
+                P(i).exitflag = P_exitflag;
+                
+                % Save
+                if options.save
+                    dlmwrite([options.foldername '/property_P' num2str(i,'%d') '__prop.csv'],P_prop,'delimiter',',','precision',12);
+                    dlmwrite([options.foldername '/property_P' num2str(i,'%d') '__par.csv'],P_par,'delimiter',',','precision',12);
+                    dlmwrite([options.foldername '/property_P' num2str(i,'%d') '__logPost.csv'],P_logPost,'delimiter',',','precision',12);
+                    dlmwrite([options.foldername '/property_P' num2str(i,'%d') '__R.csv'],P_R,'delimiter',',','precision',12);
+                    dlmwrite([options.foldername '/property_P' num2str(i,'%d') '__exitflag.csv'],P_exitflag,'delimiter',',','precision',12);
+                end
             end
         end
-    end    
-end
-
-% Assignment
-properties.P = P;
-
-% Output
-switch options.mode
-    case 'visual', fh = plotPropertyProfiles(properties,'1D',fh,options.property_index,options.plot_options);
-    case 'text' % no output
-    case 'silent' % no output
-end
-
+    end
+    
+    % Assignment
+    properties.P = P;
+    
+    % Output
+    switch options.mode
+        case 'visual', fh = plotPropertyProfiles(properties,'1D',fh,options.property_index,options.plot_options);
+        case 'text' % no output
+        case 'silent' % no output
+    end
+    
 end
 
 %% Output
