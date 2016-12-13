@@ -178,12 +178,6 @@ properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
 % Profile likelihoods are computed for the properties in the same fashion,
 % as they were computed for the parameters.
 
-properties.name     = {'log_{10}(k_1)'};
-properties.function = {@propertyFunction_theta1};
-properties.min      = -3;
-properties.max      = -1;
-properties.number   = length(properties.name);
-
 properties = getPropertyProfiles(properties, parameters, objectiveFunction, optionsProperties);
 
 %% Evaluation of properties for sampling results -- Properties
