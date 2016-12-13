@@ -143,7 +143,12 @@ switch options.group_CI_by
                     end
                     patch([CI(iP,1,k), CI(iP,2,k), CI(iP,2,k), CI(iP,1,k)], [j-h, j-h, j+h, j+h], 'k', 'FaceColor', methods.colors(j,:,k), 'EdgeColor', 'k');
                 end
-                plot([pStruct.MS.par(iP,1), pStruct.MS.par(iP,1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                              
+                if (isfield(pStruct, 'function')) % is property struct
+                    plot([pStruct.MS.prop(iP,1), pStruct.MS.prop(iP,1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                else
+                    plot([pStruct.MS.par(iP,1), pStruct.MS.par(iP,1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                end
             end
 
             if (options.draw_bounds)
