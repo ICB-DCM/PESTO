@@ -117,6 +117,7 @@ end
 
 % Optimization
 parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
+optionsMultistart.plot_options.add_points.par = [];
 
 %% Visualization of fit
 % The measured data is visualized in plot, together with fit for the best
@@ -170,7 +171,7 @@ parameters = getParameterConfidenceIntervals(parameters, alpha);
 % The values of the properties are evaluated at the end points of the
 % multi-start optimization runs by getPropertyMultiStarts.
 
-optionsProperties = optionsMultistart;
+optionsProperties = optionsMultistart.copy();
 properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
 
 %% Profile likelihood calculation -- Properties

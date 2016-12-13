@@ -268,7 +268,7 @@ for l = 1:length(I)
     
     % Plot: Additional points
     h = [];
-    if ~isempty(options.add_points)
+    if ~isempty(options.add_points) && ~isempty(options.add_points.par)
         % Check dimension:
         if size(options.add_points.par,1) ~= properties.number
             warning(['The matrix options.add_points.par should possess ' num2str(properties.number) ' rows.']);
