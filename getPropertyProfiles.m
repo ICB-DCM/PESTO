@@ -157,20 +157,9 @@ if strcmp(options.comp_type,'sequential') && options.calc_profiles
         else
             P_exitflag = NaN;
         end
-        
-        switch(i)
-            case 1
-                ordstr = 'st';
-            case 2
-                ordstr = 'nd';
-            case 3
-                ordstr = 'rd';
-            otherwise
-                ordstr = '-th';
-        end
-        
+                
         if ((P_prop <= properties.min(i)) || (properties.max(i) <= P_prop)) && ~strcmp(options.mode,'silent')
-            warning(['MAP of ' num2str(i) ordstr ' property not between respective minimum and maximum.']);
+            warning(['MAP of ' num2str(i) ordstr(i) ' property not between respective minimum and maximum.']);
         end
         
         % Compute profile for in- and decreasing property
@@ -254,19 +243,8 @@ if strcmp(options.comp_type,'sequential') && options.calc_profiles
                     dlmwrite([options.foldername '/properties_P' num2str(i,'%d') '__exitflag.csv'],P_exitflag,'delimiter',',','precision',12);
                 end
                 
-                switch(i)
-                    case 1
-                        ordstr = 'st';
-                    case 2
-                        ordstr = 'nd';
-                    case 3
-                        ordstr = 'rd';
-                    otherwise
-                        ordstr = '-th';
-                end
-                
                 % Output
-                str = [num2str(i,'%d') ordstr ' P: point ' num2str(length(properties.P(i).R)-1,'%d') ', R = ' ...
+                str = [num2str(i,'%d') ordstr(i) ' P: point ' num2str(length(properties.P(i).R)-1,'%d') ', R = ' ...
                     num2str(exp(- J_opt - properties.MS.logPost(1)),'%.3e')];
                 switch options.mode
                     case 'visual', fh = plotPropertyProfiles(properties,'1D',fh,options.property_index,options.plot_options); disp(str);
@@ -294,20 +272,9 @@ elseif strcmp(options.comp_type,'parallel') && options.calc_profiles
         else
             P_exitflag = NaN;
         end
-        
-        switch(i)
-            case 1
-                ordstr = 'st';
-            case 2
-                ordstr = 'nd';
-            case 3
-                ordstr = 'rd';
-            otherwise
-                ordstr = '-th';
-        end
-        
+                
         if ((P_prop <= properties.min(i)) || (properties.max(i) <= P_prop)) && ~strcmp(options.mode,'silent')
-            warning(['MAP of ' num2str(i) ordstr ' property not between respective minimum and maximum.']);
+            warning(['MAP of ' num2str(i) ordstr(i) ' property not between respective minimum and maximum.']);
         end
         
         % Compute profile for in- and decreasing property
