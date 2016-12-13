@@ -322,7 +322,7 @@ classdef MatlabDocMaker
             %% Preparations
             ip = inputParser;
             ip.addParamValue('open',false,@islogical);
-            ip.addParamValue('latex',false,@islogical);
+            ip.addParamValue('latex',true,@islogical);
             ip.parse(varargin{:});
             genlatex = ip.Results.latex;
             
@@ -477,12 +477,12 @@ classdef MatlabDocMaker
             % Tidy up
             fprintf('cleaning up...');
             if isfield(strs,'filter')
-                delete(filter);
+                % delete(filter);
             end
             if ~isempty(latexextras)
-                delete(latexextras);
+                % delete(latexextras);
             end
-            delete(doxyfile);
+            % delete(doxyfile);
             
             %% Post generation phase 
             cd(curdir);
