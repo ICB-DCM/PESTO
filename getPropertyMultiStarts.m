@@ -110,7 +110,7 @@ for j = 1:length(properties.MS.logPost)
     if (mod(j,100) == 0) || (j == length(properties.MS.logPost))
         str = ['Property evaluation for multi-start results completed to ' num2str(100*j/length(properties.MS.logPost),'%d') ' %'];
         switch options.mode
-            case 'visual', fh = plotPropertyMultiStarts(properties,fh); disp(str);
+            case 'visual', fh = plotPropertyMultiStarts(properties,fh);
             case 'text', disp(str);
             case 'silent' % no output
         end

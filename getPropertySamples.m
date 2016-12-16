@@ -119,7 +119,7 @@ if strcmp(options.comp_type,'sequential')
         if (mod(j,100) == 0) || (j == length(properties.S.logPost))
             str = ['Property evaluation for MCMC sampling completed to ' num2str(100*j/length(properties.S.logPost),'%d') ' %'];
             switch options.mode
-                case 'visual', fh = plotPropertySamples(properties,'1D',fh,options.property_index,options.plot_options); disp(str);
+                case 'visual', fh = plotPropertySamples(properties,'1D',fh,options.property_index,options.plot_options);
                 case 'text', disp(str);
                 case 'silent' % no output
             end
