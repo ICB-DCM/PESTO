@@ -666,7 +666,7 @@ for l2 = 1:length(I)
             switch userProv
                 case 'no'
                     if (isfield(parameters, 'MS') && isfield(parameters.MS, 'hessian') && (size(parameters.MS.hessian,3) >= 1))
-                        Sigma = pinv(parameters.MS.hessian(:,:,1));
+                        Sigma = pinv(parameters.MS.hessian([i1,i2],[i1,i2],1));
                         theta_0 = parameters.MS.par([i1,i2],1);
                         plot_appr = true;
                     else
@@ -674,20 +674,20 @@ for l2 = 1:length(I)
                     end
                 case 'sigmaOnly'
                     if (~isfield(parameters, 'MS') || ~isfield(parameters.MS, 'par') || isempty(parameters.MS.par,3))
-                        Sigma = parameters.user.Sigma_0;
+                        Sigma = parameters.user.Sigma_0([i1,i2],[i1,i2]);
                         theta_0 = parameters.MS.par([i1,i2],1);
                         plot_appr = true;
                     else
                         warning('No valid values for theta found! Not plotting approximation.');
                     end
                 case 'all'
-                    Sigma = parameters.user.Sigma_0;
-                    theta_0 = parameters.user.theta_0;
+                    Sigma = parameters.user.Sigma_0([i1,i2],[i1,i2]);
+                    theta_0 = parameters.user.theta_0([i1,i2]);
                     plot_appr = true;
             end
             
             if plot_appr
-                X = getEllipse(theta_0([i1,i2],1),Sigma([i1,i2],[i1,i2]),options.A.sigma_level);
+                X = getEllipse(theta_0, Sigma, options.A.sigma_level);
                 h = plot(X(1,:),X(2,:),'-','linewidth',options.A.lw/1.5,'color',options.A.col); hold on;
             end
             
