@@ -347,7 +347,7 @@ for s = [-1,1]
                 num2str(exp(- J_opt - parameters.MS.logPost(1)),'%.3e') ' (optimized) / '...
                 num2str(exp(- J_exp - parameters.MS.logPost(1)),'%.3e') ' (predicted)'];
             switch options.mode
-                case 'visual', fh = plotParameterProfiles(parameters,'1D',fh,options.parameter_index,options.plot_options); disp(str);
+                case 'visual', fh = plotParameterProfiles(parameters,'1D',fh,options.parameter_index,options.plot_options);
                 case 'text', disp(str);
                 case 'silent' % no output
             end

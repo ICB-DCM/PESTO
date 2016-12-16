@@ -267,7 +267,7 @@ if strcmp(options.comp_type,'sequential') && options.calc_profiles
                 str = [num2str(i,'%d') ordstr(i) ' P: point ' num2str(length(properties.P(i).R)-1,'%d') ', R = ' ...
                     num2str(exp(- J_opt - properties.MS.logPost(1)),'%.3e')];
                 switch options.mode
-                    case 'visual', fh = plotPropertyProfiles(properties,'1D',fh,options.property_index,options.plot_options); disp(str);
+                    case 'visual', fh = plotPropertyProfiles(properties,'1D',fh,options.property_index,options.plot_options);
                     case 'text', disp(str);
                     case 'silent' % no output
                 end

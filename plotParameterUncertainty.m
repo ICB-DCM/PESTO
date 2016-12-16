@@ -665,7 +665,7 @@ for l2 = 1:length(I)
             
             switch userProv
                 case 'no'
-                    if (~isfield(parameters, 'MS') || ~isfield(parameters.MS, 'hessian') || (size(parameters.MS.hessian,3) < 1))
+                    if (isfield(parameters, 'MS') && isfield(parameters.MS, 'hessian') && (size(parameters.MS.hessian,3) >= 1))
                         Sigma = pinv(parameters.MS.hessian(:,:,1));
                         theta_0 = parameters.MS.par([i1,i2],1);
                         plot_appr = true;
