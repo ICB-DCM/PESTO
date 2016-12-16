@@ -152,9 +152,9 @@ parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultista
 
 optionsMultistart.MCMC.sampling_scheme = 'single-chain';
 optionsMultistart.SC.proposal_scheme   = 'AM';
-optionsMultistart.MCMC.nsimu_warmup    = 2e3;
+optionsMultistart.MCMC.nsimu_warmup    = 2e2;
 optionsMultistart.MCMC.thinning        = 10;
-optionsMultistart.MCMC.nsimu_run       = 5e3;
+optionsMultistart.MCMC.nsimu_run       = 2e3;
 optionsMultistart.plot_options.S.bins  = 10;
 
 parameters = getParameterSamples(parameters, objectiveFunction, optionsMultistart);

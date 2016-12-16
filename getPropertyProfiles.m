@@ -102,7 +102,7 @@ options.P.max = parameters.max;
 options.MAP_index = 1;
 
 % Warning if objective function gradient is not available
-if ~strcmp(options.fmincon.GradConstr,'on')
+if ~options.fmincon.SpecifyObjectiveGradient
     warning('For efficient and reliable optimization, getPropertyProfiles.m requires gradient information.')
 end
 
@@ -126,6 +126,26 @@ end
 if(~isfield(parameters, 'MS'))
     error('No information from multi-start local optimization available. Please run getMultiStarts() before getParameterProfiles.');
 end
+
+% Check and assign options
+options.P.min = properties.min;
+options.P.max = properties.max;
+if isempty(options.property_index)
+    options.property_index = 1:properties.number;
+end
+if (isempty(options.MAP_index))
+    options.MAP_index = 1;
+end
+
+options.fmincon = optimoptions('fmincon', ...
+    'algorithm', 'active-set', ...
+    'Display', 'off', ...
+    'SpecifyObjectiveGradient', true, ...
+    'SpecifyConstraintGradient', true, ...
+    'MaxFunctionEvaluations', 100*parameters.number, ...
+    'ConstraintTolerance', 1e-4, ...
+    'MaxIterations', 300, ...
+    'PrecondBandWidth', inf); 
 
 %% Initialization of property struct
 for i = options.property_index

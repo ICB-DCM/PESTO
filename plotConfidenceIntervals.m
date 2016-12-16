@@ -136,21 +136,28 @@ switch options.group_CI_by
                 for k = methods.numLevels : -1 : 1;
                     h = methods.bars(k);
                     if (CI(iP,1,k) == -inf)
-                        CI(iP,1,k) = xlim(1);
+                        CI(iP,1,k) = pStruct.min(iP);
                     end
                     if ((CI(iP,2,k)) == inf)
-                        CI(iP,1,k) = xlim(2);
+                        CI(iP,2,k) = pStruct.max(iP);
                     end
                     patch([CI(iP,1,k), CI(iP,2,k), CI(iP,2,k), CI(iP,1,k)], [j-h, j-h, j+h, j+h], 'k', 'FaceColor', methods.colors(j,:,k), 'EdgeColor', 'k');
                 end
-                plot([pStruct.MS.par(iP,1), pStruct.MS.par(iP,1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                if (strcmp(type, 'Parameters'))
+                    plot([pStruct.MS.par(iP,1), pStruct.MS.par(iP,1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                else
+                    plot([pStruct.MS.prop(iP,1), pStruct.MS.prop(iP,1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                end
             end
 
             if (options.draw_bounds)
                 if (ax.XLim(1) <= pStruct.min(iP) && ax.XLim(2) >= pStruct.min(iP))
                     plot([pStruct.min(iP), pStruct.min(iP)], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
-                elseif (ax.XLim(1) <= pStruct.max(iP) && ax.XLim(2) >= pStruct.max(iP))
+                    set(gca, 'XLim', [pStruct.min(iP), ax.XLim(2)]);
+                end
+                if (ax.XLim(1) <= pStruct.max(iP) && ax.XLim(2) >= pStruct.max(iP))
                     plot([pStruct.max(iP), pStruct.max(iP)], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
+                    set(gca, 'XLim', [ax.XLim(1), pStruct.max(iP)]);
                 end
             end
             hold off;
@@ -180,7 +187,11 @@ switch options.group_CI_by
                     CI(iM,1,k) = min(CI(iM,1,k), XMax);
                     patch([CI(j,1,k), CI(j,2,k), CI(j,2,k), CI(j,1,k)], [iP-h, iP-h, iP+h, iP+h], 'k', 'FaceColor', methods.colors(iM,:,k), 'EdgeColor', 'k');
                 end
-                plot([pStruct.MS.par(j,iMAP), pStruct.MS.par(j,iMAP)], [iP-0.4, iP+0.4], 'k-', 'linewidth', 2);
+                if (strcmp(type, 'Parameters'))
+                    plot([pStruct.MS.par(j,iMAP), pStruct.MS.par(j,iMAP)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                else
+                    plot([pStruct.MS.prop(j,iMAP), pStruct.MS.prop(j,iMAP)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                end
                 iP = iP + 1;
             end
 
