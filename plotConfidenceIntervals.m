@@ -113,24 +113,31 @@ else
 end
 
 % Open figure
-fh = figure('Name', strcat('plotConfidenceIntervals - ', type));
-
+fh = figure('Name', ['plotConfidenceIntervals - ' type]);
+pos = nan(indexLen, 4);
 
 %% Generate the Plots
 switch options.group_CI_by
     case 'parprop'
         for iP = indexSet
             subplot(plots(1), plots(2), iP);
+            pos(iP,:) = get(gca, 'Position');
+            del = 0.1 / plots(2);
+            offsetLabels = 0.1;
+            step = (1 - offsetLabels) / plots(2);
+            pos(iP,:) = [mod((iP-1), plots(2))*step + del/2 + offsetLabels, pos(iP, 2), step-del, pos(iP, 4)];
             hold on;
 
             set(gca, 'YLim', [0.5, numConf + 0.5]);
-            title(pStruct.name{iP});
-            ylabel(' ');
-            xlabel('parameters values');
-            set(gca, 'ytick', 1 : numConf, 'yticklabel', methods.name)
+            ylabel('');
+            xlabel(pStruct.name{iP});
+            if (mod(iP-1, plots(2)) == 0)
+                set(gca, 'ytick', 1 : numConf, 'yticklabel', methods.name);
+            else
+                set(gca, 'ytick', 1 : numConf, 'yticklabel', '');
+            end
             box on;
 
-            ax = gca;
             for j = 1 : numConf
                 CI = pStruct.CI.(methods.type{j});
                 for k = methods.numLevels : -1 : 1;
@@ -151,28 +158,48 @@ switch options.group_CI_by
             end
 
             if (options.draw_bounds)
-                if (ax.XLim(1) <= pStruct.min(iP) && ax.XLim(2) >= pStruct.min(iP))
+                xLimits = get(gca, 'XLim');
+                if (xLimits(1) <= pStruct.min(iP) && xLimits(2) >= pStruct.min(iP))
                     plot([pStruct.min(iP), pStruct.min(iP)], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
-                    set(gca, 'XLim', [pStruct.min(iP), ax.XLim(2)]);
+                    set(gca, 'XLim', [pStruct.min(iP), xLimits(2)]);
                 end
-                if (ax.XLim(1) <= pStruct.max(iP) && ax.XLim(2) >= pStruct.max(iP))
+                xLimits = get(gca, 'XLim');
+                if (xLimits(1) <= pStruct.max(iP) && xLimits(2) >= pStruct.max(iP))
                     plot([pStruct.max(iP), pStruct.max(iP)], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
-                    set(gca, 'XLim', [ax.XLim(1), pStruct.max(iP)]);
+                    set(gca, 'XLim', [xLimits(1), pStruct.max(iP)]);
                 end
             end
             hold off;
         end
         
+        % Relocate the images to where I want them to be. Don't try to go
+        % for a more intelligent solution. I did, and it made me alomost
+        % mad... The Matlab syntax for figure handles is, well... o.O'
+        fig = gcf;
+        fig.Children = flip(fig.Children);
+        for iP = indexSet 
+            set(fig.Children(iP), 'Position', pos(iP,:));
+        end
+        
     case 'methods'
         for iM = indexSet
             subplot(plots(1), plots(2), iM);
+            pos(iM,:) = get(gca, 'Position');
+            del = 0.1 / plots(2);
+            offsetLabels = 0.1;
+            step = (1 - offsetLabels) / plots(2);
+            pos(iM,:) = [mod((iM-1), plots(2))*step + del/2 + offsetLabels, pos(iM, 2), step-del, pos(iM, 4)];
             hold on;
-
+            
             set(gca, 'YLim', [0.5, numP + 0.5]);
             title(methods.name{iM});
-            ylabel(' ');
-            xlabel('parameters values');
-            set(gca, 'ytick', 1 : numP, 'yticklabel', pStruct.name(pIndexSet))
+            ylabel('');
+            xlabel('');
+            if (iM == 1 || iM == 3)
+                set(gca, 'ytick', 1 : numP, 'yticklabel', pStruct.name(pIndexSet));
+            else
+                set(gca, 'ytick', 1 : numP, 'yticklabel', '');
+            end
             box on;
 
             XMin = min(pStruct.min);
@@ -204,6 +231,12 @@ switch options.group_CI_by
                 set(gca, 'XLim', limits);
             end
             hold off;
+        end
+        
+        fig = gcf;
+        fig.Children = flip(fig.Children);
+        for iM = indexSet 
+            set(fig.Children(iM), 'Position', pos(iM,:));
         end
         
     case 'all'
