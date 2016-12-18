@@ -138,7 +138,7 @@ if (isempty(options.MAP_index))
 end
 
 options.fmincon = optimoptions('fmincon', ...
-    'algorithm', 'active-set', ...
+    'algorithm', 'interior-point', ...
     'Display', 'off', ...
     'SpecifyObjectiveGradient', true, ...
     'SpecifyConstraintGradient', true, ...
@@ -310,12 +310,17 @@ elseif strcmp(options.comp_type,'parallel') && options.calc_profiles
                     (~((properties.max(i)-options.boundary_tol) <= prop) || (s == -1))
                 
                 % Proposal of next profile point
-                J_exp = -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost);
-                
+                % J_exp = -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost);
+                [theta_next,J_exp] = ...
+                    getNextPoint(theta,theta_min,theta_max,dtheta/abs(dtheta(i)),...
+                    abs(dtheta(i)),options.options_getNextPoint.min,options.options_getNextPoint.max,options.options_getNextPoint.update,...
+                    -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost),@(theta) obj(theta,objective_function,options.obj_type),...
+                    parameters.constraints,options.options_getNextPoint.mode,i);
+        
                 % Optimization
                 [theta,prop,exitflag] = ...
                     fmincon(@(theta) prop_fun(theta,properties.function{i},properties.min(i),properties.max(i),s),...
-                    theta,...
+                    theta_next,...
                     parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
                     parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
                     parameters.min,...   % lower bound
@@ -714,4 +719,116 @@ elseif s == +1
     end
 end
 
+end
+
+%% getNextStepProfile is a support function for the profile calculation
+%   and is called by computeProfile. It determines the length of the 
+%   update step given update direction, parameter constraints,
+%   log-posterior and target log posterior.
+%
+% USAGE:
+% ======
+% function [theta_next,logPost] = getNextPoint(theta,theta_min,theta_max,dtheta,logPost_target,objective_function)
+%
+% INPUTS:
+% =======
+% theta ... starting parameter   
+% theta_min ... lower bound for parameters   
+% theta_max ... upper bound for parameters   
+% dtheta ... upper direction
+% logPost_target ... target value for log-posterior
+% objective_function ... log-posterior of model as function of the parameters.
+%
+% Outputs:
+% ========
+% theta_next ... parameter proposal
+% logPost ... log-posterior at proposed parameter
+%
+% 2012/07/12 Jan Hasenauer
+
+function [theta,J] = getNextPoint(theta,theta_min,theta_max,dtheta,c,c_min,c_max,c_update,J_target,obj,constraints,update_mode,i)
+
+% Initialization
+% 1) modification of dtheta
+switch update_mode
+    case 'multi-dimensional'
+        % nothing has to be done
+    case 'one-dimensional'
+        dtheta([1:i-1,i+1:end]) = 0;
+end
+
+% 1) line search
+if dtheta(i) > 0 % increasing
+    c_bound = (theta_max(i)-theta(i))/dtheta(i);
+else
+    c_bound = (theta_min(i)-theta(i))/dtheta(i);
+end
+if c_bound > c_min
+    c_max = min(c_max,c_bound);
+    c = min(max(c,c_min),c_max);
+    search = 1;
+else
+    c_min = c_bound;
+    c_max = c_bound;
+    c = c_bound;
+    search = 0;
+end
+% 2) inequality constraints
+if ~isempty(constraints.A)
+    A = constraints.A;
+    b = constraints.b;
+else
+    A = zeros(1,length(theta));
+    b = 1;
+end
+% 3) parameter projection
+theta_fun = @(c) max(min(theta + c*dtheta,theta_max),theta_min);
+
+% Search
+theta = theta_fun(c);
+if  min(A*theta <= b)
+    J = obj(theta);
+else
+    J = inf;
+end
+
+if search == 1
+    if J > J_target % => initial c too large
+        stop = 0;
+        while stop == 0
+            c = min(max(c/c_update,c_min),c_max);
+            theta = theta_fun(c);
+            if c == c_min % lower bound reached
+                stop = 1;
+                J = obj(theta);
+            elseif min(A*theta <= b) % feasible
+                J = obj(theta);
+                if J <= J_target % objective smaller than target value
+                    stop = 1;
+                end
+            end
+        end
+    else % => initial c too small
+        stop = 0;
+        while stop == 0
+            cn = min(max(c*c_update,c_min),c_max);
+            thetan = theta_fun(cn);
+            if min(A*theta <= b) % feasible
+                Jn = obj(thetan);
+                if Jn <= J_target % objective smaller than target value
+                    c = cn;
+                    theta = thetan;
+                    J = Jn;
+                    if cn == c_max % upper bound reached
+                        stop = 1;
+                    end
+                else
+                    stop = 1;
+                end
+            else
+                stop = 1;
+            end
+        end
+    end
+end
 end
