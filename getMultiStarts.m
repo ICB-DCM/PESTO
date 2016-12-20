@@ -104,6 +104,9 @@ if isempty(options.start_index)
 end
 parameters = parametersSanityCheck(parameters);
 
+options.fmincon = optimset(options.fmincon,...
+    'MaxFunEvals', 400*parameters.number);
+
 %% Initialization and figure generation
 fh = [];
 switch options.mode
@@ -182,7 +185,7 @@ if strcmp(options.comp_type, 'sequential')
     
     % initialize the waitbar
     waitBar = waitbar(0, '1', 'name', 'Parameter estimation in process, please wait...', 'CreateCancelBtn', 'setappdata(gcbf, ''canceling'', 1)');
-    stringTimePrediction = updateWaitBar(0.004 * length(options.start_index) * options.fmincon.MaxIterations * parameters.number);
+    stringTimePrediction = updateWaitBar(0.004 * length(options.start_index) * options.fmincon.MaxIter * parameters.number);
     waitbar(0, waitBar, stringTimePrediction);
     setappdata(waitBar, 'canceling', 0);
     
@@ -200,9 +203,9 @@ if strcmp(options.comp_type, 'sequential')
         error_count = 0;
         
         % Evaluation of objective function at starting point
-        if (~options.fmincon.SpecifyObjectiveGradient)
+        if (~strcmp(options.fmincon.GradObj, 'on'))
             J_0 = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
-        elseif ((options.fmincon.SpecifyObjectiveGradient) && ~strcmp(options.fmincon.Hessian,'user-supplied'))
+        elseif (strcmp(options.fmincon.GradObj, 'on') && ~strcmp(options.fmincon.Hessian,'on'))
             [J_0, grad_J_0] = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
         else
             [J_0, grad_J_0, H_J_0] = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
@@ -229,11 +232,11 @@ if strcmp(options.comp_type, 'sequential')
             parameters.MS.par(:,i) = theta;
             parameters.MS.gradient(:,i) = gradient_opt;
             if isempty(hessian_opt)
-                if strcmp(options.fmincon.Hessian,'user-supplied')
+                if strcmp(options.fmincon.Hessian,'on')
                     [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
                 end
             elseif max(hessian_opt(:)) == 0
-                if strcmp(options.fmincon.Hessian,'user-supplied')
+                if strcmp(options.fmincon.Hessian,'on')
                     [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
                 end
             end
@@ -317,9 +320,9 @@ if strcmp(options.comp_type,'parallel')
     parfor i = options.start_index
         
         % Evaluation of objective function at starting point
-        if (~options.fmincon.SpecifyObjectiveGradient)
+        if (~strcmp(options.fmincon.GradObj, 'on'))
             J_0 = obj(parameters.MS.par0(:,i),objective_function,options.obj_type);
-        elseif ((options.fmincon.SpecifyObjectiveGradient) && ~strcmp(options.fmincon.Hessian,'user-supplied'))
+        elseif (strcmp(options.fmincon.GradObj, 'on') && ~strcmp(options.fmincon.Hessian,'on'))
             [J_0,grad_J_0] = obj(parameters.MS.par0(:,i),objective_function,options.obj_type);
         else
             [J_0,grad_J_0,H_J_0] = obj(parameters.MS.par0(:,i),objective_function,options.obj_type);
@@ -344,11 +347,11 @@ if strcmp(options.comp_type,'parallel')
             par(:,i) = theta;
             gradient(:,i) = gradient_opt;
             if isempty(hessian_opt)
-                if strcmp(options.fmincon.Hessian,'user-supplied')
+                if strcmp(options.fmincon.Hessian,'on')
                     [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
                 end
             elseif max(abs(hessian_opt(:))) == 0
-                if strcmp(options.fmincon.Hessian,'user-supplied')
+                if strcmp(options.fmincon.Hessian,'on')
                     [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
                 end
             end
