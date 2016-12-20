@@ -189,10 +189,12 @@ if strcmp(options.comp_type,'sequential') && options.calc_profiles
             theta  = parameters.MS.par(:,options.MAP_index);
             logPost = parameters.MS.logPost(options.MAP_index);
             
-            % Sequential update
-            while (logPost >= (log(options.R_min) + parameters.MS.logPost(1))) && ...
-                    (~(prop <= (properties.min(i)+options.boundary_tol)) || (s == +1)) && ...
-                    (~((properties.max(i)-options.boundary_tol) <= prop) || (s == -1))
+            computeProfile = (logPost >= (log(options.R_min) + parameters.MS.logPost(1))) && ...
+                    (prop > (properties.min(i)+options.boundary_tol)) && ...
+                    ((properties.max(i)-options.boundary_tol) > prop);
+                
+            % Sequential update    
+            while computeProfile
                 
                 % Proposal of next profile point
                 J_exp = -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost);
@@ -271,6 +273,11 @@ if strcmp(options.comp_type,'sequential') && options.calc_profiles
                     case 'text', disp(str);
                     case 'silent' % no output
                 end
+                
+                % Condition for the while-loop
+                computeProfile = (logPost >= (log(options.R_min) + parameters.MS.logPost(1))) && ...
+                    (prop > (properties.min(i)+options.boundary_tol)) && ...
+                    ((properties.max(i)-options.boundary_tol) > prop);
             end
         end
     end
@@ -304,10 +311,12 @@ elseif strcmp(options.comp_type,'parallel') && options.calc_profiles
             theta  = parameters.MS.par(:,options.MAP_index);
             logPost = parameters.MS.logPost(options.MAP_index);
             
+            computeProfile = (logPost >= (log(options.R_min) + parameters.MS.logPost(1))) && ...
+                    (prop > (properties.min(i)+options.boundary_tol)) && ...
+                    ((properties.max(i)-options.boundary_tol) > prop);
+                
             % Sequential update
-            while (logPost >= (log(options.R_min) + parameters.MS.logPost(1))) && ...
-                    (~(prop <= (properties.min(i)+options.boundary_tol)) || (s == +1)) && ...
-                    (~((properties.max(i)-options.boundary_tol) <= prop) || (s == -1))
+            while computeProfile
                 
                 % Proposal of next profile point
                 % J_exp = -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost);
@@ -382,6 +391,11 @@ elseif strcmp(options.comp_type,'parallel') && options.calc_profiles
                     dlmwrite([options.foldername '/property_P' num2str(i,'%d') '__R.csv'],P_R,'delimiter',',','precision',12);
                     dlmwrite([options.foldername '/property_P' num2str(i,'%d') '__exitflag.csv'],P_exitflag,'delimiter',',','precision',12);
                 end
+                
+                % Condition for the while-loop
+                computeProfile = (logPost >= (log(options.R_min) + parameters.MS.logPost(1))) && ...
+                    (prop > (properties.min(i)+options.boundary_tol)) && ...
+                    ((properties.max(i)-options.boundary_tol) > prop);
             end
         end
     end
