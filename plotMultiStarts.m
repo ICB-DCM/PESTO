@@ -169,7 +169,7 @@ end
 hold off;
 ylim([1-0.01,parameters.number+0.01]);
 ylabel(' ');
-xlabel('parameters values');
+xlabel('parameter value');
 set(gca,'ytick',1:parameters.number,'yticklabel',parameters.name)
 
 if options.title

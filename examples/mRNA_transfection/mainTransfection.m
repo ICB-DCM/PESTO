@@ -11,7 +11,7 @@
 % * getPropertyConfidenceIntervals()
 %
 % This example is a model for mRNA transfection, taken from the paper
-% "Single-cell mRNA transfection studies:Delivery, kinetics and statistics 
+% "Single-cell mRNA transfection studies: Delivery, kinetics and statistics 
 % by numbers", by Leonhardt C et al., Nanomedicine: NBM, 2014, vol.10
 % (see http://dx.doi.org/10.1016/j.nano.2013.11.008)
 %
@@ -39,11 +39,11 @@ TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
 %% Model Definition
-% See logLikelihood.m for a detailed description
+% See logLikelihoodT.m for a detailed description
 
 %% Data
 % We fix a data set. It consists of a vector of time points t and a 
-% measurement vector ym. This data is taken from the refernced publication. 
+% measurement vector ym. This data is taken from the referenced publication. 
 
 t = (0:0.2:10)';
 ym = [   0
@@ -98,7 +98,7 @@ ym = [   0
     3.5286
     3.2785];
 
-%% Definition of the Paramter Estimation Problem
+%% Definition of the Parameter Estimation Problem
 % In order to run any PESTO routine, at least the parameters struct with 
 % the fields shown here and the objective function need to be defined, 
 % since they are manadatory for getMultiStarts, which is usually the first 
@@ -131,7 +131,7 @@ properties.name     = {'log_{10}(t_0)';'log_{10}(k_{TL}*m_0)';...
 objectiveFunction = @(theta) logLikelihoodT(theta, t, ym);
 
 %% Multi-start local optimization
-% A multi-start local optimization is performed within the bound defined in
+% A multi-start local optimization is performed within the bounds defined in
 % parameters.min and .max in order to infer the unknown parameters from 
 % measurement data. Therefore, a PestoOptions object is created and
 % some of its properties are set. Since the field obj_type is set to
@@ -278,7 +278,7 @@ properties = getPropertySamples(properties, parameters, optionsMultistart);
 
 %% Confidence interval evaluation -- Properties
 % As for the parameters, confidence intervals are computed for the
-% properties in different fashion, based on local approxiamations, profile
+% properties in different fashion, based on local approximations, profile
 % likelihoods and samples.
 
 properties = getPropertyConfidenceIntervals(properties, alpha);

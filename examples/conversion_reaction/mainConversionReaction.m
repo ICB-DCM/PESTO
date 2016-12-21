@@ -45,7 +45,7 @@ set(0,TextSizes);
 % We fix an artificial data set. It consists of a vector of time points t
 % and a measurement vector Y. This data was created using the parameter 
 % values which are assigned to theta_true and by adding normaly distributed 
-% measurement noise with value sigma2. 
+% measurement noise with variance sigma2. 
 
 % True parameters
 theta_true = [-2.5;-2];
@@ -85,7 +85,7 @@ properties.max = [-2.4;-1.7; 5; 10; 1; 1];
 properties.number = length(properties.name);
 
 %% Multi-start local optimization
-% A multi-start local optimization is performed within the bound defined in
+% A multi-start local optimization is performed within the bounds defined in
 % parameters.min and .max in order to infer the unknown parameters from 
 % measurement data. Therefore, a PestoOptions object is created and
 % some of its properties are set accordingly.
@@ -189,7 +189,7 @@ properties = getPropertySamples(properties, parameters, optionsProperties);
 
 %% Confidence interval evaluation -- Properties
 % As for the parameters, confidence intervals are computed for the
-% properties in different fashion, based on local approxiamations, profile
+% properties in different fashion, based on local approximations, profile
 % likelihoods and samples.
 
 properties = getPropertyConfidenceIntervals(properties, alpha);
