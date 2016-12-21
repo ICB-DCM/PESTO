@@ -53,18 +53,19 @@ if length(varargin) >= 3 && ~isempty(varargin{3})
 end
 
 % Options
+defaultOptions = PestoPlottingOptions();
 if isfield(properties,'S')
     if isfield(properties.S,'PT');
-        options.S.PT.plot_type = options.S.plot_type;
-        options.S.PT.ind = 1:size(properties.S.PT.prop,3);
-        options.S.PT.col = [linspace(0,1,size(properties.S.PT.prop,3))',...
+        defaultOptions.S.PT.plot_type = defaultOptions.S.plot_type;
+        defaultOptions.S.PT.ind = 1:size(properties.S.PT.prop,3);
+        defaultOptions.S.PT.col = [linspace(0,1,size(properties.S.PT.prop,3))',...
                             0.2*ones(size(properties.S.PT.prop,3),1),...
                             linspace(1,0,size(properties.S.PT.prop,3))'];
     end
 end
 
 if ~isfield(properties,'MS')
-    options.MS.plot_type = 0; 
+    defaultOptions.MS.plot_type = 0; 
 end
 
 % Assignment of user-provided options
@@ -72,9 +73,9 @@ if length(varargin) >= 4
     if ~isa(varargin{4}, 'PestoPlottingOptions')
         error('Argument 4 is not of type PestoPlottingOptions.')
     end
-    options = setdefault(varargin{4}.copy(),options);
+    options = setdefault(varargin{4}.copy(), defaultOptions);
 else
-    options = PestoPlottingOptions();
+    options = defaultOptions;
 end
 if ~isfield(properties,'P')
     options.P.plot_type = 0; 
