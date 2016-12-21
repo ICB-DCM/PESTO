@@ -102,8 +102,6 @@ optionsMultistart.plot_options.add_points.logPost = objectiveFunction(theta_true
 % The example can also be run in parallel mode: Uncomment this, if wanted
 % optionsMultistart.comp_type = 'parallel'; 
 % optionsMultistart.mode = 'text';
-% optionsMultistart.comp_type = 'parallel'; 
-% optionsMultistart.mode = 'text';
 % optionsMultistart.save = true; 
 % optionsMultistart.foldername = 'results';
 % n_workers = 10;
@@ -215,5 +213,5 @@ end
 %% Close the pools of parallel working threads
 
 if strcmp(optionsMultistart.comp_type, 'parallel') && (n_workers >= 2)
-    parpool('close');
+    delete(gcp('nocreate'))
 end

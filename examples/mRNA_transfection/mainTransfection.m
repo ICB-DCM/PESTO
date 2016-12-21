@@ -146,9 +146,9 @@ optionsMultistart.n_starts  = 20;
 optionsMultistart.plot_options.group_CI_by = 'methods';
 
 % The example can also be run in parallel mode: Uncomment this, if wanted
-% optionsMultistart.comp_type = 'parallel'; 
-% optionsMultistart.mode = 'silent'; 
-% optionsMultistart.save = 'true'; 
+% optionsMultistart.comp_type = 'parallel';
+% optionsMultistart.mode = 'silent';
+% optionsMultistart.save = true;
 % optionsMultistart.foldername = 'results';
 % n_workers = 10;
 
@@ -305,5 +305,5 @@ end
 %% Close the pools of parallel working threads
 
 if strcmp(optionsMultistart.comp_type, 'parallel')
-    parpool('close');
+    delete(gcp('nocreate'));
 end

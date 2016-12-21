@@ -109,7 +109,7 @@ switch options.mode
             fh = figure(options.fh);
         end
     case 'text'
-        fprintf(' \nProfile likelihood caclulation:\n===============================\n');
+        fprintf(' \nProfile likelihood caculation:\n===============================\n');
     case 'silent' % no output
         % Force fmincon to be silent.
         options.fmincon = optimset(options.fmincon,'display','off');

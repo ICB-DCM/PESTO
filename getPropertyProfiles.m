@@ -116,7 +116,7 @@ switch options.mode
             fh = figure(options.fh);
         end
     case 'text'
-        fprintf(' \nProfile likelihood caclulation:\n===============================\n');
+        fprintf(' \nProfile likelihood caculation:\n===============================\n');
     case 'silent' % no output
         % Force fmincon to be silent.
         options.fmincon.Display = 'off';
@@ -321,7 +321,7 @@ elseif strcmp(options.comp_type,'parallel') && options.calc_profiles
                 % Optimization
                 [theta,prop,exitflag] = ...
                     fmincon(@(theta) prop_fun(theta,properties.function{i},properties.min(i),properties.max(i),s),...
-                    theta_next,...
+                    theta,...
                     parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
                     parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
                     parameters.min,...   % lower bound
