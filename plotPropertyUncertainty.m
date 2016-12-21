@@ -68,12 +68,13 @@ if ~isfield(properties,'MS')
 end
 
 % Assignment of user-provided options
-options = PestoPlottingOptions();
 if length(varargin) >= 4
     if ~isa(varargin{4}, 'PestoPlottingOptions')
         error('Argument 4 is not of type PestoPlottingOptions.')
     end
-    options = setdefault(varargin{4},options);
+    options = setdefault(varargin{4}.copy(),options);
+else
+    options = PestoPlottingOptions();
 end
 if ~isfield(properties,'P')
     options.P.plot_type = 0; 

@@ -29,9 +29,13 @@ else
 end
 
 % Options
-options = PestoPlottingOptions();
 if length(varargin) >= 2
-    options = varargin{2};
+    if ~isa(varargin{2}, 'PestoPlottingOptions')
+        error('Argument 3 is not of type PestoPlottingOptions.')
+    end
+    options = varargin{2}.copy();
+else
+    options = PestoPlottingOptions();
 end
 
 %% ASSIGN COLORS
