@@ -101,10 +101,10 @@ optionsMultistart.plot_options.add_points.logPost = objectiveFunction(theta_true
 
 % The example can also be run in parallel mode: Uncomment this, if wanted
 % optionsMultistart.comp_type = 'parallel'; 
-% optionsMultistart.mode = 'text'; n_workers = 1;
+% optionsMultistart.mode = 'text';
 % optionsMultistart.comp_type = 'parallel'; 
 % optionsMultistart.mode = 'text';
-% optionsMultistart.save = 'true'; 
+% optionsMultistart.save = true; 
 % optionsMultistart.foldername = 'results';
 % n_workers = 10;
 
@@ -117,7 +117,6 @@ end
 
 % Optimization
 parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
-optionsMultistart.plot_options.add_points.par = [];
 
 %% Visualization of fit
 % The measured data is visualized in plot, together with fit for the best
