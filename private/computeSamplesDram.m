@@ -86,9 +86,9 @@ end
 
 if ~exist('mcmcrun.m', 'file')
     if ~exist('DRAM', 'dir')
-        error('The file mcmcrun  and the folder DRAM were not found in the MATLAB search path. It seems like the DRAM toolbox is not properly installed.');
+        error('The file mcmcrun  and the folder DRAM were not found in the MATLAB search path. It seems like the DRAM toolbox is not properly installed. DRAM can be obtained from http://helios.fmi.fi/~lainema/mcmc/ .');
     else
-        error('The file mcmcrun was not found in the MATLAB search path, although a DRAM folder is there. Maybe the DRAM toolbox is not properly installed.');
+        error('The file mcmcrun was not found in the MATLAB search path, although a DRAM folder is there. Maybe the DRAM toolbox is not properly installed. DRAM can be obtained from http://helios.fmi.fi/~lainema/mcmc/ .');
     end
 end
 
