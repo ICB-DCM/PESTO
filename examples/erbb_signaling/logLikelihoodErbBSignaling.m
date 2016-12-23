@@ -1,4 +1,4 @@
-function varargout = logLikelihoodErbBSignaling(theta, D, optionsAmici)
+function varargout = logLikelihoodErbBSignaling(theta, D)
 % Objective function for examples/erbb_signaling
 %
 % logLikelihoodErbBSignaling.m provides the log-likelihood and its gradient 
@@ -29,6 +29,7 @@ function varargout = logLikelihoodErbBSignaling(theta, D, optionsAmici)
 
 %% AMICI
 % Setting the options for the AMICI solver
+optionsAmici = amioption;
 optionsAmici.atol = 1e-8;
 optionsAmici.maxsteps = 2e5;
 optionsAmici.interpType = 2;

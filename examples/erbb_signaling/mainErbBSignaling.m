@@ -36,7 +36,7 @@ set(0,TextSizes);
 
 [exdir,~,~] = fileparts(which('mainErbBSignaling.m'));
 try
-    amiwrap('erbb_pesto', 'erbb_signaling_pesto_syms', exdir);
+    %amiwrap('erbb_pesto', 'erbb_signaling_pesto_syms', exdir);
 catch ME
     warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
     rethrow(ME);
@@ -47,7 +47,7 @@ end
 % is used for the ODE integration
 
 load('erbb_signaling_pnom.mat');
-D = getData();
+D = getData_erbB_signaling();
 
 %% Generation of the structs and options for PESTO
 % The structs and the PestoOptions object, which are necessary for the 
@@ -68,17 +68,17 @@ optionsMultistart.n_starts  = 20;
 optionsMultistart.comp_type = 'sequential';
 optionsMultistart.mode      = 'text';
 optionsMultistart.rng       = 0;
-optionsMultistart.fmincon   = optimoptions('fmincon',...
+optionsMultistart.fmincon   = optimset(optionsMultistart.fmincon,...
     'Algorithm','interior-point',...
-    'SpecifyObjectiveGradient', true,...
+    'GradObj', 'on',...
     'Display', 'iter', ...
-    'MaxIterations', 500,...
-    'FunctionTolerance', 0,...
-    'StepTolerance', 1e-10,...
-    'MaxFunctionEvaluations', 500);
+    'MaxIter', 1000,...
+    'TolFun', 0,...
+    'TolX', 1e-10,...
+    'MaxFunEvals', 2000);
 
 % Set the objective function
-objectiveFunction = @(theta) logLikelihoodErbBSignaling(theta, D(1), options);
+objectiveFunction = @(theta) logLikelihoodErbBSignaling(theta, D(1));
 
 %% Perform Multistart optimization
 % A multi-start local optimization is performed within the bound defined in
