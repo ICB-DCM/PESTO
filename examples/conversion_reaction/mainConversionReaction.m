@@ -45,7 +45,7 @@ set(0,TextSizes);
 % We fix an artificial data set. It consists of a vector of time points t
 % and a measurement vector Y. This data was created using the parameter 
 % values which are assigned to theta_true and by adding normaly distributed 
-% measurement noise with value sigma2. 
+% measurement noise with variance sigma2. 
 
 % True parameters
 theta_true = [-2.5;-2];
@@ -85,7 +85,7 @@ properties.max = [-2.4;-1.7; 5; 10; 1; 1];
 properties.number = length(properties.name);
 
 %% Multi-start local optimization
-% A multi-start local optimization is performed within the bound defined in
+% A multi-start local optimization is performed within the bounds defined in
 % parameters.min and .max in order to infer the unknown parameters from 
 % measurement data. Therefore, a PestoOptions object is created and
 % some of its properties are set accordingly.
@@ -101,10 +101,8 @@ optionsMultistart.plot_options.add_points.logPost = objectiveFunction(theta_true
 
 % The example can also be run in parallel mode: Uncomment this, if wanted
 % optionsMultistart.comp_type = 'parallel'; 
-% optionsMultistart.mode = 'text'; n_workers = 1;
-% optionsMultistart.comp_type = 'parallel'; 
 % optionsMultistart.mode = 'text';
-% optionsMultistart.save = 'true'; 
+% optionsMultistart.save = true; 
 % optionsMultistart.foldername = 'results';
 % n_workers = 10;
 
@@ -117,7 +115,6 @@ end
 
 % Optimization
 parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
-optionsMultistart.plot_options.add_points.par = [];
 
 %% Visualization of fit
 % The measured data is visualized in plot, together with fit for the best
@@ -189,7 +186,7 @@ properties = getPropertySamples(properties, parameters, optionsProperties);
 
 %% Confidence interval evaluation -- Properties
 % As for the parameters, confidence intervals are computed for the
-% properties in different fashion, based on local approxiamations, profile
+% properties in different fashion, based on local approximations, profile
 % likelihoods and samples.
 
 properties = getPropertyConfidenceIntervals(properties, alpha);
@@ -216,5 +213,5 @@ end
 %% Close the pools of parallel working threads
 
 if strcmp(optionsMultistart.comp_type, 'parallel') && (n_workers >= 2)
-    parpool('close');
+    delete(gcp('nocreate'))
 end

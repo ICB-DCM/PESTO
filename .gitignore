@@ -1,7 +1,10 @@
-*.mat
+*~
 *.fig
 *.mexa64
 *.mexmaci64
+simulate_*.m
 doc/out/
-examples/Chen2009/simulate_Chen2009.m
-examples/enzymatic_catalysis/simulate_enzymaticCatalysis.m
+doc/config/Doxyfile
+doc/config/latexextras.sty
+doc/config/mtocpp_filter.sh
+

@@ -17,14 +17,15 @@ set(0,TextSizes);
 
 %% Model Definition
 % The models are provided as AMICI syms files in the folder Models
+addpath('Models');
 
 %% Data
 % load data provided in Saunders et. al (2011)
 % absolute file paths can be used instead of relative ones
-options.optionsLogPost.Estdata{1} = load('Data/Saunders2011/FigureS5A.mat');
-options.optionsLogPost.Estdata{2} = load('Data/Saunders2011/FigureS5C.mat');
-options.optionsLogPost.Estdata{3} = load('Data/Saunders2011/FigureS5D.mat');
-options.optionsLogPost.Estdata{4} = load('Data/Saunders2011/Figure1C.mat');
+options.optionsLogPost.Estdata{1} = load('./Data/Saunders2011/FigureS5A.mat');
+options.optionsLogPost.Estdata{2} = load('./Data/Saunders2011/FigureS5C.mat');
+options.optionsLogPost.Estdata{3} = load('./Data/Saunders2011/FigureS5D.mat');
+options.optionsLogPost.Estdata{4} = load('./Data/Saunders2011/Figure1C.mat');
 
 %% GENREAL PARAMETERS
 options.startdate = datestr(now,'yyyy-mm-dd');
@@ -54,7 +55,11 @@ switch model
         parameters_est.min = [  -2, -5,  0,   -1.5,   -5,   -5, -5]';
         parameters_est.max = [   2,  2,  4,      2,   -2,   -2, -2]';
         parameters_est.name = {'D','a','J','w_tea','s_1','s_2','s_3'};
+<<<<<<< HEAD
         % Pom1p_MSP_wrap
+=======
+        Pom1p_MSP_wrap;
+>>>>>>> 675d93a44aed146af33f7280a00b9f8a65aeb0c3
     case 'AP'
         % Set 6 basic kinetic parameters
         parameters_est.number = 9;
@@ -78,6 +83,7 @@ end
 options.optionsMultistart = PestoOptions();
 options.optionsMultistart.obj_type = 'log-posterior';
 options.optionsMultistart.comp_type = 'sequential';
+<<<<<<< HEAD
 options.optionsMultistart.fmincon = optimset(options.optionsMultistart.fmincon,...
    'Algorithm','interior-point',...
    'Display','off',...
@@ -88,6 +94,19 @@ options.optionsMultistart.fmincon = optimset(options.optionsMultistart.fmincon,.
    'MaxIter',600);                
 options.optionsMultistart.n_starts = 5;
 options.optionsMultistart.proposal = 'uniform';
+=======
+options.optionsMultistart.fmincon = optimset(...
+                           'algorithm','interior-point',...
+                           'display','off',...
+                           'GradObj','on',...
+                           'TolFun',1e-8,...
+                           'TolX',1e-8,...
+                           'MaxFunEvals',3000*parameters_est.number,...
+                           'MaxIter',600,...
+                           'PrecondBandWidth',Inf);                
+options.optionsMultistart.n_starts = 5;
+options.optionsMultistart.proposal = 'latin hypercube';
+>>>>>>> 675d93a44aed146af33f7280a00b9f8a65aeb0c3
 
 options.optionsMultistart.mode = 'text';
 options.optionsMultistart.save = true;

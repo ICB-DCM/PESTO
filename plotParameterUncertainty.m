@@ -78,14 +78,13 @@ end
 
 % Options
 % General plot options
-options = PestoPlottingOptions();
-
-% Assignment of user-provided options
 if length(varargin) >= 4
     if ~isa(varargin{4}, 'PestoPlottingOptions')
         error('Argument 4 is not of type PestoPlottingOptions.')
     end
-    options = varargin{4};
+    options = varargin{4}.copy();
+else
+    options = PestoPlottingOptions();
 end
 
 if ~isfield(parameters,'P')

@@ -50,8 +50,10 @@ if length(varargin) >= 2
     if ~isa(varargin{2}, 'PestoPlottingOptions')
         error('Third argument is not of type PestoPlottingOptions.')
     end
-    options = setdefault(varargin{2}, defaultOptions);
+    options = setdefault(varargin{2}.copy(), defaultOptions);
     options.add_points = setdefault(options.add_points, defaultOptions.add_points);
+else
+    options = defaultOptions;
 end
 
 %% SORT RESULTS
@@ -167,7 +169,7 @@ end
 hold off;
 ylim([1-0.01,parameters.number+0.01]);
 ylabel(' ');
-xlabel('parameters values');
+xlabel('parameter value');
 set(gca,'ytick',1:parameters.number,'yticklabel',parameters.name)
 
 if options.title

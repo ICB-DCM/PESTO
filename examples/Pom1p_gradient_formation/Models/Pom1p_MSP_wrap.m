@@ -1,4 +1,6 @@
-clear; close all; clc
+% clear all
+% close all
+% clc
 
 %% COMPILATION
 

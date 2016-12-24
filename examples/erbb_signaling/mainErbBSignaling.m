@@ -5,7 +5,7 @@
 %
 % This example is a rather big biological model. It is included here to 
 % show the ability of PESTO to handle ODE-based models with some hundred 
-% state variables and some hunderd parameters. This model is taken from the
+% state variables and some hundred parameters. This model is taken from the
 % paper "Input-output behavior of ErbB signaling pathways as revealed by a 
 % mass action model trained against dynamic data", by Chen et al., in 2009,
 % PubMed, vol.5, no.239 (see https://www.ncbi.nlm.nih.gov/pubmed/19156131).
@@ -38,7 +38,7 @@ set(0,TextSizes);
 try
     %amiwrap('erbb_pesto', 'erbb_signaling_pesto_syms', exdir);
 catch ME
-    warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
+    warning('There was a problem with the AMICI toolbox (available at https://github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
     rethrow(ME);
 end
 
@@ -53,7 +53,7 @@ D = getData_erbB_signaling();
 % The structs and the PestoOptions object, which are necessary for the 
 % PESTO routines to work are created and set to convenient values
 
-% Set the best  value of theta
+% Set the best value of theta
 theta = log10(pnom);
 theta(isinf(theta)) = log10(eps);
 

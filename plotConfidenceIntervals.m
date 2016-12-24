@@ -62,7 +62,7 @@ if (length(varargin) >= 2)
         error('Argument 2 is not of type PestoOptions.')
     end
     allOptions = varargin{2};
-    options = allOptions.plot_options;
+    options = allOptions.plot_options.copy();
 else
     allOptions = PestoOptions();
     options = PestoPlottingOptions();
