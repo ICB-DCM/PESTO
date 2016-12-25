@@ -47,7 +47,7 @@ end
 % is used for the ODE integration
 
 load('erbb_signaling_pnom.mat');
-D = getData_erbB_signaling();
+D = getData_ErbB_signaling();
 
 %% Generation of the structs and options for PESTO
 % The structs and the PestoOptions object, which are necessary for the 
