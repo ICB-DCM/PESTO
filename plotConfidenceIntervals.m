@@ -47,13 +47,15 @@ function fh = plotConfidenceIntervals(pStruct, alpha, varargin)
 if (length(varargin) >= 1)
     if(~isempty(varargin{1}))
         methIn = varargin{1};
+        boolWarning = true;
     else
         methIn = {'local_PL', 'PL', 'local_B', 'S'};
+        boolWarning = false;
     end
 else
     methIn = {'local_PL', 'PL', 'local_B', 'S'};
 end
-methods = checkMeth(methIn, pStruct);
+methods = checkMeth(methIn, pStruct, boolWarning);
 numConf = methods.num;
 
 % Assignment of user-provided options
@@ -247,7 +249,7 @@ end
 
 
 
-function methodsOut = checkMeth(methodsIn, pStruct)
+function methodsOut = checkMeth(methodsIn, pStruct, boolWarning)
     tempMethType = {'PL', 'local_PL', 'local_B', 'S'};
     tempMethName = {'Profile L.', 'L.App, th.', 'L.App, mass', 'Bay., Sampl.'};
 
@@ -258,8 +260,10 @@ function methodsOut = checkMeth(methodsIn, pStruct)
                 if (isfield(pStruct.CI, methodsIn{k}))
                     checkMeth(j) = 1;
                 else
-                    warning(['You wanted to plot confidence intervals using the method ' methodsIn{k} ...
-                    ', but you did not pass the data to do so. This confidence intervals will not be plotted.']);
+                    if boolWarning
+                        warning(['You wanted to plot confidence intervals using the method ' methodsIn{k} ...
+                        ', but you did not pass the data to do so. This confidence intervals will not be plotted.']);
+                    end
                 end
             end
         end

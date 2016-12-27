@@ -69,7 +69,11 @@ rng(options.rng);
 % Use MS distribution to find sufficient start values and inital 
 % covariances for tempered chains. To do so, we take into account both 
 % - the height and basin of the modes in our target
-iMAP = options.MAP_index;
+if isempty(options.MAP_index)
+    iMAP = 1;
+else
+    iMAP = options.MAP_index;
+end
 
 if isfield(parameters,'MS')
     % If multi-start local optimization was performed, use the results

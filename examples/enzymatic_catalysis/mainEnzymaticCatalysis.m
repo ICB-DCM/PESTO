@@ -1,9 +1,15 @@
 % Main file of the enzymatic catalysis example
 %
 % Demonstrates the use of:
+% * getParameterSamples()
 % * getMultiStarts()
+% * getParameterConfidenceIntervals()
 % * getParameterProfiles()
-% * integrateParamterProfiles()
+%
+% Demonstrates furthermore:
+% * how to do sampling without multi-start local optimization beforehand
+% * the value of multi-start local optimization before sampling
+% * how to use Hessian information for optimization
 %
 % This example provides a model for the reaction of a species X_1 to a
 % species X_4, which is catalyzed by an enzyme X_2.
@@ -64,35 +70,102 @@ con0 = getInitialConcentrations();
 
 % parameters
 fprintf('\n Prepare structs and options...')
-parameters.name = {'log(theta_1)', 'log(theta_2)', 'log(theta_3)', 'log(theta_4)'};
-parameters.min = lowerBound * ones(1, 4);
-parameters.max = upperBound * ones(1, 4);
+parameters.name   = {'log(theta_1)', 'log(theta_2)', 'log(theta_3)', 'log(theta_4)'};
+parameters.min    = lowerBound * ones(1, 4);
+parameters.max    = upperBound * ones(1, 4);
 parameters.number = length(parameters.name);
 
 % objective function
 objectiveFunction = @(theta) logLikelihoodEC(theta, yMeasured, sigma2, con0, nTimepoints, nMeasure);
 
 % PestoOptions
-optionsMultistart           = PestoOptions();
-optionsMultistart.n_starts  = 15;
-optionsMultistart.obj_type  = 'log-posterior';
-optionsMultistart.comp_type = 'sequential'; 
-optionsMultistart.mode      = 'visual';
-optionsMultistart.plot_options.add_points.par = theta;
-optionsMultistart.plot_options.add_points.logPost = objectiveFunction(theta);
+optionsPesto           = PestoOptions();
+optionsPesto.obj_type  = 'log-posterior';
+optionsPesto.comp_type = 'sequential'; 
+optionsPesto.mode      = 'visual';
+optionsPesto.plot_options.add_points.par = theta;
+optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
+
+%% Parameter Sampling
+% An adapted Metropolis-Hastings-Algorithm is used to explore the parameter
+% space. Without Multi-start local optimization, this is not extremly
+% effective, but for small problems, this is feasible and PESTO also allows
+% sampling without previous parameter optimization.
+tic;
+% Length of the chain
+% optionsPesto.MCMC.nsimu_warmup = 2e4;
+% optionsPesto.MCMC.nsimu_run    = 1e4;
+% 
+% % Transition kernels and adaptation scheme
+% optionsPesto.MCMC.sampling_scheme          = 'single-chain'; 
+% optionsPesto.SC.proposal_scheme            = 'AM';
+% optionsPesto.SC.AM.proposal_scaling_scheme = 'Haario';
+% optionsPesto.SC.AM.adaption_interval       = 1;  
+% optionsPesto.MCMC.report_interval          = 250;
+% 
+% % Initialization
+% optionsPesto.MCMC.initialization = 'user-provided';
+% optionsPesto.plot_options.MCMC   = 'user-provided';
+% parameters.user.theta_0 = 0.5 * (parameters.min + parameters.max)';
+% parameters.user.Sigma_0 = eye(4);
+% 
+% % Visualization
+% options.plot_options.S.bins = 20;
+% 
+% parameters = getParameterSamples(parameters, objectiveFunction, optionsPesto);
 
 %% Perform Multistart optimization
 % A multi-start local optimization is performed within the bound defined in
 % parameters.min and .max in order to infer the unknown parameters from 
 % measurement data.
 
-fprintf('\n Perform optimization...');
-parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
+% Set number of Multistarts
+optionsPesto.n_starts  = 10;
 
-%% Calculate profile likelihoods I
-% The uncertainty of the estimated parameters is visualized by computing
-% and plotting profile likelihoods. In getParameterProfiles, this is done
-% by using repeated reoptimization
+% Define the Hessian Function
+type = 'FIM'; % 'FD'
+HessianApprox = @(theta, lambda) HessianApproxEC(theta, objectiveFunction, type, lambda);
 
-fprintf('\n Perform Profile Computation...');
-parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultistart);
+% Set options for using a Hessian approximation for optimization
+optionsPesto.fmincon = optimset(optionsPesto.fmincon, ...
+    'Display', 'iter', ...
+    'Hessian', 'on', ...
+    'GradConstr', 'on', ...
+    'HessFcn', HessianApprox);
+
+parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+
+%% Calculate Confidence Intervals
+% Confidence Intervals for the Parameters are inferred from the local 
+% optimization and the sampling information.
+
+% Set alpha levels
+alpha = [0.8, 0.9, 0.95, 0.99];
+
+parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
+
+%% Calculate Profile Likelihoods
+% The result of the sampling is compared with profile likelihoods.
+
+parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
+
+%% Perform a second Sampling, now based on Multistart Optimization
+% To compare the effect of previous multi-start optimization, we perform a
+% second sampling.
+
+% Delete old settings for user-supplied samping
+optionsPesto.MCMC.initialization = 'multistart';
+optionsPesto.plot_options.MCMC   = 'multistart';
+
+% Length of the chain
+optionsPesto.MCMC.nsimu_warmup = 1e3;
+optionsPesto.MCMC.nsimu_run    = 1e4;
+
+parameters = getParameterSamples(parameters, objectiveFunction, optionsPesto);
+
+%% Calculate Confidence Intervals
+% Confidence Intervals for the Parameters are inferred from the local 
+% optimization and the sampling information.
+
+parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
+disp(toc);

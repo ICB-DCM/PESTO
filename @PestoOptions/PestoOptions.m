@@ -188,7 +188,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         % index MAP - parameter vector starting from which the
         %       profile is calculated. This option is helpful if local
         %       optima are present.
-        MAP_index = [];
+        MAP_index = 1;
         
         % Tolance for the maximal distance of the list point 
         % the lower and upper bounds for the properties (default = 1e-5).
