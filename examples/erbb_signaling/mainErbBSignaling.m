@@ -36,7 +36,7 @@ set(0,TextSizes);
 
 [exdir,~,~] = fileparts(which('mainErbBSignaling.m'));
 try
-    %amiwrap('erbb_pesto', 'erbb_signaling_pesto_syms', exdir);
+    amiwrap('erbb_pesto', 'erbb_signaling_pesto_syms', exdir);
 catch ME
     warning('There was a problem with the AMICI toolbox (available at https://github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
     rethrow(ME);
