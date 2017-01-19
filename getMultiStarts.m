@@ -187,7 +187,7 @@ if strcmp(options.comp_type, 'sequential')
     waitBar = waitbar(0, '1', 'name', 'Parameter estimation in process, please wait...', 'CreateCancelBtn', 'setappdata(gcbf, ''canceling'', 1)');
     stringTimePrediction = updateWaitBar(0.004 * length(options.start_index) * options.fmincon.MaxIter * parameters.number);
     waitbar(0, waitBar, stringTimePrediction);
-    setappdata(waitBar, 'canceling', 0);
+    C = onCleanup(@() delete(waitBar));
     
     % Loop: Mutli-starts
     for i = 1 : length(options.start_index)
@@ -286,10 +286,7 @@ if strcmp(options.comp_type, 'sequential')
         stringTimePrediction = updateWaitBar((sum(parameters.MS.t_cpu(1:i)) / i) * (length(options.start_index) - i));
         waitbar(i / length(options.start_index), waitBar, stringTimePrediction);
     end
-    
-    % Close the waitbar
-    delete(waitBar);
-    
+        
     % Assignment
     parameters = sortMultiStarts(parameters);
 end
