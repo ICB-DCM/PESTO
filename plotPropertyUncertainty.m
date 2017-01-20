@@ -272,16 +272,16 @@ for l = 1:length(I)
     h = [];
     if ~isempty(options.add_points) && ~isempty(options.add_points.par)
         % Check dimension:
-        if size(options.add_points.par,1) ~= properties.number
+        if size(options.add_points.prop,1) ~= properties.number
             warning(['The matrix options.add_points.par should possess ' num2str(properties.number) ' rows.']);
         else
-            for j = 1:size(options.add_points.par,2)
-                if size(options.add_points.col,1) == size(options.add_points.par,2)
+            for j = 1:size(options.add_points.prop,2)
+                if size(options.add_points.col,1) == size(options.add_points.prop,2)
                     l = j;
                 else
                     l = 1;
                 end
-                h = plot(options.add_points.par(i,j)*[1,1],[0,1.05],options.add_points.ls,'color',options.add_points.col(l,:),'linewidth',options.add_points.lw);
+                h = plot(options.add_points.prop(i,j)*[1,1],[0,1.05],options.add_points.ls,'color',options.add_points.col(l,:),'linewidth',options.add_points.lw);
             end
         end
     end

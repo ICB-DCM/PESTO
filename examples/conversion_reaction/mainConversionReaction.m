@@ -98,6 +98,10 @@ optionsMultistart.comp_type = 'sequential';
 optionsMultistart.mode = 'visual';
 optionsMultistart.plot_options.add_points.par = theta_true;
 optionsMultistart.plot_options.add_points.logPost = objectiveFunction(theta_true);
+optionsMultistart.plot_options.add_points.prop = nan(properties.number,1);
+for j = 1 : properties.number
+    optionsMultistart.plot_options.add_points.prop(j) = properties.function{j}(optionsMultistart.plot_options.add_points.par);
+end
 
 % The example can also be run in parallel mode: Uncomment this, if wanted
 % optionsMultistart.comp_type = 'parallel'; 
