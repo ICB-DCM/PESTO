@@ -128,22 +128,3 @@ The following functions are available to analyze and plot properties:
 * plotPropertyUncertainty.m
 
 See mainConversionReaction.m for examples.
-
-<!--
-# TODO ##
-
-As opposed to other toolboxes ... 
-
-
-The following table show functionality of PESTO in comparison to other available toolboxes:
-
-| Feature \ Toolbox  | *PESTO*    |  A           | B         | 
-|:-------------------|:----------:|:------------:|:---------:|
-| Global optimization|     X      |              |           |
-| Profile likelihood |     X      |              |           |
-| Bayesian Methods   |     X      |              |           |
-| Indep. from Solver |     X      |              |           |
-# References 
-
-... 
--->
