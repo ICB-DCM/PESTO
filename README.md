@@ -12,7 +12,7 @@ PESTO features include:
 
 These function are demonstrated in several systems biology examples included in the `examples/` directory.
 
-## Installation         {#installation}
+## Installation
 
 If the zip archive was downloaded, it needs to be unzipped and the main folder has to be added to the MATLAB search path (non-recursively). 
 
@@ -20,7 +20,7 @@ If the repository was cloned, the main folder needs to be added to the MATLAB se
 
 *Note:* Detailed instructions on how to modify your MATLAB search path are provided here: https://de.mathworks.com/help/matlab/matlab_env/add-remove-or-reorder-folders-on-the-search-path.html
 
-## Licensing         {#licensing}
+## Licensing
 
 See [ ```LICENSE```](LICENSE) file in the PESTO source directory.
 
