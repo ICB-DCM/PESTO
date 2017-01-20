@@ -144,6 +144,11 @@ end
 % from http://gingproc.iim.csic.es/meigom.html and uncomment
 p = getGlobalOptimum(parameters, objectiveFunction, optionsMultistart);
 
+% Using PSwarm
+optionsGlobalPSwarm = optionsMultistart.copy();
+optionsGlobalPSwarm.globalOptimizer = 'pswarm';
+pp = getGlobalOptimum(parameters, objectiveFunction, optionsGlobalPSwarm);
+
 %% Profile likelihood calculation -- Parameters
 % The uncertainty of the estimated parameters is visualized by computing
 % and plotting profile likelihoods. In getParameterProfiles, this is done
