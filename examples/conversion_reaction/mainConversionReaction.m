@@ -144,7 +144,7 @@ p = getGlobalOptimum(parameters, objectiveFunction, optionsMultistart);
 % The uncertainty of the estimated parameters is visualized by computing
 % and plotting profile likelihoods. In getParameterProfiles, this is done
 % by using repeated reoptimization
-parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultistart);
+p = getParameterProfiles(p, objectiveFunction, optionsMultistart);
 
 %% Single-chain Monte-Carlo sampling -- Parameters
 % Values for the parameters are sampled by using an adapted Metropolis (AM)
@@ -160,7 +160,7 @@ optionsMultistart.MCMC.thinning        = 10;
 optionsMultistart.MCMC.nsimu_run       = 2e3;
 optionsMultistart.plot_options.S.bins  = 10;
 
-parameters = getParameterSamples(parameters, objectiveFunction, optionsMultistart);
+p = getParameterSamples(p, objectiveFunction, optionsMultistart);
 
 %% Confidence interval evaluation -- Parameters
 % Confidence intervals to the confidence levels fixed in the array alpha
@@ -168,27 +168,27 @@ parameters = getParameterSamples(parameters, objectiveFunction, optionsMultistar
 % optimum, based on the profile likelihoods and on the parameter sampling.
 
 alpha = [0.9,0.95,0.99];
-parameters = getParameterConfidenceIntervals(parameters, alpha);
+p = getParameterConfidenceIntervals(p, alpha);
 
 %% Evaluation of properties for multi-start local optimization results -- Properties
 % The values of the properties are evaluated at the end points of the
 % multi-start optimization runs by getPropertyMultiStarts.
 
 optionsProperties = optionsMultistart.copy();
-properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
+properties = getPropertyMultiStarts(properties,p,optionsProperties);
 
 %% Profile likelihood calculation -- Properties
 % Profile likelihoods are computed for the properties in the same fashion,
 % as they were computed for the parameters.
 
-properties = getPropertyProfiles(properties, parameters, objectiveFunction, optionsProperties);
+properties = getPropertyProfiles(properties, p, objectiveFunction, optionsProperties);
 
 %% Evaluation of properties for sampling results -- Properties
 % From the smaples of the parameters, the properties are calculated and
 % hence a probabality distribution for the properties can be reconstructed
 % from that.
 
-properties = getPropertySamples(properties, parameters, optionsProperties);
+properties = getPropertySamples(properties, p, optionsProperties);
 
 %% Confidence interval evaluation -- Properties
 % As for the parameters, confidence intervals are computed for the
@@ -206,7 +206,7 @@ if strcmp(optionsMultistart.mode, 'visual')
     % Loop: parameters
     for i = 1:min(parameters.number, properties.number)
         subplot(ceil(parameters.number/ceil(sqrt(parameters.number))),ceil(sqrt(parameters.number)),i);
-        plot(parameters.P(i).par(i,:),parameters.P(i).R,'bx-'); hold on;
+        plot(p.P(i).par(i,:),p.P(i).R,'bx-'); hold on;
         plot(properties.P(i).prop,properties.P(i).R,'r-o');
         xlabel(properties.name{i});
         ylabel('likelihood ratio');

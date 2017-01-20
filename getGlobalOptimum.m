@@ -139,7 +139,7 @@ function [parameters,fh] = getGlobalOptimum(parameters, objective_function, vara
     
     %% Global optimization
     
-    i = 1;
+    j = 1;
     % reset the objective function
     if(options.resetobjective)
         fun = functions(objective_function);
@@ -155,7 +155,7 @@ function [parameters,fh] = getGlobalOptimum(parameters, objective_function, vara
     problem.f = 'meigoDummy';
     problem.x_L = parameters.min;
     problem.x_U = parameters.max;
-    problem.x_0 = parameters.MS.par0(:,i);
+    problem.x_0 = parameters.MS.par0(:,j);
     
     meigoAlgo = 'ESS';
     if strcmp(options.globalOptimizer, 'meigo-vns')
@@ -169,12 +169,16 @@ function [parameters,fh] = getGlobalOptimum(parameters, objective_function, vara
       
     % Assignment
     %parameters.MS.J(1, i) = -J_0;
-    parameters.MS.logPost(i) = -Results.fbest;
-    parameters.MS.par(:,i) = Results.xbest;
-    parameters.MS.n_objfun(i) = Results.numeval;
-    parameters.MS.n_iter(i) = size(Results.neval, 2);
-    parameters.MS.t_cpu(i) = Results.cpu_time;
-           
+    parameters.MS.logPost(j) = -Results.fbest;
+    parameters.MS.par(:,j) = Results.xbest;
+    parameters.MS.n_objfun(j) = Results.numeval;
+    parameters.MS.n_iter(j) = size(Results.neval, 2);
+    parameters.MS.t_cpu(j) = Results.cpu_time;
+    
+    [~, G_opt, H_opt] = objective_function(parameters.MS.par);
+    parameters.MS.hessian = -H_opt;
+    parameters.MS.gradient= -G_opt;
+    
     %% Output
     switch options.mode
         case {'visual','text'}, disp(['-> Optimization FINISHED (MEIGO exit code: ' num2str(Results.end_crit) ').']);

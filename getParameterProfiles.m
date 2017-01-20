@@ -92,7 +92,7 @@ if (isempty(options.MAP_index))
     options.MAP_index = 1;
 end
 
-options.fmincon = optimset(options.fmincon,...
+options.localOptimizerOptions = optimset(options.localOptimizerOptions,...
     'algorithm', 'interior-point', ...
     'MaxIter', 400,...
     'GradConstr', 'on', ...
@@ -112,7 +112,7 @@ switch options.mode
         fprintf(' \nProfile likelihood caculation:\n===============================\n');
     case 'silent' % no output
         % Force fmincon to be silent.
-        options.fmincon = optimset(options.fmincon,'display','off');
+        options.localOptimizerOptions = optimset(options.localOptimizerOptions,'display','off');
 end
 
 %% Initialization of parameter struct
@@ -299,7 +299,7 @@ for s = [-1,1]
             Aeq,beq,... % linear equality constraints
             parameters.min(I),...   % lower bound
             parameters.max(I),...   % upper bound
-            [],options.fmincon);    % options
+            [],options.localOptimizerOptions);    % options
         
         % Restore full vector and determine update direction
         logPost = -J_opt;
