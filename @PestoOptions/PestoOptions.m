@@ -28,14 +28,37 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         comp_type = 'sequential';
 
-        % Options for the fmincon local optimizer. See *help('fmincon')*
+        % Which optimizer to use? Current options: ['fmincon']
+       
+        localOptimizer = 'fmincon';
+               
+        % Options for the chosen local optimizer. Setting fmincon options as default local optimizer. See *help('fmincon')*
         % MaxIter: fmincon default, necessary to be set for tracing
         
-        fmincon = optimset('algorithm', 'interior-point',...
+        localOptimizerOptions = optimset('algorithm', 'interior-point',...
             'display', 'off',...
             'GradObj', 'on',...
             'MaxIter', 2000,...
             'PrecondBandWidth', inf);
+        
+        % Which global optimizer to use? Currently only MEIGO 
+        % (http://gingproc.iim.csic.es/meigom.html) is supported, which 
+        % has to installed separately.
+        % 
+        % Options: ['meigo-ess', 'meigo-vss']
+
+        globalOptimizer = 'meigo-ess';
+        
+        % Options for the chosen global optimizer.
+        %
+        % Default is MEIGO. Its options are described in ess_kernel.m in
+        % the MEIGO folder
+
+        globalOptimizerOptions = struct('maxeval', 2e3, ...
+                                        'local', struct('solver', 'fmincon', ...
+                                                        'finish', 'fmincon', ...
+                                                        'iterprint', 1) ...
+                                       )
         
         % Initialization of random number generator (default = 0).
         % * Any real number r: random generator is initialized with r.

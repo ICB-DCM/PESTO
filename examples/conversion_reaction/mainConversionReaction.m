@@ -134,6 +134,12 @@ if strcmp(optionsMultistart.mode,'visual')
     legend('data','fit');
 end
 
+%% Global optimization
+
+% Using default settings which use the MEIGO toolbox. Install separately
+% from http://gingproc.iim.csic.es/meigom.html and uncomment
+p = getGlobalOptimum(parameters, objectiveFunction, optionsMultistart);
+
 %% Profile likelihood calculation -- Parameters
 % The uncertainty of the estimated parameters is visualized by computing
 % and plotting profile likelihoods. In getParameterProfiles, this is done

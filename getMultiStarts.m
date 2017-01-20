@@ -104,7 +104,7 @@ if isempty(options.start_index)
 end
 parameters = parametersSanityCheck(parameters);
 
-options.fmincon = optimset(options.fmincon,...
+options.localOptimizerOptions = optimset(options.localOptimizerOptions,...
     'MaxFunEvals', 400*parameters.number);
 
 %% Initialization and figure generation
@@ -120,7 +120,7 @@ switch options.mode
         fprintf(' \nOptimization:\n=============\n');
     case 'silent' % no output
         % Force fmincon to be silent.
-        options.fmincon.Display = 'off';
+        options.localOptimizerOptions.Display = 'off';
 end
 
 %% Initialization of random number generator
@@ -167,9 +167,9 @@ parameters.MS.n_iter = nan(length(options.start_index),1);
 parameters.MS.t_cpu = nan(length(options.start_index),1);
 parameters.MS.exitflag = nan(length(options.start_index),1);
 if(options.trace)
-    parameters.MS.par_trace = nan(parameters.number,options.fmincon.MaxIter+1,length(options.start_index));
-    parameters.MS.fval_trace = nan(options.fmincon.MaxIter+1,length(options.start_index));
-    parameters.MS.time_trace = nan(options.fmincon.MaxIter+1,length(options.start_index));
+    parameters.MS.par_trace = nan(parameters.number,options.localOptimizerOptions.MaxIter+1,length(options.start_index));
+    parameters.MS.fval_trace = nan(options.localOptimizerOptions.MaxIter+1,length(options.start_index));
+    parameters.MS.time_trace = nan(options.localOptimizerOptions.MaxIter+1,length(options.start_index));
 end
 waitbarFields1 = {'logPost', 'logPost0', 'n_objfun', 'n_iter', 't_cpu', 'exitflag'};
 waitbarFields2 = {'par', 'par0', 'gradient', 'fval_trace', 'time_trace'};
@@ -181,11 +181,11 @@ if strcmp(options.comp_type, 'sequential')
     % initialise tracing of parameter and objective function values
     ftrace = options.trace;
     ftempsave  = options.tempsave;
-    options.fmincon.OutputFcn = @outfun_fmincon;
+    options.localOptimizerOptions.OutputFcn = @outfun_fmincon;
     
     % initialize the waitbar
     waitBar = waitbar(0, '1', 'name', 'Parameter estimation in process, please wait...', 'CreateCancelBtn', 'setappdata(gcbf, ''canceling'', 1)');
-    stringTimePrediction = updateWaitBar(0.004 * length(options.start_index) * options.fmincon.MaxIter * parameters.number);
+    stringTimePrediction = updateWaitBar(0.004 * length(options.start_index) * options.localOptimizerOptions.MaxIter * parameters.number);
     waitbar(0, waitBar, stringTimePrediction);
     C = onCleanup(@() delete(waitBar));
     
@@ -203,9 +203,9 @@ if strcmp(options.comp_type, 'sequential')
         error_count = 0;
         
         % Evaluation of objective function at starting point
-        if (~strcmp(options.fmincon.GradObj, 'on'))
+        if (~strcmp(options.localOptimizerOptions.GradObj, 'on'))
             J_0 = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
-        elseif (strcmp(options.fmincon.GradObj, 'on') && ~strcmp(options.fmincon.Hessian,'on'))
+        elseif (strcmp(options.localOptimizerOptions.GradObj, 'on') && ~strcmp(options.localOptimizerOptions.Hessian,'on'))
             [J_0, grad_J_0] = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
         else
             [J_0, grad_J_0, H_J_0] = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
@@ -224,7 +224,7 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
                 parameters.min,...     % lower bound
                 parameters.max,...     % upper bound
-                [],options.fmincon);   % options
+                [],options.localOptimizerOptions);   % options
             
             % Assignment
             parameters.MS.J(1, i) = -J_0;
@@ -232,11 +232,11 @@ if strcmp(options.comp_type, 'sequential')
             parameters.MS.par(:,i) = theta;
             parameters.MS.gradient(:,i) = gradient_opt;
             if isempty(hessian_opt)
-                if strcmp(options.fmincon.Hessian,'on')
+                if strcmp(options.localOptimizerOptions.Hessian,'on')
                     [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
                 end
             elseif max(hessian_opt(:)) == 0
-                if strcmp(options.fmincon.Hessian,'on')
+                if strcmp(options.localOptimizerOptions.Hessian,'on')
                     [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
                 end
             end
@@ -317,9 +317,9 @@ if strcmp(options.comp_type,'parallel')
     parfor i = options.start_index
         
         % Evaluation of objective function at starting point
-        if (~strcmp(options.fmincon.GradObj, 'on'))
+        if (~strcmp(options.localOptimizerOptions.GradObj, 'on'))
             J_0 = obj(parameters.MS.par0(:,i),objective_function,options.obj_type);
-        elseif (strcmp(options.fmincon.GradObj, 'on') && ~strcmp(options.fmincon.Hessian,'on'))
+        elseif (strcmp(options.localOptimizerOptions.GradObj, 'on') && ~strcmp(options.localOptimizerOptions.Hessian,'on'))
             [J_0,grad_J_0] = obj(parameters.MS.par0(:,i),objective_function,options.obj_type);
         else
             [J_0,grad_J_0,H_J_0] = obj(parameters.MS.par0(:,i),objective_function,options.obj_type);
@@ -337,18 +337,18 @@ if strcmp(options.comp_type,'parallel')
                 parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
                 parameters.min,...     % lower bound
                 parameters.max,...     % upper bound
-                [],options.fmincon);   % options
+                [],options.localOptimizerOptions);   % options
             
             % Assignment
             logPost(i) = -J_opt;
             par(:,i) = theta;
             gradient(:,i) = gradient_opt;
             if isempty(hessian_opt)
-                if strcmp(options.fmincon.Hessian,'on')
+                if strcmp(options.localOptimizerOptions.Hessian,'on')
                     [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
                 end
             elseif max(abs(hessian_opt(:))) == 0
-                if strcmp(options.fmincon.Hessian,'on')
+                if strcmp(options.localOptimizerOptions.Hessian,'on')
                     [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
                 end
             end
@@ -398,7 +398,7 @@ switch options.mode
 end
 
 % Clear Output Function
-options.fmincon.OutputFcn = [];
+options.localOptimizerOptions.OutputFcn = [];
 
 %% Nested function for storing of objective function and parameter values
     function stop = outfun_fmincon(x,optimValues,state)
