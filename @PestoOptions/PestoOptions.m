@@ -45,7 +45,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         % (http://gingproc.iim.csic.es/meigom.html) is supported, which 
         % has to installed separately.
         % 
-        % Options: ['meigo-ess', 'meigo-vss']
+        % Options: ['meigo-ess', 'meigo-vns', 'pswarm']
 
         globalOptimizer = 'meigo-ess';
         
@@ -517,5 +517,17 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
+        function set.globalOptimizer(this, value)
+            if (strcmp(value, 'meigo-ess') || strcmp(value, 'meigo-vns') || strcmp(value, 'pswarm'))
+                this.globalOptimizer = value;
+                
+                if strcmp(value, 'pswarm')
+                    this.globalOptimizerOptions = PSwarm('defaults');
+                end
+            else
+                error('PestoOptions.globalOptimizer only supports the following choices: meigo-ess, meigo-vns, pswarm.');
+            end
+        end
+
     end
 end

@@ -71,8 +71,8 @@ function [parameters,fh] = getGlobalOptimum(parameters, objective_function, vara
         options = PestoOptions();
     end
     
-    if ~strcmp(options.globalOptimizer, 'meigo-ess') && ~strcmp(options.globalOptimizer, 'meigo-vns')
-        error(['Global optimzer ' options.globalOptimizer 'not supported']);
+    if ~strcmp(options.globalOptimizer, 'meigo-ess') && ~strcmp(options.globalOptimizer, 'meigo-vns') && ~strcmp(options.globalOptimizer, 'pswarm')
+        error(['Global optimzer "' options.globalOptimizer '" not supported']);
     end
     
     parameters = parametersSanityCheck(parameters);
@@ -151,38 +151,58 @@ function [parameters,fh] = getGlobalOptimum(parameters, objective_function, vara
     % Reset error count
     error_count = 0;
     
-    % MEIGO:
-    problem.f = 'meigoDummy';
-    problem.x_L = parameters.min;
-    problem.x_U = parameters.max;
-    problem.x_0 = parameters.MS.par0(:,j);
-    
-    meigoAlgo = 'ESS';
-    if strcmp(options.globalOptimizer, 'meigo-vns')
-        meigoAlgo = 'VNS';
-    end
-    Results = MEIGO(problem, options.globalOptimizerOptions, meigoAlgo, @(theta) obj_w_error_count(theta,objective_function,options.obj_type));
-    
-    %TODO  
-    % parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
-    % parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
-      
-    % Assignment
-    %parameters.MS.J(1, i) = -J_0;
-    parameters.MS.logPost(j) = -Results.fbest;
-    parameters.MS.par(:,j) = Results.xbest;
-    parameters.MS.n_objfun(j) = Results.numeval;
-    parameters.MS.n_iter(j) = size(Results.neval, 2);
-    parameters.MS.t_cpu(j) = Results.cpu_time;
-    
-    [~, G_opt, H_opt] = objective_function(parameters.MS.par);
-    parameters.MS.hessian = -H_opt;
-    parameters.MS.gradient= -G_opt;
-    
-    %% Output
-    switch options.mode
-        case {'visual','text'}, disp(['-> Optimization FINISHED (MEIGO exit code: ' num2str(Results.end_crit) ').']);
-        case 'silent' % no output
+    if strcmp(options.globalOptimizer, 'meigo-ess') || strcmp(options.globalOptimizer, 'meigo-vns')
+        
+        %% MEIGO
+        problem.f = 'meigoDummy';
+        problem.x_L = parameters.min;
+        problem.x_U = parameters.max;
+        problem.x_0 = parameters.MS.par0(:,j);
+        
+        meigoAlgo = 'ESS';
+        if strcmp(options.globalOptimizer, 'meigo-vns')
+            meigoAlgo = 'VNS';
+        end
+        objFunHandle = @(theta) obj_w_error_count(theta,objective_function,options.obj_type);
+        Results = MEIGO(problem, options.globalOptimizerOptions, meigoAlgo, objFunHandle);
+        
+        %TODO
+        % parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
+        % parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
+        
+        %parameters.MS.J(1, i) = -J_0;
+        parameters.MS.logPost(j) = -Results.fbest;
+        parameters.MS.par(:,j) = Results.xbest;
+        parameters.MS.n_objfun(j) = Results.numeval;
+        parameters.MS.n_iter(j) = size(Results.neval, 2);
+        parameters.MS.t_cpu(j) = Results.cpu_time;
+        
+        [~, G_opt, H_opt] = objective_function(parameters.MS.par);
+        parameters.MS.hessian = -H_opt;
+        parameters.MS.gradient= -G_opt;
+        
+        %% Output
+        switch options.mode
+            case {'visual','text'}, disp(['-> Optimization FINISHED (MEIGO exit code: ' num2str(Results.end_crit) ').']);
+            case 'silent' % no output
+        end
+        
+    elseif strcmp(options.globalOptimizer, 'pswarm')
+        
+        %% PSwarm optimizer
+        problem = struct();
+        problem.ObjFunction= 'meigoDummy';
+        problem.LB = parameters.min;
+        problem.UB = parameters.max;
+        % TODO linear constraints .A and .b
+        tic
+        objFunHandle = @(theta) obj_w_error_count(theta,objective_function,options.obj_type);
+        [theta,J,RunData] = PSwarm(problem, struct('x', parameters.MS.par0(:,j)), options.globalOptimizerOptions, objFunHandle);
+        parameters.MS.logPost(j) = -J;
+        parameters.MS.par(:,j) = theta;
+        parameters.MS.n_objfun(j) = RunData.ObjFunCounter;
+        parameters.MS.n_iter(j) = RunData.IterCounter;
+        parameters.MS.t_cpu(j) = toc;
     end
 end
 
