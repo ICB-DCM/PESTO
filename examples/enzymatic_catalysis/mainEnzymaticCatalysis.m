@@ -36,7 +36,7 @@
 %% Preliminary
 clear all;
 close all;
-clc;
+%clc;
 
 TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
@@ -91,7 +91,7 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 % space. Without Multi-start local optimization, this is not extremly
 % effective, but for small problems, this is feasible and PESTO also allows
 % sampling without previous parameter optimization.
-tic;
+
 % Length of the chain
 % optionsPesto.MCMC.nsimu_warmup = 2e4;
 % optionsPesto.MCMC.nsimu_run    = 1e4;
@@ -120,18 +120,18 @@ tic;
 % measurement data.
 
 % Set number of Multistarts
-optionsPesto.n_starts  = 10;
+optionsPesto.n_starts  = 3;
 
 % Define the Hessian Function
-type = 'FIM'; % 'FD'
+type = 'FIM'; % 'FD', 'FIM'
 HessianApprox = @(theta, lambda) HessianApproxEC(theta, objectiveFunction, type, lambda);
 
 % Set options for using a Hessian approximation for optimization
-optionsPesto.fmincon = optimset(optionsPesto.fmincon, ...
-    'Display', 'iter', ...
-    'Hessian', 'on', ...
-    'GradConstr', 'on', ...
-    'HessFcn', HessianApprox);
+optionsPesto.localOptimizer = 'fmincon';
+optionsPesto.localOptimizerOptions.Hessian = 'on';
+optionsPesto.localOptimizerOptions.GradConstr = 'on';
+optionsPesto.localOptimizerOptions.Display = 'iter';
+optionsPesto.localOptimizerOptions.HessFcn = HessianApprox;
 
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
@@ -168,4 +168,3 @@ parameters = getParameterSamples(parameters, objectiveFunction, optionsPesto);
 % optimization and the sampling information.
 
 parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
-disp(toc);

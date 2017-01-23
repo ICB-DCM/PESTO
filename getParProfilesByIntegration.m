@@ -406,7 +406,7 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
 
         % Output
         if ~strcmp(options.comp_type,'parallel')
-            if strcmp(options.profile.method, 'integration')
+            if strcmp(options.profile_method, 'integration')
                 switch options.mode
                     case 'visual', fh = plotParameterProfiles(parameters, '1D', fh, options.parameter_index, options.plot_options);
                     case 'text'   % no output
@@ -502,6 +502,7 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
                 fprintf('\n');
                 warning('Lost optimal path, reoptimization necessary!');
                 [newY, L, GL] = reoptimizePath(y(:,iT), ind, objectiveFunction, borders, options);
+                L = -L;
                 y(:,iT) = [newY(1:ind-1); y(ind,iT); newY(ind:end)];
                 yCorrection(:,iT) = y(:,iT);
                 status = 1;
@@ -663,7 +664,7 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
             
             % finite differences approx. of hessian
             for j = 1 : npar
-                [~, GLplus] = objectiveFunction(th + hLh * sparse(j, 1, 1, npar, 1));
+                [~, GLplus] = objectiveFunction(y + hLh * sparse(j, 1, 1, npar, 1));
                 HL(:,j) = (GLplus - GL) / hLh;
             end
         end

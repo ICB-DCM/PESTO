@@ -138,7 +138,7 @@ for iMeasure = 1 : nMeasure
         J = J - 0.5 * sum(log(2*pi*sigma2) + (Y(:,iObserv) - y(:,iObserv)).^2 / sigma2);
         if (nargout > 1)
             gradJ = gradJ + dydtheta(:,iObserv + (0 : nObserv : nParams*nObserv - iObserv))' * ((Y(:,iObserv) - y(:,iObserv)) / sigma2);
-            FIM = FIM - dydtheta(:,iObserv + (0 : nObserv : nParams*nObserv - iObserv))' * dydtheta(:,iObserv + (0 : nObserv : nParams*nObserv - iObserv))/sigma2;
+            FIM = FIM + dydtheta(:,iObserv + (0 : nObserv : nParams*nObserv - iObserv))' * dydtheta(:,iObserv + (0 : nObserv : nParams*nObserv - iObserv))/sigma2;
         end
     end
 end
