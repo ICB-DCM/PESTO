@@ -140,20 +140,29 @@ end
 
 %% Global optimization
 
-% Using default settings which use the MEIGO toolbox. Install separately
-% from http://gingproc.iim.csic.es/meigom.html and uncomment
-p = getGlobalOptimum(parameters, objectiveFunction, optionsMultistart);
+% Instead of multi-start local optimization, an alternative global
+% optimization strategy can be used. To this end, PESTO provides an
+% interface to MEIGO and PSwarm, which have to be installed separately.
 
-% Using PSwarm
-optionsGlobalPSwarm = optionsMultistart.copy();
-optionsGlobalPSwarm.globalOptimizer = 'pswarm';
-pp = getGlobalOptimum(parameters, objectiveFunction, optionsGlobalPSwarm);
+% The following uses the MEIGO toolbox with default settings:
+% (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
+% uncomment:
+% 
+% globalOptOptions = optionsMultistart.copy()
+% parameters = getGlobalOptimum(parameters, objectiveFunction, optionsMultistart);
+
+% This section uses PSwarm, a particle swarm optimizer
+% (Install from http://www.norg.uminho.pt/aivaz/pswarm/ and uncomment)
+%
+% optionsGlobalPSwarm = optionsMultistart.copy();
+% optionsGlobalPSwarm.globalOptimizer = 'pswarm';
+% parameters = getGlobalOptimum(parameters, objectiveFunction, optionsGlobalPSwarm);
 
 %% Profile likelihood calculation -- Parameters
 % The uncertainty of the estimated parameters is visualized by computing
 % and plotting profile likelihoods. In getParameterProfiles, this is done
 % by using repeated reoptimization
-p = getParameterProfiles(p, objectiveFunction, optionsMultistart);
+parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultistart);
 
 %% Single-chain Monte-Carlo sampling -- Parameters
 % Values for the parameters are sampled by using an adapted Metropolis (AM)
@@ -169,7 +178,7 @@ optionsMultistart.MCMC.thinning        = 10;
 optionsMultistart.MCMC.nsimu_run       = 2e3;
 optionsMultistart.plot_options.S.bins  = 10;
 
-p = getParameterSamples(p, objectiveFunction, optionsMultistart);
+parameters = getParameterSamples(parameters, objectiveFunction, optionsMultistart);
 
 %% Confidence interval evaluation -- Parameters
 % Confidence intervals to the confidence levels fixed in the array alpha
@@ -177,27 +186,27 @@ p = getParameterSamples(p, objectiveFunction, optionsMultistart);
 % optimum, based on the profile likelihoods and on the parameter sampling.
 
 alpha = [0.9,0.95,0.99];
-p = getParameterConfidenceIntervals(p, alpha);
+parameters = getParameterConfidenceIntervals(parameters, alpha);
 
 %% Evaluation of properties for multi-start local optimization results -- Properties
 % The values of the properties are evaluated at the end points of the
 % multi-start optimization runs by getPropertyMultiStarts.
 
 optionsProperties = optionsMultistart.copy();
-properties = getPropertyMultiStarts(properties,p,optionsProperties);
+properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
 
 %% Profile likelihood calculation -- Properties
 % Profile likelihoods are computed for the properties in the same fashion,
 % as they were computed for the parameters.
 
-properties = getPropertyProfiles(properties, p, objectiveFunction, optionsProperties);
+properties = getPropertyProfiles(properties, parameters, objectiveFunction, optionsProperties);
 
 %% Evaluation of properties for sampling results -- Properties
 % From the smaples of the parameters, the properties are calculated and
 % hence a probabality distribution for the properties can be reconstructed
 % from that.
 
-properties = getPropertySamples(properties, p, optionsProperties);
+properties = getPropertySamples(properties, parameters, optionsProperties);
 
 %% Confidence interval evaluation -- Properties
 % As for the parameters, confidence intervals are computed for the
@@ -215,7 +224,7 @@ if strcmp(optionsMultistart.mode, 'visual')
     % Loop: parameters
     for i = 1:min(parameters.number, properties.number)
         subplot(ceil(parameters.number/ceil(sqrt(parameters.number))),ceil(sqrt(parameters.number)),i);
-        plot(p.P(i).par(i,:),p.P(i).R,'bx-'); hold on;
+        plot(parameters.P(i).par(i,:),parameters.P(i).R,'bx-'); hold on;
         plot(properties.P(i).prop,properties.P(i).R,'r-o');
         xlabel(properties.name{i});
         ylabel('likelihood ratio');

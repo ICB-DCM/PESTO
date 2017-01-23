@@ -3,15 +3,15 @@ function [parameters,fh] = getGlobalOptimum(parameters, objective_function, vara
     % parameters of a user-supplied posterior function by using a global
     % optimization algortihm as specified in PestoOptions.
     %
-    % Note: This function can exploit up to (n_start + 1) workers when running
-    % in 'parallel' mode.
-    %
     % USAGE:
-    % * [...] = getMultiStarts(parameters,objective_function)
-    % * [...] = getMultiStarts(parameters,objective_function,options)
-    % * [parameters,fh] = getMultiStarts(...)
+    % * [...] = getGlobalOptimum(parameters,objective_function)
+    % * [...] = getGlobalOptimum(parameters,objective_function,options)
+    % * [parameters,fh] = getGlobalOptimum(...)
     %
-    % getMultiStarts() uses the following PestoOptions members:
+    % getGlobalOptimum() uses the following PestoOptions members:
+    % * PestoOptions.globalOptimizer
+    % * PestoOptions.globalOptimizerOptions
+    % * ...
     %
     % Parameters:
     %   parameters: parameter struct
@@ -37,22 +37,22 @@ function [parameters,fh] = getGlobalOptimum(parameters, objective_function, vara
     %   fh: figure handle
     %
     % Generated fields of parameters:
-    %   MS: information about multi-start optimization
-    %     * par0(:,i): starting point yielding ith MAP
-    %     * par(:,i): ith MAP
-    %     * logPost(i): log-posterior for ith MAP
-    %     * logPost0(i): log-posterior for starting point yielding ith MAP
-    %     * gradient(_,i): gradient of log-posterior at ith MAP
-    %     * hessian(:,:,i): hessian of log-posterior at ith MAP
-    %     * n_objfun(i): # objective evaluations used to calculate ith MAP
-    %     * n_iter(i): # iterations used to calculate ith MAP
-    %     * t_cpu(i): CPU time for calculation of ith MAP
-    %     * exitflag(i): exitflag the optimizer returned for ith MAP
-    %     * par_trace(:,:,i): parameter trace for ith MAP
+    %   MS: optimization results and additional information
+    %     * par0(:,1): starting point yielding ith MAP
+    %     * par(:,1): ith MAP
+    %     * logPost(1): log-posterior for ith MAP
+    %     * logPost0(1): log-posterior for starting point yielding ith MAP
+    %     * gradient(_,1): gradient of log-posterior at ith MAP
+    %     * hessian(:,:,1): hessian of log-posterior at ith MAP
+    %     * n_objfun(1): # objective evaluations used to calculate ith MAP
+    %     * n_iter(1): # iterations used to calculate ith MAP
+    %     * t_cpu(1): CPU time for calculation of ith MAP
+    %     * exitflag(1): exitflag the optimizer returned for ith MAP
+    %     * par_trace(:,:,1): parameter trace for ith MAP
     %         (if options.trace == true)
-    %     * fval_trace(:,i): objective function value trace for ith MAP
+    %     * fval_trace(:,1): objective function value trace for ith MAP
     %         (if options.trace == true)
-    %     * time_trace(:,i): computation time trace for ith MAP
+    %     * time_trace(:,1): computation time trace for ith MAP
     %         (if options.trace == true)
     %
     % History:
@@ -153,6 +153,10 @@ function [parameters,fh] = getGlobalOptimum(parameters, objective_function, vara
     
     if strcmp(options.globalOptimizer, 'meigo-ess') || strcmp(options.globalOptimizer, 'meigo-vns')
         
+        if ~exist('MEIGO', 'file')
+            error('MEIGO not found. This feature requires the "MEIGO" toolbox to be installed. See http://gingproc.iim.csic.es/meigo.html for download and installation instructions.');
+        end
+        
         %% MEIGO
         problem.f = 'meigoDummy';
         problem.x_L = parameters.min;
@@ -188,6 +192,10 @@ function [parameters,fh] = getGlobalOptimum(parameters, objective_function, vara
         end
         
     elseif strcmp(options.globalOptimizer, 'pswarm')
+        
+        if ~exist('PSwarm', 'file')
+            error('PSwarm not found. This feature requires the "PSwarm" toolbox to be installed. See http://www.norg.uminho.pt/aivaz/pswarm/ for download and installation instructions.');
+        end
         
         %% PSwarm optimizer
         problem = struct();
