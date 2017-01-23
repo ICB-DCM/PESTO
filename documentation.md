@@ -31,6 +31,16 @@ If the repository was cloned, the main folder needs to be added to the MATLAB se
 
 *Note:* Detailed instructions on how to modify your MATLAB search path are provided here: https://de.mathworks.com/help/matlab/matlab_env/add-remove-or-reorder-folders-on-the-search-path.html
 
+## Third-party packages
+
+PESTO provides an interfaces to several other toolboxes which are not included in the PESTO archive:
+
+* PSwarm: http://www.norg.uminho.pt/aivaz/pswarm/
+* MEIGO: http://gingproc.iim.csic.es/meigo.html
+* DRAM: http://helios.fmi.fi/~lainema/dram/
+
+To use their functionality, these toolboxes have to be installed separately. Please consult the respective user manuals for details.
+
 # Licensing         {#licensing}
 
 See ```LICENSE``` file in the PESTO source directory.
@@ -51,12 +61,23 @@ PESTO implements a number of state-of-the-art algorithms related to parameter es
 
 Since most of the examples use analytical approaches for computing the gradient of the respective objective function, which quantifies the deviation of the fit for the current model parameters from the actual measurement data, the usage of the term ‚sensitivity analysis‘ may be misleading. In our context, ‚sensitivity analysis‘ is used in the context of ODE or PDE models and describes the sensitivity of the ODE/PDE state with respect to the model parameters. Those state sensitivities can be implemented in the ODE/PDE system and then used for an analytical calculation of the sensitivity of the objective function. This objective functions sensitivity will always be called the objective function gradient in our context. Finally, the behavior of the objective function by the variation of single parameters in order to find possible (non-)identifiabilities will always be referred to as ‚uncertainty analysis‘.
 
-## Multi-start local optimization ### {#global-optimization}
+## Global optimization ### {#global-optimization}
 
-Non-linear optimization problems like those in parameter estimation problems tend to have multiple optima. Usually, nothing is known beforehand about their number or their location, but the user is interested in finding the global optimum. There are different techniques for this kind of problem and multi-start local optimization has turned out to be a very efficient one: Here, random points from across the parameter space are chosen as starting points for local optimization. If an adequate number of starting points spanning the domain of interest of the parameter space is selected, the lowest/highest minimum/maximum is accepted to be the global minimum/maximum.
+Non-linear optimization problems like those in parameter estimation problems tend to have multiple optima. Usually, nothing is known beforehand about their number or their location, but the user is interested in finding the global optimum. 
+There are different techniques for this kind of problem. PESTO provides a multi-start local optimization framework and provides an interface to two global optimizers.
+
+### Multi-start local optimization
+
+Multi-start local optimization has turned out to be a very efficient method for "global" optimization: Here, random points from across the parameter space are chosen as starting points for local optimization. 
+If an adequate number of starting points spanning the domain of interest of the parameter space is selected, the lowest/highest minimum/maximum is accepted to be the global minimum/maximum.
 
 This functionality is provided in getMultiStarts.m, getPropertyMultiStarts.m and the respective plotting routines plotMultiStarts.m and plotPropertyMultiStarts.m.
 See mainConversionReaction.m for an example.
+
+### Global optimizers
+
+PESTO provides an interface to [PSwarm](http://www.norg.uminho.pt/aivaz/pswarm/) and [MEIGO](http://gingproc.iim.csic.es/meigo.html). Once these toolboxes have been installed - they are not included in the PESTO archive - 
+they can be used for parameter estimation via getGlobalOptimum.m together with PestoOptions::globalOptimizer and PestoOptions::globalOptimizerOptions.
 
 ## Uncertainty analysis ### {#uncertainty-analysis}
 
