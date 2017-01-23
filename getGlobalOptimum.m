@@ -153,6 +153,10 @@ function [parameters,fh] = getGlobalOptimum(parameters, objective_function, vara
     
     if strcmp(options.globalOptimizer, 'meigo-ess') || strcmp(options.globalOptimizer, 'meigo-vns')
         
+        if ~exist('MEIGO', 'file')
+            error('MEIGO not found. This feature requires the "MEIGO" toolbox to be installed. See http://gingproc.iim.csic.es/meigo.html for download and installation instructions.');
+        end
+        
         %% MEIGO
         problem.f = 'meigoDummy';
         problem.x_L = parameters.min;
@@ -188,6 +192,10 @@ function [parameters,fh] = getGlobalOptimum(parameters, objective_function, vara
         end
         
     elseif strcmp(options.globalOptimizer, 'pswarm')
+        
+        if ~exist('PSwarm', 'file')
+            error('PSwarm not found. This feature requires the "PSwarm" toolbox to be installed. See http://www.norg.uminho.pt/aivaz/pswarm/ for download and installation instructions.');
+        end
         
         %% PSwarm optimizer
         problem = struct();
