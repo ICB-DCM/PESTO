@@ -68,8 +68,8 @@ There are different techniques for this kind of problem. PESTO provides a multi-
 
 ### Multi-start local optimization
 
-Multi-start local optimization has turned out to be a very efficient method for "global" optimization: Here, random points from across the parameter space are chosen as starting points for local optimization. 
-If an adequate number of starting points spanning the domain of interest of the parameter space is selected, the lowest/highest minimum/maximum is accepted to be the global minimum/maximum.
+Multi-start local optimization has turned out to be a very efficient method for "global optimization": Here, random points from across the parameter space are chosen as starting points for local optimization. 
+If an adequate number of starting points spanning the domain of interest of the parameter space is selected, the lowest/highest minimum/maximum is accepted to be the global minimum/maximum. By default, fmincon is used as a local solver.
 
 This functionality is provided in getMultiStarts.m, getPropertyMultiStarts.m and the respective plotting routines plotMultiStarts.m and plotPropertyMultiStarts.m.
 See mainConversionReaction.m for an example.
@@ -77,7 +77,11 @@ See mainConversionReaction.m for an example.
 ### Global optimizers
 
 PESTO provides an interface to [PSwarm](http://www.norg.uminho.pt/aivaz/pswarm/) and [MEIGO](http://gingproc.iim.csic.es/meigo.html). Once these toolboxes have been installed - they are not included in the PESTO archive - 
-they can be used for parameter estimation via getGlobalOptimum.m together with PestoOptions::globalOptimizer and PestoOptions::globalOptimizerOptions.
+they can be used for parameter estimation. 
+These optimizers are also accessed via getMultiStarts.m by setting PestoOptions::localOptimizer and PestoOptions::localOptimizerOptions accordingly. 
+In principle, a single optimizer run (PestoOptions::n_starts = 1) should be enough for these global optimizers.
+
+An example is included in mainConversionReaction.m.
 
 ## Uncertainty analysis ### {#uncertainty-analysis}
 
