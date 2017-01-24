@@ -104,8 +104,10 @@ if isempty(options.start_index)
 end
 parameters = parametersSanityCheck(parameters);
 
-options.localOptimizerOptions = optimset(options.localOptimizerOptions,...
-    'MaxFunEvals', 400*parameters.number);
+if strcmp(options.localOptimizer, 'fmincon')
+    options.localOptimizerOptions = optimset(options.localOptimizerOptions,...
+        'MaxFunEvals', 400*parameters.number);
+end
 
 %% Initialization and figure generation
 fh = [];
@@ -148,7 +150,7 @@ end
 parameters.MS.n_starts = options.n_starts;
 parameters.MS.par0 = par0(:,options.start_index);
 
-%% Preperation of folder
+%% Preparation of folder
 if options.save
     if(~exist(options.foldername,'dir'))
         mkdir(options.foldername);
@@ -181,15 +183,18 @@ if strcmp(options.comp_type, 'sequential')
     % initialise tracing of parameter and objective function values
     ftrace = options.trace;
     ftempsave  = options.tempsave;
-    options.localOptimizerOptions.OutputFcn = @outfun_fmincon;
+    
+    if strcmp(options.localOptimizer, 'fmincon')
+        options.localOptimizerOptions.OutputFcn = @outfun_fmincon;
+    end
     
     % initialize the waitbar
     waitBar = waitbar(0, '1', 'name', 'Parameter estimation in process, please wait...', 'CreateCancelBtn', 'setappdata(gcbf, ''canceling'', 1)');
-    stringTimePrediction = updateWaitBar(0.004 * length(options.start_index) * options.localOptimizerOptions.MaxIter * parameters.number);
+    stringTimePrediction = updateWaitBar(0.004 * length(options.start_index) * parameters.number);
     waitbar(0, waitBar, stringTimePrediction);
     C = onCleanup(@() delete(waitBar));
     
-    % Loop: Mutli-starts
+    % Loop: Multi-starts
     for i = 1 : length(options.start_index)
         % reset the objective function
         if(options.resetobjective)
@@ -203,7 +208,7 @@ if strcmp(options.comp_type, 'sequential')
         error_count = 0;
         
         % Evaluation of objective function at starting point
-        if (~strcmp(options.localOptimizerOptions.GradObj, 'on'))
+        if (~strcmp(options.localOptimizer, 'fmincon') || ~strcmp(options.localOptimizerOptions.GradObj, 'on'))
             J_0 = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
         elseif (strcmp(options.localOptimizerOptions.GradObj, 'on') && ~strcmp(options.localOptimizerOptions.Hessian,'on'))
             [J_0, grad_J_0] = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
@@ -213,39 +218,106 @@ if strcmp(options.comp_type, 'sequential')
         parameters.MS.logPost0(i) = -J_0;
         
         % Optimization
-        t_cpu_fmincon = cputime;
+        startTimeLocalOptimization = cputime;
         if J_0 < -options.init_threshold
             
-            % Optimization using fmincon
-            [theta,J_opt,parameters.MS.exitflag(i),results_fmincon,~,gradient_opt,hessian_opt] = ...
-                fmincon(@(theta) obj_w_error_count(theta,objective_function,options.obj_type),...  % negative log-likelihood function
-                parameters.MS.par0(:,i),...    % initial parameter
-                parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
-                parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
-                parameters.min,...     % lower bound
-                parameters.max,...     % upper bound
-                [],options.localOptimizerOptions);   % options
-            
-            % Assignment
-            parameters.MS.J(1, i) = -J_0;
-            parameters.MS.logPost(i) = -J_opt;
-            parameters.MS.par(:,i) = theta;
-            parameters.MS.gradient(:,i) = gradient_opt;
-            if isempty(hessian_opt)
-                if strcmp(options.localOptimizerOptions.Hessian,'on')
-                    [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
+            if strcmp(options.localOptimizer, 'fmincon')    
+                %% fmincon as local optimizer
+                % Optimization using fmincon
+                [theta,J_opt,parameters.MS.exitflag(i),results_fmincon,~,gradient_opt,hessian_opt] = ...
+                    fmincon(@(theta) obj_w_error_count(theta,objective_function,options.obj_type),...  % negative log-likelihood function
+                    parameters.MS.par0(:,i),...    % initial parameter
+                    parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
+                    parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
+                    parameters.min,...     % lower bound
+                    parameters.max,...     % upper bound
+                    [],options.localOptimizerOptions);   % options
+                
+                % Assignment of reseults
+                parameters.MS.J(1, i) = -J_0;
+                parameters.MS.logPost(i) = -J_opt;
+                parameters.MS.par(:,i) = theta;
+                parameters.MS.gradient(:,i) = gradient_opt;
+                if isempty(hessian_opt)
+                    if strcmp(options.localOptimizerOptions.Hessian,'on')
+                        [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
+                    end
+                elseif max(hessian_opt(:)) == 0
+                    if strcmp(options.localOptimizerOptions.Hessian,'on')
+                        [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
+                    end
                 end
-            elseif max(hessian_opt(:)) == 0
-                if strcmp(options.localOptimizerOptions.Hessian,'on')
-                    [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
+                parameters.MS.n_objfun(i) = results_fmincon.funcCount;
+                parameters.MS.n_iter(i) = results_fmincon.iterations;
+                parameters.MS.hessian(:,:,i) = full(hessian_opt);
+                
+            elseif strcmp(options.localOptimizer, 'meigo-ess') || strcmp(options.localOptimizer, 'meigo-vns')
+                %% Use MEIGO as local optimizer
+                if ~exist('MEIGO', 'file')
+                    error('MEIGO not found. This feature requires the "MEIGO" toolbox to be installed. See http://gingproc.iim.csic.es/meigo.html for download and installation instructions.');
                 end
+                
+                problem.f = 'meigoDummy';
+                problem.x_L = parameters.min;
+                problem.x_U = parameters.max;
+                problem.x_0 = parameters.MS.par0(:,i);
+                
+                meigoAlgo = 'ESS';
+                if strcmp(options.localOptimizer, 'meigo-vns')
+                    meigoAlgo = 'VNS';
+                end
+                objFunHandle = @(theta) obj_w_error_count(theta,objective_function,options.obj_type);
+                Results = MEIGO(problem, options.localOptimizerOptions, meigoAlgo, objFunHandle);
+                
+                %TODO
+                % parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
+                % parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
+                
+                parameters.MS.J(1, i) = -J_0;
+                parameters.MS.logPost(i) = -Results.fbest;
+                parameters.MS.par(:,i) = Results.xbest;
+                parameters.MS.n_objfun(i) = Results.numeval;
+                parameters.MS.n_iter(i) = size(Results.neval, 2);
+                
+                [~, G_opt, H_opt] = objective_function(parameters.MS.par);
+                parameters.MS.hessian(:,:,i) = -H_opt;
+                parameters.MS.gradient(:,i) = -G_opt;
+                
+                %% Output
+                switch options.mode
+                    case {'visual','text'}, disp(['-> Optimization FINISHED (MEIGO exit code: ' num2str(Results.end_crit) ').']);
+                    case 'silent' % no output
+                end
+                
+            elseif strcmp(options.localOptimizer, 'pswarm')
+                %% Use PSwarm as local optimizer
+                if ~exist('PSwarm', 'file')
+                    error('PSwarm not found. This feature requires the "PSwarm" toolbox to be installed. See http://www.norg.uminho.pt/aivaz/pswarm/ for download and installation instructions.');
+                end
+
+                problem = struct();
+                problem.ObjFunction= 'meigoDummy';
+                problem.LB = parameters.min;
+                problem.UB = parameters.max;
+                problem.A = parameters.constraints.A;
+                problem.b = parameters.constraints.b;
+                
+                objFunHandle = @(theta) obj_w_error_count(theta,objective_function,options.obj_type);
+                [theta,J,RunData] = PSwarm(problem, struct('x', parameters.MS.par0(:,i)), options.localOptimizerOptions, objFunHandle);
+                
+                parameters.MS.logPost(i) = -J;
+                parameters.MS.par(:,i) = theta;
+                parameters.MS.n_objfun(i) = RunData.ObjFunCounter;
+                parameters.MS.n_iter(i) = RunData.IterCounter;
+                
+                [~, G_opt, H_opt] = objective_function(parameters.MS.par);
+                parameters.MS.hessian(:,:,i) = -H_opt;
+                parameters.MS.gradient(:,i) = -G_opt;
+
             end
-            parameters.MS.n_objfun(i) = results_fmincon.funcCount;
-            parameters.MS.n_iter(i) = results_fmincon.iterations;
-            parameters.MS.hessian(:,:,i) = full(hessian_opt);
+            
         end
-        parameters.MS.t_cpu(i) = cputime - t_cpu_fmincon;
-        
+        parameters.MS.t_cpu(i) = cputime - startTimeLocalOptimization;
         
         % Save
         if options.save

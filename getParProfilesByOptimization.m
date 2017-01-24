@@ -247,7 +247,7 @@ for s = [-1,1]
             Aeq,beq,... % linear equality constraints
             parameters.min(I),...   % lower bound
             parameters.max(I),...   % upper bound
-            [],options.localOptimizerOptions);    % options
+            [],options.profileReoptimizationOptions);    % options
         
         % Restore full vector and determine update direction
         logPost = -J_opt;
