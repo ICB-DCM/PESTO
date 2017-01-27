@@ -82,7 +82,9 @@ end
 %% Profile calculation
 if strcmp(options.comp_type,'sequential')
     for i = options.parameter_index
+        tic;
         parameters = optimizeProfileForParameterI(parameters, objective_function, i, options, fh);
+        disp(toc);
     end
     
 elseif strcmp(options.comp_type,'parallel')

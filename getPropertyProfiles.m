@@ -137,12 +137,11 @@ if (isempty(options.MAP_index))
     options.MAP_index = 1;
 end
 
-options.localOptimizerOptions = optimset(options.localOptimizerOptions,...
-    'algorithm', 'interior-point', ...
-    'MaxIter', 400,...
-    'GradConstr', 'on', ...
-    'TolCon', 1e-6, ...
-    'MaxFunEvals', 200*parameters.number);
+options.localOptimizerOptions.algorithm = 'interior-point';
+options.localOptimizerOptions.MaxIter = 400;
+options.localOptimizerOptions.GradConstr = 'on';
+options.localOptimizerOptions.TolCon = 1e-6;
+options.localOptimizerOptions.MaxFunEvals = 200*parameters.number;
 
 %% Initialization of property struct
 for i = options.property_index

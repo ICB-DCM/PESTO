@@ -92,12 +92,11 @@ if (isempty(options.MAP_index))
     options.MAP_index = 1;
 end
 
-options.localOptimizerOptions = optimset(options.localOptimizerOptions,...
-    'algorithm', 'interior-point', ...
-    'MaxIter', 400,...
-    'GradConstr', 'on', ...
-    'TolCon', 1e-6, ...
-    'MaxFunEvals', 200*parameters.number);
+options.localOptimizerOptions.algorithm   = 'interior-point';
+options.localOptimizerOptions.MaxIter     = 500;
+options.localOptimizerOptions.GradConstr  = 'ion';
+options.localOptimizerOptions.TolCon      = 1e-6;
+options.localOptimizerOptions.MaxFunEvals = 200 * parameters.number;
 
 %% Initialization and figure generation
 fh = [];
@@ -112,7 +111,7 @@ switch options.mode
         fprintf(' \nProfile likelihood caculation:\n===============================\n');
     case 'silent' % no output
         % Force fmincon to be silent.
-        options.localOptimizerOptions = optimset(options.localOptimizerOptions,'display','off');
+        options.localOptimizerOptions.Display = 'off';
 end
 
 %% Initialization of parameter struct
