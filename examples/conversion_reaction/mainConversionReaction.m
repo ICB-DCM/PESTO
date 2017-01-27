@@ -138,25 +138,37 @@ if strcmp(optionsMultistart.mode,'visual')
     legend('data','fit');
 end
 
-%% Global optimization
+%% Choosing different optimizers
 
-% Instead of multi-start local optimization, an alternative global
-% optimization strategy can be used. To this end, PESTO provides an
-% interface to MEIGO and PSwarm, which have to be installed separately.
+% Besides the default fmincon local optimizer, alternative optimizers can be chosen. 
+% Currently, PESTO provides an interface to MEIGO and PSwarm, which have to be installed separately.
+% These algorithms aim at finding the global optimum, and therefore, a
+% low number or a single optimizer run should be enough.
 
 % The following uses the MEIGO toolbox with default settings:
 % (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
 % uncomment:
+
+% MeigoOptions = struct(...
+%     'maxeval', 1e4, ...
+%     'local', struct('solver', 'fmincon', ...
+%     'finish', 'fmincon', ...
+%     'iterprint', 1) ...
+%     );
 % 
-% globalOptOptions = optionsMultistart.copy()
-% parameters = getGlobalOptimum(parameters, objectiveFunction, optionsMultistart);
+% optionsMultistartMeigo = optionsMultistart.copy();
+% optionsMultistartMeigo.localOptimizer = 'meigo-ess';
+% optionsMultistartMeigo.localOptimizerOptions = MeigoOptions;
+% optionsMultistartMeigo.n_starts = 2;
+% parametersMeigo = getMultiStarts(parameters, objectiveFunction, optionsMultistartMeigo);
 
 % This section uses PSwarm, a particle swarm optimizer
 % (Install from http://www.norg.uminho.pt/aivaz/pswarm/ and uncomment)
 %
-% optionsGlobalPSwarm = optionsMultistart.copy();
-% optionsGlobalPSwarm.globalOptimizer = 'pswarm';
-% parameters = getGlobalOptimum(parameters, objectiveFunction, optionsGlobalPSwarm);
+% optionsMultistartPSwarm = optionsMultistart.copy();
+% optionsMultistartPSwarm.localOptimizer = 'pswarm';
+% optionsMultistartPSwarm.n_starts = 10;
+% parametersPSwarm = getMultiStarts(parameters, objectiveFunction, optionsMultistartPSwarm);
 
 %% Profile likelihood calculation -- Parameters
 % The uncertainty of the estimated parameters is visualized by computing

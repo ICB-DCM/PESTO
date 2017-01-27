@@ -28,38 +28,40 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         comp_type = 'sequential';
 
-        % Which optimizer to use? Current options: ['fmincon']
-       
+        % Which optimizer to use? Current options: ['fmincon', 'meigo-ess', 'meigo-vns', 'pswarm']
+        %
+        % For 'meigo-ess' or 'meigo-vns', MEIGO
+        % (http://gingproc.iim.csic.es/meigom.html) has to be installed separately.
+        %
+        % For 'pswarm' PSwarm (http://www.norg.uminho.pt/aivaz/pswarm/) has
+        % to be installed separately
+
         localOptimizer = 'fmincon';
                
         % Options for the chosen local optimizer. Setting fmincon options as default local optimizer. See *help('fmincon')*
+        %
         % MaxIter: fmincon default, necessary to be set for tracing
+        %
+        % Options for 'meigo-ess' are described in ess_kernel.m in the
+        % MEIGO folder.
         
-        localOptimizerOptions = optimset('algorithm', 'interior-point',...
-            'display', 'off',...
-            'GradObj', 'on',...
-            'MaxIter', 2000,...
+        localOptimizerOptions = optimset( ...
+            'algorithm', 'interior-point',...
+            'display', 'off', ...
+            'GradObj', 'on', ...
+            'MaxIter', 2000, ...
             'PrecondBandWidth', inf);
         
-        % Which global optimizer to use? Currently only MEIGO 
-        % (http://gingproc.iim.csic.es/meigom.html) is supported, which 
-        % has to installed separately.
-        % 
-        % Options: ['meigo-ess', 'meigo-vns', 'pswarm']
-
-        globalOptimizer = 'meigo-ess';
+        % Optimizer options for profile likelihood
         
-        % Options for the chosen global optimizer.
-        %
-        % Default is MEIGO. Its options are described in ess_kernel.m in
-        % the MEIGO folder
+        profileReoptimizationOptions = optimset( ...
+            'algorithm', 'interior-point', ...
+            'display', 'off', ...
+            'MaxIter', 400, ...
+            'GradConstr', 'on', ...
+            'TolCon', 1e-6 ...
+            );
 
-        globalOptimizerOptions = struct('maxeval', 1e4, ...
-                                        'local', struct('solver', 'fmincon', ...
-                                                        'finish', 'fmincon', ...
-                                                        'iterprint', 1) ...
-                                       )
-        
         % Initialization of random number generator (default = 0).
         % * Any real number r: random generator is initialized with r.
         % * []: random number generator is not initialized.
@@ -417,6 +419,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         function set.n_starts(this, value)
             if(isnumeric(value) && floor(value) == value && value > 0)
                 this.n_starts = value;
+                this.start_index = [];
             else
                 error('PestoOptions.n_starts must be a positive integer value.');
             end
@@ -526,15 +529,16 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.globalOptimizer(this, value)
-            if (strcmp(value, 'meigo-ess') || strcmp(value, 'meigo-vns') || strcmp(value, 'pswarm'))
-                this.globalOptimizer = value;
+        function set.localOptimizer(this, value)
+            if (strcmp(value, 'fmincon') || strcmp(value, 'meigo-ess') || ...
+                    strcmp(value, 'meigo-vns') || strcmp(value, 'pswarm'))
+                this.localOptimizer = value;
                 
                 if strcmp(value, 'pswarm')
-                    this.globalOptimizerOptions = PSwarm('defaults');
+                    this.localOptimizerOptions = PSwarm('defaults');
                 end
             else
-                error('PestoOptions.globalOptimizer only supports the following choices: meigo-ess, meigo-vns, pswarm.');
+                error('PestoOptions.localOptimizer only supports the following choices: fmincon, meigo-ess, meigo-vns, pswarm.');
             end
         end
 

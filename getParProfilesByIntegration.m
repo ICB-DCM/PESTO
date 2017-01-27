@@ -534,7 +534,7 @@ function [newY, newL, newGL] = reoptimizePath(y, ind, objectiveFunction, borders
     theta_red(ind) = [];
     borders(ind, :) = [];
     
-    options.localOptimizerOptions.Display = 'off';
+    options.profileReoptimizationOptions.Display = 'off';
     
     [newY, newL, ~, ~, ~, newGL] = fmincon(...
         @(theta_red) obj_red(y(ind), ind, theta_red, objectiveFunction), ...
@@ -543,7 +543,7 @@ function [newY, newL, newGL] = reoptimizePath(y, ind, objectiveFunction, borders
         [], [], ... % linear equality constraints
         borders(:,1), ...   % lower bound
         borders(:,2), ...   % upper bound
-        [], options.localOptimizerOptions);
+        [], options.profileReoptimizationOptions);
 end
 
 %% SingleParameter is a support function for the profile integration
@@ -889,7 +889,7 @@ function Mt = getMassmatrixDAE(c ,s, y, ind, objectiveFunction, parameterFunctio
     if (isempty(c))
         display(['Jacobian Evaluation around theta = ' y']);
     else
-        display(['Laufachse: ' num2str(s*c) '   Optimalität in theta: ', num2str(sqrt(GL1' * GL1)), '    Kondition: ', num2str(rcond(A1))]);
+        display(['Laufachse: ' num2str(s*c) '   Optimalitï¿½t in theta: ', num2str(sqrt(GL1' * GL1)), '    Kondition: ', num2str(rcond(A1))]);
     end
 end
 
