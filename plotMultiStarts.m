@@ -1,77 +1,59 @@
+function fh = plotMultiStarts(parameters, varargin)
 % plotMultiStarts plots the result of the multi-start 
 % optimization stored in parameters.
 %
 % USAGE:
-% ======
 % fh = plotMultiStarts(parameters)
 % fh = plotMultiStarts(parameters,fh)
 % fh = plotMultiStarts(parameters,fh,options)
 %
-% INPUTS:
-% =======
-% parameters ... parameter struct containing information about parameters
+% plotMultiStarts() uses the following PestoPlottingOptions members:
+%  * PestoPlottingOptions::add_points
+%  * PestoPlottingOptions::title
+%  * PestoPlottingOptions::draw_bounds
+%
+% Parameters:
+% parameters: parameter struct containing information about parameters
 %   and log-posterior.
-% fh ... handle of figure in which profile likelihood is plotted. If no
+% varargin:
+% fh: handle of figure in which profile likelihood is plotted. If no
 %   figure handle is provided, a new figure is opened.
-% options ... options of plotting
-%   .title ... switches plot title of (default = 'off').
-%   .add_points ... option used to add additional points, e.g. true
-%           parameter in the case of test examples
-%       .val ... n x m matrix of m additional points
-%       .col ... color used for additional points (default = [0,0,0]).
-%                  This can also be a m x 3 matrix of colors.
-%       .ls ... line style (default = '-')
-%       .lw ... line width (default = 2)
-%       .m ... marker style (default = 's')
-%       .ms ... line width (default = 8)
-%       .name ... name of legend entry (default = 'add. point')
+% options: options of plotting as instance of PestoPlottingOptions
 %
-% Outputs:
-% ========
-% fh .. figure handle
+% Return values:
+% fh: figure handle
 %
-% 2012/05/31 Jan Hasenauer
-
-% function fh = plotMultiStarts(parameters,fh,options)
-function fh = plotMultiStarts(varargin)
+% History: 
+% * 2012/05/31 Jan Hasenauer
+% * 2016/10/07 Daniel Weindl
 
 %% CHECK AND ASSIGN INPUTS
-% Assign parameters
-if nargin >= 1
-    parameters = varargin{1};
-else
-    error('plotMultiStarts requires a parameter object as input.');
-end
-
 % Open figure
-if nargin >= 2
-    if ~isempty(varargin{2})
-        if(isvalid(varargin{2}))
-            fh = figure(varargin{2});
-        else
-            fh = figure;
-        end
-    else
-        fh = figure;
-    end
+if length(varargin) >= 1 && ~isempty(varargin{1}) && isvalid(varargin{1})
+    fh = figure(varargin{1});
 else
-    fh = figure;
+    fh = figure('Name','plotMultiStarts');
 end
 
 % Options
-options.title = 'off';
-options.bounds = 'on';
-options.add_points.par = [];
-options.add_points.logPost = [];
-options.add_points.col = [0,0.8,0];
-options.add_points.ls = '-';
-options.add_points.lw = 1;
-options.add_points.m = 'd';
-options.add_points.ms = 8;
-options.add_points.name = 'add. point';
+defaultOptions = PestoPlottingOptions();
+defaultOptions.add_points.par = [];
+defaultOptions.add_points.logPost = [];
+defaultOptions.add_points.col = [0,0.8,0];
+defaultOptions.add_points.ls = '-';
+defaultOptions.add_points.lw = 1;
+defaultOptions.add_points.m = 'd';
+defaultOptions.add_points.ms = 8;
+defaultOptions.add_points.name = 'add. point';
 
-if nargin == 3
-    options = setdefault(varargin{3},options);
+if length(varargin) >= 2
+    if ~isa(varargin{2}, 'PestoPlottingOptions')
+        error('Third argument is not of type PestoPlottingOptions.')
+    end
+    options = setdefault(varargin{2}.copy(), defaultOptions);
+    options.add_points = setdefault(options.add_points, defaultOptions.add_points);
+else
+    options = defaultOptions;
 end
 
 %% SORT RESULTS
@@ -134,7 +116,7 @@ hold off;
 xlim([1-0.2,i+0.2]);
 xlabel('start');
 ylabel('log-likelihood');
-if strcmp(options.title,'on')
+if options.title
     title('all estimates');
 end
 
@@ -163,7 +145,7 @@ if(any(~isnan(parameters.MS.logPost(1:min(i,10)))))
 end
 xlabel('start');
 ylabel('log-likelihood');
-if strcmp(options.title,'on')
+if options.title
     title('top 10 estimates');
 end
 
@@ -173,7 +155,7 @@ for j = i:-1:1
     plot(parameters.MS.par(:,j)',1:parameters.number,'-o','color',Col(j,:),'linewidth',2); hold on;
 end
 plot(parameters.MS.par(:,1)',1:parameters.number,'r-o','linewidth',2); hold on;
-if strcmp(options.bounds,'on')
+if options.draw_bounds
     plot(parameters.min([1,1:parameters.number,parameters.number])',[0.99,1:parameters.number,parameters.number+0.01],'b--','linewidth',2); hold on;
     plot(parameters.max([1,1:parameters.number,parameters.number])',[0.99,1:parameters.number,parameters.number+0.01],'b--','linewidth',2); hold on;
 end
@@ -187,10 +169,10 @@ end
 hold off;
 ylim([1-0.01,parameters.number+0.01]);
 ylabel(' ');
-xlabel('parameters values');
+xlabel('parameter value');
 set(gca,'ytick',1:parameters.number,'yticklabel',parameters.name)
 
-if strcmp(options.title,'on')
+if options.title
     title('estimated parameters');
 end
 drawnow;

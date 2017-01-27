@@ -1,27 +1,50 @@
+function properties = getPropertyConfidenceIntervals(properties, alpha, varargin)
 % getPropertyConfidenceIntervals.m calculates the confidence intervals 
-%   based on the Hessian at the maximum a posteriori estimate or profiles.
+% for the model properties. This is done by three approaches:
+% The values of CI.local_PL and CI.PL are determined by the point on which 
+% a threshold according to the confidence level alpha (calculated by a 
+% chi2-distribution) is reached. local_PL computes this point by a local
+% approximation around the MAP estimate using the Hessian matrix, PL uses 
+% the profile likelihoods instead.
+% The value of CI.local_B is computed by using the cummulative distribution
+% function of a local approximation of the profile based on the Hessian
+% matrix at the MAP estimate.
 %
 % USAGE:
-% ======
-% properties = getPropertyConfidenceIntervals(properties,alpha)
+% * properties = getPropertyConfidenceIntervals(properties, alpha)
 %
-% INPUTS:
-% =======
-% properties ... properties struct
-% alpha ... vector of confidence levels
+% Parameters:
+%   properties: property struct
+%   alpha: vector with desired confidence levels for the intervals
 %
-% Outputs:
-% ========
-% properties.CI ... Information about confidence levels
-%   Threshold based confidence intervals:
-%     .local_PL ... from local approximation.
-%     .PL ... from profiles.
-%   Mass based confidence intervals:
-%     .local_B ... from local approximation.
+% Return values:
+%   properties: updated properties struct
 %
-% 2013/11/29 Jan Hasenauer
+% Generated fields of properties:
+%   CI: Information about confidence levels
+%     * local_PL: Threshold based approach, uses a local approximation by
+%         the Hessian matrix at the MAP estimate
+%         (requires parameters.MS, e.g. from getMultiStarts)
+%     * PL: Threshold based approach, uses profile likelihoods 
+%         (requires parameters.P, e.g. from getParameterProfiles)
+%     * local_B: Mass based approach, uses a local approximation by
+%         the Hessian matrix at the MAP estimate
+%         (requires parameters.MS, e.g. from getMultiStarts)
+%
+% History:
+% * 2013/11/29 Jan Hasenauer
+% * 2016/12/01 Paul Stapor
 
-function properties = getPropertyConfidenceIntervals(properties,alpha)
+%% Checking and assigning inputs
+% Options
+if (length(varargin) >= 1)
+    if (~isa(varargin{1}, 'PestoOptions'))
+        error('Argument 3 is not of type PestoOptions.')
+    end
+    options = varargin{1};
+else
+    options = PestoOptions();
+end
 
 % Initialization
 properties.CI.alpha_levels = alpha;
@@ -31,22 +54,17 @@ for k = 1:length(alpha)
     % Loop: properties
     for i = 1:properties.number
         % Hessian
-        hessian = pinv(properties.MS.prop_Sigma(:,:,1));
+        Sigma = properties.MS.prop_Sigma(:,:,1);
         
         % Confidence intervals computed using local approximation and a
         % threshold (-> similar to PL-based confidence intervals)
-        properties.CI.local_PL(i,1,k) = properties.MS.prop(i) - sqrt(icdf('chi2',alpha(k),1)/hessian(i,i));
-        properties.CI.local_PL(i,2,k) = properties.MS.prop(i) + sqrt(icdf('chi2',alpha(k),1)/hessian(i,i));
+        properties.CI.local_PL(i,1,k) = properties.MS.prop(i) - sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
+        properties.CI.local_PL(i,2,k) = properties.MS.prop(i) + sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
 
         % Confidence intervals computed using local approximation and the
         % probability mass (-> similar to Bayesian confidence intervals)
-        if hessian(i,i) > 1e-16
-            properties.CI.local_B(i,1,k)  = icdf('norm',  (1-alpha(k))/2,properties.MS.prop(i),inv(sqrt(hessian(i,i))));
-            properties.CI.local_B(i,2,k)  = icdf('norm',1-(1-alpha(k))/2,properties.MS.prop(i),inv(sqrt(hessian(i,i))));
-        else
-            properties.CI.local_B(i,1,k) = -inf;
-            properties.CI.local_B(i,2,k) =  inf;
-        end
+        properties.CI.local_B(i,1,k)  = icdf('norm',  (1-alpha(k))/2,properties.MS.prop(i),sqrt(Sigma(i,i)));
+        properties.CI.local_B(i,2,k)  = icdf('norm',1-(1-alpha(k))/2,properties.MS.prop(i),sqrt(Sigma(i,i)));
 
         % Confidence intervals computed using profile likelihood
         if isfield(properties,'P')
@@ -73,5 +91,14 @@ for k = 1:length(alpha)
                 end
             end
         end
+        
+        % Confidence intervals computed using sample
+        if isfield(properties,'S')
+            properties.CI.S(i,:,k) = prctile(properties.S.prop(i,:),50 + 100*[-alpha(k)/2, alpha(k)/2]);
+        end
     end
+end
+
+plotConfidenceIntervals(properties, alpha, [], options);
+
 end

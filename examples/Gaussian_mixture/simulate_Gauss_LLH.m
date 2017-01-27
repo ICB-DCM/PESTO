@@ -1,6 +1,15 @@
-% Based on Liang & Wong (2001) and Lacki et al. (2015)
-
 function [ llh ] = simulate_Gauss_LLH( par, mu, sigma )
+% simulate_Gauss_LLH TODO
+%
+% Based on Liang & Wong (2001) and Lacki et al. (2015)
+%
+% Parameters: 
+% par: 
+% mu: 
+% sigma: standard deviation
+%
+% Return values:
+% llh: log-likelihood
 
 if max(size(par)) == 1
 	par = par';
