@@ -10,17 +10,20 @@ function varargout = objectiveWrap(varargin)
 
     % Catch up possible overload
     switch nargin
-        case {0, 1, 2}
+        case {0, 1, 2, 3}
             error('Call to objective function giving not enough inputs.')
-        case 3
-            theta             = varargin{1};
-            objectiveFunction = varargin{2};
-            type              = varargin{3};
         case 4
             theta             = varargin{1};
             objectiveFunction = varargin{2};
             type              = varargin{3};
             outNumber         = varargin{4};
+            I = 1 : length(theta);
+        case 6
+            theta             = varargin{1};
+            objectiveFunction = varargin{2};
+            type              = varargin{3};
+            outNumber         = varargin{4};
+            I                 = varargin{5};
         otherwise
             error('Call to objective function giving too many inputs.')
     end
@@ -43,8 +46,8 @@ function varargout = objectiveWrap(varargin)
                 end
                 
                 switch type
-                    case 'log-posterior'          , varargout = {-J,-G};
-                    case 'negative log-posterior' , varargout = { J, G};
+                    case 'log-posterior'          , varargout = {-J,-G(I)};
+                    case 'negative log-posterior' , varargout = { J, G(I)};
                 end
             case 3
                 switch outNumber
@@ -60,8 +63,8 @@ function varargout = objectiveWrap(varargin)
                 end
 
                 switch type
-                    case 'log-posterior'          , varargout = {-J,-G,-H};
-                    case 'negative log-posterior' , varargout = { J, G, H};
+                    case 'log-posterior'          , varargout = {-J,-G(I),-H(I,I)};
+                    case 'negative log-posterior' , varargout = { J, G(I), H(I,I)};
                 end
                 if(any(isnan(H)))
                     error('Hessian contains NaNs')

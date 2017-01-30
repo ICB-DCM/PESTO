@@ -12,17 +12,34 @@ function varargout = objectiveWrapWErrorCount(varargin)
     
     % Catch up possible overload
     switch nargin
-        case {0, 1, 2}
+        case {0, 1, 2, 3}
             error('Call to objective function giving not enough inputs.')
-        case 3
-            theta             = varargin{1};
-            objectiveFunction = varargin{2};
-            type              = varargin{3};
         case 4
             theta             = varargin{1};
             objectiveFunction = varargin{2};
             type              = varargin{3};
             outNumber         = varargin{4};
+        case 5
+            theta             = varargin{1};
+            objectiveFunction = varargin{2};
+            type              = varargin{3};
+            outNumber         = varargin{4};
+            sign              = varargin{5};
+            switch sign
+                case 'positive', s =  1;
+                case 'negative', s = -1;
+            end
+        case 6
+            theta             = varargin{1};
+            objectiveFunction = varargin{2};
+            type              = varargin{3};
+            outNumber         = varargin{4};
+            sign              = varargin{5};
+            switch sign
+                case 'positive', s =  1;
+                case 'negative', s = -1;
+            end
+            I                 = varargin{6};
         otherwise
             error('Call to objective function giving too many inputs.')
     end
