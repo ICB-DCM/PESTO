@@ -170,7 +170,7 @@ else
         success = 0;
         j = 1;
         while (success == 0)
-            logP(i) = logPost(theta_0(:,i),objective_function,options.obj_type,'positive',options.MCMC.show_warning);
+            logP(i) = -objectiveWrap(theta_0(:,i),objective_function,options.obj_type,options.objOutNumber,[],options.MCMC.show_warning);
             if (isnan(logP(i))) || (logP(i) == -inf)
                 warning(['Some of your initital parameter vectors theta_0 are ill conditioned! Therefore' ...
                     ' randomize theta_0 and test it again. Temperature number: ' num2str(i) ...
@@ -192,11 +192,11 @@ switch options.MCMC.sampling_scheme
    
     % DRAM
     case 'DRAM'
-        parameters = computeSamplesDram(parameters, objective_function, options, @(theta,fun,type,sign,flag_warning) logPost(theta,fun,type,sign,flag_warning));
+        parameters = computeSamplesDram(parameters, objective_function, options);
     
     % Single-Chain
     case 'single-chain'
-        parameters = computeSamplesSinglechain(parameters, objective_function, options, @(theta,fun,type,sign,flag_warning) logPost(theta,fun,type,sign,flag_warning));
+        parameters = computeSamplesSinglechain(parameters, objective_function, options);
           
 end
 
@@ -213,71 +213,6 @@ end
 switch options.mode
     case {'visual','text'}, disp('-> Sampling FINISHED.');
 end
-
-end
-
-
-
-%% Objetive function interface
-% This function is used as interface to the user-provided objective
-% function. It adapts the sign and supplies the correct number of outputs.
-% Furthermore, it catches errors in the user-supplied objective function.
-%   theta ... parameter vector
-%   fun ... user-supplied objective function
-%   type ... type of user-supplied objective function
-
-function varargout = logPost(theta,fun,type,sign,flag_warning)
-
-    switch sign
-        case 'negative'
-            s = -1;
-        case 'positive'
-            s = +1;
-    end
-
-    try
-        switch nargout
-            case 1
-                J = fun(theta);
-                if isnan(J)
-                    error('J is NaN.');
-                end
-                switch type
-                    case 'log-posterior'          , varargout = {s* J};
-                    case 'negative log-posterior' , varargout = {s*-J};
-                end
-            case 2
-                [J,G] = fun(theta);
-                if max(isnan([J;G(:)]))
-                    error('J and/or G contain a NaN.');
-                end
-                switch type
-                    case 'log-posterior'          , varargout = {s* J,s* G(:)};
-                    case 'negative log-posterior' , varargout = {s*-J,s*-G(:)};
-                end
-            case 3
-                [J,G,H] = fun(theta);
-                if max(isnan([J;G(:);H(:)]))
-                    error('J, G and/or H contain a NaN.');
-                end
-                switch type
-                    case 'log-posterior'          , varargout = {s* J,s* G(:),s* H};
-                    case 'negative log-posterior' , varargout = {s*-J,s*-G(:),s*-H};
-                end
-        end
-    catch error_msg
-        if flag_warning
-            disp(['Objective function evaluation failed because: ' error_msg.message]);
-        end
-        switch nargout
-            case 1
-                varargout = {-s*inf};
-            case 2
-                varargout = {-s*inf,zeros(length(theta),1)};
-            case 3
-                varargout = {-s*inf,zeros(length(theta),1),zeros(length(theta))};
-        end
-    end
 
 end
 

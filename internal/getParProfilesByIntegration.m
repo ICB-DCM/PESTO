@@ -101,7 +101,7 @@
 % 2013/10/05 FF original code from thesis
 % 2014/04/09 Sabrina Hross - completely reworked
 % 2016/11/21 Paul Stapor
-% 2017/02/20 Paul Stapor - PESTO version of the code
+% 2017/02/02 Paul Stapor - PESTO version of the code
 
 function [parameters, fh] = getParProfilesByIntegration(parameters, objectiveFunction, options, varargin)
 
@@ -125,9 +125,13 @@ function [parameters, fh] = getParProfilesByIntegration(parameters, objectiveFun
 
     % Profile calculation
     if strcmp(options.comp_type, 'sequential')
+        
         for j = options.parameter_index
+            tic;
             parameters = integrateProfileForParameterI(parameters, objectiveFunction, j, options, fh);
+            disp(toc);
         end
+        
         
     elseif strcmp(options.comp_type, 'parallel')
         parfor j = options.parameter_index
@@ -262,8 +266,10 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
                             y = [y; yAdd(1:j-1)', runPar, yAdd(j:end)'];
                             llhHistory = [llhHistory, -L];
                             R = exp(-L - parameters.MS.logPost(1));
-                            fprintf('\n  |  %11.8f | %11.7f | %7.5f |', ...
-                                runPar, sqrt(sum(shortGL.^2)), R);
+                            if (strcmp(options.mode, 'text') || strcmp(options.mode, 'visual'))
+                                fprintf('\n  |  %11.8f | %11.7f | %7.5f |', ...
+                                    runPar, sqrt(sum(shortGL.^2)), R);
+                            end
                             if (R < options.R_min)
                                 break;
                             end
@@ -389,7 +395,7 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
 
         end
 
-        %% Final output and storage
+        % Final output and storage
         if (strcmp(options.mode, 'text') || strcmp(options.mode, 'visual'))
             fprintf('\n  |======================================|\n');
             fprintf('\n  Total RHS evaluations: %i', ObjFuncCounter - lastCounter);
@@ -509,9 +515,11 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
             end
 
             R = exp(L - logPostMax);
-
-            fprintf('\n  |  %11.8f | %11.7f | %7.5f |', ...
-                s*t(iT), sqrt(sum(GL.*GL)), R);
+            
+            if (strcmp(options.mode, 'text') || strcmp(options.mode, 'visual'))
+                fprintf('\n  |  %11.8f | %11.7f | %7.5f |', ...
+                    s*t(iT), sqrt(sum(GL.*GL)), R);
+            end
             llhHistory = [llhHistory, L];
         end
         
@@ -526,7 +534,7 @@ function [newY, newL, newGL] = reoptimizePath(y, ind, objectiveFunction, borders
     theta_red(ind) = [];
     borders(ind, :) = [];
     
-    options.profileReoptimizationOptions.Display = 'iter';
+    options.profileReoptimizationOptions.Display = 'off';
     
     [newY, newL, ~, ~, ~, newGL] = fmincon(...
         @(theta_red) obj_red(y(ind), ind, theta_red, objectiveFunction), ...

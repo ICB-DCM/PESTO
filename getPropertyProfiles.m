@@ -137,12 +137,11 @@ if (isempty(options.MAP_index))
     options.MAP_index = 1;
 end
 
-options.profileReoptimizationOptions = optimset(options.profileReoptimizationOptions,...
-    'algorithm', 'interior-point', ...
-    'MaxIter', 400,...
-    'GradConstr', 'on', ...
-    'TolCon', 1e-6, ...
-    'MaxFunEvals', 200*parameters.number);
+options.profileReoptimizationOptions.algorithm = 'interior-point';
+options.profileReoptimizationOptions.MaxIter = 400;
+options.profileReoptimizationOptions.GradConstr = 'on';
+options.profileReoptimizationOptions.TolCon = 1e-6;
+options.profileReoptimizationOptions.MaxFunEvals = 200*parameters.number;
 
 %% Initialization of property struct
 for i = options.property_index

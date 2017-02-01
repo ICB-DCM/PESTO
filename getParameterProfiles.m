@@ -92,8 +92,11 @@ if (isempty(options.MAP_index))
     options.MAP_index = 1;
 end
 
-options.profileReoptimizationOptions = optimset(options.profileReoptimizationOptions,...
-    'MaxFunEvals', 200*parameters.number);
+options.profileReoptimizationOptions.algorithm   = 'interior-point';
+options.profileReoptimizationOptions.MaxIter     = 500;
+options.profileReoptimizationOptions.GradConstr  = 'on';
+options.profileReoptimizationOptions.TolCon      = 1e-6;
+options.profileReoptimizationOptions.MaxFunEvals = 200 * parameters.number;
 
 %% Initialization and figure generation
 fh = [];

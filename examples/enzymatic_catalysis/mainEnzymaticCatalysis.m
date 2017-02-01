@@ -123,15 +123,15 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 optionsPesto.n_starts  = 3;
 
 % Define the Hessian Function
-type = 'FIM'; % 'FD', 'FIM'
-HessianApprox = @(theta, lambda) HessianApproxEC(theta, objectiveFunction, type, lambda);
+type = 'FD'; % 'FD', 'FIM'
+HessianFunction = @(theta, lambda) HessianApproxEC(theta, objectiveFunction, type, lambda);
 
 % Set options for using a Hessian approximation for optimization
 optionsPesto.localOptimizer = 'fmincon';
 optionsPesto.localOptimizerOptions.Hessian = 'on';
 optionsPesto.localOptimizerOptions.GradConstr = 'on';
 optionsPesto.localOptimizerOptions.Display = 'iter';
-optionsPesto.localOptimizerOptions.HessFcn = HessianApprox;
+optionsPesto.localOptimizerOptions.HessFcn = HessianFunction;
 
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 

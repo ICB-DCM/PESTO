@@ -205,6 +205,7 @@ parameters = getParameterConfidenceIntervals(parameters, alpha);
 % multi-start optimization runs by getPropertyMultiStarts.
 
 optionsProperties = optionsMultistart.copy();
+optionsProperties.fh = [];
 properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
 
 %% Profile likelihood calculation -- Properties

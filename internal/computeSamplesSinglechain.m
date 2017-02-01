@@ -1,17 +1,15 @@
-function [parameters] = computeSamplesSinglechain(parameters, objective_function, options, logPost)
+function [parameters] = computeSamplesSinglechain(parameters, objective_function, options)
 % computeSamplesSinglechain.m performs adaptive MCMC sampling of the 
 % posterior distribution by using various single-chain algorithms.
 %
 % USAGE:
 % ======
-% [parameters] = computeSamplesSinglechain(parameters,objective_function,options,logPost)
+% [parameters] = computeSamplesSinglechain(parameters,objective_function,options)
 %
 % Parameters:
 %   parameters: parameter struct
 %   objective_function: log-posterior of model as function of the parameters.
 %   options: A PestoOptions object holding various options for the sampling
-%   logPost: The wrapper from getParameterSamples.m for the user-provided
-%       posterior function
 %
 % Required fields of parameters:
 %   number: Number of parameters
@@ -53,11 +51,15 @@ sigma_scale = 1;
 % Initialization and testing of starting point
 switch options.SC.proposal_scheme
     case {'MH','AM'}
-        [logP] = logPost(theta,objective_function,options.obj_type,'positive',options.MCMC.show_warning);
+        logP = objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber,[],options.MCMC.show_warning);
+        logP = -logP;
         mu = theta;
         Sigma = parameters.user.Sigma_0;
     case 'MALA'
-        [logP,G,H] = logPost(theta,objective_function,options.obj_type,'positive',options.MCMC.show_warning);
+        [logP,G,H] = objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber,[],options.MCMC.show_warning);
+        logP = -logP;
+        G = -G;
+        H = -H;
         if logP < inf
             [mu,Sigma] = getProposal(theta,G,H,options.SC.MALA.min_regularisation,options.SC.MALA.w_hist,...
                 parameters.user.theta_0,parameters.user.Sigma_0,parameters.min,parameters.max);
@@ -97,15 +99,20 @@ for i = 1:(options.MCMC.nsimu_run+options.MCMC.nsimu_warmup)
         switch options.SC.proposal_scheme
             case {'MH','AM'}
                 % Compute log-posterior
-                [logP_i] = logPost(theta_i,objective_function,options.obj_type,'positive',options.MCMC.show_warning);
-
+                logP_i = objectiveWrap(theta_i,objective_function,options.obj_type,options.objOutNumber,[],options.MCMC.show_warning);
+                logP_i = -logP_i;
+                
                 % Update mu and Sigma of proposal
                 mu_i = theta_i;
                 Sigma_i = Sigma;
+                
             case 'MALA'
                 % Compute log-posterior, gradient and hessian
-                [logP_i,G_i,H_i] = logPost(theta_i,objective_function,options.obj_type,'positive',options.MCMC.show_warning);
-
+                [logP_i,G_i,H_i] = objectiveWrap(theta_i,objective_function,options.obj_type,options.objOutNumber,[],options.MCMC.show_warning);
+                logP_i = -logP_i;
+                G_i = -G_i;
+                H_i = -H_i;
+                
                 % Update mu and Sigma of proposal
                 if logP_i < inf
                     [mu_i,Sigma_i] = getProposal(theta_i,G_i,H_i,options.SC.MALA.min_regularisation,options.SC.MALA.w_hist,...

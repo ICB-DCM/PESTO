@@ -20,6 +20,15 @@ classdef PestoOptions < matlab.mixin.SetGet
 
         obj_type = 'log-posterior';
         
+        % Maximum number of putputs, the objective function can provide:
+        % 1 ... only objective value
+        % 2 ... objective value with gradient
+        % 3 ... objective value, gradient and Hessian (Default)
+        %
+        % Missing values will be approximated by finite differences.
+
+        objOutNumber = 3;
+        
         % Perform calculations sequantially (''sequential'', default), or
         % in parallel (''parallel''). Parallel mode will speed-up the
         % calculations on multi-core systems, but requires the 
@@ -58,6 +67,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             'algorithm', 'interior-point', ...
             'display', 'off', ...
             'MaxIter', 400, ...
+            'GradObj', 'on', ...
             'GradConstr', 'on', ...
             'TolCon', 1e-6 ...
             );
