@@ -17,13 +17,22 @@ function varargout = objectiveWrap(varargin)
             objectiveFunction = varargin{2};
             type              = varargin{3};
             outNumber         = varargin{4};
-            I = 1 : length(theta);
+            I                 = 1 : length(theta);
+            showWarning       = false;
+        case 5
+            theta             = varargin{1};
+            objectiveFunction = varargin{2};
+            type              = varargin{3};
+            outNumber         = varargin{4};
+            I                 = varargin{5};
+            showWarning       = false;
         case 6
             theta             = varargin{1};
             objectiveFunction = varargin{2};
             type              = varargin{3};
             outNumber         = varargin{4};
             I                 = varargin{5};
+            showWarning       = varargin{5};
         otherwise
             error('Call to objective function giving too many inputs.')
     end
@@ -52,9 +61,7 @@ function varargout = objectiveWrap(varargin)
             case 3
                 switch outNumber
                     case 1
-                        J = objectiveFunction(theta);
-                        G = getFiniteDifferences(theta, objectiveFunction, 1);
-                        H = getFiniteDifferences(theta, objectiveFunction, 2);
+                        [J, G, H] = getFiniteDifferences(theta, objectiveFunction, 2);
                     case 2
                         [J, G] = objectiveFunction(theta);
                         H = getFiniteDifferences(theta, objectiveFunction, 3);
@@ -72,7 +79,9 @@ function varargout = objectiveWrap(varargin)
         end
 
     catch error_msg
-        % disp(error_msg.message)
+        if showWarning
+            warning(error_msg.message);
+        end
 
         % Derive output
         switch nargout

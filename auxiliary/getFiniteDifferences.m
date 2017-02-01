@@ -32,7 +32,7 @@ function varargout = getFiniteDifferences(theta, objectiveFunction, mode)
             if isempty(lastParameter)
                 fdStepParameter = getStepSizeFD(theta, objectiveFunction, 1);
                 lastParameter = theta;
-            elseif (sum((theta - lastParameter).^2) > 0.1 * nPar)
+            elseif (sum((theta - lastParameter).^2) > 0.5 * sqrt(nPar))
                 fdStepParameter = getStepSizeFD(theta, objectiveFunction, 1);
                 lastParameter = theta;
             end
@@ -47,8 +47,8 @@ function varargout = getFiniteDifferences(theta, objectiveFunction, mode)
                 delta(j) = fdStepParameter(j);
                 
                 % Gradient computation
-                Jplus = objectiveFuntion(theta + delta);
-                Jminus = objectiveFuntion(theta - delta);
+                Jplus = objectiveFunction(theta + delta);
+                Jminus = objectiveFunction(theta - delta);
                 G(j) = (Jplus - Jminus) / (2 * fdStepParameter(j));
             end
             
@@ -63,8 +63,8 @@ function varargout = getFiniteDifferences(theta, objectiveFunction, mode)
             if isempty(lastParameter)
                 fdStepParameter = getStepSizeFD(theta, objectiveFunction, 1);
                 lastParameter = theta;
-            elseif (sum((theta - lastParameter).^2) > 0.1 * nPar)
-                fdStepParameter = getStepSizeFD(theta, objectiveFunction, 1);
+            elseif (sum((theta - lastParameter).^2) > sqrt(nPar))
+                fdStepParameter = getStepSizeFD(theta, 0.5 * objectiveFunction, 1);
                 lastParameter = theta;
             end
             
@@ -73,7 +73,7 @@ function varargout = getFiniteDifferences(theta, objectiveFunction, mode)
             H = zeros(nPar, nPar);
             
             % Objective function at given parameter vector
-            J = objectiveFuntion(theta);
+            J = objectiveFunction(theta);
             
             % Do FD
             for j = 1 : nPar
@@ -82,8 +82,8 @@ function varargout = getFiniteDifferences(theta, objectiveFunction, mode)
                 delta(j) = fdStepParameter(j);
                 
                 % Gradient and diagonal of the Hessian
-                Jplus = objectiveFuntion(theta + delta);
-                Jminus = objectiveFuntion(theta - delta);
+                Jplus = objectiveFunction(theta + delta);
+                Jminus = objectiveFunction(theta - delta);
                 G(j) = (Jplus - Jminus) / (2 * fdStepParameter(j));
                 H(j,j) = (Jplus + Jminus - 2*J) / (fdStepParameter(j)^2);
                 
@@ -119,7 +119,7 @@ function varargout = getFiniteDifferences(theta, objectiveFunction, mode)
             if isempty(lastParameter)
                 fdStepGradient = getStepSizeFD(theta, objectiveFunction, 2);
                 lastParameter = theta;
-            elseif (sum((theta - lastParameter).^2) > 0.1 * nPar)
+            elseif (sum((theta - lastParameter).^2) > 0.5 * sqrt(nPar))
                 fdStepGradient = getStepSizeFD(theta, objectiveFunction, 2);
                 lastParameter = theta;
             end
@@ -134,8 +134,8 @@ function varargout = getFiniteDifferences(theta, objectiveFunction, mode)
                 delta(j) = fdStepGradient(j);
                 
                 % Gradient computation
-                [~, Gplus] = objectiveFuntion(theta + delta);
-                [~, Gminus] = objectiveFuntion(theta - delta);
+                [~, Gplus] = objectiveFunction(theta + delta);
+                [~, Gminus] = objectiveFunction(theta - delta);
                 H(:,j) = (Gplus - Gminus) / (2 * fdStepGradient(j));
             end
             

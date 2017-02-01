@@ -82,9 +82,7 @@ end
 %% Profile calculation
 if strcmp(options.comp_type,'sequential')
     for i = options.parameter_index
-        tic;
         parameters = optimizeProfileForParameterI(parameters, objective_function, i, options, fh);
-        disp(toc);
     end
     
 elseif strcmp(options.comp_type,'parallel')
@@ -233,9 +231,9 @@ for s = [-1,1]
         
         % Proposal of next profile point
         [theta_next,J_exp] = ...
-            getNextPoint(theta,theta_min,theta_max,dtheta/abs(dtheta(i)),...
+            getNextProfilePoint(theta,theta_min,theta_max,dtheta/abs(dtheta(i)),...
             abs(dtheta(i)),options.options_getNextPoint.min,options.options_getNextPoint.max,options.options_getNextPoint.update,...
-            -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost),@(theta) obj(theta,objective_function,options.obj_type),...
+            -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost),@(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber),...
             parameters.constraints,options.options_getNextPoint.mode,i);
         
         % Construction of reduced linear constraints
@@ -243,7 +241,7 @@ for s = [-1,1]
         
         % Optimization
         [theta_I_opt,J_opt] = ...
-            fmincon(@(theta_I) obj([theta_I(I1);theta_next(i);theta_I(I2-1)],objective_function,options.obj_type,I),... % negative log-posterior function
+            fmincon(@(theta_I) objectiveWrap([theta_I(I1);theta_next(i);theta_I(I2-1)],objective_function,options.obj_type,options.objOutNumber,I),... % negative log-posterior function
             theta_next(I),...
             A  ,b  ,... % linear inequality constraints
             Aeq,beq,... % linear equality constraints
@@ -303,63 +301,10 @@ for s = [-1,1]
         end
     end
 end
-end
-
-
-%% Objective function interface
-function varargout = obj(theta,fun,type,I)
-% This function is used as interface to the user-provided objective
-% function. It adapts the sign and supplies the correct number of outputs.
-% Furthermore, it catches errors in the user-supplied objective function.
-%
-% Parameters:
-%   theta: parameter vector
-%   fun: user-supplied objective function
-%   type: type of user-supplied objective function
-%   I: index set of optimized parameters
-
-try
-    switch nargout
-        case {0,1}
-            J = fun(theta);
-            if isnan(J)
-                error('J is NaN.')
-            end
-            switch type
-                case 'log-posterior'          , varargout = {-J};
-                case 'negative log-posterior' , varargout = { J};
-            end
-        case 2
-            [J,G] = fun(theta);
-            if max(isnan([J;G(:)]))
-                error('J and/or G contain a NaN.')
-            end
-            switch type
-                case 'log-posterior'          , varargout = {-J,-G(I)};
-                case 'negative log-posterior' , varargout = { J, G(I)};
-            end
-        case 3
-            [J,G,H] = fun(theta);
-            if max(isnan([J;G(:);H(:)]))
-                error('J, G and/or H contain a NaN.')
-            end
-            switch type
-                case 'log-posterior'          , varargout = {-J,-G(I),-H(I,I)};
-                case 'negative log-posterior' , varargout = { J, G(I), H(I,I)};
-            end
-    end
-catch
-    switch nargout
-        case {0,1}
-            varargout = {inf};
-        case 2
-            varargout = {inf,zeros(length(I),1)};
-        case 3
-            varargout = {inf,zeros(length(I),1),zeros(length(I))};
-    end
-end
 
 end
+
+
 
 %% Constraint generation
 % This function is used to generate the linear constraints for the
@@ -392,116 +337,4 @@ else
     beq = [];
 end
 
-end
-
-%% getNextStepProfile is a support function for the profile calculation
-%   and is called by computeProfile. It determines the length of the 
-%   update step given update direction, parameter constraints,
-%   log-posterior and target log posterior.
-%
-% USAGE:
-% ======
-% function [theta_next,logPost] = getNextPoint(theta,theta_min,theta_max,dtheta,logPost_target,objective_function)
-%
-% INPUTS:
-% =======
-% theta ... starting parameter   
-% theta_min ... lower bound for parameters   
-% theta_max ... upper bound for parameters   
-% dtheta ... upper direction
-% logPost_target ... target value for log-posterior
-% objective_function ... log-posterior of model as function of the parameters.
-%
-% Outputs:
-% ========
-% theta_next ... parameter proposal
-% logPost ... log-posterior at proposed parameter
-%
-% 2012/07/12 Jan Hasenauer
-
-function [theta,J] = getNextPoint(theta,theta_min,theta_max,dtheta,c,c_min,c_max,c_update,J_target,obj,constraints,update_mode,i)
-
-% Initialization
-% 1) modification of dtheta
-switch update_mode
-    case 'multi-dimensional'
-        % nothing has to be done
-    case 'one-dimensional'
-        dtheta([1:i-1,i+1:end]) = 0;
-end
-
-% 1) line search
-if dtheta(i) > 0 % increasing
-    c_bound = (theta_max(i)-theta(i))/dtheta(i);
-else
-    c_bound = (theta_min(i)-theta(i))/dtheta(i);
-end
-if c_bound > c_min
-    c_max = min(c_max,c_bound);
-    c = min(max(c,c_min),c_max);
-    search = 1;
-else
-    c_min = c_bound;
-    c_max = c_bound;
-    c = c_bound;
-    search = 0;
-end
-% 2) inequality constraints
-if ~isempty(constraints.A)
-    A = constraints.A;
-    b = constraints.b;
-else
-    A = zeros(1,length(theta));
-    b = 1;
-end
-% 3) parameter projection
-theta_fun = @(c) max(min(theta + c*dtheta,theta_max),theta_min);
-
-% Search
-theta = theta_fun(c);
-if  min(A*theta <= b)
-    J = obj(theta);
-else
-    J = inf;
-end
-
-if search == 1
-    if J > J_target % => initial c too large
-        stop = 0;
-        while stop == 0
-            c = min(max(c/c_update,c_min),c_max);
-            theta = theta_fun(c);
-            if c == c_min % lower bound reached
-                stop = 1;
-                J = obj(theta);
-            elseif min(A*theta <= b) % feasible
-                J = obj(theta);
-                if J <= J_target % objective smaller than target value
-                    stop = 1;
-                end
-            end
-        end
-    else % => initial c too small
-        stop = 0;
-        while stop == 0
-            cn = min(max(c*c_update,c_min),c_max);
-            thetan = theta_fun(cn);
-            if min(A*theta <= b) % feasible
-                Jn = obj(thetan);
-                if Jn <= J_target % objective smaller than target value
-                    c = cn;
-                    theta = thetan;
-                    J = Jn;
-                    if cn == c_max % upper bound reached
-                        stop = 1;
-                    end
-                else
-                    stop = 1;
-                end
-            else
-                stop = 1;
-            end
-        end
-    end
-end
 end
