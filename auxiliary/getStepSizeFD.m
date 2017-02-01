@@ -23,8 +23,8 @@ function fdStepSize = getStepSizeFD(theta, objectiveFunction, mode)
         
             for j = 1 : nPar
                 delta = zeros(nPar,1);
-                gradients = zeros(1,6);
-                qualityVector = zeros(1,6);
+                gradients = zeros(1,7);
+                qualityVector = zeros(1,7);
 
                 % Compute gradient for different step sizes
                 for k = 3 : 9
@@ -35,16 +35,16 @@ function fdStepSize = getStepSizeFD(theta, objectiveFunction, mode)
                 end
 
                 % Compare gradients for different step sizes
-                for k = 2 : 5
+                for k = 2 : 6
                     qualityVector(k) = 0.5 * (abs(gradients(k-1) - gradients(k)) ...
                         + abs(gradients(k+1) - gradients(k)));
                 end
                 qualityVector(1) = abs(gradients(1) - gradients(2));
-                qualityVector(6) = abs(gradients(5) - gradients(6));
+                qualityVector(7) = abs(gradients(5) - gradients(6));
 
                 % Choose step sizes with best stability properties
                 [maxQual, ind] = min(qualityVector);
-                fdStepSize(j) = 10^(-ind - 2);
+                fdStepSize(j) = 10^(-ind-3);
 
                 if (maxQual > 0.1)
                     warning('Could not find a good step size for finite differences. Please check the accuracy of your objetive function.');
@@ -57,8 +57,8 @@ function fdStepSize = getStepSizeFD(theta, objectiveFunction, mode)
         
             for j = 1 : nPar
                 delta = zeros(nPar,1);
-                hessians = zeros(nPar,6);
-                qualityVector = zeros(1,6);
+                hessians = zeros(nPar,7);
+                qualityVector = zeros(1,7);
 
                 % Compute gradient for different step sizes
                 for k = 3 : 9
@@ -69,16 +69,16 @@ function fdStepSize = getStepSizeFD(theta, objectiveFunction, mode)
                 end
 
                 % Compare gradients for different step sizes
-                for k = 2 : 5
-                    qualityVector(k) = 0.5 * (sum(abs(hessians(:,k-1) - hessians(:,k))) ...
-                        + sum(abs(hessians(:,k+1) - hessians(:,k))));
+                for k = 2 : 6
+                    qualityVector(k) = 0.5 * (sum(abs(hessians(:,k-1) - hessians(:,k)).^2) ...
+                        + sum(abs(hessians(:,k+1) - hessians(:,k)).^2));
                 end
                 qualityVector(1) = sum(abs(hessians(:,1) - hessians(:,2)));
-                qualityVector(6) = sum(abs(hessians(:,5) - hessians(:,6)));
+                qualityVector(7) = sum(abs(hessians(:,5) - hessians(:,6)));
 
                 % Choose step sizes with best stability properties
                 [maxQual, ind] = min(qualityVector);
-                fdStepSize(j) = 10^(-ind - 2);
+                fdStepSize(j) = 10^(-ind-3);
                 
                 if (maxQual > 0.1 * nPar)
                     warning('Could not find a good step size for finite differences. Please check the accuracy of your objetive function.');

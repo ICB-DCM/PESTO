@@ -13,23 +13,10 @@ function Hessian = HessianApproxEC(theta, objectiveFunction, type, lambda)
 %  Hessian: An approximation of the Hessian matrix
 
 if (strcmp(type, 'FIM'))
-    [Hessian, ~, ~] = objectiveFunction(theta);
-    Hessian = -Hessian;
-    
+    [Hessian, ~, ~] = objectiveWrap(theta, objectiveFunction, 'log-posterior', 3);   
 elseif (strcmp(type, 'FD'))
     % Initialization
-    step = 1e-7;
-    Hessian = zeros(4);
-    
-    % Finite difference loop of parameters
-    for iTheta = 1 : 4
-        delta = zeros(4,1);
-        delta(iTheta) = step;
-        [~, gradF, ~] = objectiveFunction(theta + delta);
-        [~, gradB, ~] = objectiveFunction(theta - delta);
-        Hessian(:,iTheta) = -(gradF - gradB) / (2*step);
-    end
-    
+    [Hessian, ~, ~] = objectiveWrap(theta, objectiveFunction, 'log-posterior', 1);
 else
     error('Not a known type of Hessian approximation in this example');
 end

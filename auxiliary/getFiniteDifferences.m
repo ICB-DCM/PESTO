@@ -63,8 +63,8 @@ function varargout = getFiniteDifferences(theta, objectiveFunction, mode)
             if isempty(lastParameter)
                 fdStepParameter = getStepSizeFD(theta, objectiveFunction, 1);
                 lastParameter = theta;
-            elseif (sum((theta - lastParameter).^2) > sqrt(nPar))
-                fdStepParameter = getStepSizeFD(theta, 0.5 * objectiveFunction, 1);
+            elseif (sum((theta - lastParameter).^2) > 0.5 * sqrt(nPar))
+                fdStepParameter = getStepSizeFD(theta, objectiveFunction, 1);
                 lastParameter = theta;
             end
             

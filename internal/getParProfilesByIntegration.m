@@ -101,7 +101,7 @@
 % 2013/10/05 FF original code from thesis
 % 2014/04/09 Sabrina Hross - completely reworked
 % 2016/11/21 Paul Stapor
-% 2017/02/20 Paul Stapor - PESTO version of the code
+% 2017/02/02 Paul Stapor - PESTO version of the code
 
 function [parameters, fh] = getParProfilesByIntegration(parameters, objectiveFunction, options, varargin)
 
