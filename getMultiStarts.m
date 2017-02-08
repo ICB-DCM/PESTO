@@ -151,11 +151,14 @@ parameters.MS.n_starts = options.n_starts;
 parameters.MS.par0 = par0(:,options.start_index);
 
 %% Preparation of folder
-if options.save
-    if(~exist(options.foldername,'dir'))
-        mkdir(options.foldername);
+if or(options.save,options.tempsave)
+    if(~exist(fullfile(pwd,options.foldername),'dir'))
+        mkdir(fullfile(pwd,options.foldername))
     end
-    save([options.foldername '/init'],'parameters','-v7.3');
+    % only save the init mat for the first start index, not every one if they are called seperately
+    if(and(options.save,~isempty(find(options.start_index==1))))
+        save([options.foldername '/init'],'parameters','-v7.3');
+    end
 end
 
 %% Initialization
@@ -173,9 +176,11 @@ if(options.trace)
     parameters.MS.fval_trace = nan(options.localOptimizerOptions.MaxIter+1,length(options.start_index));
     parameters.MS.time_trace = nan(options.localOptimizerOptions.MaxIter+1,length(options.start_index));
 end
+
 waitbarFields1 = {'logPost', 'logPost0', 'n_objfun', 'n_iter', 't_cpu', 'exitflag'};
 waitbarFields2 = {'par', 'par0', 'gradient', 'fval_trace', 'time_trace'};
 waitbarFields3 = {'hessian', 'par_trace'};
+
 
 %% Multi-start local optimization -- SEQUENTIAL
 if strcmp(options.comp_type, 'sequential')
@@ -189,10 +194,12 @@ if strcmp(options.comp_type, 'sequential')
     end
     
     % initialize the waitbar
-    waitBar = waitbar(0, '1', 'name', 'Parameter estimation in process, please wait...', 'CreateCancelBtn', 'setappdata(gcbf, ''canceling'', 1)');
-    stringTimePrediction = updateWaitBar(0.004 * length(options.start_index) * parameters.number);
-    waitbar(0, waitBar, stringTimePrediction);
-    C = onCleanup(@() delete(waitBar));
+    if(strcmp(options.mode,'visual'))
+        waitBar = waitbar(0, '1', 'name', 'Parameter estimation in process, please wait...', 'CreateCancelBtn', 'setappdata(gcbf, ''canceling'', 1)');
+        stringTimePrediction = updateWaitBar(0.004 * length(options.start_index) * parameters.number);
+        waitbar(0, waitBar, stringTimePrediction);
+        C = onCleanup(@() delete(waitBar));
+    end
     
     % Loop: Multi-starts
     for i = 1 : length(options.start_index)
@@ -332,31 +339,35 @@ if strcmp(options.comp_type, 'sequential')
         end
         
         % Abort the calculation if the waitbar is cancelled
-        if getappdata(waitBar, 'canceling')
-            parameters.MS.n_starts = i;
-            for iWaitbarField = 1:6
-                parameters.MS.(waitbarFields1{iWaitbarField}) = ...
-                     parameters.MS.(waitbarFields1{iWaitbarField})(1:i, :);
-            end
-            for iWaitbarField = 1:5
-                if (isfield(parameters.MS, waitbarFields2{iWaitbarField}))
-                    parameters.MS.(waitbarFields2{iWaitbarField}) = ...
-                        parameters.MS.(waitbarFields2{iWaitbarField})(:, 1:i);
+        if(strcmp(options.mode,'visual'))
+            if getappdata(waitBar, 'canceling')
+                parameters.MS.n_starts = i;
+                for iWaitbarField = 1:6
+                    parameters.MS.(waitbarFields1{iWaitbarField}) = ...
+                        parameters.MS.(waitbarFields1{iWaitbarField})(1:i, :);
                 end
-            end
-            for iWaitbarField = 1:2
-                if (isfield(parameters.MS, waitbarFields3{iWaitbarField}))
-                    parameters.MS.(waitbarFields3{iWaitbarField}) = ...
-                        parameters.MS.(waitbarFields3{iWaitbarField})(:, :, 1:i);
+                for iWaitbarField = 1:5
+                    if (isfield(parameters.MS, waitbarFields2{iWaitbarField}))
+                        parameters.MS.(waitbarFields2{iWaitbarField}) = ...
+                            parameters.MS.(waitbarFields2{iWaitbarField})(:, 1:i);
+                    end
                 end
+                for iWaitbarField = 1:2
+                    if (isfield(parameters.MS, waitbarFields3{iWaitbarField}))
+                        parameters.MS.(waitbarFields3{iWaitbarField}) = ...
+                            parameters.MS.(waitbarFields3{iWaitbarField})(:, :, 1:i);
+                    end
+                end
+                
+                break;
             end
-            
-            break;
         end
         
         % update the waitbar
-        stringTimePrediction = updateWaitBar((sum(parameters.MS.t_cpu(1:i)) / i) * (length(options.start_index) - i));
-        waitbar(i / length(options.start_index), waitBar, stringTimePrediction);
+        if(strcmp(options.mode,'visual'))
+            stringTimePrediction = updateWaitBar(nanmedian(parameters.MS.t_cpu(1:i)) * (length(options.start_index) - i));
+            waitbar(i / length(options.start_index), waitBar, stringTimePrediction);
+        end
     end
         
     % Assignment
@@ -399,7 +410,7 @@ if strcmp(options.comp_type,'parallel')
         logPost0(i) = -J_0;
         
         % Optimization
-        t_cpu_fmincon = cputime;
+        startTimeLocalOptimization = cputime;
         if J_0 < -options.init_threshold
             % Optimization using fmincon
             [theta,J_opt,exitflag(i),results_fmincon,~,gradient_opt,hessian_opt] = ...
@@ -428,7 +439,7 @@ if strcmp(options.comp_type,'parallel')
             n_objfun(i) = results_fmincon.funcCount;
             n_iter(i) = results_fmincon.iterations;
         end
-        t_cpu(i) = cputime - t_cpu_fmincon;
+        t_cpu(i) = cputime - startTimeLocalOptimization;
         
         % Save
         if options.save
@@ -484,7 +495,7 @@ options.localOptimizerOptions.OutputFcn = [];
                 if(ftrace)
                     parameters.MS.par_trace(:,optimValues.iteration+1,i) = x;
                     parameters.MS.fval_trace(optimValues.iteration+1,i) = optimValues.fval;
-                    parameters.MS.time_trace(optimValues.iteration+1,i) = cputime - t_cpu_fmincon;
+                    parameters.MS.time_trace(optimValues.iteration+1,i) = cputime - startTimeLocalOptimization;
                 end
                 if(ftempsave)
                     if optimValues.iteration>0
@@ -628,7 +639,7 @@ try
             end
     end
     % Reset error count
-    error_count = 0;
+    error_count = error_count - 1;
 catch error_msg
     % Increase error count
     error_count = error_count + 1;
@@ -687,7 +698,7 @@ function stringTimePrediction = updateWaitBar(timePredicted)
     else
         stringTimePrediction = 'Kingdoms will rise, civilization will decline, stars will fade - but your calculation...(!) ;)';
     end
-    stringTimePrediction = ['Predicted waiting time: ', stringTimePrediction];
+    stringTimePrediction = ['Predicted remaining waiting time: ', stringTimePrediction];
     
 end
 
