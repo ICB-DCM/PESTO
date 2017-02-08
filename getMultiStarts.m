@@ -151,11 +151,14 @@ parameters.MS.n_starts = options.n_starts;
 parameters.MS.par0 = par0(:,options.start_index);
 
 %% Preparation of folder
-if options.save
-    if(~exist(options.foldername,'dir'))
-        mkdir(options.foldername);
+if or(options.save,options.tempsave)
+    if(~exist(fullfile(pwd,options.foldername),'dir'))
+        mkdir(fullfile(pwd,options.foldername))
     end
-    save([options.foldername '/init'],'parameters','-v7.3');
+    % only save the init mat for the first start index, not every one if they are called seperately
+    if(and(options.save,~isempty(find(options.start_index==1))))
+        save([options.foldername '/init'],'parameters','-v7.3');
+    end
 end
 
 %% Initialization
@@ -700,9 +703,6 @@ function stringTimePrediction = updateWaitBar(timePredicted)
 end
 
 function saveResults(parameters,options,i)
-    if(~exist(fullfile(pwd,options.foldername),'dir'))
-        mkdir(fullfile(pwd,options.foldername))
-    end
     dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost.csv']),parameters.MS.logPost(i),'delimiter',',','precision',12);
     dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost0.csv']),parameters.MS.logPost0(i),'delimiter',',','precision',12);
     dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__par.csv']),parameters.MS.par(:,i),'delimiter',',','precision',12);
