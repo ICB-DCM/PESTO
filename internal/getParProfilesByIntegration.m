@@ -199,7 +199,7 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
     % lambda = -(DG' * parameters.MS.gradient(:,1)) / (DG' * DG);
 
     %% Compute profile for in- and decreasing theta_i
-    for s = [1, -1]
+    for s = -1 % [1, -1]
 
         % Set bound for considered parameter (ONLY integrate profiles)
         borders = [parameters.min, parameters.max];
@@ -251,31 +251,33 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
                     % If yCorrection is set to inf, then the ODE is too stiff, 
                     % some steps of optimization based calculation have to be done
                     if (yCorrection == inf)
-                        lastOdePoint = y(end, j);
-                        for iStep = 1 : 4
-                            runPar = iStep * s * 0.025 + lastOdePoint;
-                            if (iStep == 1)
-                                yNew = y(end,:)';
-                                yNew(j) = runPar;
-                            else
-                                yNew = 2*y(end,:)' - y(end-1,:)';
-                                yNew(j) = runPar;
-                            end
-                            [yAdd, L, shortGL] = ...
-                                reoptimizePath(yNew, j, objectiveFunction, borders, options);
-                            y = [y; yAdd(1:j-1)', runPar, yAdd(j:end)'];
-                            llhHistory = [llhHistory, -L];
-                            R = exp(-L - parameters.MS.logPost(1));
-                            if (strcmp(options.mode, 'text') || strcmp(options.mode, 'visual'))
-                                fprintf('\n  |  %11.8f | %11.7f | %7.5f |', ...
-                                    runPar, sqrt(sum(shortGL.^2)), R);
-                            end
-                            if (R < options.R_min)
-                                break;
-                            end
-                        end
+                        addY = doOptimizationSteps(parameters, y, objectiveFunction, borders, j, s, options);
+                        y = [y; addY];
+%                         lastOdePoint = y(end, j);
+%                         for iStep = 1 : 4
+%                             runPar = iStep * s * 0.025 + lastOdePoint;
+%                             if (iStep == 1)
+%                                 yNew = y(end,:)';
+%                                 yNew(j) = runPar;
+%                             else
+%                                 yNew = 2*y(end,:)' - y(end-1,:)';
+%                                 yNew(j) = runPar;
+%                             end
+%                             [yAdd, L, shortGL] = ...
+%                                 reoptimizePath(yNew, j, objectiveFunction, borders, options);
+%                             y = [y; yAdd(1:j-1)', runPar, yAdd(j:end)'];
+%                             llhHistory = [llhHistory, -L];
+%                             R = exp(-L - parameters.MS.logPost(1));
+%                             if (strcmp(options.mode, 'text') || strcmp(options.mode, 'visual'))
+%                                 fprintf('\n  |  %11.8f | %11.7f | %7.5f |', ...
+%                                     runPar, sqrt(sum(shortGL.^2)), R);
+%                             end
+%                             if (R < options.R_min)
+%                                 break;
+%                             end
+%                         end
                     else
-                    % If reoptimization had to be done, correct the values in y by the optimized ones
+                    % If reoptimization has to be done, correct the values in y by the optimized ones
                         for iLine = size(yCorrection, 2) : -1 : 1
                             % Not sure: Either all entries are nan, or none
                             % of them, so it if sufficient to test the 1st?
@@ -290,7 +292,6 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
                     else
                         theta = fliplr(y');
                     end
-                    t = t';
 
                 case 'CVODE' 
                     cvodeOptions.RootsFn = @(t,y) getEndProfile(t, s, y, j, borders, objectiveFunction, options, parameters.MS.logPost(1));
@@ -367,7 +368,6 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
                     else
                         theta = fliplr(y');
                     end
-                    t = t';
             end
 
             %% Write results to the parameters struct
@@ -426,42 +426,6 @@ end
 
 
 
-function varargout = obj_red(t, ind, theta_red, objectiveFunction)
-    
-    theta = [theta_red(1:ind-1); t; theta_red(ind:end)];
-    
-    try
-        switch nargout
-            case 1
-                L = objectiveFunction(theta);
-                varargout{1} = -L;
-            case 2
-                [L, GL] = objectiveFunction(theta);
-                GL(ind) = [];
-                varargout{1} = -L;
-                varargout{2} = -GL;
-            case 3
-                [L, GL, HL] = objectiveFunction(theta);
-                GL(ind) = [];
-                HL(:,ind) = [];
-                HL(ind,:) = [];
-                varargout{1} = -L;
-                varargout{2} = -GL;
-                varargout{3} = -HL;
-        end
-    catch 
-        switch nargout
-            case {0,1}
-                varargout = {inf};
-            case 2
-                varargout = {inf,zeros(length(I),1)};
-            case 3
-                varargout = {inf,zeros(length(I),1),zeros(length(I))};
-        end
-    end
-    
-end
-
 function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunction, borders, options)
     
     % Assume successful Check
@@ -501,26 +465,25 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
             end
 
             % Check, if first optimality is violated, reoptimize if necessary
-            [L, GL] = objectiveFunction(y(:,iT));
+            [L, GL] = objectiveWrap(y(:,iT), objectiveFunction, options.obj_type, options.objOutNumber);
             GL(ind) = 0;
             
             if (sqrt(sum(GL.^2)) > 1)
                 fprintf('\n');
                 warning('Lost optimal path, reoptimization necessary!');
                 [newY, L, GL] = reoptimizePath(y(:,iT), ind, objectiveFunction, borders, options);
-                L = -L;
                 y(:,iT) = [newY(1:ind-1); y(ind,iT); newY(ind:end)];
                 yCorrection(:,iT) = y(:,iT);
                 status = 1;
             end
 
-            R = exp(L - logPostMax);
+            R = exp(-L - logPostMax);
             
             if (strcmp(options.mode, 'text') || strcmp(options.mode, 'visual'))
                 fprintf('\n  |  %11.8f | %11.7f | %7.5f |', ...
                     s*t(iT), sqrt(sum(GL.*GL)), R);
             end
-            llhHistory = [llhHistory, L];
+            llhHistory = [llhHistory, -L];
         end
         
     end
@@ -528,23 +491,85 @@ end
 
 
 
-function [newY, newL, newGL] = reoptimizePath(y, ind, objectiveFunction, borders, options)
+function [newY, newL, newGL] = reoptimizePath(theta, ind, objectiveFunction, borders, options)
     
-    theta_red = y;
-    theta_red(ind) = [];
-    borders(ind, :) = [];
+    I1 = (1 : ind-1)';
+    I2 = (ind+1 : length(theta))';
+    I = [I1; I2];
     
-    options.profileReoptimizationOptions.Display = 'off';
-    
-    [newY, newL, ~, ~, ~, newGL] = fmincon(...
-        @(theta_red) obj_red(y(ind), ind, theta_red, objectiveFunction), ...
-        theta_red, ...
-        [], [] ,... % linear inequality constraints
-        [], [], ... % linear equality constraints
-        borders(:,1), ...   % lower bound
-        borders(:,2), ...   % upper bound
-        [], options.profileReoptimizationOptions);
+    options.profileReoptimizationOptions.Display = 'iter';
+
+    % Optimization
+    [newY, newL, ~, ~, ~, newGL] = ...
+        fmincon(@(theta_I) objectiveWrap([theta_I(I1); theta(ind); theta_I(I2-1)], objectiveFunction, options.obj_type, options.objOutNumber, I),... % negative log-posterior function
+        theta(I),...
+        [], [],... % linear inequality constraints
+        [], [],... % linear equality constraints
+        borders(I,1),...   % lower bound
+        borders(I,2),...   % upper bound
+        [],options.profileReoptimizationOptions);    % options
 end
+
+
+
+function y = doOptimizationSteps(parameters, theta, objectiveFunction, borders, ind, s, options)
+    
+    global llhHistory;
+    
+    % Initialize everything
+    y = [];
+    I1 = (1 : ind-1)';
+    I2 = (ind+1 : length(theta))';
+    I = [I1; I2];
+    stepCounter = 1;
+    lastOdePoint = (theta(end, :))';
+    borders(ind,:) = [options.P.min(ind), options.P.max(ind)];
+    dtheta = zeros(parameters.number,1);
+    dtheta(ind) = s*options.options_getNextPoint.guess;
+    logPost = parameters.MS.logPost(options.MAP_index);
+    logPost_max = parameters.MS.logPost(1);
+    
+    % Sequential update
+    while (options.P.min(ind) < theta(ind)) && (theta(ind) < options.P.max(ind)) && ...
+            (logPost >= (log(options.R_min) + logPost_max) && ...
+            stepCounter < 4)
+    
+        % Proposal of next profile point
+        [theta_next,~] = ...
+            getNextProfilePoint(lastOdePoint,borders(:,1),borders(:,2),dtheta/abs(dtheta(ind)),...
+            abs(dtheta(ind)),options.options_getNextPoint.min,options.options_getNextPoint.max,options.options_getNextPoint.update,...
+            -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost),...
+            @(theta) objectiveWrap(theta,objectiveFunction,options.obj_type, options.objOutNumber),...
+            parameters.constraints, options.options_getNextPoint.mode,ind);
+
+        % Optimization
+        [theta_I_opt, L, ~, ~, ~, shortGL] = ...
+            fmincon(@(theta_I) objectiveWrap([theta_I(I1);theta_next(ind);theta_I(I2-1)],objective_function,options.obj_type,options.objOutNumber,I),... % negative log-posterior function
+            theta_next(I),...
+            A  ,b  ,... % linear inequality constraints
+            Aeq,beq,... % linear equality constraints
+            parameters.min(I),...   % lower bound
+            parameters.max(I),...   % upper bound
+            [],options.profileReoptimizationOptions);    % options
+        
+        % Restore full vector and determine update direction
+        logPost = -L;
+        dtheta = [theta_I_opt(I1); theta_next(ind); theta_I_opt(I2-1)] - theta;
+        theta = theta + dtheta;
+        
+        llhHistory = [llhHistory, logPost];
+        R = exp(-L - parameters.MS.logPost(1));
+        if (strcmp(options.mode, 'text') || strcmp(options.mode, 'visual'))
+            fprintf('\n  |  %11.8f | %11.7f | %7.5f |', ...
+                theta(ind), sqrt(sum(shortGL.^2)), R);
+        end
+        y = [y, theta];
+        stepCounter = stepCounter + 1;
+    end
+    
+end
+
+
 
 %% SingleParameter is a support function for the profile integration
 %  Provides function handles for the parameter function its
@@ -617,7 +642,8 @@ end
 
 function [varargout] = getEndProfile(t, s, y, ind, borders, objectiveFunction, options, logPostMax)
 
-    R = objectiveFunction(y) - (log(options.R_min) + logPostMax);
+    L = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
+    R = -L - (log(options.R_min) + logPostMax);
 
     if strcmp(options.solver.type, 'CVODE')
         if (t < borders(ind, 2)) && (t > borders(ind, 1))
@@ -662,23 +688,25 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
     global ObjFuncCounter;
     ObjFuncCounter = ObjFuncCounter + 1;
     
-    if (options.solver.gradient)
-        if strcmp(options.solver.hessian, 'analytic')
-            [~, GL, HL] = objectiveFunction(y);
-        else
-            hLh = options.solver.hessianStep;
-            [~, GL] = objectiveFunction(y);
-            HL = zeros(npar);
-            
-            % finite differences approx. of hessian
-            for j = 1 : npar
-                [~, GLplus] = objectiveFunction(y + hLh * sparse(j, 1, 1, npar, 1));
-                HL(:,j) = (GLplus - GL) / hLh;
-            end
-        end
-    else
-        error('At least Gradient information is required to use the profile integration method reliably.');
-    end
+    [~, GL, HL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
+    
+%     if (options.solver.gradient)
+%         if strcmp(options.solver.hessian, 'analytic')
+%             [~, GL, HL] = objectiveFunction(y);
+%         else
+%             hLh = options.solver.hessianStep;
+%             [~, GL] = objectiveFunction(y);
+%             HL = zeros(npar);
+%             
+%             % finite differences approx. of hessian
+%             for j = 1 : npar
+%                 [~, GLplus] = objectiveFunction(y + hLh * sparse(j, 1, 1, npar, 1));
+%                 HL(:,j) = (GLplus - GL) / hLh;
+%             end
+%         end
+%     else
+%         error('At least Gradient information is required to use the profile integration method reliably.');
+%     end
     
     if (sum(sum(isnan(HL)))>0) || sum(isnan(GL))>0 || (sum(sum(isinf(HL)))>0) || sum(isinf(GL))>0
         disp('Warning: Undefined model output')
@@ -798,7 +826,7 @@ function [dth, flag] = getRhsDAE(~, s, y, yp, ind, objectiveFunction, options)
     flag = 0;
 
     if (options.solver.gradient)
-         [~,GL] = objectiveFunction(y);
+         [~,GL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
     else
         error('At least gradient information is required use the profile integration method reliably.');
     end
@@ -853,23 +881,25 @@ function Mt = getMassmatrixDAE(c ,s, y, ind, objectiveFunction, parameterFunctio
     % set parameters
     npar = length(y);
     
-    if (options.solver.gradient)
-        if strcmp(options.solver.hessian, 'analytic')
-            [~, GL, HL] = objectiveFunction(y);
-        else
-            hLh = options.solver.hessianStep;
-            [~, GL] = objectiveFunction(y);
-            HL = zeros(npar);
-            
-            % finite differences approx. of hessian
-            for j = 1 : npar
-                [~, GLplus] = objectiveFunction(th + hLh * sparse(j, 1, 1, npar, 1));
-                HL(:,j) = (GLplus - GL) / hLh;
-            end
-        end
-    else
-        error('At least Gradient information is required to use the profile integration method reliably.');
-    end
+    [~, GL, HL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
+    
+%     if (options.solver.gradient)
+%         if strcmp(options.solver.hessian, 'analytic')
+%             [~, GL, HL] = objectiveFunction(y);
+%         else
+%             hLh = options.solver.hessianStep;
+%             [~, GL] = objectiveFunction(y);
+%             HL = zeros(npar);
+%             
+%             % finite differences approx. of hessian
+%             for j = 1 : npar
+%                 [~, GLplus] = objectiveFunction(th + hLh * sparse(j, 1, 1, npar, 1));
+%                 HL(:,j) = (GLplus - GL) / hLh;
+%             end
+%         end
+%     else
+%         error('At least Gradient information is required to use the profile integration method reliably.');
+%     end
     
     if (sum(sum(isnan(HL)))>0) || (sum(sum(isinf(HL)))>0) 
         disp('Warning: Undefined model output')

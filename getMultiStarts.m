@@ -158,6 +158,11 @@ if options.save
 end
 
 %% Initialization
+if strcmp(options.localOptimizer, 'fmincon')
+    maxOptimSteps = options.localOptimizerOptions.MaxIter;
+elseif strcmp(options.localOptimizer, 'meigo-ess') || strcmp(options.localOptimizer, 'meigo-vns')
+    maxOptimSteps = options.localOptimizerOptions.maxeval;
+end
 parameters.MS.par = nan(parameters.number,length(options.start_index));
 parameters.MS.logPost0 = nan(length(options.start_index),1);
 parameters.MS.logPost = nan(length(options.start_index),1);
@@ -168,9 +173,9 @@ parameters.MS.n_iter = nan(length(options.start_index),1);
 parameters.MS.t_cpu = nan(length(options.start_index),1);
 parameters.MS.exitflag = nan(length(options.start_index),1);
 if(options.trace)
-    parameters.MS.par_trace = nan(parameters.number,options.localOptimizerOptions.MaxIter+1,length(options.start_index));
-    parameters.MS.fval_trace = nan(options.localOptimizerOptions.MaxIter+1,length(options.start_index));
-    parameters.MS.time_trace = nan(options.localOptimizerOptions.MaxIter+1,length(options.start_index));
+    parameters.MS.par_trace = nan(parameters.number,maxOptimSteps+1,length(options.start_index));
+    parameters.MS.fval_trace = nan(maxOptimSteps+1,length(options.start_index));
+    parameters.MS.time_trace = nan(maxOptimSteps+1,length(options.start_index));
 end
 waitbarFields1 = {'logPost', 'logPost0', 'n_objfun', 'n_iter', 't_cpu', 'exitflag'};
 waitbarFields2 = {'par', 'par0', 'gradient', 'fval_trace', 'time_trace'};
@@ -189,7 +194,7 @@ if strcmp(options.comp_type, 'sequential')
     
     % initialize the waitbar
     waitBar = waitbar(0, '1', 'name', 'Parameter estimation in process, please wait...', 'CreateCancelBtn', 'setappdata(gcbf, ''canceling'', 1)');
-    stringTimePrediction = updateWaitBar(0.004 * length(options.start_index) * parameters.number);
+    stringTimePrediction = updateWaitBar(nan);
     waitbar(0, waitBar, stringTimePrediction);
     C = onCleanup(@() delete(waitBar));
     
@@ -207,13 +212,14 @@ if strcmp(options.comp_type, 'sequential')
         error_count = 0;
         
         % Evaluation of objective function at starting point
-        if (~strcmp(options.localOptimizer, 'fmincon') || ~strcmp(options.localOptimizerOptions.GradObj, 'on'))
-            J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
-        elseif (strcmp(options.localOptimizerOptions.GradObj, 'on') && ~strcmp(options.localOptimizerOptions.Hessian,'on'))
-            [J_0, grad_J_0] = objectiveWrapWErrorCount(parameters.MS.par0(:,i), objective_function, options.obj_type, options.objOutNumber);
-        else
-            [J_0, grad_J_0, H_J_0] = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
-        end
+%         if (~strcmp(options.localOptimizer, 'fmincon') || ~strcmp(options.localOptimizerOptions.GradObj, 'on'))
+%             J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+%         elseif (strcmp(options.localOptimizerOptions.GradObj, 'on') && ~strcmp(options.localOptimizerOptions.Hessian,'on'))
+%             [J_0, grad_J_0] = objectiveWrapWErrorCount(parameters.MS.par0(:,i), objective_function, options.obj_type, options.objOutNumber);
+%         else
+%             [J_0, grad_J_0, H_J_0] = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+%         end
+        J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
         parameters.MS.logPost0(i) = -J_0;
         
         % Optimization
@@ -398,7 +404,7 @@ if strcmp(options.comp_type,'parallel')
         logPost0(i) = -J_0;
         
         % Optimization
-        t_cpu_fmincon = cputime;
+        startTimeLocalOptimization = cputime;
         if J_0 < -options.init_threshold
             % Optimization using fmincon
             [theta,J_opt,exitflag(i),results_fmincon,~,gradient_opt,hessian_opt] = ...
@@ -427,7 +433,7 @@ if strcmp(options.comp_type,'parallel')
             n_objfun(i) = results_fmincon.funcCount;
             n_iter(i) = results_fmincon.iterations;
         end
-        t_cpu(i) = cputime - t_cpu_fmincon;
+        t_cpu(i) = cputime - startTimeLocalOptimization;
         
         % Save
         if options.save
@@ -483,7 +489,7 @@ options.localOptimizerOptions.OutputFcn = [];
                 if(ftrace)
                     parameters.MS.par_trace(:,optimValues.iteration+1,i) = x;
                     parameters.MS.fval_trace(optimValues.iteration+1,i) = optimValues.fval;
-                    parameters.MS.time_trace(optimValues.iteration+1,i) = cputime - t_cpu_fmincon;
+                    parameters.MS.time_trace(optimValues.iteration+1,i) = cputime - startTimeLocalOptimization;
                 end
                 if(ftempsave)
                     if optimValues.iteration>0
@@ -657,8 +663,9 @@ function stringTimePrediction = updateWaitBar(timePredicted)
 %   
 % Return Values:
 % * stringTimePrediction: String, Updating Message
-
-    if (timePredicted < 60)
+    if isnan(timePredicted)
+        stringTimePrediction = 'Unknown.';
+    elseif (timePredicted < 60)
         stringTimePrediction = 'One minute or less...';
     elseif (timePredicted >= 60 && timePredicted < 3600)
         stringTimePrediction = ['About ' num2str(round(timePredicted/60)) + 1 ' minutes'];
