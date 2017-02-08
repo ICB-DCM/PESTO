@@ -362,7 +362,7 @@ if strcmp(options.comp_type, 'sequential')
         
         % update the waitbar
         if(strcmp(options.mode,'visual'))
-            stringTimePrediction = updateWaitBar((sum(parameters.MS.t_cpu(1:i)) / i) * (length(options.start_index) - i));
+            stringTimePrediction = updateWaitBar(nanmedian(parameters.MS.t_cpu(1:i)) * (length(options.start_index) - i));
             waitbar(i / length(options.start_index), waitBar, stringTimePrediction);
         end
     end
@@ -695,7 +695,7 @@ function stringTimePrediction = updateWaitBar(timePredicted)
     else
         stringTimePrediction = 'Kingdoms will rise, civilization will decline, stars will fade - but your calculation...(!) ;)';
     end
-    stringTimePrediction = ['Predicted waiting time: ', stringTimePrediction];
+    stringTimePrediction = ['Predicted remaining waiting time: ', stringTimePrediction];
     
 end
 
