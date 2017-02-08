@@ -636,7 +636,7 @@ try
             end
     end
     % Reset error count
-    error_count = 0;
+    error_count = error_count - 1;
 catch error_msg
     % Increase error count
     error_count = error_count + 1;
