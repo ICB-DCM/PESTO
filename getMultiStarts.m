@@ -407,7 +407,7 @@ if strcmp(options.comp_type,'parallel')
         logPost0(i) = -J_0;
         
         % Optimization
-        t_cpu_fmincon = cputime;
+        startTimeLocalOptimization = cputime;
         if J_0 < -options.init_threshold
             % Optimization using fmincon
             [theta,J_opt,exitflag(i),results_fmincon,~,gradient_opt,hessian_opt] = ...
@@ -436,7 +436,7 @@ if strcmp(options.comp_type,'parallel')
             n_objfun(i) = results_fmincon.funcCount;
             n_iter(i) = results_fmincon.iterations;
         end
-        t_cpu(i) = cputime - t_cpu_fmincon;
+        t_cpu(i) = cputime - startTimeLocalOptimization;
         
         % Save
         if options.save
@@ -492,7 +492,7 @@ options.localOptimizerOptions.OutputFcn = [];
                 if(ftrace)
                     parameters.MS.par_trace(:,optimValues.iteration+1,i) = x;
                     parameters.MS.fval_trace(optimValues.iteration+1,i) = optimValues.fval;
-                    parameters.MS.time_trace(optimValues.iteration+1,i) = cputime - t_cpu_fmincon;
+                    parameters.MS.time_trace(optimValues.iteration+1,i) = cputime - startTimeLocalOptimization;
                 end
                 if(ftempsave)
                     if optimValues.iteration>0
@@ -700,6 +700,9 @@ function stringTimePrediction = updateWaitBar(timePredicted)
 end
 
 function saveResults(parameters,options,i)
+    if(~exist(fullfile(pwd,options.foldername),'dir'))
+        mkdir(fullfile(pwd,options.foldername))
+    end
     dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost.csv']),parameters.MS.logPost(i),'delimiter',',','precision',12);
     dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost0.csv']),parameters.MS.logPost0(i),'delimiter',',','precision',12);
     dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__par.csv']),parameters.MS.par(:,i),'delimiter',',','precision',12);
