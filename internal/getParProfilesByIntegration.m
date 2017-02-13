@@ -199,7 +199,7 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
     % lambda = -(DG' * parameters.MS.gradient(:,1)) / (DG' * DG);
 
     %% Compute profile for in- and decreasing theta_i
-    for s = -1 % [1, -1]
+    for s = [1, -1]
 
         % Set bound for considered parameter (ONLY integrate profiles)
         borders = [parameters.min, parameters.max];
@@ -217,6 +217,10 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
         OutputFunction = @(t, y, flag) checkOptimality(t, y, flag, s, j, ...
             parameters.MS.logPost(options.MAP_index), objectiveFunction, borders, options);
 
+        if ~strcmp(options.solver.hessian, 'user-supplied')
+            approximateHessian(parameters.MS.par(:,options.MAP_index), -parameters.MS.gradient(:,options.MAP_index), parameters.MS.hessian(:,:,options.MAP_index), [], 'init');
+        end
+        
         % Pre-Output
         if (strcmp(options.mode, 'text') || strcmp(options.mode, 'visual'))
             fprintf('\n  |  Integrating Parameter %4i, s = %2i  |', j, s);
@@ -240,11 +244,11 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
                     odeMatlabOptions.OutputFcn = OutputFunction;
                     odeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, j, borders, objectiveFunction, options, parameters.MS.logPost(1));
                     if (strcmp(options.solver.type, 'ode15s'))
-                        [t,y]= ode15s(@(t,y) getRhsRed(t, s, y, j, borders, objectiveFunction, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions); 
+                        [t,y] = ode15s(@(t,y) getRhsRed(t, s, y, j, borders, objectiveFunction, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions); 
                     elseif (strcmp(options.solver.type, 'ode45'))
-                        [t,y]= ode45(@(t,y) getRhsRed(t, s, y, j, borders, objectiveFunction, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
+                        [t,y] = ode45(@(t,y) getRhsRed(t, s, y, j, borders, objectiveFunction, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
                     else
-                        [t,y]= ode113(@(t,y) getRhsRed(t, s, y, j, borders, objectiveFunction, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
+                        [t,y] = ode113(@(t,y) getRhsRed(t, s, y, j, borders, objectiveFunction, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
                     end
 
 
@@ -500,7 +504,7 @@ function [newY, newL, newGL] = reoptimizePath(theta, ind, objectiveFunction, bor
     options.profileReoptimizationOptions.Display = 'iter';
 
     % Optimization
-    [newY, newL, ~, ~, ~, newGL] = ...
+    [newY, newL, ~, ~, ~, newGL, newHL] = ...
         fmincon(@(theta_I) objectiveWrap([theta_I(I1); theta(ind); theta_I(I2-1)], objectiveFunction, options.obj_type, options.objOutNumber, I),... % negative log-posterior function
         theta(I),...
         [], [],... % linear inequality constraints
@@ -508,6 +512,15 @@ function [newY, newL, newGL] = reoptimizePath(theta, ind, objectiveFunction, bor
         borders(I,1),...   % lower bound
         borders(I,2),...   % upper bound
         [],options.profileReoptimizationOptions);    % options
+    
+    if ~strcmp(options.solver.hessian, 'user-supplied')
+        theta = [newY(1:ind-1); theta(ind); newY(ind:end)];
+        tmpHL = [newHL(1:ind-1,1:ind-1), zeros(ind-1,1), newHL(1:ind-1,ind:end);...
+            zeros(1,length(theta)); newHL(ind:end,1:ind-1), zeros(length(theta)-ind,1), newHL(ind:end,ind:end)];
+        tmpHL(ind,ind) = inf;
+        tmpGL = [newGL(1:ind-1); inf; newGL(ind:end)];
+        approximateHessian(theta, -tmpGL, tmpHL, options.solver.hessian, 'reinit');
+    end
 end
 
 
@@ -688,25 +701,15 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
     global ObjFuncCounter;
     ObjFuncCounter = ObjFuncCounter + 1;
     
-    [~, GL, HL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
-    
-%     if (options.solver.gradient)
-%         if strcmp(options.solver.hessian, 'analytic')
-%             [~, GL, HL] = objectiveFunction(y);
-%         else
-%             hLh = options.solver.hessianStep;
-%             [~, GL] = objectiveFunction(y);
-%             HL = zeros(npar);
-%             
-%             % finite differences approx. of hessian
-%             for j = 1 : npar
-%                 [~, GLplus] = objectiveFunction(y + hLh * sparse(j, 1, 1, npar, 1));
-%                 HL(:,j) = (GLplus - GL) / hLh;
-%             end
-%         end
-%     else
-%         error('At least Gradient information is required to use the profile integration method reliably.');
-%     end
+    switch options.solver.hessian
+        case 'user-supplied'
+            [~, GL, HL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
+        case {'bfgs', 'sr1'}
+            [~, GL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
+            HL = approximateHessian(y, -GL, [], options.solver.hessian, []);
+        otherwise
+            error('Unknown type of Hessian computation.');
+    end
     
     if (sum(sum(isnan(HL)))>0) || sum(isnan(GL))>0 || (sum(sum(isinf(HL)))>0) || sum(isinf(GL))>0
         disp('Warning: Undefined model output')
@@ -787,6 +790,58 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
     end
    
     new_Data = [];
+end
+
+
+
+function hessian = approximateHessian(theta, grad, hess, method, flag)
+    
+    persistent lastTheta;
+    persistent lastGrad;
+    persistent lastHess;
+    
+    if strcmp(flag, 'init')
+        hessian = [];
+        
+        % Replace old by new values for next call
+        lastGrad = grad;
+        lastHess = hess;
+        lastTheta = theta;
+    elseif strcmp(flag, 'reinit')
+        % Replace old by new values for next call
+        lastTheta = theta;    
+        [~,ind] = max(hess);
+        ind = ind(1);
+        lastHess = [hess(1:ind-1,1:ind-1), lastHess(1:ind-1,ind), hess(1:ind-1,ind+1:end); ...
+            lastHess(ind,:); hess(ind+1:end,1:ind-1), lastHess(ind+1:end,ind), hess(ind+1:end,ind+1:end)];
+        lastGrad = [grad(1:ind-1); lastGrad(ind); grad(ind+1:end)];
+
+    else
+        if (theta == lastTheta)
+            hessian = lastHess;
+        else
+            switch method
+                case 'bfgs'
+                    delTheta = theta - lastTheta;
+                    delGrad = grad - lastGrad;
+                    u = delGrad * delGrad' / (delGrad' * delTheta);
+                    v = lastHess * (delTheta * delTheta') * lastHess / (delTheta' * lastHess * delTheta);
+                    hessian = lastHess + u - v;
+                case 'sr1'
+                    delTheta = theta - lastTheta;
+                    delGrad = grad - lastGrad;
+                    u = delGrad - lastHess * delTheta;
+                    v = u * u' / (u' * delTheta);
+                    hessian = lastHess + v;
+            end
+            
+            % Replace old by new values for next call
+            lastGrad = grad;
+            lastHess = hessian;
+            lastTheta = theta;
+        end
+    end
+    
 end
 
 
