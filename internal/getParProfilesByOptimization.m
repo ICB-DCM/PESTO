@@ -14,18 +14,19 @@ function [parameters,fh] = getParProfilesByOptimization(parameters, objective_fu
 % [...] = getParameterProfiles(parameters, objective_function, options)
 % [parameters, fh] = getParameterProfiles(...)
 %
-% getParameterProfiles() uses the following PestoOptions members:
+% getParProfilesByOptimization() uses the following PestoOptions members:
 %  * PestoOptions::calc_profiles
 %  * PestoOptions::comp_type
 %  * PestoOptions::dJ
 %  * PestoOptions::dR_max
 %  * PestoOptions::fh
-%  * PestoOptions::fmincon
-%  * PestoOptions::foldername%  * PestoOptions::MAP_index
+%  * PestoOptions::MAP_index
 %  * PestoOptions::mode
 %  * PestoOptions::obj_type
 %  * PestoOptions::options_getNextPoint .guess .min .max .update .mode
 %  * PestoOptions::parameter_index
+%  * PestoOptions::profile_method
+%  * PestoOptions::profileReoptimizationOptions
 %  * PestoOptions::plot_options
 %  * PestoOptions::R_min
 %  * PestoOptions::save

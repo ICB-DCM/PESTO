@@ -60,16 +60,20 @@ end
 [parameters] = sortMultiStarts(parameters);
 
 %% CLUSTERING
-clust = cluster(linkage(pdist(parameters.MS.logPost)),'cutoff',0.1,'criterion','distance');
-
+n_starts = length(parameters.MS.logPost);
+if (n_starts > 1)
+    clust = cluster(linkage(pdist(parameters.MS.logPost)),'cutoff',0.1,'criterion','distance');
+else
+    clust = 1;
+end
 uclust = unique(clust);
+    
 for iclust = 1:length(uclust)
     sizecluster(iclust) = sum(clust == uclust(iclust));
 end
 
 %% ASSIGN COLORS
-i = length(parameters.MS.logPost);
-Col = colormap(gray(i+ceil(i/3)));
+Col = colormap(gray(n_starts+ceil(n_starts/3)));
 Col = Col.^(1/3);
 Col(1,:) = [1,0,0];
 
@@ -96,15 +100,22 @@ end
 
 %% PLOT OBJECTIVES
 subplot(2,2,1);
-plot(1:i,parameters.MS.logPost,'-','color',0.9*[1,1,1],'linewidth',2); hold on;
-for j = i:-1:1
+plot(1:n_starts,parameters.MS.logPost,'-','color',0.9*[1,1,1],'linewidth',2); hold on;
+for j = n_starts:-1:1
     plot(j,parameters.MS.logPost(j),'o','color',Col(j,:),'linewidth',2); hold on;
 end
 if ~isempty(options.add_points.logPost)
     if length(options.add_points.logPost) == 1
-        plot(1:i,options.add_points.logPost*ones(size(1:i)),...
-            options.add_points.ls,'color',options.add_points.col(1,:),...
-            'linewidth',options.add_points.lw); hold on;
+        if (n_starts == 1)
+            addPointsX = [0.85 1.15];
+            addPointsY = options.add_points.logPost * [1 1];
+        else
+            addPointsX = 1 : n_starts;
+            addPointsY = options.add_points.logPost * ones(size(1:n_starts));
+        end
+        plot(addPointsX,addPointsY,options.add_points.ls,'color',...
+            options.add_points.col(1,:),'linewidth',options.add_points.lw); 
+        hold on;
     else
         plot(1:length(options.add_points.logPost),options.add_points.logPost,...
             options.add_points.ls,'color',options.add_points.col(1,:),...
@@ -113,7 +124,7 @@ if ~isempty(options.add_points.logPost)
     end
 end
 hold off;
-xlim([1-0.2,i+0.2]);
+xlim([1-0.2,n_starts+0.2]);
 xlabel('start');
 ylabel('log-likelihood');
 if options.title
@@ -122,13 +133,13 @@ end
 
 %% PLOT TOP TEN OBJECTIVES
 subplot(2,2,3);
-plot(1:min(i,10),parameters.MS.logPost(1:min(i,10)),'-','color',0.9*[1,1,1],'linewidth',2); hold on;
-for j = min(i,10):-1:1
+plot(1:min(n_starts,10),parameters.MS.logPost(1:min(n_starts,10)),'-','color',0.9*[1,1,1],'linewidth',2); hold on;
+for j = min(n_starts,10):-1:1
     plot(j,parameters.MS.logPost(j),'o','color',Col(j,:),'linewidth',2); hold on;
 end
 if ~isempty(options.add_points.logPost)
     if length(options.add_points.logPost) == 1
-        plot(1:min(i,10),options.add_points.logPost*ones(size(1:min(i,10))),...
+        plot(1:min(n_starts,10),options.add_points.logPost*ones(size(1:min(n_starts,10))),...
             options.add_points.ls,'color',options.add_points.col(1,:),...
             'linewidth',options.add_points.lw); hold on;
     else
@@ -139,9 +150,9 @@ if ~isempty(options.add_points.logPost)
     end
 end
 hold off;
-xlim([1-0.2,min(i,10)+0.2]);
-if(any(~isnan(parameters.MS.logPost(1:min(i,10)))))
-    ylim([min(parameters.MS.logPost(1),min(parameters.MS.logPost(1:min(i,10)))-1),parameters.MS.logPost(1)+1]);
+xlim([1-0.2,min(n_starts,10)+0.2]);
+if(any(~isnan(parameters.MS.logPost(1:min(n_starts,10)))))
+    ylim([min(parameters.MS.logPost(1),min(parameters.MS.logPost(1:min(n_starts,10)))-1),parameters.MS.logPost(1)+1]);
 end
 xlabel('start');
 ylabel('log-likelihood');
@@ -151,7 +162,7 @@ end
 
 %% PLOT PARAMETERS
 subplot(2,2,[2,4]);
-for j = i:-1:1
+for j = n_starts:-1:1
     plot(parameters.MS.par(:,j)',1:parameters.number,'-o','color',Col(j,:),'linewidth',2); hold on;
 end
 plot(parameters.MS.par(:,1)',1:parameters.number,'r-o','linewidth',2); hold on;

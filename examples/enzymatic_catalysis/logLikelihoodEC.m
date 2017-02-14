@@ -122,7 +122,7 @@ dydtheta = zeros(length(t), nParams * nObserv);
 % Loop over the experiments and simulation for each experiment
 for iMeasure = 1 : nMeasure
     % Simulation
-    odeOptions = odeset('RelTol', 1e-8, 'AbsTol', 1e-10);
+    odeOptions = odeset('RelTol', 1e-8, 'AbsTol', 1e-12);
     [~,X] = ode15s(@(t,x) f(exp(theta),x), t, [con0(:,iMeasure); fillX], odeOptions);
     y = h(X(:,1:nStates), exp(theta));
     Y(:, :) = yMeasured(iMeasure, :, :);

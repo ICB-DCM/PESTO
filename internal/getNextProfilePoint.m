@@ -1,4 +1,4 @@
-%% getNextStepProfile is a support function for the profile calculation
+%% getNextProfilePoint is a support function for the profile calculation
 %   and is called by computeProfile. It determines the length of the 
 %   update step given update direction, parameter constraints,
 %   log-posterior and target log posterior.

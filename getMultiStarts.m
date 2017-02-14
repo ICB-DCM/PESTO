@@ -200,7 +200,7 @@ if strcmp(options.comp_type, 'sequential')
     % initialize the waitbar
     if(strcmp(options.mode,'visual'))
         waitBar = waitbar(0, '1', 'name', 'Parameter estimation in process, please wait...', 'CreateCancelBtn', 'setappdata(gcbf, ''canceling'', 1)');
-        stringTimePrediction = updateWaitBar(0.004 * length(options.start_index) * parameters.number);
+        stringTimePrediction = updateWaitBar(nan);
         waitbar(0, waitBar, stringTimePrediction);
         C = onCleanup(@() delete(waitBar));
     end
@@ -285,8 +285,8 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.n_iter(i) = size(Results.neval, 2);
                 
                 [~, G_opt, H_opt] = objectiveWrapWErrorCount(parameters.MS.par(:,i),objective_function,options.obj_type,options.objOutNumber);
-                parameters.MS.hessian(:,:,i) = H_opt;
-                parameters.MS.gradient(:,i) = G_opt;
+                parameters.MS.hessian(:,:,i) = -H_opt;
+                parameters.MS.gradient(:,i) = -G_opt;
                 
                 %% Output
                 switch options.mode
@@ -316,8 +316,8 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.n_iter(i) = RunData.IterCounter;
                 
                 [~, G_opt, H_opt] = objectiveWrapWErrorCount(parameters.MS.par(:,i),objective_function,options.obj_type,options.objOutNumber);
-                parameters.MS.hessian(:,:,i) = H_opt;
-                parameters.MS.gradient(:,i) = G_opt;
+                parameters.MS.hessian(:,:,i) = -H_opt;
+                parameters.MS.gradient(:,i) = -G_opt;
 
             end
             

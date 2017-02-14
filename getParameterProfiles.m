@@ -20,12 +20,14 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
 %  * PestoOptions::dJ
 %  * PestoOptions::dR_max
 %  * PestoOptions::fh
-%  * PestoOptions::fmincon
-%  * PestoOptions::foldername%  * PestoOptions::MAP_index
+%  * PestoOptions::MAP_index
 %  * PestoOptions::mode
 %  * PestoOptions::obj_type
 %  * PestoOptions::options_getNextPoint .guess .min .max .update .mode
 %  * PestoOptions::parameter_index
+%  * PestoOptions::parameter_method_index
+%  * PestoOptions::profile_method
+%  * PestoOptions::profileReoptimizationOptions
 %  * PestoOptions::plot_options
 %  * PestoOptions::R_min
 %  * PestoOptions::save
@@ -52,7 +54,7 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
 %     * hessian: Hessian matrix (or approximation) at the optimal point
 %
 % Return values:
-%   properties: updated parameter struct
+%   parameters: updated parameter struct
 %   fh: figure handle
 %
 % Generated fields of parameters:

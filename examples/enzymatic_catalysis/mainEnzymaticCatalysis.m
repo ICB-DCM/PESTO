@@ -36,7 +36,7 @@
 %% Preliminary
 clear all;
 close all;
-%clc;
+clc;
 
 TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
@@ -119,21 +119,27 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 % parameters.min and .max in order to infer the unknown parameters from 
 % measurement data.
 
-% Set number of Multistarts
-optionsPesto.n_starts  = 3;
+% The following section uses the MEIGO toolbox with following settings:
+% (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
+% uncomment:
 
-% Define the Hessian Function
-type = 'FD'; % 'FD', 'FIM'
-HessianFunction = @(theta, lambda) HessianApproxEC(theta, objectiveFunction, type, lambda);
+MeigoOptions = struct(...
+    'maxeval', 500, ...
+    'local', struct('solver', 'fmincon', ...
+    'finish', 'fmincon', ...
+    'iterprint', 0) ...
+    );
 
-% Set options for using a Hessian approximation for optimization
-optionsPesto.localOptimizer = 'fmincon';
-optionsPesto.localOptimizerOptions.Hessian = 'on';
-optionsPesto.localOptimizerOptions.GradConstr = 'on';
-optionsPesto.localOptimizerOptions.Display = 'iter';
-optionsPesto.localOptimizerOptions.HessFcn = HessianFunction;
+optionsMeigo = optionsPesto.copy();
+optionsMeigo.localOptimizer = 'meigo-ess';
+optionsMeigo.localOptimizerOptions = MeigoOptions;
+optionsMeigo.n_starts = 1;
+parameters = getMultiStarts(parameters, objectiveFunction, optionsMeigo);
 
-parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+% Options for an alternative multi-start local optimization
+% 
+% optionsPesto.n_starts = 10;
+% parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
 %% Calculate Confidence Intervals
 % Confidence Intervals for the Parameters are inferred from the local 
@@ -147,6 +153,25 @@ parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
 %% Calculate Profile Likelihoods
 % The result of the sampling is compared with profile likelihoods.
 
+optionsPesto.profile_method = 'integration';
+optionsPesto.solver = struct('gamma', 10, ...
+    'type', 'ode113', ...
+    'algorithm', 'Adams', ...
+    'nonlinSolver', 'Newton', ...
+    'linSolver', 'Dense', ...
+    'eps', 1e-8, ...
+    'minCond', 1e-10, ...
+    'gradient', true, ...
+    'hessian', 'user-supplied', ... 
+    'MaxStep', 0.1, ...
+    'MinStep', 1e-5, ...
+    'MaxNumSteps', 1e4, ...
+    'RelTol', 1e-5, ...
+    'AbsTol', 1e-8, ...
+    'hessianStep', 1e-7, ...
+    'gradientStep', 1e-7 ...
+    );
+
 parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
 
 %% Perform a second Sampling, now based on Multistart Optimization
@@ -159,7 +184,7 @@ optionsPesto.plot_options.MCMC   = 'multistart';
 
 % Length of the chain
 optionsPesto.MCMC.nsimu_warmup = 1e3;
-optionsPesto.MCMC.nsimu_run    = 1e4;
+optionsPesto.MCMC.nsimu_run    = 1e3;
 
 parameters = getParameterSamples(parameters, objectiveFunction, optionsPesto);
 
