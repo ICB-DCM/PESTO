@@ -100,9 +100,19 @@ end
 
 %% PLOT OBJECTIVES
 subplot(2,2,1);
-plot(1:n_starts,parameters.MS.logPost,'-','color',0.9*[1,1,1],'linewidth',2); hold on;
-for j = n_starts:-1:1
-    plot(j,parameters.MS.logPost(j),'o','color',Col(j,:),'linewidth',2); hold on;
+for j = 1 : n_starts
+    if ~isnan(parameters.MS.logPost(j))
+        n_finished_starts = j;
+    else
+        break;
+    end
+end
+
+plot(1:n_finished_starts,parameters.MS.logPost(1:n_finished_starts),'-','color',0.9*[1,1,1],'linewidth',2);
+hold on;
+for j = n_finished_starts:-1:1
+    plot(j,parameters.MS.logPost(j),'o','color',Col(j,:),'linewidth',2);
+    hold on;
 end
 if ~isempty(options.add_points.logPost)
     if length(options.add_points.logPost) == 1
@@ -162,7 +172,7 @@ end
 
 %% PLOT PARAMETERS
 subplot(2,2,[2,4]);
-for j = n_starts:-1:1
+for j = n_finished_starts:-1:1
     plot(parameters.MS.par(:,j)',1:parameters.number,'-o','color',Col(j,:),'linewidth',2); hold on;
 end
 plot(parameters.MS.par(:,1)',1:parameters.number,'r-o','linewidth',2); hold on;
