@@ -227,6 +227,8 @@ if strcmp(options.comp_type, 'sequential')
             else
                 J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
             end
+        else
+            J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
         end
         parameters.MS.logPost0(i) = -J_0;
         
