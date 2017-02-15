@@ -79,8 +79,11 @@ function varargout = objectiveWrap(varargin)
         end
 
     catch error_msg
+        % Display a warning with error message
         if showWarning
-            warning(error_msg.message);
+            warning(['Evaluation of likelihood failed because: ' error_msg.message]);
+            display(['Last Error in function ' error_msg.stack(1).name ', line ' ...
+                num2str(error_msg.stack(1).line) ', file ' error_msg.stack(1).file '.']);
         end
 
         % Derive output

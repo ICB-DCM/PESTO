@@ -20,7 +20,7 @@ classdef PestoOptions < matlab.mixin.SetGet
 
         obj_type = 'log-posterior';
         
-        % Maximum number of putputs, the objective function can provide:
+        % Maximum number of outputs, the objective function can provide:
         % 1 ... only objective value
         % 2 ... objective value with gradient
         % 3 ... objective value, gradient and Hessian (Default)

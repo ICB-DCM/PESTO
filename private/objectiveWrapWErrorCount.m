@@ -72,7 +72,7 @@ function varargout = objectiveWrapWErrorCount(varargin)
         end
 
         % Reset error count
-        error_count = 0;
+        error_count = error_count - 1;
         
     catch error_msg
         % Display a warning with error message
