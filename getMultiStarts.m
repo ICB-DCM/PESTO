@@ -218,8 +218,18 @@ if strcmp(options.comp_type, 'sequential')
         % Reset error count
         error_count = 0;
         
-        % Evaluation of objective function at starting point
-        J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+        % Test evaluation of objective function at starting point
+        if (strcmp(options.localOptimizer, 'fmincon'))
+            if (strcmp(options.localOptimizerOptions.Hessian, 'on'))
+                [J_0,~,~] = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+            elseif (strcmp(options.localOptimizerOptions.GradObj, 'on'))
+                [J_0,~] = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+            else
+                J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+            end
+        else
+            J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+        end
         parameters.MS.logPost0(i) = -J_0;
         
         % Optimization
