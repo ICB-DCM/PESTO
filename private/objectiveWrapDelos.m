@@ -1,4 +1,4 @@
-function varargout = objectiveWrap(varargin)
+function varargout = objectiveWrapDelos(varargin)
 
     % This function is used as interface to the user-provided objective
     % function. It adapts the sign and supplies the correct number of outputs.
@@ -33,10 +33,22 @@ function varargout = objectiveWrap(varargin)
             outNumber         = varargin{4};
             I                 = varargin{5};
             showWarning       = varargin{6};
+        case 7
+            theta             = varargin{1};
+            objectiveFunction = varargin{2};
+            type              = varargin{3};
+            outNumber         = varargin{4};
+            I                 = varargin{5};
+            showWarning       = varargin{6};
+            minibatch         = varargin{7};
+            if isempty(showWarning), showWarning = false; end
+            if isempty(I), I = 1 : length(theta); end
         otherwise
             error('Call to objective function giving too many inputs.')
     end
 
+    objectiveFunction = @(theta) objectiveFunction(theta, minibatch);
+    
     try
         switch nargout
             case {0,1}

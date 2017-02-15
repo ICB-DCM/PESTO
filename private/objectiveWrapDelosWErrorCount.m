@@ -1,4 +1,4 @@
-function varargout = objectiveWrap(varargin)
+function varargout = objectiveWrapDelosWErrorCount(varargin)
 
     % This function is used as interface to the user-provided objective
     % function. It adapts the sign and supplies the correct number of outputs.
@@ -8,6 +8,8 @@ function varargout = objectiveWrap(varargin)
     %   type ... type of user-supplied objective function
     %   outNumber ... Maximum of outputs, the original objFun provides
 
+    global error_count;
+    
     % Catch up possible overload
     switch nargin
         case {0, 1, 2, 3}
@@ -17,26 +19,27 @@ function varargout = objectiveWrap(varargin)
             objectiveFunction = varargin{2};
             type              = varargin{3};
             outNumber         = varargin{4};
-            I                 = 1 : length(theta);
-            showWarning       = false;
+            I = 1 : length(theta);
         case 5
             theta             = varargin{1};
             objectiveFunction = varargin{2};
             type              = varargin{3};
             outNumber         = varargin{4};
             I                 = varargin{5};
-            showWarning       = false;
         case 6
             theta             = varargin{1};
             objectiveFunction = varargin{2};
             type              = varargin{3};
             outNumber         = varargin{4};
             I                 = varargin{5};
-            showWarning       = varargin{6};
+            minibatch         = varargin{6};
+            if isempty(I), I = 1 : length(theta); end
         otherwise
             error('Call to objective function giving too many inputs.')
     end
 
+    objectiveFunction = @(theta) objectiveFunction(theta, minibatch);
+    
     try
         switch nargout
             case {0,1}
@@ -78,14 +81,18 @@ function varargout = objectiveWrap(varargin)
                 end
         end
 
+        % Reset error count
+        error_count = error_count - 1;
+        
     catch error_msg
         % Display a warning with error message
-        if showWarning
-            warning(['Evaluation of likelihood failed because: ' error_msg.message]);
-            display(['Last Error in function ' error_msg.stack(1).name ', line ' ...
-                num2str(error_msg.stack(1).line) ', file ' error_msg.stack(1).file '.']);
-        end
+        warning(['Evaluation of likelihood failed because: ' error_msg.message]);
+        display(['Last Error in function ' error_msg.stack(1).name ', line ' ...
+            num2str(error_msg.stack(1).line) ', file ' error_msg.stack(1).file '.']);
 
+        % Increase error count
+        error_count = error_count + 1;
+    
         % Derive output
         switch nargout
             case {0,1}
