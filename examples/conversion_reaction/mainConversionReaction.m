@@ -118,25 +118,25 @@ else
 end
 
 % Optimization
-parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
+% parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
 
 %% Visualization of fit
 % The measured data is visualized in plot, together with fit for the best
 % parameter value found during getMutliStarts
 
-if strcmp(optionsMultistart.mode,'visual')
-    % Simulation
-    tsim = linspace(t(1),t(end),100);
-    ysim = simulateConversionReaction(exp(parameters.MS.par(:,1)),tsim);
-
-    % Plot: Fit
-    figure('Name','Conversion reaction: Visualization of fit');
-    plot(t,y,'bo'); hold on;
-    plot(tsim,ysim,'r-'); 
-    xlabel('time t');
-    ylabel('output y');
-    legend('data','fit');
-end
+% if strcmp(optionsMultistart.mode,'visual')
+%     % Simulation
+%     tsim = linspace(t(1),t(end),100);
+%     ysim = simulateConversionReaction(exp(parameters.MS.par(:,1)),tsim);
+% 
+%     % Plot: Fit
+%     figure('Name','Conversion reaction: Visualization of fit');
+%     plot(t,y,'bo'); hold on;
+%     plot(tsim,ysim,'r-'); 
+%     xlabel('time t');
+%     ylabel('output y');
+%     legend('data','fit');
+% end
 
 %% Choosing different optimizers
 
@@ -144,6 +144,22 @@ end
 % Currently, PESTO provides an interface to MEIGO and PSwarm, which have to be installed separately.
 % These algorithms aim at finding the global optimum, and therefore, a
 % low number or a single optimizer run should be enough.
+
+optionsDelos = optionsMultistart.copy();
+optionsDelos.localOptimizer = 'delos';
+optionsDelos.localOptimizerOptions.stochastic = false;
+% optionsDelos.optim_options.nDatasets = nPoints;
+% optionsDelos.optim_options.nBatchdata = 15;
+optionsDelos.localOptimizerOptions.MaxIter = 800;
+optionsDelos.localOptimizerOptions.method = 'adam';
+optionsDelos.localOptimizerOptions.hyperparams = struct(...
+    'rho1', 0.999, ...
+    'rho2', 0.9, ...
+    'delta', 1e-8, ...
+    'eps0', 0.1, ...
+    'epsTau', 1e-5, ...
+    'tau', 600);
+parametersDelos = getMultiStarts(parameters, objectiveFunction, optionsDelos);
 
 % The following uses the MEIGO toolbox with default settings:
 % (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and

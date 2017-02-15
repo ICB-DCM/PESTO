@@ -5,7 +5,7 @@
 %
 % Last change: Paul Stapor, 07/06/16
 
-function [thetaOpt, jOptim, exitflag, DelosResults, gradientOpt] ...
+function [thetaOpt, jOptim, flag, DelosResults, gradientOpt] ...
           = runDELOS(varargin)
 %% Documentation of performSGD
 %
@@ -92,7 +92,6 @@ function [thetaOpt, jOptim, exitflag, DelosResults, gradientOpt] ...
     skipped = 0;
     
     % Prepare the output array and set default values
-    exitflag = 0;
     DelosResults = struct(...
         'objectiveTrace',  nan(options.MaxIter + 1, 1), ...
         'parameterTrace',  nan(options.MaxIter + 1, Parameters.number), ...
@@ -155,7 +154,7 @@ function [thetaOpt, jOptim, exitflag, DelosResults, gradientOpt] ...
         % Assignment
         DelosResults.objectiveTrace(iOptim+1) = State.j;
         DelosResults.normGradTrace(iOptim+1) = sqrt(sum((State.g).^2));
-        DelosResults.parameterTrace(:,iOptim+1) = State.theta;
+        DelosResults.parameterTrace(iOptim+1,:) = State.theta';
         
     % --- End of loop over Optimization steps -----------------------------
     end
@@ -169,6 +168,9 @@ function [thetaOpt, jOptim, exitflag, DelosResults, gradientOpt] ...
         jOptim = State.j;
         gradientOpt = State.g;
     end
+    
+    % Set exit flag
+    flag = 0;
 end
 
 

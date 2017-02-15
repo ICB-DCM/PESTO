@@ -539,7 +539,8 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         function set.localOptimizer(this, value)
             if (strcmp(value, 'fmincon') || strcmp(value, 'meigo-ess') || ...
-                    strcmp(value, 'meigo-vns') || strcmp(value, 'pswarm'))
+                    strcmp(value, 'meigo-vns') || strcmp(value, 'pswarm') || ...
+                    strcmp(value, 'delos'))
                 this.localOptimizer = value;
                 
                 if strcmp(value, 'pswarm')
