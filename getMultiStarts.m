@@ -178,11 +178,12 @@ parameters.MS.exitflag = nan(length(options.start_index),1);
 if(options.trace)
     parameters.MS.par_trace = nan(parameters.number,maxOptimSteps+1,length(options.start_index));
     parameters.MS.fval_trace = nan(maxOptimSteps+1,length(options.start_index));
+    parameters.MS.norm_grad_trace = nan(maxOptimSteps+1,length(options.start_index));
     parameters.MS.time_trace = nan(maxOptimSteps+1,length(options.start_index));
 end
 
 waitbarFields1 = {'logPost', 'logPost0', 'n_objfun', 'n_iter', 't_cpu', 'exitflag'};
-waitbarFields2 = {'par', 'par0', 'gradient', 'fval_trace', 'time_trace'};
+waitbarFields2 = {'par', 'par0', 'gradient', 'fval_trace', 'time_trace', 'norm_grad_trace'};
 waitbarFields3 = {'hessian', 'par_trace'};
 
 
@@ -227,6 +228,13 @@ if strcmp(options.comp_type, 'sequential')
             else
                 J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
             end
+        elseif (strcmp(options.localOptimizer, 'delos'))
+            if options.localOptimizerOptions.stochastic
+                miniBatches = createMiniBatches(options.localOptimizerOptions);
+                [J_0,~] = objectiveWrapDelosWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber,[],miniBatches(:,1));
+            else
+                [J_0,~] = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+            end
         else
             J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
         end
@@ -248,7 +256,7 @@ if strcmp(options.comp_type, 'sequential')
                     parameters.max,...     % upper bound
                     [],options.localOptimizerOptions);   % options
                 
-                % Assignment of reseults
+                % Assignment of results
                 parameters.MS.J(1, i) = -J_0;
                 parameters.MS.logPost(i) = -J_opt;
                 parameters.MS.par(:,i) = theta;
@@ -265,6 +273,41 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.n_objfun(i) = results_fmincon.funcCount;
                 parameters.MS.n_iter(i) = results_fmincon.iterations;
                 parameters.MS.hessian(:,:,i) = full(hessian_opt);
+                
+            elseif strcmp(options.localOptimizer, 'delos')   
+                %% DeLOS as local optimizer
+                % Optimization using deep learning and stochastic schemes
+                
+                if options.localOptimizerOptions.stochastic
+                    % Stochastic mode
+                    [theta, J_opt, exitflag, DelosResults, G_opt] = ...
+                        performSGD(parameters, options.optim_options, subsets, ...
+                        @(theta, jOptions) obj_w_error_count(theta, ...
+                        objective_function, options.obj_type, jOptions), ...
+                        parameters.MS.par0(:,i));
+                else
+                    % Deterministic mode
+                    [theta, J_opt, parameters.MS.exitflag(i), DelosResults, G_opt] = ...
+                        performSGD(parameters, options.optim_options, ...
+                        @(theta) obj_w_error_count(theta, objective_function, ...
+                        options.obj_type), parameters.MS.par0(:,i));
+                end
+                
+                % Assignment of results
+                parameters.MS.exitflag(i) = exitflag;
+                parameters.MS.J(1, i) = -J_0;
+                parameters.MS.logPost(i) = -J_opt;
+                parameters.MS.par(:,i) = theta;
+                parameters.MS.gradient(:,i) = -G_opt;
+                
+                if (options.trace)
+                    parameters.MS.par_trace(:,:,i) = DelosResults.parameterTrace;
+                    parameters.MS.fval_trace(:,i)  = DelosResults.objectiveTrace;
+                    parameters.MS.norm_grad_trace(:,i)  = DelosResults.normGradTrace;
+                end
+                
+                [~, ~, H_opt] = objectiveWrapWErrorCount(parameters.MS.par(:,i),objective_function,options.obj_type,options.objOutNumber);
+                parameters.MS.hessian(:,:,i) = -H_opt;
                 
             elseif strcmp(options.localOptimizer, 'meigo-ess') || strcmp(options.localOptimizer, 'meigo-vns')
                 %% Use MEIGO as local optimizer
@@ -354,7 +397,7 @@ if strcmp(options.comp_type, 'sequential')
                     parameters.MS.(waitbarFields1{iWaitbarField}) = ...
                         parameters.MS.(waitbarFields1{iWaitbarField})(1:i, :);
                 end
-                for iWaitbarField = 1:5
+                for iWaitbarField = 1:6
                     if (isfield(parameters.MS, waitbarFields2{iWaitbarField}))
                         parameters.MS.(waitbarFields2{iWaitbarField}) = ...
                             parameters.MS.(waitbarFields2{iWaitbarField})(:, 1:i);
