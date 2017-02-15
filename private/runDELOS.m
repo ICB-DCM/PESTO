@@ -17,13 +17,13 @@ function [thetaOpt, jOptim, exitflag, DelosResults, gradientOpt] ...
 %% Input Arguments
 % # Parameters: Struct, parameteres from getMultiStarts (see Doc. there)
 %
-% # Opt: Struct, with the following properties
-%   * .isMinibatch ... logical: perform full batch or minibatch optim
+% # options: Struct, with the following properties
+%   * .stochastic ... logical: perform full batch or minibatch optim
 %       = false ... deterministic optimization
 %       = true ... minibatch optim, Obj function must be adapted
-%   * .nDatasets ... number of measurement points, only if isMinibatch
-%   * .nBatchdata ... Size of Minibatches, only if isMinibatch
-%   * .nOptimSteps ... number of maximum optimization steps
+%   * .dataSetSize ... number of measurement points, only if isMinibatch
+%   * .miniBatchSize ... Size of Minibatches, only if isMinibatch
+%   * .MaxIter ... number of maximum optimization steps
 %   * .model ... String with the model name for AMICI, may be left void
 %   * .method ... optimization method, to be chosen from
 %        = 'SGD' ... stochastic gradient descent, standard method
@@ -71,8 +71,7 @@ function [thetaOpt, jOptim, exitflag, DelosResults, gradientOpt] ...
         case 5
             Parameters = varargin{1};
             options = varargin{2};
-            miniBatches = varargin{3};
-            jOptions = struct('subset', nan(size(miniBatches, 1), 1));   
+            miniBatches = varargin{3}; 
             objectiveFunction = varargin{4};
             par0 = varargin{5};
         otherwise
@@ -95,9 +94,9 @@ function [thetaOpt, jOptim, exitflag, DelosResults, gradientOpt] ...
     % Prepare the output array and set default values
     exitflag = 0;
     DelosResults = struct(...
-        'objectiveTrace',  nan(options.nOptimSteps + 1, 1), ...
-        'parameterTrace',  nan(options.nOptimSteps + 1, Parameters.number), ...
-        'normGradTrace', nan(options.nOptimSteps + 1, 1));
+        'objectiveTrace',  nan(options.MaxIter + 1, 1), ...
+        'parameterTrace',  nan(options.MaxIter + 1, Parameters.number), ...
+        'normGradTrace', nan(options.MaxIter + 1, 1));
     
     % Check if a 2nd order momentum method is used
     if (strcmp(options.method, 'nesterov') ...
@@ -107,7 +106,7 @@ function [thetaOpt, jOptim, exitflag, DelosResults, gradientOpt] ...
         Momentum2nd = false;
     end
 
-    for iOptim = 1 : options.nOptimSteps
+    for iOptim = 1 : options.MaxIter
     % --- Loop over Optimization steps ------------------------------------    
 
         [OldState.j, OldState.g, State.j, State.g] ...
@@ -165,7 +164,7 @@ function [thetaOpt, jOptim, exitflag, DelosResults, gradientOpt] ...
     thetaOpt = State.theta;
     
     if (~isempty(miniBatches))
-        [jOptim, gradientOpt] = objectiveFunction(State.theta, 1 : options.nDatasets);
+        [jOptim, gradientOpt] = objectiveFunction(State.theta, 1 : options.dataSetSize);
     else
         jOptim = State.j;
         gradientOpt = State.g;
@@ -174,12 +173,12 @@ end
 
 
 
-function [oldJ, oldG, newJ, newG] = part1(iOptim, Opt, Momentum2nd, State, subsets, objectiveFunction, rescale)
+function [oldJ, oldG, newJ, newG] = part1(iOptim, options, Momentum2nd, State, subsets, objectiveFunction, rescale)
 
     % Apply interim update, if 2nd order momentum method is used
     if (Momentum2nd)
-        [State.theta, ~, ~, Opt.hyperparams] = updateMethod(iOptim, ...
-            State, Opt.method, Opt.hyperparams, 1, rescale);
+        [State.theta, ~, ~, options.hyperparams] = updateMethod(iOptim, ...
+            State, options.method, options.hyperparams, 1, rescale);
     end
     
     % Save old State settings
@@ -196,15 +195,15 @@ end
 
 
 
-function [oldTheta, oldV, oldR, newTheta, newV, newR] = part2(iOptim, Opt, State, Parameters, rescale)
+function [oldTheta, oldV, oldR, newTheta, newV, newR] = part2(iOptim, options, State, Parameters, rescale)
     % Save old State settings
     oldTheta = State.theta;
     oldV = State.v;
     oldR = State.r;
 
     % Apply the optimization update
-    [newTheta, newV, newR, Opt.hyperparams] = updateMethod(iOptim, ...
-        State, Opt.method, Opt.hyperparams, [], rescale);
+    [newTheta, newV, newR, options.hyperparams] = updateMethod(iOptim, ...
+        State, options.method, options.hyperparams, [], rescale);
 
     % Correct, if the bounds were violated
     newTheta = max(newTheta, Parameters.min);
