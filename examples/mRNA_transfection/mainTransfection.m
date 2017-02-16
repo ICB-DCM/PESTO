@@ -150,21 +150,38 @@ optionsMultistart.plot_options.group_CI_by = 'methods';
 % optionsMultistart.mode = 'silent';
 % optionsMultistart.save = true;
 % optionsMultistart.foldername = 'results';
-% n_workers = 10;
+% n_workers = 20;
 
 % Open matlabpool
 if strcmp(optionsMultistart.comp_type, 'parallel') && (n_workers >= 2)
     parpool(n_workers);
 end
 
-% Optimization
-parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
+% This section uses PSwarm, a particle swarm optimizer
+% (Install from http://www.norg.uminho.pt/aivaz/pswarm/ and uncomment)
+
+optionsMultistartPSwarm = optionsMultistart.copy();
+optionsMultistartPSwarm.localOptimizer = 'pswarm';
+optionsMultistartPSwarm.localOptimizerOptions.MaxObj  = 25000;
+optionsMultistartPSwarm.localOptimizerOptions.MaxIter = 1000;
+optionsMultistartPSwarm.localOptimizerOptions.Size    = 100;
+optionsMultistartPSwarm.localOptimizerOptions.Social  = 0.5;
+optionsMultistartPSwarm.localOptimizerOptions.Cognitial = 0.9;
+optionsMultistartPSwarm.localOptimizerOptions.IPrint  = -1;
+optionsMultistartPSwarm.n_starts = 20;
+
+parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistartPSwarm);
+
+% This is an alternativ section which uses Multi-start local optimization
+% 
+% % Optimization
+% parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
 
 %% Collection of results, check for bimodality
 
 % Check if a second mode was found
 for iMode = 2 : optionsMultistart.n_starts
-    if (parameters.MS.logPost(iMode) > 39.99)
+    if (parameters.MS.logPost(iMode) > 39.5)
         if (abs(parameters.MS.par(3,iMode) - parameters.MS.par(3,1)) > 0.1)
             index2MAP = iMode;
             break;

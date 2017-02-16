@@ -80,14 +80,16 @@ dhdx = @(x,theta) [0, 1];
 dydtheta = zeros(length(t), n_theta * n_y);
 switch scale
     case 'lin'
-        [~,X] = ode15s(@(t,x) f(t,x,theta), t, x0(theta));
+        odeOptions = odeset('RelTol', 1e-5, 'AbsTol', 1e-8);
+        [~,X] = ode15s(@(t,x) f(t,x,theta), t, x0(theta), odeOptions);
         y = h(X(:,1:n_x), theta);
         for i = 1:n_theta
             dxdxi_i = X(:, i*n_x+(1:n_x));
             dydtheta(1:length(t), (i-1)*n_y+(1:n_y)) = dxdxi_i*dhdx(X, theta)';
         end
     case 'log'
-        [~,X] = ode15s(@(t,x) f(t, x, exp(theta)), t, x0(exp(theta)));
+        odeOptions = odeset('RelTol', 1e-5, 'AbsTol', 1e-8);
+        [~,X] = ode15s(@(t,x) f(t, x, exp(theta)), t, x0(exp(theta)), odeOptions);
         y = h(X(:,1:n_x), exp(theta));
         for i = 1:n_theta
             dxdxi_i = X(:, i*n_x+(1:n_x))*exp(theta(i));

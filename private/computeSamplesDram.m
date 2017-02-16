@@ -1,4 +1,4 @@
-function [parameters] = computeSamplesDram(parameters, objective_function, options, logPost)
+function [parameters] = computeSamplesDram(parameters, objective_function, options)
 % computeSamplesDram.m performs adaptive MCMC sampling of the posterior
 % distribution by using the DRAM library routine tooparameters.minox.
 % It provides the interface to the MATLAB tooparameters.minox for
@@ -8,14 +8,12 @@ function [parameters] = computeSamplesDram(parameters, objective_function, optio
 %
 % USAGE:
 % ======
-% [parameters] = computeSamplesDram(parameters,objective_function,options,logPost)
+% [parameters] = computeSamplesDram(parameters,objective_function,options)
 %
 % Parameters:
 %   parameters: parameter struct
 %   objective_function: log-posterior of model as function of the parameters.
 %   options: A PestoOptions object holding various options for the sampling
-%   logPost: The wrapper from getParameterSamples.m for the user-provided
-%       posterior function
 %
 % Required fields of parameters:
 %   number: Number of parameters
@@ -47,8 +45,8 @@ for i = 1:parameters.number
     params{i} = {parameters.name{i},parameters.user.theta_0(i),parameters.min(i),parameters.max(i)};
 end
 
-model.ssfun = @(theta,dummi) 2*logPost(theta, objective_function, ...
-    options.obj_type, 'negative', options.MCMC.show_warning);
+model.ssfun = @(theta,dummi) 2*objectiveWrap(theta, objective_function, ...
+    options.obj_type, options.objOutNumber, [], options.MCMC.show_warning);
 model.sigma2 = 1;
 model.N = 1;     
 
