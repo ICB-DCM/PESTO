@@ -264,7 +264,11 @@ if strcmp(options.comp_type, 'sequential')
                 end
                 parameters.MS.n_objfun(i) = results_fmincon.funcCount;
                 parameters.MS.n_iter(i) = results_fmincon.iterations;
-                parameters.MS.hessian(:,:,i) = full(hessian_opt);
+                try
+                    parameters.MS.hessian(:,:,i) = full(hessian_opt);
+                catch err_msg
+                    warning(['Error in assigning final Hessian matrix. Original errror message: ' err_msg.message]);
+                end
                 
             elseif strcmp(options.localOptimizer, 'meigo-ess') || strcmp(options.localOptimizer, 'meigo-vns')
                 %% Use MEIGO as local optimizer
