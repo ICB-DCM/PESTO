@@ -1,21 +1,17 @@
-% collectResults.m collects the results stored in a common folder.
+function obj = collectResults(foldername)
+% collectResults() collects and plots the results stored in a common folder
 %
 % USAGE:
-% ======
 % [parameters] = collectResults(foldername)
 %
-% INPUTS:
-% =======
-% foldername ... name of folder from which results are collected.
+% Parameters:
+% foldername: Name of folder from which results are collected.
 %
-% Outputs:
-% ========
-% parameters ... parameter struct.
+% Return values:
+% parameters: parameter struct.
 %
+% History:
 % 2014/06/12 Jan Hasenauer
-
-function obj = collectResults(foldername)
-
 %% Initialization
 warning off;
 try
@@ -55,7 +51,7 @@ for j = 1:length(files)
     % Determine index and fieldname
     fn1 = files(j).name(1);
     fn2 = files(j).name((strfind(files(j).name,'__')+2):(length(files(j).name)-4));
-
+    
     % Assignment
     switch fn1
         case 'M' % -> Multi-start optimization results
@@ -65,7 +61,7 @@ for j = 1:length(files)
                 case 'logPost0', obj.MS.logPost0(i,1) = v;
                 case 'par', obj.MS.par(:,i) = v;
                 case 'par0', obj.MS.par0(:,i) = v;
-                case 'gradient', obj.MS.gradient(:,i) = v;            
+                case 'gradient', obj.MS.gradient(:,i) = v;
                 case 'hessian', obj.MS.hessian(:,:,i) = v;
                 case 't_cpu', obj.MS.t_cpu(i,1) = v;
                 case 'n_objfun', obj.MS.n_objfun(i,1) = v;
@@ -83,10 +79,10 @@ for j = 1:length(files)
                 case 'exitflag', obj.P(i).exitflag = v;
                 case 'prop', obj.P(i).prop = v;
             end
-   end
+    end
 end
 
-%% Sort and save results 
+%% Sort and save results
 switch type
     case 'parameters'
         parameters = sortMultiStarts(obj);

@@ -1,281 +1,90 @@
+function fh = plotPropertyUncertainty(properties, varargin)
 % plotPropertyUncertainty.m visualizes profile likelihood and MCMC samples
 % stored in properties.
 %
 % USAGE:
-% ======
 % fh = plotPropertyUncertainty(properties,type)
 % fh = plotPropertyUncertainty(properties,type,fh)
 % fh = plotPropertyUncertainty(properties,type,fh,I)
-% fh = plotUnplotPropertyUncertaintycertainty(properties,type,fh,I,options)
+% fh = plotPropertyUncertainty(properties,type,fh,I,options)
 %
-% INPUTS:
-% =======
-% properties ... properties struct.
-% type ... string indicating the type of visualization: '1D'
-% fh ... handle of figure. If no figure handle is provided, a new figure
-%       is opened.
-% I ... index of properties which are updated. If no index is provided
-%       all parameters are updated.
-% options ... options of plotting
-%   .hold_on ... indicates whether plots are redrawn or whether something
-%       is added to the plot
-%       = 'false' (default) ... new plot
-%       = 'true' ... extension of plot
-%   .interval ... selection mechanism for x limits
-%       = 'dynamic' (default) ... x limits depending on analysis results
-%       = 'static' ... x limits depending on properties.min and .max or on
-%          user-defined bound options.bounds.min and .max. The later are
-%          used if provided.
-%   .bounds ... bounds used for visualization if options.interval = 'static'
-%       .min ... lower bound
-%       .max ... upper bound
-%   .P ... options for profile plots
-%       .plot_type ... plot type
-%           = 0 (default if no profiles are provided) ... no plot
-%           = 1 (default if profiles are provided) ... likelihood ratio
-%           = 2 ... negative log-likelihood
-%       .col ... color of profile lines (default = [1,0,0])
-%       .lw ... line width of profile lines (default = 2)
-%       .name ... name of legend entry (default = 'P')
-%   .S ... options for sample plots
-%       .plot_type ... plot type
-%           = 0 (default if no samples are provided) ... no plot
-%           = 1 (default if samples are provided) ... histogram
-%           = 2 ... kernel-density estimates
-%       .hist_col ... color of histogram (default = [0.7,0.7,0.7])
-%       .bins ... number of histogram bins
-%           = 'optimal' ... selection using Scott's rule
-%           = 'conservative' (default) ... selection using Scott's rule / 2
-%           = N (with N being an integer) ... N bins
-%       .sp_col ... color of scatter plot (default = [0.7,0.7,0.7])
-%       .sp_m ... marker for scatter plot (default = '.')
-%       .sp_ms ... marker size for scatter plot (default = 5)
-%       .name ... name of legend entry (default = 'S')
-%   .MS ... options for multi-start optimization plots
-%       .plot_type ... plot type
-%           = 0 (default if no MS are provided) ... no plot
-%           = 1 (default if MS are provided) ... likelihood ratio and
-%               position of optima above threshold
-%           = 2 ... negative log-likelihood and position of optima 
-%               above threshold
-%       .col ... color of local optima (default = [1,0,0])
-%       .lw ... line width of local optima (default = 1.5)
-%       .only_optimum ... only optimum is plotted
-%   .A ... options for distribution approximation plots
-%       .plot_type ... plot type
-%           = 0 (default if no MS are provided) ... no plot
-%           = 1 (default if MS are provided) ... likelihood ratio
-%           = 2 ... negative log-likelihood
-%       .col ... color of approximation lines (default = [0,0,1])
-%       .lw ... line width of approximation lines (default = 2)
-%       .sigma_level ... sigma-level which is visualized (default = 2)
-%       .name_conv ... name of legend entry (default = 'MS - conv.')
-%       .name_nconv ... name of legend entry (default = 'MS - not conv.')
-%   .CL ... options for confidence level plots
-%       .plot_type ... plot type
-%           = 0 (default) ... no plot
-%           = 1 ... likelihood ratio
-%           = 2 ... negative log-likelihood
-%       .alpha ... visualized confidence level (default = 0.95)
-%       .type ... type of confidence interval
-%           = 'point-wise' (default) ... point-wise confidence interval
-%           = 'simultanous' ... point-wise confidence interval
-%           = {'point-wise','simultanous'} ... both
-%       .col ... color of profile lines (default = [0,0,0])
-%       .lw ... line width of profile lines (default = 2)
-%       .name ... name of legend entry (default = 'P_{app}')
-%   .op2D ... options used for 2D plot to position subplot axes.
-%       .b1 ... offset from left and bottom border (default = 0.15)
-%       .b2 ... offset from left and bottom border (default = 0.02)
-%       .r ... relative width of subplots (default = 0.95)
-%   .add_points ... option used to add additional points, e.g. true
-%           parameter in the case of test examples
-%       .par ... n x m matrix of m additional points
-%       .col ... color used for additional points (default = [0,0.8,0]).
-%                  This can also be a m x 3 matrix of colors.
-%       .ls ... line style (default = '--').
-%       .lw ... line width (default = 2).
-%       .m ... marker style (default = 'd').
-%       .property_MS ... line width (default = 8).
-%       .name ... name of legend entry (default = 'add. point')
-%   .legend ... legend options
-%       .color ... background color (default = 'none').
-%       .box ... legend outine (default = 'on').
-%       .orientation ... orientation of list (default = 'vertical').
-%   .fontsize ... fontsize
-%       .tick ... fontsize for ticklabels (default = 12).
+% Parameters:
+%   properties: properties struct.
+%   varargin:
+%     type: string indicating the type of visualization: '1D'
+%     fh: handle of figure. If no figure handle is provided, a new figure
+%         is opened.
+%     I: index of properties which are updated. If no index is provided
+%         all parameters are updated.
+%     options: options of plotting as instance of PestoPlottingOptions
 %
-% Outputs:
-% ========
-% fh ... figure handle
+% Return values:
+%   fh: figure handle
 %
-% 2012/05/31 Jan Hasenauer
-% 2014/06/20 Jan Hasenauer
-
-% function fh = plotPropertyUncertainty(properties,fh,I,options)
-function fh = plotPropertyUncertainty(varargin)
+% History:
+% * 2012/05/31 Jan Hasenauer
+% * 2014/06/20 Jan Hasenauer
+% * 2016/10/10 Daniel Weindl
 
 %% Check and assign inputs
-% Assign parameters
-if nargin >= 1
-    properties = varargin{1};
-else
-    error('plotPropertyUncertainty requires a parameter object as input.');
-end
-
 % Plot type
 type = '1D';
-if nargin >= 2
-    if ~isempty(varargin{2})
-        type = varargin{2};
+if length(varargin) >= 1 && ~isempty(varargin{1})
+    type = varargin{1};
+    if ~max(strcmp({'1D','2D'},type))
+        error('The ''type'' of plot is unknown.')
     end
-end
-if ~max(strcmp({'1D','2D'},type))
-    error('The ''type'' of plot is unknown.')
 end
 
 % Open figure
-if nargin >= 3
-    if ~isempty(varargin{3})
-        fh = figure(varargin{3});
-    else
-        fh = figure;
-    end
+if length(varargin) >= 2 && ~isempty(varargin{2})
+    fh = figure(varargin{2});
 else
-    fh = figure;
+    fh = figure('Name','plotPropertyUncertainty');
 end
 
 % Index of subplot which is updated
-I = 1:length(properties.P);
-if nargin >= 4
-    if ~isempty(varargin{4})
-        I = varargin{4};
-        if ~isnumeric(I) || max(abs(I - round(I)) > 0)
-            error('I is not an integer vector.');
-        end
+I = 1:properties.number;
+if length(varargin) >= 3 && ~isempty(varargin{3})
+    I = varargin{3};
+    if ~isnumeric(I) || max(abs(I - round(I)) > 0)
+        error('I is not an integer vector.');
     end
 end
 
 % Options
-% General plot options
-options.hold_on = 'false';
-options.interval = 'dynamic'; %'static';
-
-% Default profile plotting options
-%   0 => no plot
-%   1 => likelihood ratio
-%   2 => negative log-likelihood
-if isfield(properties,'P')
-    options.P.plot_type = 1; 
-else
-    options.P.plot_type = 0; 
-end
-options.P.col = [1,0,0];
-options.P.lw = 2;
-options.P.name = 'P';
-
-% Default sample plotting options
-%   0 => no plot
-%   1 => histogram
-%   2 => kernel-density estimate
-if isfield(properties,'S')
-    options.S.plot_type = 1; 
-else
-    options.S.plot_type = 0; 
-end
-options.S.bins = 'conservative';
-options.S.scaling = [];
-options.S.hist_col = [0.7,0.7,0.7];
-options.S.sp_col = [0.7,0.7,0.7];
-options.S.lin_col = [1,0,0];
-options.S.lin_lw = 2;
-options.S.sp_m = '.';
-options.S.sp_ms = 5;
-options.S.PT.lw = 1.5;
-options.S.PT.ind = [];
-options.S.PT.col = [];
-options.S.PT.plot_type = 0;
+defaultOptions = PestoPlottingOptions();
 if isfield(properties,'S')
     if isfield(properties.S,'PT');
-        options.S.PT.plot_type = options.S.plot_type;
-        options.S.PT.ind = 1:size(properties.S.PT.prop,3);
-        options.S.PT.col = [linspace(0,1,size(properties.S.PT.prop,3))',...
+        defaultOptions.S.PT.plot_type = defaultOptions.S.plot_type;
+        defaultOptions.S.PT.ind = 1:size(properties.S.PT.prop,3);
+        defaultOptions.S.PT.col = [linspace(0,1,size(properties.S.PT.prop,3))',...
                             0.2*ones(size(properties.S.PT.prop,3),1),...
                             linspace(1,0,size(properties.S.PT.prop,3))'];
     end
 end
-options.S.name = 'S';
 
-% Local optima
-%   0 => no plot
-%   1 => likelihood ratio
-%   2 => negative log-likelihood
-if isfield(properties,'MS')
-    if options.S.plot_type == options.P.plot_type
-        options.MS.plot_type = options.S.plot_type;
-    elseif options.S.plot_type == 0
-        options.MS.plot_type = options.P.plot_type;
-    elseif options.P.plot_type == 0
-        options.MS.plot_type = options.S.plot_type;
-    end
-else
-    options.MS.plot_type = 0; 
+if ~isfield(properties,'MS')
+    defaultOptions.MS.plot_type = 0; 
 end
-options.MS.col = [1,0,0];
-options.MS.lw = 2;
-options.MS.name_conv = 'MS - conv.';
-options.MS.name_nconv = 'MS - not conv.';
-options.MS.only_optimum = false;
-
-% Default approxiamtion plotting options
-%   0 => no plot
-%   1 => likelihood ratio
-%   2 => negative log-likelihood
-options.A.plot_type = options.MS.plot_type;
-options.A.col = [0,0,1];
-options.A.lw = 2;
-options.A.sigma_level = 2;
-options.A.name = 'P_{app}';
-
-% Confidence level
-options.CL.plot_type = 0;%options.MS.plot_type;
-options.CL.alpha = 0.95;
-options.CL.type = 'point-wise'; % 'simultanous', {'point-wise','simultanous'}
-options.CL.col = [0,0,0];
-options.CL.lw = 2;
-options.CL.name = 'cut-off';
-
-% Settings for 2D plot
-options.op2D.b1 = 0.15;
-options.op2D.b2 = 0.02;
-options.op2D.r = 0.95;
-
-% Additional points
-options.add_points.par = [];
-options.add_points.col = [0,0.8,0];
-options.add_points.ls = '--';
-options.add_points.lw = 2;
-options.add_points.m = 'd';
-options.add_points.ms = 8;
-options.add_points.name = 'add. point';
-
-% Legend
-options.legend.color = 'none';
-options.legend.box = 'on';
-options.legend.orientation = 'vertical';
-options.legend.position = [];
-
-% Labels
-options.labels.y_always = true;
-options.labels.y_name = [];
-
-% Fontsize
-options.fontsize.tick = 12;
 
 % Assignment of user-provided options
-if nargin == 5
-    options = setdefault(varargin{5},options);
+if length(varargin) >= 4
+    if ~isa(varargin{4}, 'PestoPlottingOptions')
+        error('Argument 4 is not of type PestoPlottingOptions.')
+    end
+    options = setdefault(varargin{4}.copy(), defaultOptions);
+else
+    options = defaultOptions;
 end
+if ~isfield(properties,'P')
+    options.P.plot_type = 0; 
+end
+
+if ~isfield(properties,'S')
+    options.S.plot_type = 0; 
+end
+
 
 % Subplot arrangement
 if ~isfield(options,'subplot_size_1D')
@@ -322,7 +131,7 @@ for l = 1:length(I)
     subplot(options.subplot_size_1D(1),options.subplot_size_1D(2),options.subplot_indexing_1D(l));
         
     % Hold on/off
-    if strcmp(options.hold_on,'true')
+    if options.hold_on
         hold on;
     else
         hold off;
@@ -395,7 +204,7 @@ for l = 1:length(I)
         case 2
             % kernel-density estimate
             x_grid = linspace(min(properties.S.prop(i,:)),max(properties.S.prop(i,:)),100);
-            [KDest] = kde_simple(squeeze(properties.S.prop(i,:)),x_grid);
+            [KDest] = getKernelDensityEstimate(squeeze(properties.S.prop(i,:)),x_grid);
             h = plot(x_grid,KDest/max(KDest),'-','color',options.S.lin_col,'linewidth',options.S.lin_lw); hold on;
         otherwise
             error('Selected value for ''options.S.plot_type'' is not available.');
@@ -461,18 +270,18 @@ for l = 1:length(I)
     
     % Plot: Additional points
     h = [];
-    if ~isempty(options.add_points.par)
+    if ~isempty(options.add_points) && ~isempty(options.add_points.par)
         % Check dimension:
-        if size(options.add_points.par,1) ~= properties.number
+        if size(options.add_points.prop,1) ~= properties.number
             warning(['The matrix options.add_points.par should possess ' num2str(properties.number) ' rows.']);
         else
-            for j = 1:size(options.add_points.par,2)
-                if size(options.add_points.col,1) == size(options.add_points.par,2)
+            for j = 1:size(options.add_points.prop,2)
+                if size(options.add_points.col,1) == size(options.add_points.prop,2)
                     l = j;
                 else
                     l = 1;
                 end
-                h = plot(options.add_points.par(i,j)*[1,1],[0,1.05],options.add_points.ls,'color',options.add_points.col(l,:),'linewidth',options.add_points.lw);
+                h = plot(options.add_points.prop(i,j)*[1,1],[0,1.05],options.add_points.ls,'color',options.add_points.col(l,:),'linewidth',options.add_points.lw);
             end
         end
     end
@@ -616,8 +425,7 @@ for l2 = 1:length(I)
                         options.op2D.b1+(length(I)-l2)*d,...
                         options.op2D.r*d,options.op2D.r*d]);
     
-    % Hold on/off
-    if strcmp(options.hold_on,'true')
+    if options.hold_on
         hold on;
     else
         hold off;
