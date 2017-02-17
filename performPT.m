@@ -53,15 +53,6 @@ function res = performPT( logPostHandle, opt )
 %
 % Written by Benjamin Ballnus 2/2017
 
-   res.par(:,i,:) = theta;
-   res.logPost(i,:) = logPost;
-   res.acc(i,:) = 100*acc/j;
-   res.accSwap(i,:,:) = 100*(accSwap(:,:)+accSwap(:,:)')./(propSwap(:,:)+propSwap(:,:)');
-   res.propSwap = propSwap;
-   res.sigmaScale(i,:) = sigmaScale;
-   res.sigmaHist = sigmaHist;
-   res.temperatures(i,:) = 1./beta;
-
 
 % Initialization
 nTemps = opt.PT.nTemps;
