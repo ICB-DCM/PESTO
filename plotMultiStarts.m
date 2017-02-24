@@ -100,6 +100,7 @@ end
 
 %% PLOT OBJECTIVES
 subplot(2,2,1);
+n_finished_starts = 0;
 for j = 1 : n_starts
     if ~isnan(parameters.MS.logPost(j))
         n_finished_starts = j;
