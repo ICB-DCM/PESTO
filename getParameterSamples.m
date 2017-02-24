@@ -139,11 +139,11 @@ if isfield(parameters,'MS')
 else
     % if no multi-start local optimization was done, we need an input for
     % Sigma_0 and theta_0 to do sampling
-    if (~isfield(parameters, 'user') || isempty(parameters.user))
-        if (~isfield(parameters.user, 'Sigma_0') || ~isfield(parameters.user, 'theta_0') || isempty(parameters.user.Sigma_0) || isempty(parameters.user.theta_0))
+    if (~isfield(parameters, 'user') || isempty(parameters.user) ...
+        || ~isfield(parameters.user, 'Sigma_0') || ~isfield(parameters.user, 'theta_0') ...
+        || isempty(parameters.user.Sigma_0) || isempty(parameters.user.theta_0))
         error(['You have to specify an initial parameters vector theta_0 and covariance matrix Sigma_0' ...
              ' or perform a optimization first.']);
-        end
     else
         Sigma_0 = parameters.user.Sigma_0;
         theta_0 = parameters.user.theta_0;
