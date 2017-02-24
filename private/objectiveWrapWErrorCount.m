@@ -46,10 +46,16 @@ function varargout = objectiveWrapWErrorCount(varargin)
                     case {2, 3}
                         [J, G] = objectiveFunction(theta);
                 end
-                
-                switch type
-                    case 'log-posterior'          , varargout = {-J,-G(I)};
-                    case 'negative log-posterior' , varargout = { J, G(I)};
+                if (numel(J) == 1)
+                    switch type
+                        case 'log-posterior'          , varargout = {-J,-G(I)};
+                        case 'negative log-posterior' , varargout = { J, G(I)};
+                    end
+                else
+                    switch type
+                        case 'log-posterior'          , varargout = {-J,-G(:,I)};
+                        case 'negative log-posterior' , varargout = { J, G(:,I)};
+                    end
                 end
             case 3
                 switch outNumber
@@ -86,9 +92,13 @@ function varargout = objectiveWrapWErrorCount(varargin)
         % Derive output
         switch nargout
             case {0,1}
-                varargout = {inf};
+                varargout = {inf(size(J))};
             case 2
-                varargout = {inf,zeros(length(theta),1)};
+                if (numel(J) == 1)
+                    varargout = {inf,zeros(length(theta),1)};
+                else
+                    varargout = {inf(size(J)),zeros(size(J,1), length(theta))};
+                end
             case 3
                 varargout = {inf,zeros(length(theta),1),zeros(length(theta))};
         end

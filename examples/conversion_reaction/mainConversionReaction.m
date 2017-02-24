@@ -145,11 +145,13 @@ end
 % These algorithms aim at finding the global optimum, and therefore, a
 % low number or a single optimizer run should be enough.
 
+% The following code uses the optimizer DELOS which is part of PESTO and 
+% employs strategies from deep learning (DEep Learning Optimization 
+% Strategies).
+%
 % optionsDelos = optionsMultistart.copy();
 % optionsDelos.localOptimizer = 'delos';
 % optionsDelos.localOptimizerOptions.stochastic = false;
-% % optionsDelos.optim_options.nDatasets = nPoints;
-% % optionsDelos.optim_options.nBatchdata = 15;
 % optionsDelos.localOptimizerOptions.MaxIter = 800;
 % optionsDelos.localOptimizerOptions.method = 'adam';
 % optionsDelos.localOptimizerOptions.hyperparams = struct(...
@@ -161,22 +163,47 @@ end
 %     'tau', 600);
 % parametersDelos = getMultiStarts(parameters, objectiveFunction, optionsDelos);
 
+% The following code uses the MATLAB optimization function lsqnonlin. It
+% needs residuals and its sensitivities for optimizaion and hence works
+% differently from fmincon.
+
+objectiveFunction = @(theta) logLikelihoodCR(theta, t, y, sigma2, 'log', 'lsqnonlin');
+
+optionsLsqnonlin = optionsMultistart.copy();
+optionsLsqnonlin.localOptimizer = 'lsqnonlin';
+optionsLsqnonlin.localOptimizerOptions = optimoptions('lsqnonlin', ...
+    'Algorithm', 'trust-region-reflective', ...
+    'Jacobian', 'on', ...
+    'Display', 'off');
+res_true = objectiveFunction(theta_true);
+optionsLsqnonlin.plot_options.add_points.logPost = -res_true' * res_true;
+optionsLsqnonlin.plot_options.add_points.prop = nan(properties.number,1);
+for j = 1 : properties.number
+    optionsLsqnonlin.plot_options.add_points.prop(j) = properties.function{j}(optionsMultistart.plot_options.add_points.par);
+end
+
+parametersLsqnonlin = getMultiStarts(parameters, objectiveFunction, optionsLsqnonlin);
+
+% The following uses a gradient free optimizer (dynamic hill climbing) 
+% which was adapted from the MEIGO toolbox for Pesto (Install MEIGO from 
+% http://gingproc.iim.csic.es/meigom.html and uncomment:
+%
+% DhcOptions = struct(...
+%     'MaxFunEvals', 1e3, ...
+%     'TolX', 1e-11, ...
+%     'Display', 'iter' ...
+%     );
+% 
+% optionsMultistartDhc = optionsMultistart.copy();
+% optionsMultistartDhc.localOptimizer = 'dhc';
+% optionsMultistartDhc.localOptimizerOptions = DhcOptions;
+% optionsMultistartDhc.n_starts = 20;
+% parametersDhc = getMultiStarts(parameters, objectiveFunction, optionsMultistartDhc);
+
 % The following uses the MEIGO toolbox with default settings:
 % (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
 % uncomment:
-
-DhcOptions = struct(...
-    'MaxFunEvals', 1e3, ...
-    'TolX', 1e-11, ...
-    'Display', 'iter' ...
-    );
-
-optionsMultistartDhc = optionsMultistart.copy();
-optionsMultistartDhc.localOptimizer = 'dhc';
-optionsMultistartDhc.localOptimizerOptions = DhcOptions;
-optionsMultistartDhc.n_starts = 20;
-parametersDhc = getMultiStarts(parameters, objectiveFunction, optionsMultistartDhc);
-
+%
 % MeigoOptions = struct(...
 %     'maxeval', 1e4, ...
 %     'local', struct('solver', 'fmincon', ...

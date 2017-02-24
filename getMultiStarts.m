@@ -194,7 +194,7 @@ if strcmp(options.comp_type, 'sequential')
     ftrace = options.trace;
     ftempsave  = options.tempsave;
     
-    if strcmp(options.localOptimizer, 'fmincon')
+    if strcmp(options.localOptimizer, 'fmincon') || strcmp(options.localOptimizer, 'lsqnonlin')
         options.localOptimizerOptions.OutputFcn = @outfun_fmincon;
     end
     
@@ -236,6 +236,9 @@ if strcmp(options.comp_type, 'sequential')
                 miniBatches = [];
                 [J_0,~] = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
             end
+        elseif (strcmp(options.localOptimizer, 'lsqnonlin'))
+            res = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+            J_0 = sum(sum(res.^2));
         else
             J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
         end

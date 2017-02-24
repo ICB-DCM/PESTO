@@ -1,4 +1,4 @@
-function [logL, dlogLdtheta, FIM] = logLikelihoodCR(theta, t, Y, sigma2, scale)
+function varargout = logLikelihoodCR(theta, t, Y, sigma2, scale, varargin)
 % Objective function for examples/conversion_reaction
 %
 % logLikelihood.m provides the log-likelihood, its gradient and an 
@@ -101,15 +101,36 @@ end
 
 %% Objective Function Evaluation
 % Initialization of output values
-logL = 0;
-dlogLdtheta = zeros(n_theta, 1);
-FIM = zeros(n_theta, n_theta);
 
-% Assignment
-for i = 1:n_y
-    logL = logL - 0.5*sum(log(2*pi*sigma2) + (Y(:,i)-y(:,i)).^2/sigma2);
-    dlogLdtheta = dlogLdtheta + dydtheta(:,i+(0:n_y:n_theta*n_y-i))' * ((Y(:,i)-y(:,i))/sigma2);
-    FIM = FIM - dydtheta(:,i+(0:n_y:n_theta*n_y-i))' * dydtheta(:,i+(0:n_y:n_theta*n_y-i))/sigma2;
+if (nargin < 6) || ~strcmp(varargin{1}, 'lsqnonlin')
+    % Local optimizer which needs gradient
+    logL = 0;
+    dlogLdtheta = zeros(n_theta, 1);
+    FIM = zeros(n_theta, n_theta);
+    
+    % Assignment
+    for i = 1:n_y
+        logL = logL - 0.5*sum(log(2*pi*sigma2) + (Y(:,i)-y(:,i)).^2/sigma2);
+        dlogLdtheta = dlogLdtheta + dydtheta(:,i+(0:n_y:n_theta*n_y-i))' * ((Y(:,i)-y(:,i))/sigma2);
+        FIM = FIM - dydtheta(:,i+(0:n_y:n_theta*n_y-i))' * dydtheta(:,i+(0:n_y:n_theta*n_y-i))/sigma2;
+    end
+    
+    varargout{1} = logL;
+    varargout{2} = dlogLdtheta;
+    varargout{3} = FIM;
+else
+    % Local optimizer which needs residuals (e.g. lsqnonlin)
+    res = reshape((Y - y) ./ sqrt(sigma2), numel(Y), 1);
+    sensi_res = reshape((dydtheta ./ sqrt(sigma2)), numel(Y), n_theta);
+%     for i = 1:n_theta
+%         sensi_res(:,i) = res .* sensi_res(:,i);
+%     end
+    
+    % Assignment
+    varargout{1} = -res;
+    varargout{2} = sensi_res;
 end
+
+
 
 end
