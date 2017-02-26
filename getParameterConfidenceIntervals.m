@@ -115,6 +115,9 @@ for k = 1:length(alpha)
     end
 end
 
-plotConfidenceIntervals(parameters, alpha, [], options);
+switch options.mode
+    case 'visual'
+        plotConfidenceIntervals(parameters, alpha, [], options);
+end
 
 end
