@@ -121,7 +121,9 @@ switch options.mode
         fprintf(' \nOptimization:\n=============\n');
     case 'silent' % no output
         % Force fmincon to be silent.
-        options.localOptimizerOptions.Display = 'off';
+        if strcmp(options.localOptimizer, 'fmincon')
+            options.localOptimizerOptions.Display = 'off';
+        end
 end
 
 %% Initialization of random number generator
