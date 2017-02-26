@@ -115,9 +115,14 @@ for k = 1:length(alpha)
     end
 end
 
+%% Output
 switch options.mode
     case 'visual'
         plotConfidenceIntervals(parameters, alpha, [], options);
+        disp('-> Calculation of confidence intervals for parameters FINISHED.');
+    case 'text'
+        disp('-> Calculation of confidence intervals for parameters FINISHED.');
+    case 'silent' % no output
 end
 
 end

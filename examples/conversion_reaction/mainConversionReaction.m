@@ -4,8 +4,10 @@
 % * getMultiStarts()
 % * getParameterProfiles()
 % * getParameterSamples()
-% * plotParameterUncertainty()
+% * getParameterConfidenceIntervals()
+% * getPropertyMultiStarts()
 % * getPropertyProfiles()
+% * getPropertySamples()
 % * getPropertyConfidenceIntervals()
 %
 % This example provides a model for the interconversion of two species 

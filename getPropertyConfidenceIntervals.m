@@ -99,6 +99,14 @@ for k = 1:length(alpha)
     end
 end
 
-plotConfidenceIntervals(properties, alpha, [], options);
+%% Output
+switch options.mode
+    case 'visual'
+        plotConfidenceIntervals(properties, alpha, [], options);
+        disp('-> Calculation of confidence intervals for properties FINISHED.');
+    case 'text'
+        disp('-> Calculation of confidence intervals for properties FINISHED.');
+    case 'silent' % no output
+end
 
 end
