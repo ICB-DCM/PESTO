@@ -10,6 +10,7 @@
 % * how to do sampling without multi-start local optimization beforehand
 % * the value of multi-start local optimization before sampling
 % * how to use the MEIGO toolbox for optimization
+% * how to compute profile likelihoods via ODE integration
 %
 % This example provides a model for the reaction of a species X_1 to a
 % species X_4, which is catalyzed by an enzyme X_2.
@@ -26,10 +27,9 @@
 % optimization based on these measurements, demonstrating the use of
 % getMultiStarts().
 %
-% The Profile likelihoods are calculated in two different ways: First, the
-% calculation is done by repeated reoptimization using 
-% getParameterProfiles(), then it is done by integrating the an ODE along
-% the profile path using integrateParameterProfiles().
+% The Profile likelihoods are calculated by integrating the an ODE along
+% the profile path using getParameterProfiles with the option
+% optionsPesto.profile_method = 'integration'.
 
 
 

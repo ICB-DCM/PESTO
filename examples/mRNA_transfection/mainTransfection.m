@@ -10,6 +10,11 @@
 % * getPropertySamples()
 % * getPropertyConfidenceIntervals()
 %
+% Demonstrates furthermore:
+% * how to carry out uncertainty analysis for local (non-global) optimum
+% * how to use the PSwarm toolbox for optimization (commented) and what
+%   problems may occur when no gradient based approach is used
+%
 % This example is a model for mRNA transfection, taken from the paper
 % "Single-cell mRNA transfection studies: Delivery, kinetics and statistics 
 % by numbers", by Leonhardt C et al., Nanomedicine: NBM, 2014, vol.10
@@ -159,27 +164,25 @@ end
 
 % This section uses PSwarm, a particle swarm optimizer
 % (Install from http://www.norg.uminho.pt/aivaz/pswarm/ and uncomment)
-
-optionsMultistartPSwarm = optionsMultistart.copy();
-optionsMultistartPSwarm.localOptimizer = 'pswarm';
-optionsMultistartPSwarm.localOptimizerOptions.MaxObj  = 25000;
-optionsMultistartPSwarm.localOptimizerOptions.MaxIter = 1000;
-optionsMultistartPSwarm.localOptimizerOptions.Size    = 100;
-optionsMultistartPSwarm.localOptimizerOptions.Social  = 0.5;
-optionsMultistartPSwarm.localOptimizerOptions.Cognitial = 0.9;
-optionsMultistartPSwarm.localOptimizerOptions.IPrint  = -1;
-optionsMultistartPSwarm.n_starts = 20;
-
-parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistartPSwarm);
-
-% This is an alternativ section which uses Multi-start local optimization
 % 
-% % Optimization
-% parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
+% optionsMultistartPSwarm = optionsMultistart.copy();
+% optionsMultistartPSwarm.localOptimizer = 'pswarm';
+% optionsMultistartPSwarm.localOptimizerOptions.MaxObj  = 25000;
+% optionsMultistartPSwarm.localOptimizerOptions.MaxIter = 1000;
+% optionsMultistartPSwarm.localOptimizerOptions.Size    = 100;
+% optionsMultistartPSwarm.localOptimizerOptions.Social  = 0.5;
+% optionsMultistartPSwarm.localOptimizerOptions.Cognitial = 0.9;
+% optionsMultistartPSwarm.localOptimizerOptions.IPrint  = -1;
+% 
+% parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistartPSwarm);
+
+
+% This section uses multi-start local optimization
+parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
 
 %% Collection of results, check for bimodality
 
-% Check if a second mode was found
+% Check if a second optimum was found, which is good enough
 for iMode = 2 : optionsMultistart.n_starts
     if (parameters.MS.logPost(iMode) > 39.5)
         if (abs(parameters.MS.par(3,iMode) - parameters.MS.par(3,1)) > 0.1)
@@ -222,6 +225,7 @@ parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultista
 % Computation for the second mode
 optionsMultistart.MAP_index = MAP_index2;
 optionsMultistart.parameter_index = [3, 4];
+optionsMultistart.fh = figure();
 parametersAlt = getParameterProfiles(parametersAlt, objectiveFunction, optionsMultistart);
 
 %% Single-chain Markov chain Monte-Carlo sampling -- Parameters
