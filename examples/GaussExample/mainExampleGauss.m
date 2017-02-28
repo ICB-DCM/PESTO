@@ -47,9 +47,20 @@ opt.useMS              = false;
 % opt.sigma0                = 1e1*blkdiag([50,0;0,1],diag(ones(1,dimi)));
 
 % Using MALA
-opt.samplingAlgorithm     = 'MALA';
+% opt.samplingAlgorithm     = 'MALA';
+% opt.objOutNumber          = 1;
+% opt.MALA.regFactor        = 1e-4;
+% opt.theta0                = [0,20,repmat(25,1,dimi)]'; 
+% opt.sigma0                = 1e1*blkdiag([50,0;0,1],diag(ones(1,dimi)));
+
+% Using PHS
+opt.samplingAlgorithm     = 'PHS';
 opt.objOutNumber          = 1;
-opt.MALA.regFactor        = 1e-4;
+opt.PHS.nChains           = 3;
+opt.PHS.alpha             = 0.51;
+opt.PHS.memoryLength      = 1;
+opt.PHS.regFactor         = 1e-4;
+opt.PHS.trainingTime      = ceil(opt.nIterations / 5);
 opt.theta0                = [0,20,repmat(25,1,dimi)]'; 
 opt.sigma0                = 1e1*blkdiag([50,0;0,1],diag(ones(1,dimi)));
 

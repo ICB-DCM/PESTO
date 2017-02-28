@@ -86,6 +86,23 @@ function par = getParameterSamples(par, objFkt, opt)
 %                                  no temperature adaption.
 %
 %   --- Parallel Hierarchical Sampling ---
+%   opt.PHS.nChains             : Number of chains (1 'mother'-chain and opt.PHS.nChains-1 
+%                               auxillary chains)
+%   opt.PHS.alpha               : Control parameter for adaption decay.
+%                               Needs values between 0 and 1. Higher values
+%                               lead to faster decays, meaning that new
+%                               iterations influence the single-chain
+%                               proposal adaption only very weakly very
+%                               quickly.
+%   opt.PHS.memoryLength        : Control parameter for adaption. Higher
+%                               values supress strong ealy adaption.
+%   opt.PHS.regFactor           : This factor is used for regularization in
+%                               cases where the single-chain proposal
+%                               covariance matrices are ill conditioned.
+%                               nChainsarger values equal stronger
+%                               regularization.
+%   opt.PHS.trainingTime        : The iterations before the first chain swap
+%                               is invoked
 %
 %
 %
@@ -100,7 +117,7 @@ function par = getParameterSamples(par, objFkt, opt)
 checkSamplingOptions(opt);
 
 %% Wrap objective function
-wrappedObjFkt = @(theta) objectiveWrap( theta,objFkt,'log-posterior',1 );
+wrappedObjFkt = @(theta) objectiveWrap( theta,objFkt,'log-posterior',opt.objOutNumber );
 
 %% Selection of sampling procedure
 switch opt.samplingAlgorithm
@@ -119,7 +136,7 @@ switch opt.samplingAlgorithm
       
    % PHS
    case 'PHS'
-      % TODO
+      par.S = performPHS( wrappedObjFkt, opt );
 end
 
 

@@ -168,6 +168,58 @@ switch opt.samplingAlgorithm
                 'opt.PT.regFactor = 1e-5'])
       end    
 
+   case 'PHS'
+
+      if ~Check('opt.PHS')
+         error('Please enter an options sub-struct for PHS options, e.g. options.PHS. ... .')
+      end    
+      if ~Check('opt.objOutNumber')
+         error(['Please specify opt.objOutNumber = 1'])
+      end          
+      if ~Check('opt.PHS.nChains')
+         error(['Please enter the number of chains, e.g. options.PHS.nChains = 10.'])
+      end
+      if ~Check('opt.theta0')
+         error(['Please define an inital parameter point, e.g. opt.theta0 = [-1;2;4]'...
+                'for single chain algorithms or opt.theta0 = repmat([0.1,1.05,-2.5,-0.5,0.4]'','...
+                '1,10) for multi-chain algorithms. It is recommended to set theta0 and sigma0'...
+                ' by taking into account the results from a preceeding optimization.'])
+      elseif size(opt.theta0,1) ~= opt.number || ...
+            (size(opt.theta0,2) ~= opt.PHS.nChains && size(opt.theta0,2) ~= 1)
+         error('Please make sure opt.theta0, the opt.number and opt.PT.nTemps are consistent.')
+      end      
+      if ~Check('opt.sigma0')
+         error(['Please define an inital parameter covariance matrix, e.g. opt.sigma0 = ' ...
+                '1e5*diag(ones(1,5)); '...
+                'for single chain algorithms or opt.sigma0 = repmat(1e5*diag(ones(1,5)),1,1,10)'...
+                ' for multi-chain algorithms. It is recommended to set theta0 and sigma0'...
+                ' by taking into account the results from a preceeding optimization.'])
+      elseif  size(opt.sigma0,1) ~= opt.number || ...
+              size(opt.sigma0,2) ~= opt.number || ...
+              (size(opt.sigma0,3) ~= opt.PHS.nChains && size(opt.sigma0,3) ~= 1)
+         error('Please make sure opt.sigma0, the opt.number and opt.PHS.nChains are consistent.')
+      end        
+      if ~Check('opt.PHS.alpha')
+         error(['Please enter the parameter which controlls the adaption degeneration'...
+                'velocity of the single-chain proposals., e.g. ' ...
+                'opt.PHS.alpha = 0.51.'])
+      elseif opt.PHS.alpha < 0
+         error('opt.PHS.alpha must have a value greater 0.')
+      end               
+      if ~Check('opt.PHS.memoryLength')
+         error(['Please add the delay before starting the adaption, e.g. ' ...
+                'opt.PHS.memoryLength = 1.'])
+      end        
+      if ~Check('opt.PHS.regFactor')
+         error(['Please specify Regularization factor for ill conditioned covariance'...
+                ' matrices of the adapted proposal density, e.g. ' ...
+                'opt.PHS.regFactor = 1e-5'])
+      end         
+      if ~Check('opt.PHS.trainingTime')
+         error(['Please add the delay before starting the chain swaps, e.g. ' ...
+                'opt.PHS.trainingTime = 1.'])
+      end 
+      
 end
    
 
