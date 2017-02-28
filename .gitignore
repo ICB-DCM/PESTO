@@ -7,4 +7,5 @@ doc/out/
 doc/config/Doxyfile
 doc/config/latexextras.sty
 doc/config/mtocpp_filter.sh
+DRAMToolbox
 

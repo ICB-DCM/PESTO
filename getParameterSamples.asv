@@ -41,26 +41,8 @@ function par = getParameterSamples(par, objFkt, opt)
 %               by taking into account the results from a preceeding optimization.
 %
 %   --- Delayed Rejection Adaptive Metropolis ---
-%   opt.DRAM.regFactor          : This factor is used for regularization in
-%                                 cases where the single-chain proposal
-%                                 covariance matrices are ill conditioned.
-%                                 Larger values equal stronger
-%                                 regularization.
-%   opt.DRAM.nTry               : The number of tries in the delayed
-%                                 rejection scheme
-%   opt.DRAM.verbosityMode      : Defines the level of verbosity 'silent', 'visual', 
-%                                 'debug' or 'text'
-%   opt.DRAM.adaptionInterval   : Updates the proposal density only every opt.DRAM.adaptionInterval
-%                                 time
 %
 %   --- Metropolis Adaptive Langevin Algorithm ---
-%   Note: This algorithm uses gradients & hessian either calculated by
-%   sensitivites or finite differences.
-%   opt.MALA.regFactor          : This factor is used for regularization in
-%                                 cases where the proposal
-%                                 covariance matrices are ill conditioned.
-%                                 Larger values equal stronger
-%                                 regularization.
 %
 %   --- Parallel Tempering ---
 %   opt.PT.nTemps: Initial number of temperatures (default 10)
@@ -100,18 +82,18 @@ function par = getParameterSamples(par, objFkt, opt)
 checkSamplingOptions(opt);
 
 %% Wrap objective function
-wrappedObjFkt = @(theta) objectiveWrap( theta,objFkt,'log-posterior',1 );
+wrappedObjFkt = @(theta) objectiveWrap( theta,objFkt,'log-posterior',~);
 
 %% Selection of sampling procedure
 switch opt.samplingAlgorithm
    
    % DRAM
    case 'DRAM'
-      par.S = performDRAM( wrappedObjFkt, opt );
+      % TODO
       
    % MALA
    case 'MALA'
-      par.S = performMALA( wrappedObjFkt, opt );
+      % TODO
       
    % MH, AM and PT
    case 'PT'

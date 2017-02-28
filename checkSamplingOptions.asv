@@ -52,27 +52,10 @@ end
 
 % Depending on the used Algorithm different options have to be specified
 switch opt.samplingAlgorithm
-   
-   case 'MALA'
-      if ~Check('opt.MALA')
-         error('Please enter an options sub-struct for MALA options, e.g. options.MALA. ... .')
-      end         
-      if ~Check('opt.objOutNumber')
-         error(['Please enter wheter finite differences and Hessians opt.objOutNumber = 1' ...
-                'or sensitivity based gradients and Hessians opt.objOutNumber = 3 should be used.'])
-      end
-      if ~Check('opt.MALA.regFactor')
-         error(['Please specify Regularization factor for ill conditioned covariance'...
-                ' matrices of the adapted proposal density, e.g. ' ...
-                'opt.MALA.regFactor = 1e-5'])
-      end       
 
    case 'DRAM'
       if ~Check('opt.DRAM')
          error('Please enter an options sub-struct for DRAM options, e.g. options.DRAM. ... .')
-      end     
-      if ~Check('opt.objOutNumber')
-         error(['Please specify opt.objOutNumber = 1'])
       end      
       if ~Check('opt.theta0')
          error(['Please define an inital parameter point, e.g. opt.theta0 = [-1;2;4]'''
@@ -94,24 +77,24 @@ switch opt.samplingAlgorithm
                 ' matrices of the adapted proposal density, e.g. ' ...
                 'opt.DRAM.regFactor = 1e-5'])
       end  
-      if ~Check('opt.DRAM.nTry')
-         error(['Please specify the number of delayed rejection tries, e.g. opt.DRAM.nTry = 5'])
+       if ~Check('opt.DRAM.nTry')
+         error(['Please specify Regularization factor for ill conditioned covariance'...
+                ' matrices of the adapted proposal density, e.g. ' ...
+                'opt.DRAM.regFactor = 1e-5'])
       end  
-      if ~Check('opt.DRAM.verbosityMode')
-         error(['Please specify the level of verbosity, e.g. opt.DRAM.nTry = ''text'''])
-      end    
-      if ~Check('opt.DRAM.adaptionInterval')
-         error(['Please specify the adaption interval, e.g. opt.DRAM.adaptionInterval = 20'])
-      end           
+
+% opt.DRAM.nTry               : The number of tries in the delayed
+%                               rejection scheme
+% opt.DRAM.verbosityMode      : Defines the level of verbosity 'silent', 'visual', 
+%                               'debug' or 'text'
+% opt.DRAM.adaptionInterval   : Updates the proposal density only every opt.DRAM.adaptionInterval
+%                               time      
       
    case 'PT'
 
       if ~Check('opt.PT')
          error('Please enter an options sub-struct for PT options, e.g. options.PT. ... .')
-      end    
-      if ~Check('opt.objOutNumber')
-         error(['Please specify opt.objOutNumber = 1'])
-      end          
+      end      
       if ~Check('opt.PT.nTemps')
          error(['Please enter the initial number of temperatures, e.g. ' ...
                 'options.PT.nTemps = 10.'])
