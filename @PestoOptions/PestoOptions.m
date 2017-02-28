@@ -153,18 +153,17 @@ classdef PestoOptions < matlab.mixin.SetGet
         %% get(Parameter|Property)Profiles options        
         
         % The following options are for getParameterProfiles only:
-        % Indices of the parameters for which the profile
-        % is calculated (default = 1:parameters.number).
+        
+        % Indices of the parameters for which the profile is calculated. 
+        % Default: profile_optim_index will be set to 1:parameters.number
+        % if both indices are left empty
         parameter_index = [];
+        profile_optim_index = [];
+        profile_integ_index = [];
         
-        % Specifies the method for profile calculation
-        % 'optimization' (default), 'integration', 'mixed'
+        % How should profiles be computed? ('optimization', 'integration',
+        % 'mixed') Default: 'optimization'
         profile_method = 'optimization';
-        
-        % Indices which specify which profile whould be optimized and
-        % which should be integrated, if profile_method is set to 'mixed' 
-        % (0: optimization, 1: integration)
-        parameter_method_index = [];
         
         % Indices of the properties for which the profile
         % is to be calculated (default = 1:properties.number).
@@ -210,7 +209,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             'update', 1.25);
 
         % options for Profile integration 
-        solver = struct('type', 'CVODE', ...
+        solver = struct('type', 'ode113', ...
             'algorithm', 'Adams', ...
             'nonlinSolver', 'Newton', ...
             'linSolver', 'Dense', ...
