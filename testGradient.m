@@ -230,7 +230,7 @@ if(fplot)
    e = [abs(g_fd_f(:)-g_fd_c(:));abs(g_fd_b(:)-g_fd_c(:));abs(g(:)-g_fd_c(:))];
    mine = min(e(e>0))*0.5;
    maxe = max(e(e>0))*2;
-   r = [abs(g(:)./g_fd_c(:))]
+   r = [abs(g(:)./g_fd_c(:))];
    minr = min(r(r>0))*0.5;
    maxr = max(r(r>0))*2;
    xlim([mine,maxe])
@@ -251,7 +251,7 @@ if(fplot)
    e = [abs(g_fd_f(:)-g_fd_c(:));abs(g(:));abs(g_fd_c(:))];
    mine = min(e(e>0))*0.5;
    maxe = max(e(e>0))*2;
-   r = [abs(g(:)./g_fd_c(:))]
+   r = [abs(g(:)./g_fd_c(:))];
    minr = min(r(r>0))*0.5;
    maxr = max(r(r>0))*2;
    xlim([mine,maxe])
