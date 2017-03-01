@@ -237,7 +237,7 @@ if(fplot)
    ylabel('ratio Gradient/FD')
    axis square
    box on
-   legend('forward','backward','Location','SouthEast')
+   legend('forward FD','backward FD','Location','SouthEast')
    
    subplot(2,2,4)
    scatter(abs(g(:)),abs(g(:)./g_fd_c(:)),'rx')
