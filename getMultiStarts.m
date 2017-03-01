@@ -145,8 +145,16 @@ switch options.proposal
                              rand(parameters.number,options.n_starts - size(parameters.guess,2))))];
     case 'user-supplied'
         % Sampling from user-supplied function
-        par0 = [parameters.guess,...
-                parameters.init_fun(parameters.guess,parameters.min,parameters.max,options.n_starts - size(parameters.guess,2))];
+        if (~isfield(parameters, 'init_fun') || isempty(parameters.init_fun))
+            if size(parameters.guess,2) < options.n_starts
+                error('You did not define an initial function and do not provide enough starting points in parameters.guess. Aborting.');
+            else
+                par0 = [parameters.guess(:,1:options.n_starts)];
+            end
+        else
+            par0 = [parameters.guess,...
+            parameters.init_fun(parameters.guess,parameters.min,parameters.max,options.n_starts - size(parameters.guess,2))];
+        end 
 end
 parameters.MS.n_starts = options.n_starts;
 parameters.MS.par0 = par0(:,options.start_index);

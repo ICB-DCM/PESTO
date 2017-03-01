@@ -84,12 +84,14 @@ parameters.guess = par0(:,1:100);
 objectiveFunction = @(theta) logLikelihoodJakstat(theta, amiData);
 
 % PestoOptions
-optionsMultistart           = PestoOptions();
-optionsMultistart.n_starts  = 10;
-optionsMultistart.trace     = true;
-optionsMultistart.obj_type  = 'log-posterior';
-optionsMultistart.mode      = 'visual';
-optionsMultistart.fmincon   = optimset(...
+optionsMultistart          = PestoOptions();
+optionsMultistart.n_starts = 10;
+optionsMultistart.trace    = true;
+optionsMultistart.proposal = 'user-supplied';
+optionsMultistart.obj_type = 'log-posterior';
+optionsMultistart.mode     = 'visual';
+optionsMultistart.localOptimizer = 'fmincon';
+optionsMultistart.localOptimizerOptions = optimset(...
     'Algorithm','interior-point',...
     'GradObj', 'on',...
     'Display', 'iter', ...
