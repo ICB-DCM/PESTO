@@ -675,8 +675,8 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
     try    
         % Reduce linear system by implicit funtion theorem
         A1 = [HL(1 : ind-1, :); HL(ind+1 : npar, :); s*GG'];
-        b1 = [-GL(1 : ind-1) * s * options.solver.gamma; ...
-             -GL(ind+1 : npar) * s * options.solver.gamma; ...
+        b1 = [-GL(1 : ind-1) * options.solver.gamma; ...
+             -GL(ind+1 : npar) * options.solver.gamma; ...
              1];
         A2 = [A1(1:end-1, 1:ind-1), A1(1:end-1, ind+1:end)];
         b2 = b1(1:end-1) - s * A1(1:end-1, ind);
@@ -719,8 +719,8 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
         try    
             % Reduce linear system by implicit funtion theorem
             A1 = [HL(1 : ind-1, :); HL(ind+1 : npar, :); s*GG'];
-            b1 = [-GL(1 : ind-1) * s * options.solver.gamma; ...
-                 -GL(ind+1 : npar) * s * options.solver.gamma; ...
+            b1 = [-GL(1 : ind-1) * options.solver.gamma; ...
+                 -GL(ind+1 : npar) * options.solver.gamma; ...
                  1];
             A2 = [A1(1:end-1, 1:ind-1), A1(1:end-1, ind+1:end)];
             b2 = b1(1:end-1) - s * A1(1:end-1, ind);
@@ -759,7 +759,7 @@ function hessian = approximateHessian(theta, grad, hess, method, flag)
     elseif strcmp(flag, 'reinit')
         % Replace old by new values for next call
         lastTheta = theta;    
-        [~,ind] = max(hess);
+        [~,ind] = max(max(hess));
         ind = ind(1);
         lastHess = [hess(1:ind-1,1:ind-1), lastHess(1:ind-1,ind), hess(1:ind-1,ind+1:end); ...
             lastHess(ind,:); hess(ind+1:end,1:ind-1), lastHess(ind+1:end,ind), hess(ind+1:end,ind+1:end)];

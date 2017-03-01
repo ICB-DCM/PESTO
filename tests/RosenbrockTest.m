@@ -17,12 +17,17 @@ function RosenbrockTest()
     
     % OPtimization options
     options.localOptimizer = 'fmincon';
-    options.n_starts = 20;
+    options.n_starts = 1;
     
     % Profile options
-    options.profile_method = 'mixed';
-    options.profile_optim_index = 1;
-    options.profile_integ_index = 2;
+    options.profile_method = 'integration';
+%     options.profile_optim_index = 1;
+%     options.profile_integ_index = 2;
+    options.solver.hessian = 'user-supplied';
+    options.solver.gamma = 100;
+    options.solver.type = 'ode113';
+    options.solver.RelTol = 1e-8;
+    options.solver.AbsTol = 1e-10;
     
     % Sampling Options
     options.MCMC.sampling_scheme = 'single-chain';
@@ -44,8 +49,8 @@ function RosenbrockTest()
     % Call the routies
     parameters = getMultiStarts(parameters, objectiveFunction, options);
     parameters = getParameterProfiles(parameters, objectiveFunction, options);
-    parameters = getParameterSamples(parameters, objectiveFunction, options);
-    getParameterConfidenceIntervals(parameters, [0.8, 0.9,0.95,0.99]);
+%     parameters = getParameterSamples(parameters, objectiveFunction, options);
+%     getParameterConfidenceIntervals(parameters, [0.8, 0.9,0.95,0.99]);
 end
 
 function [y, dy, ddy] = rosenbrock(x, a, b)

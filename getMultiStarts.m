@@ -225,20 +225,25 @@ if strcmp(options.comp_type, 'sequential')
             clear(fun.function(s_start(1):s_end(2)));
         end
         
+        % Define the negative log-posterior funtion
+        % (fmincon needs the neagtive log posterior for optimization)
+        negLogPost = @(theta) @(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
+        negLogPostWErrorCount = @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber);
+        
         % Reset error count
         error_count = 0;
         
         % Test evaluation of objective function at starting point
         if (strcmp(options.localOptimizer, 'fmincon'))
             if (strcmp(options.localOptimizerOptions.Hessian, 'on'))
-                [J_0,~,~] = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+                [J_0,~,~] = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
             elseif (strcmp(options.localOptimizerOptions.GradObj, 'on'))
-                [J_0,~] = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+                [J_0,~] = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
             else
-                J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+                J_0 = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
             end
         else
-            J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+            J_0 = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
         end
         parameters.MS.logPost0(i) = -J_0;
         
@@ -250,7 +255,7 @@ if strcmp(options.comp_type, 'sequential')
                 %% fmincon as local optimizer
                 % Optimization using fmincon
                 [theta,J_opt,parameters.MS.exitflag(i),results_fmincon,~,gradient_opt,hessian_opt] = ...
-                    fmincon(@(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber),...  % negative log-likelihood function
+                    fmincon(negLogPostWErrorCount,...  % negative log-likelihood function
                     parameters.MS.par0(:,i),...    % initial parameter
                     parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
                     parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
@@ -258,18 +263,18 @@ if strcmp(options.comp_type, 'sequential')
                     parameters.max,...     % upper bound
                     [],options.localOptimizerOptions);   % options
                 
-                % Assignment of reseults
+                % Assignment of results
                 parameters.MS.J(1, i) = -J_0;
                 parameters.MS.logPost(i) = -J_opt;
                 parameters.MS.par(:,i) = theta;
                 parameters.MS.gradient(:,i) = gradient_opt;
                 if isempty(hessian_opt)
                     if strcmp(options.localOptimizerOptions.Hessian,'on')
-                        [~,~,hessian_opt] = objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
+                        [~,~,hessian_opt] = negLogPost(theta); % objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
                     end
                 elseif max(hessian_opt(:)) == 0
                     if strcmp(options.localOptimizerOptions.Hessian,'on')
-                        [~,~,hessian_opt] = objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
+                        [~,~,hessian_opt] = negLogPost(theta); % objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
                     end
                 end
                 parameters.MS.n_objfun(i) = results_fmincon.funcCount;
