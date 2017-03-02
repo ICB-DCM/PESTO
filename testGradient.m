@@ -234,7 +234,11 @@ if(fplot)
    minr = min(r(r>0))*0.5;
    maxr = max(r(r>0))*2;
    xlim([mine,maxe])
-   ylim([minr,maxr])
+   try  
+       ylim([minr,maxr])
+   catch
+       ylim([1e-1,1e1])
+   end
    plot([mine,maxe],[1,1],'k:');
    xlabel('FD precision (upper bound)')
    ylabel('ratio Gradient/FD')
@@ -255,7 +259,11 @@ if(fplot)
    minr = min(r(r>0))*0.5;
    maxr = max(r(r>0))*2;
    xlim([mine,maxe])
-   ylim([minr,maxr])
+   try
+       ylim([minr,maxr])
+   catch
+       ylim([1e-1,1e1])
+   end
    plot([mine,maxe],[1,1],'k:');
    legend('Gradient','FD','Location','SouthEast')
    xlabel('derivative value')
