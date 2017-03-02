@@ -7,5 +7,7 @@ mainEnzymaticCatalysis;
 mainTransfection;
 runEstimation;
 mainJakstatSignaling;
+mainExampleGauss;
+mainExampleRing;
 
 end

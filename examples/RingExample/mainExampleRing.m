@@ -12,13 +12,14 @@ ringDimension          = 2;
 
 
 % Set required sampling options for Parallel Tempering
-clear opt;
-opt.number             = ringDimension;
+clear opt; clear par;
+par.number             = ringDimension;
+par.min                = -25*ones(ringDimension,1);
+par.max                = 25*ones(ringDimension,1);
+par.obj_type           = 'log-posterior';
+
 opt.rndSeed            = 3;
 opt.nIterations        = 1e5;
-opt.min                = -25*ones(ringDimension,1);
-opt.max                = 25*ones(ringDimension,1);
-opt.useMS              = false;
 
 % Using PT
 % opt.samplingAlgorithm     = 'PT';

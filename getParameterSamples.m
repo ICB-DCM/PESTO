@@ -6,22 +6,22 @@ function par = getParameterSamples(par, objFkt, opt)
 %   be contained in here but as standalone scripts capable of using the
 %   resulting par.S.
 %
-%   par   : parameter struct which no longer contains options of any kind. However,
-%               it might contain .MS results which can be used for
-%               initialization.
+%   par   : parameter struct covering model options and results obtained by
+%               optimization, profiles and sampling. Optimization results
+%               can be used for initialization. The parameter struct should
+%               at least contain:
+%               par.min: Lower parameter bounds
+%               par.max: Upper parameter bounds
+%               par.number: Number of parameters
+%               par.obj_type: Type of objective function, e.g. 'log-posterior'
 %   objFkt: Objective function which measures the difference of model output and data
 %   opt   : An options object holding various options for the
 %              sampling. Depending on the algorithm and particular flavor,
 %              different options must be set:
 %
 %   --- General ---
-%   opt.min: Lower parameter bounds
-%   opt.max: Upper parameter bounds
-%   opt.number: Number of parameters
 %   opt.rndSeed: Either a number or 'shuffle'
 %   opt.nIterations: Number of iterations, e.g. 1e6
-%   opt.useMS: Use the results of a preceeding MS optimization for initialization.
-%              Either 'true' or 'false'
 %   opt.samplingAlgorithm: Specifies the code body which will be used.
 %     Further options (details below) depend on the choice made here:
 %     'DRAM' for Delayed Rejection Adaptive Metropolis
@@ -114,10 +114,14 @@ function par = getParameterSamples(par, objFkt, opt)
 % 2017/02/01 Benjamin Ballnus
 
 %% Check and assign inputs, note that theta0 and sigma0 are always set manually outside this function
-checkSamplingOptions(opt);
+checkSamplingOptions(par,opt);
+opt.number = par.number;
+opt.min    = par.min;
+opt.max    = par.max;
+% opt.obj_type = par.obj_type;
 
 %% Wrap objective function
-wrappedObjFkt = @(theta) objectiveWrap( theta,objFkt,'log-posterior',opt.objOutNumber );
+wrappedObjFkt = @(theta) -objectiveWrap( theta, objFkt, opt.obj_type, opt.objOutNumber );
 
 %% Selection of sampling procedure
 switch opt.samplingAlgorithm

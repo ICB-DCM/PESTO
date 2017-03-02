@@ -42,8 +42,8 @@ function varargout = objectiveWrap(varargin)
             case {0,1}
                 J = objectiveFunction(theta);
                 switch type
-                    case 'log-posterior'          , varargout = { J};
-                    case 'negative log-posterior' , varargout = {-J};
+                    case 'log-posterior'          , varargout = {-J};
+                    case 'negative log-posterior' , varargout = { J};
                 end
             case 2
                 switch outNumber
@@ -55,8 +55,8 @@ function varargout = objectiveWrap(varargin)
                 end
                 
                 switch type
-                    case 'log-posterior'          , varargout = { J, G(I)};
-                    case 'negative log-posterior' , varargout = {-J,-G(I)};
+                    case 'log-posterior'          , varargout = {-J,-G(I)};
+                    case 'negative log-posterior' , varargout = { J, G(I)};
                 end
             case 3
                 switch outNumber
@@ -70,8 +70,8 @@ function varargout = objectiveWrap(varargin)
                 end
 
                 switch type
-                    case 'log-posterior'          , varargout = { J, G(I), H(I,I)};
-                    case 'negative log-posterior' , varargout = {-J,-G(I),-H(I,I)};
+                    case 'log-posterior'          , varargout = {-J,-G(I),-H(I,I)};
+                    case 'negative log-posterior' , varargout = { J, G(I), H(I,I)};
                 end
                 if any(any(isnan(H)))
                     error('Hessian contains NaNs')

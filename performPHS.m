@@ -1,8 +1,9 @@
 function res = performPHS( logPostHandle, opt )
-% performPT.m uses an adaptive Parallel Tempering algorithm to sample from an objective function
-% 'logPostHandle'. The tempered chains are getting swapped using an equi
-% energy scheme. The temperatures are getting adapted as well as the
-% proposal density covariance matrix. The options 'opt' cover:
+% performPHS.m uses Parallel Hierarchical Sampling algorithm to sample from an objective function
+% 'logPostHandle'. The code is based on [RigatMira2012]. 
+% The 'mother' chain is swaped with one of the auxillary chains in each iteration.
+%
+% The options 'opt' cover:
 % opt.theta0                  : The inital parameter points for each of the
 %                               tempered chains
 % opt.sigma0                  : The inital proposal covariance matrix of

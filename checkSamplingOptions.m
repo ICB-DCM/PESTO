@@ -1,4 +1,4 @@
-function [] = checkSamplingOptions(opt)
+function [] = checkSamplingOptions(par,opt)
 % checkSamplingOptions.m checks the options struct opt regarding sampling
 % inputs. If any option is missing or specified incorrectly, this module will
 % display an error and a suggestion on how to properly specify the option.
@@ -13,32 +13,35 @@ function [] = checkSamplingOptions(opt)
 if ~Check('opt')
    error('Options do not exist or are empty. Please specify an options struct.')
 end
-if ~Check('opt.number')
-   error('Please specify the number of parameters, e.g. opt.number = 7.')
+if ~Check('par')
+   error(['Parameter struct does not exist or is empty. Please specify an ' ...
+         'parameter struct at least covering bounds and number of parameters.'])
+end
+if ~Check('opt.obj_type')
+   error(['Please specify the type of objective function, e.g. opt.obj_type = ''log-posterior''']);
+end
+if ~Check('par.number')
+   error('Please specify the number of parameters, e.g. par.number = 7.')
 end
 if ~Check('opt.rndSeed')
    error('Please specify the random seed, e.g. opt.rndSeed = 7 or opt.rndSeed = ''shuffle''.')
 end
-if ~Check('opt.min')
-   error('Please define lower parameter borders, e.g. opt.min = [-1;2;4]')
-elseif length(opt.min) ~= opt.number 
-   error('Please make sure opt.number and the length of opt.min are consistent.')
-elseif size(opt.min,2) > 1
-   error('Please transpose opt.min.')
+if ~Check('par.min')
+   error('Please define lower parameter borders, e.g. par.min = [-1;2;4]')
+elseif length(par.min) ~= par.number 
+   error('Please make sure par.number and the length of par.min are consistent.')
+elseif size(par.min,2) > 1
+   error('Please transpose par.min.')
 end
-if ~Check('opt.max')
-   error('Please define upper parameter borders, e.g. opt.max = [-1;2;4]')
-elseif length(opt.max) ~= opt.number 
-   error('Please make sure opt.number and the length of opt.max are consistent.')
-elseif size(opt.max,2) > 1
-   error('Please transpose opt.max.')
+if ~Check('par.max')
+   error('Please define upper parameter borders, e.g. par.max = [-1;2;4]')
+elseif length(par.max) ~= par.number 
+   error('Please make sure par.number and the length of par.max are consistent.')
+elseif size(par.max,2) > 1
+   error('Please transpose par.max.')
 end
 if ~Check('opt.nIterations')
    error('Please enter the number of desired iterations, e.g. opt.nIterations = 1e6.')
-end
-if ~Check('opt.useMS')
-   error(['Please specify if the optimization results should be'...
-          'used for initialization, e.g. opt.useMS = true.'])
 end
 if ~Check('opt.samplingAlgorithm')
    error('Please specify the algorithm which should be used, e.g. opt.samplingAlgorithm = ''PT''')
@@ -78,16 +81,16 @@ switch opt.samplingAlgorithm
          error(['Please define an inital parameter point, e.g. opt.theta0 = [-1;2;4]'''
                 '. It is recommended to set theta0 and sigma0'...
                 ' by taking into account the results from a preceeding optimization.'])
-      elseif size(opt.theta0,1) ~= opt.number
-         error('Please make sure opt.theta0 and opt.number are consistent.')             
+      elseif size(opt.theta0,1) ~= par.number
+         error('Please make sure opt.theta0 and par.number are consistent.')             
       end      
       if ~Check('opt.sigma0')
          error(['Please define an inital parameter covariance matrix, e.g. opt.sigma0 = ' ...
                 '1e5*diag(ones(1,5)); It is recommended to set theta0 and sigma0'...
                 ' by taking into account the results from a preceeding optimization.'])
-      elseif  size(opt.sigma0,1) ~= opt.number || ...
-              size(opt.sigma0,2) ~= opt.number 
-         error('Please make sure opt.sigma0 and opt.number are consistent.')
+      elseif  size(opt.sigma0,1) ~= par.number || ...
+              size(opt.sigma0,2) ~= par.number 
+         error('Please make sure opt.sigma0 and par.number are consistent.')
       end        
       if ~Check('opt.DRAM.regFactor')
          error(['Please specify Regularization factor for ill conditioned covariance'...
@@ -121,9 +124,9 @@ switch opt.samplingAlgorithm
                 'for single chain algorithms or opt.theta0 = repmat([0.1,1.05,-2.5,-0.5,0.4]'','...
                 '1,10) for multi-chain algorithms. It is recommended to set theta0 and sigma0'...
                 ' by taking into account the results from a preceeding optimization.'])
-      elseif size(opt.theta0,1) ~= opt.number || ...
+      elseif size(opt.theta0,1) ~= par.number || ...
             (size(opt.theta0,2) ~= opt.PT.nTemps && size(opt.theta0,2) ~= 1)
-         error('Please make sure opt.theta0, the opt.number and opt.PT.nTemps are consistent.')
+         error('Please make sure opt.theta0, the par.number and opt.PT.nTemps are consistent.')
       end      
       if ~Check('opt.sigma0')
          error(['Please define an inital parameter covariance matrix, e.g. opt.sigma0 = ' ...
@@ -131,10 +134,10 @@ switch opt.samplingAlgorithm
                 'for single chain algorithms or opt.sigma0 = repmat(1e5*diag(ones(1,5)),1,1,10)'...
                 ' for multi-chain algorithms. It is recommended to set theta0 and sigma0'...
                 ' by taking into account the results from a preceeding optimization.'])
-      elseif  size(opt.sigma0,1) ~= opt.number || ...
-              size(opt.sigma0,2) ~= opt.number || ...
+      elseif  size(opt.sigma0,1) ~= par.number || ...
+              size(opt.sigma0,2) ~= par.number || ...
               (size(opt.sigma0,3) ~= opt.PT.nTemps && size(opt.sigma0,3) ~= 1)
-         error('Please make sure opt.sigma0, the opt.number and opt.PT.nTemps are consistent.')
+         error('Please make sure opt.sigma0, the par.number and opt.PT.nTemps are consistent.')
       end        
       if ~Check('opt.PT.exponentT')
          error(['Please enter the power law exponent for the inital temperatures, e.g. ' ...
@@ -184,9 +187,9 @@ switch opt.samplingAlgorithm
                 'for single chain algorithms or opt.theta0 = repmat([0.1,1.05,-2.5,-0.5,0.4]'','...
                 '1,10) for multi-chain algorithms. It is recommended to set theta0 and sigma0'...
                 ' by taking into account the results from a preceeding optimization.'])
-      elseif size(opt.theta0,1) ~= opt.number || ...
+      elseif size(opt.theta0,1) ~= par.number || ...
             (size(opt.theta0,2) ~= opt.PHS.nChains && size(opt.theta0,2) ~= 1)
-         error('Please make sure opt.theta0, the opt.number and opt.PT.nTemps are consistent.')
+         error('Please make sure opt.theta0, the par.number and opt.PT.nTemps are consistent.')
       end      
       if ~Check('opt.sigma0')
          error(['Please define an inital parameter covariance matrix, e.g. opt.sigma0 = ' ...
@@ -194,10 +197,10 @@ switch opt.samplingAlgorithm
                 'for single chain algorithms or opt.sigma0 = repmat(1e5*diag(ones(1,5)),1,1,10)'...
                 ' for multi-chain algorithms. It is recommended to set theta0 and sigma0'...
                 ' by taking into account the results from a preceeding optimization.'])
-      elseif  size(opt.sigma0,1) ~= opt.number || ...
-              size(opt.sigma0,2) ~= opt.number || ...
+      elseif  size(opt.sigma0,1) ~= par.number || ...
+              size(opt.sigma0,2) ~= par.number || ...
               (size(opt.sigma0,3) ~= opt.PHS.nChains && size(opt.sigma0,3) ~= 1)
-         error('Please make sure opt.sigma0, the opt.number and opt.PHS.nChains are consistent.')
+         error('Please make sure opt.sigma0, the par.number and opt.PHS.nChains are consistent.')
       end        
       if ~Check('opt.PHS.alpha')
          error(['Please enter the parameter which controlls the adaption degeneration'...

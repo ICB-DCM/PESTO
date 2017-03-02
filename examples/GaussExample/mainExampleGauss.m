@@ -15,12 +15,13 @@ gaussDimension          = 2 + dimi;
 
 % Set required sampling options for Parallel Tempering
 clear opt;
-opt.number             = gaussDimension;
+par.number             = gaussDimension;
+par.min                = -3*ones(dimi+2,1);
+par.max                = 50*ones(dimi+2,1);
+
+opt.obj_type           = 'log-posterior';
 opt.rndSeed            = 3;
 opt.nIterations        = 1e5;
-opt.min                = -3*ones(dimi+2,1);
-opt.max                = 50*ones(dimi+2,1);
-opt.useMS              = false;
 
 % Using PT
 % opt.samplingAlgorithm  = 'PT';

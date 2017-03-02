@@ -176,21 +176,51 @@ end
 % by using repeated reoptimization
 parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultistart);
 
-%% Single-chain Monte-Carlo sampling -- Parameters
-% Values for the parameters are sampled by using an adapted Metropolis (AM)
+%% Markov Chain Monte Carlo sampling -- Parameters
+% Values for the parameters are sampled by using an Parallel Tempering (PT)
 % algorithm. This way, the underlying probability density of the parameter 
-% distribution can be captured. The proposal scheme of the Markov chain 
-% Monte Carlo algorithm is chosen to be 'Haario', but also other ones can
-% be used.
+% distribution can be captured. 
 
-optionsMultistart.MCMC.sampling_scheme = 'single-chain';
-optionsMultistart.SC.proposal_scheme   = 'AM';
-optionsMultistart.MCMC.nsimu_warmup    = 2e2;
-optionsMultistart.MCMC.thinning        = 10;
-optionsMultistart.MCMC.nsimu_run       = 2e3;
-optionsMultistart.plot_options.S.bins  = 10;
+% For Sampling all options must be covered in one struct
+% General options:
+samplingOpt.name          = {'log_{10}(k_1)','log_{10}(k_2)'};
+samplingOpt.min           = [-7,-7]';
+samplingOpt.max           = [ 3, 3]';
+samplingOpt.number        = length(parameters.name);
+samplingOpt.obj_type      = 'log-posterior';
+samplingOpt.objOutNumber  = 1;
+samplingOpt.rndSeed       = 3;
+samplingOpt.nIterations   = 2e3;
 
-parameters = getParameterSamples(parameters, objectiveFunction, optionsMultistart);
+% PT specific options:
+samplingOpt.samplingAlgorithm     = 'PT';
+samplingOpt.PT.nTemps             = 3;
+samplingOpt.PT.exponentT          = 4;    
+samplingOpt.PT.alpha              = 0.51;
+samplingOpt.PT.temperatureAlpha   = 0.51;
+samplingOpt.PT.memoryLength       = 1;
+samplingOpt.PT.regFactor          = 1e-4;
+samplingOpt.PT.temperatureAdaptionScheme =  'Lacki15'; %'Vousden16'; %
+
+% Initialize the chains by making use of the preceeding multi-start local
+% optimization, all of them starting from the same point
+samplingOpt.theta0                = parameters.MS.par(:,1); 
+samplingOpt.sigma0                = 0.5*inv(squeeze(parameters.MS.hessian(:,:,1)));
+
+% Run the sampling
+parameters = getParameterSamples(parameters, objectiveFunction, samplingOpt);
+
+%% Plot the sampling results
+samplingPlottingOpt = PestoPlottingOptions();
+samplingPlottingOpt.S.plot_type = 1; % Histogram
+% samplingPlottingOpt.S.plot_type = 2; % Density estimate
+samplingPlottingOpt.S.ind = 3; % 3 to show all temperatures
+samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
+samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
+
+% plotParameterSamples(parameters,'1D',[],[],samplingPlottingOpt)
+
+plotParameterSamples(parameters,'2D',[],[],samplingPlottingOpt)
 
 %% Confidence interval evaluation -- Parameters
 % Confidence intervals to the confidence levels fixed in the array alpha
