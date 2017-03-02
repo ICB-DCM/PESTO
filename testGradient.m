@@ -53,6 +53,14 @@ if nargin >= 5
 else
     ig = 2;
 end
+
+if nargin >= 6
+    fplot = varargin{6};
+else
+    fplot = false;
+end
+
+
 theta = theta(:);
 
 if(~ischar(ig))
@@ -174,3 +182,95 @@ for i = 1:length(theta)
         eval(['g_fd_c(' repmat(':,',1,numel(size(g))-1) 'i) = (l_i_f-l_i_b)/(2*eps);'])
     end
 end
+
+if(fplot)
+   figure
+   subplot(2,2,1)
+   scatter(abs(g_fd_f(:)-g_fd_c(:)),abs(g(:)-g_fd_c(:)),'rx')
+   hold on
+   scatter(abs(g_fd_b(:)-g_fd_c(:)),abs(g(:)-g_fd_c(:)),'bo')
+   set(gca,'YScale','log')
+   set(gca,'XScale','log') 
+   e = [abs(g_fd_f(:)-g_fd_c(:));abs(g_fd_b(:)-g_fd_c(:));abs(g(:)-g_fd_c(:))];
+   mine = min(e(e>0))*0.5;
+   maxe = max(e(e>0))*2;
+   xlim([mine,maxe])
+   ylim([mine,maxe])
+   plot([mine,maxe],[mine,maxe],'k:');
+   xlabel('FD precision (upper bound)')
+   ylabel('difference |Gradient-FD|')
+   axis square
+   box on
+   legend('forward FD','backward FD','Location','NorthWest')
+   
+   subplot(2,2,2)
+   scatter(abs(g(:)),abs(g(:)-g_fd_c(:)),'rx')
+   hold on
+   scatter(abs(g_fd_c(:)),abs(g(:)-g_fd_c(:)),'bo')
+   set(gca,'YScale','log')
+   set(gca,'XScale','log') 
+   e = [abs(g_fd_f(:)-g_fd_c(:));abs(g(:));abs(g_fd_c(:))];
+   mine = min(e(e>0))*0.5;
+   maxe = max(e(e>0))*2;
+   xlim([mine,maxe])
+   ylim([mine,maxe])
+   plot([mine,maxe],[mine,maxe],'k:');
+   legend('Gradient','FD','Location','NorthWest')
+   xlabel('derivative value')
+   ylabel('difference |Gradient-FD|')
+   axis square
+   box on
+   
+   subplot(2,2,3)
+   scatter(abs(g_fd_f(:)-g_fd_c(:)),abs(g(:)./g_fd_c(:)),'rx')
+   hold on
+   scatter(abs(g_fd_b(:)-g_fd_c(:)),abs(g(:)./g_fd_c(:)),'bo')
+   set(gca,'YScale','log')
+   set(gca,'XScale','log') 
+   e = [abs(g_fd_f(:)-g_fd_c(:));abs(g_fd_b(:)-g_fd_c(:));abs(g(:)-g_fd_c(:))];
+   mine = min(e(e>0))*0.5;
+   maxe = max(e(e>0))*2;
+   r = [abs(g(:)./g_fd_c(:))];
+   minr = min(r(r>0))*0.5;
+   maxr = max(r(r>0))*2;
+   xlim([mine,maxe])
+   try  
+       ylim([minr,maxr])
+   catch
+       ylim([1e-1,1e1])
+   end
+   plot([mine,maxe],[1,1],'k:');
+   xlabel('FD precision (upper bound)')
+   ylabel('ratio Gradient/FD')
+   axis square
+   box on
+   legend('forward FD','backward FD','Location','SouthEast')
+   
+   subplot(2,2,4)
+   scatter(abs(g(:)),abs(g(:)./g_fd_c(:)),'rx')
+   hold on
+   scatter(abs(g_fd_c(:)),abs(g(:)./g_fd_c(:)),'bo')
+   set(gca,'YScale','log')
+   set(gca,'XScale','log') 
+   e = [abs(g_fd_f(:)-g_fd_c(:));abs(g(:));abs(g_fd_c(:))];
+   mine = min(e(e>0))*0.5;
+   maxe = max(e(e>0))*2;
+   r = [abs(g(:)./g_fd_c(:))];
+   minr = min(r(r>0))*0.5;
+   maxr = max(r(r>0))*2;
+   xlim([mine,maxe])
+   try
+       ylim([minr,maxr])
+   catch
+       ylim([1e-1,1e1])
+   end
+   plot([mine,maxe],[1,1],'k:');
+   legend('Gradient','FD','Location','SouthEast')
+   xlabel('derivative value')
+   ylabel('ratio Gradient/FD')
+   axis square
+   box on
+end
+
+
+
