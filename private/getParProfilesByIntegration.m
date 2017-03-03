@@ -91,15 +91,13 @@ function [parameters, fh] = getParProfilesByIntegration(parameters, objectiveFun
     % Profile calculation
     if strcmp(options.comp_type, 'sequential')
         
-        for j = options.parameter_index
-            tic;
+        for j = options.profile_integ_index
             parameters = integrateProfileForParameterI(parameters, objectiveFunction, j, options, fh);
-            disp(toc);
         end
         
         
     elseif strcmp(options.comp_type, 'parallel')
-        parfor j = options.parameter_index
+        parfor j = options.profile_integ_index
             integrateProfileForParameterI(parameters, objectiveFunction, j, options, fh);
         end
         
@@ -358,12 +356,10 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
 
         % Output
         if ~strcmp(options.comp_type,'parallel')
-            if strcmp(options.profile_method, 'integration')
-                switch options.mode
-                    case 'visual', fh = plotParameterProfiles(parameters, '1D', fh, options.parameter_index, options.plot_options);
-                    case 'text'   % no output
-                    case 'silent' % no output
-                end
+            switch options.mode
+                case 'visual', fh = plotParameterProfiles(parameters, '1D', fh, options.parameter_index, options.plot_options);
+                case 'text'   % no output
+                case 'silent' % no output
             end
         end        
     end 

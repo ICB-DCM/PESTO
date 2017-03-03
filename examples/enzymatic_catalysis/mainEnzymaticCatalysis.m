@@ -9,7 +9,8 @@
 % Demonstrates furthermore:
 % * how to do sampling without multi-start local optimization beforehand
 % * the value of multi-start local optimization before sampling
-% * how to use Hessian information for optimization
+% * how to use the MEIGO toolbox for optimization
+% * how to compute profile likelihoods via ODE integration
 %
 % This example provides a model for the reaction of a species X_1 to a
 % species X_4, which is catalyzed by an enzyme X_2.
@@ -26,10 +27,9 @@
 % optimization based on these measurements, demonstrating the use of
 % getMultiStarts().
 %
-% The Profile likelihoods are calculated in two different ways: First, the
-% calculation is done by repeated reoptimization using 
-% getParameterProfiles(), then it is done by integrating the an ODE along
-% the profile path using integrateParameterProfiles().
+% The Profile likelihoods are calculated by integrating the an ODE along
+% the profile path using getParameterProfiles with the option
+% optionsPesto.profile_method = 'integration'.
 
 
 
@@ -88,9 +88,10 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 
 %% Parameter Sampling
 % An adapted Metropolis-Hastings-Algorithm is used to explore the parameter
-% space. Without Multi-start local optimization, this is not extremly
-% effective, but for small problems, this is feasible and PESTO also allows
-% sampling without previous parameter optimization.
+% space. Without Multi-start local optimization, this is not recommended
+% (since it is in genereal ineffective), but for small problems, this is 
+% feasible and PESTO also allows sampling without previous parameter 
+% optimization.
 
 % Length of the chain
 % optionsPesto.MCMC.nsimu_warmup = 2e4;
@@ -124,17 +125,16 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 % uncomment:
 
 MeigoOptions = struct(...
-    'maxeval', 500, ...
+    'maxeval', 1000, ...
     'local', struct('solver', 'fmincon', ...
     'finish', 'fmincon', ...
     'iterprint', 0) ...
     );
 
-optionsMeigo = optionsPesto.copy();
-optionsMeigo.localOptimizer = 'meigo-ess';
-optionsMeigo.localOptimizerOptions = MeigoOptions;
-optionsMeigo.n_starts = 1;
-parameters = getMultiStarts(parameters, objectiveFunction, optionsMeigo);
+optionsPesto.localOptimizer = 'meigo-ess';
+optionsPesto.localOptimizerOptions = MeigoOptions;
+optionsPesto.n_starts = 1;
+parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
 % Options for an alternative multi-start local optimization
 % 
@@ -154,23 +154,9 @@ parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
 % The result of the sampling is compared with profile likelihoods.
 
 optionsPesto.profile_method = 'integration';
-optionsPesto.solver = struct('gamma', 10, ...
-    'type', 'ode113', ...
-    'algorithm', 'Adams', ...
-    'nonlinSolver', 'Newton', ...
-    'linSolver', 'Dense', ...
-    'eps', 1e-8, ...
-    'minCond', 1e-10, ...
-    'gradient', true, ...
-    'hessian', 'user-supplied', ... 
-    'MaxStep', 0.1, ...
-    'MinStep', 1e-5, ...
-    'MaxNumSteps', 1e4, ...
-    'RelTol', 1e-5, ...
-    'AbsTol', 1e-8, ...
-    'hessianStep', 1e-7, ...
-    'gradientStep', 1e-7 ...
-    );
+optionsPesto.solver.gamma = 10;
+optionsPesto.solver.type = 'ode113';
+optionsPesto.solver.hessian = 'user-supplied';
 
 parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
 

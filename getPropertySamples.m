@@ -172,7 +172,7 @@ end
 
 %% Output
 switch options.mode
-    case {'visual','text'}, disp('-> Property evaluation for sample FINISHED.');
+    case {'visual','text'}, disp('-> Property evaluation for samples FINISHED.');
     case 'silent' % no output
 end
 
