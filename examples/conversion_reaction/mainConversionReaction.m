@@ -26,7 +26,7 @@
 % 
 % Profile likelihood calculation is done using getParameterProfiles().
 %
-% Sngle-chain Monte-Carlo sampling is performed by getParameterSamples() 
+% Single-chain Monte-Carlo sampling is performed by getParameterSamples() 
 % and plotted.
 
 

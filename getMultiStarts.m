@@ -191,6 +191,12 @@ if(options.trace)
     parameters.MS.time_trace = nan(maxOptimSteps+1,length(options.start_index));
 end
 
+% Define the negative log-posterior funtion
+% (fmincon needs the neagtive log posterior for optimization)
+negLogPost = @(theta) @(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
+negLogPostWErrorCount = @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber);
+        
+
 waitbarFields1 = {'logPost', 'logPost0', 'n_objfun', 'n_iter', 't_cpu', 'exitflag'};
 waitbarFields2 = {'par', 'par0', 'gradient', 'fval_trace', 'time_trace'};
 waitbarFields3 = {'hessian', 'par_trace'};
@@ -224,11 +230,6 @@ if strcmp(options.comp_type, 'sequential')
             s_end = strfind(fun.function,'(')-1;
             clear(fun.function(s_start(1):s_end(2)));
         end
-        
-        % Define the negative log-posterior funtion
-        % (fmincon needs the neagtive log posterior for optimization)
-        negLogPost = @(theta) @(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
-        negLogPostWErrorCount = @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber);
         
         % Reset error count
         error_count = 0;

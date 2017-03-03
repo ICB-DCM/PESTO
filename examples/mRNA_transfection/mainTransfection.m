@@ -27,7 +27,10 @@
 % these measurements, demonstrating the use of getMultiStarts(). The model 
 % fit is then visualized.
 % 
-% Profile likelihood calculation is done using getParameterProfiles().
+% Profile likelihood calculation is done by optimization and integration
+% using getParameterProfiles() with the option 
+% optionsMultistart.profile_method = 'mixed'to have comparison of both
+% methods.
 %
 % Multi-chain Monte-Carlo sampling is performed by getParameterSamples() 
 % and plotted using plotParameterUncertainty().
@@ -220,11 +223,11 @@ end
 % by using repeated reoptimization. The information about the profiles is
 % then written to the parameters struct.
 
+% Profiles are computed using optimization by getParameterProfiles()
 parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultistart);
 
 % Computation for the second mode
 optionsMultistart.MAP_index = MAP_index2;
-optionsMultistart.parameter_index = [3, 4];
 optionsMultistart.fh = figure();
 parametersAlt = getParameterProfiles(parametersAlt, objectiveFunction, optionsMultistart);
 

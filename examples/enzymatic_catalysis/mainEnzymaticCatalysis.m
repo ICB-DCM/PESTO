@@ -27,7 +27,7 @@
 % optimization based on these measurements, demonstrating the use of
 % getMultiStarts().
 %
-% The Profile likelihoods are calculated by integrating the an ODE along
+% The Profile likelihoods are calculated by integrating an ODE following
 % the profile path using getParameterProfiles with the option
 % optionsPesto.profile_method = 'integration'.
 
@@ -155,7 +155,6 @@ parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
 
 optionsPesto.profile_method = 'integration';
 optionsPesto.solver.gamma = 10;
-optionsPesto.solver.type = 'ode113';
 optionsPesto.solver.hessian = 'user-supplied';
 
 parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
