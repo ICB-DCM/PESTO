@@ -87,18 +87,59 @@ end
 % Check and assign options
 options.P.min = parameters.min;
 options.P.max = parameters.max;
-if isempty(options.parameter_index)
-    options.parameter_index = 1:parameters.number;
-end
+options.profileReoptimizationOptions.MaxFunEvals = 200 * parameters.number;
 if (isempty(options.MAP_index))
     options.MAP_index = 1;
 end
 
-options.profileReoptimizationOptions.algorithm   = 'interior-point';
-options.profileReoptimizationOptions.MaxIter     = 500;
-options.profileReoptimizationOptions.GradConstr  = 'on';
-options.profileReoptimizationOptions.TolCon      = 1e-6;
-options.profileReoptimizationOptions.MaxFunEvals = 200 * parameters.number;
+% Process, which profiles should be computed in which manner
+if isempty(options.parameter_index)
+    switch options.profile_method
+        case 'optimization'
+            options.profile_optim_index = 1:parameters.number;
+            if ~isempty(options.profile_integ_index)
+                options.profile_optim_index(options.profile_integ_index) = [];
+            end
+            
+        case 'integration'
+            options.profile_integ_index = 1:parameters.number;
+            if ~isempty(options.profile_optim_index)
+                options.profile_integ_index(options.profile_optim_index) = [];
+            end
+            
+        case 'mixed'
+            if (isempty(options.profile_optim_index) && isempty(options.profile_integ_index))
+                warning('You specified profile computation method to be "mixed", but did not specify the precise method. Doing optimization for all profiles now!');
+                options.profile_method = 'optimization';
+                options.profile_optim_index = 1:parameters.number;
+            end
+            if length(unique([options.profile_optim_index options.profile_integ_index])) < length([options.profile_optim_index options.profile_integ_index])
+                error('Some profiles seem to be computed twice. Please redefine consistent options!');
+            end
+    end
+    options.parameter_index = sort(unique([options.profile_optim_index options.profile_integ_index]));
+else
+    if (length(unique([options.profile_optim_index, options.profile_integ_index])) < length(unique([options.parameter_index, options.profile_optim_index, options.profile_integ_index])))
+        error('Inconsistent settings for indices in profile calculation.');
+    end
+    
+    switch options.profile_method
+        case 'optimization'
+            options.profile_optim_index = options.parameter_index;
+            if ~isempty(options.profile_integ_index)
+                options.profile_optim_index(options.profile_integ_index) = [];
+            end
+            
+        case 'integration'
+            options.profile_integ_index = options.parameter_index;
+            if ~isempty(options.profile_optim_index)
+                options.profile_integ_index(options.profile_optim_index) = [];
+            end
+            
+        case 'mixed'
+            options.parameter_index = sort(unique([options.profile_optim_index options.profile_integ_index]));
+    end
+end
 
 %% Initialization and figure generation
 fh = [];
@@ -113,7 +154,7 @@ switch options.mode
         fprintf(' \nProfile likelihood caculation:\n===============================\n');
     case 'silent' % no output
         % Force fmincon to be silent.
-        options.profileReoptimizationOptions = optimset(options.profileReoptimizationOptions,'display','off');
+        options.profileReoptimizationOptions.display = 'off';
 end
 
 %% Initialization of parameter struct
@@ -139,31 +180,31 @@ if options.calc_profiles
             [parameters, fh] = getParProfilesByIntegration(parameters, objective_function, options, fh);
             
         case 'mixed'
-            % Checking if the method index was set
-            if length(options.parameter_method_index) ~= length(options.parameter_index)
-                warning('The vector of indices for the profile calculation method was not properly set. Doing optimization for all profiles.');
-                options.options.parameter_method_index = ones(size(parameter_index));
-            end
-            
             if strcmp(options.comp_type,'sequential')
                 for j = options.parameter_index
                     currentOptions = options.copy();
-                    currentOptions.parameter_index = j;
-                    if (currentOptions.parameter_method_index(j) == 0)
-                        [parameters, fh] = getParProfilesByOptimization(parameters, objective_function, currentOptions, fh);
-                    elseif (currentOptions.parameter_method_index(j) == 1)
+                    if sum(j == options.profile_integ_index) == 1
+                        currentOptions.profile_integ_index = j;
                         [parameters, fh] = getParProfilesByIntegration(parameters, objective_function, currentOptions, fh);
+                    elseif sum(j == options.profile_integ_index) == 0
+                        currentOptions.profile_optim_index = j;
+                        [parameters, fh] = getParProfilesByOptimization(parameters, objective_function, currentOptions, fh);
+                    else
+                        error('Some really strange error for the profile calculation indices occured');
                     end
                 end
                 
             elseif strcmp(options.comp_type,'parallel')
                 parfor j = options.parameter_index
                     currentOptions = options.copy();
-                    currentOptions.parameter_index = j;
-                    if (currentOptions.parameter_method_index(j) == 0)
-                        getParProfilesByOptimization(parameters, objective_function, currentOptions);
-                    elseif (currentOptions.parameter_method_index(j) == 1)
-                        getParProfilesByIntegration(parameters, objective_function, currentOptions);
+                    if sum(j == options.profile_integ_index) == 1
+                        currentOptions.profile_integ_index = j;
+                        getParProfilesByIntegration(parameters, objective_function, currentOptions, fh);
+                    elseif sum(j == options.profile_integ_index) == 0
+                        currentOptions.profile_optim_index = j;
+                        getParProfilesByOptimization(parameters, objective_function, currentOptions, fh);
+                    else
+                        error('Some really strange error for the profile calculation indices occured');
                     end
                 end
                 
@@ -180,7 +221,7 @@ end
 
 %% Output
 switch options.mode
-    case {'visual','text'}, disp('-> Profile calculation FINISHED.');
+    case {'visual','text'}, disp('-> Profile calculation for parameters FINISHED.');
     case 'silent' % no output
 end
 

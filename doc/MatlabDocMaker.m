@@ -466,6 +466,8 @@ classdef MatlabDocMaker
                         if s ~= 0
                             warn = [warn sprintf('LaTeX compiler output:\n') latexmsg];
                             latexerr = true;
+                        else
+                            copyfile(fullfile(latexdir,'refman.pdf'), fullfile(fileparts(mfilename('fullpath')),'PESTO-doc.pdf'))
                         end
                     else
                         fprintf('cannot compile LaTeX output: no refman.tex found...');
