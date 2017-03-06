@@ -93,8 +93,22 @@ switch size(theta0,2)
    otherwise
       error('Dimension of options.theta0 is incorrect.');
 end
-
 muHist = theta;
+
+% Regularization sigma0
+for l = 1:size(sigma0,3)
+   [~,p] = cholcov(sigma0(:,:,l),0);
+   if p ~= 0
+      sigma0(:,:,l) = sigma0(:,:,l) + regFactor*eye(nPar);
+      sigma0(:,:,l) = (sigma0(:,:,l)+sigma0(:,:,l)')/2;
+      [~,p] = cholcov(sigma0(:,:,l),0);
+      if p ~= 0
+         sigma0(:,:,l) = sigma0(:,:,l) + max(max(sigma0(:,:,l)))/1000*eye(nPar);
+         sigma0(:,:,l) = (sigma0(:,:,l)+sigma0(:,:,l)')/2;
+      end
+   end
+end
+
 switch size(sigma0,3)
    case 1
       sigmaHist = repmat(sigma0,[1,1,nTemps]);

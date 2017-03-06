@@ -18,6 +18,10 @@ clear opt;
 par.number             = gaussDimension;
 par.min                = -3*ones(dimi+2,1);
 par.max                = 50*ones(dimi+2,1);
+par.name               = {};
+for i = 1:dimi+2
+   par.name{end+1}     = ['\theta_' num2str(i)];
+end
 
 opt.obj_type           = 'log-posterior';
 opt.rndSeed            = 3;
@@ -66,7 +70,6 @@ opt.theta0                = [0,20,repmat(25,1,dimi)]';
 opt.sigma0                = 1e1*blkdiag([50,0;0,1],diag(ones(1,dimi)));
 
 % Perform the parameter estimation via sampling
-par.MS = [];
 par = getParameterSamples(par, logP, opt);
 
 % Visualize
@@ -76,7 +79,17 @@ subplot(2,1,2);
 plot(squeeze(par.S.par(1,:,1))',squeeze(par.S.par(2,:,1))','.'); hold all
 plot_Gauss_LH(); 
 
+% Visualize using the PESTO routines
+samplingPlottingOpt = PestoPlottingOptions();
+samplingPlottingOpt.S.plot_type = 1; % Histogram
+% samplingPlottingOpt.S.plot_type = 2; % Density estimate
+samplingPlottingOpt.S.ind = 1; % 3 to show all temperatures
+samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
+samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
 
+plotParameterSamples(par,'1D',[],[],samplingPlottingOpt)
+
+plotParameterSamples(par,'2D',[],[],samplingPlottingOpt)
 
 
 

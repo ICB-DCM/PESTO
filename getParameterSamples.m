@@ -114,11 +114,10 @@ function par = getParameterSamples(par, objFkt, opt)
 % 2017/02/01 Benjamin Ballnus
 
 %% Check and assign inputs, note that theta0 and sigma0 are always set manually outside this function
-checkSamplingOptions(par,opt);
 opt.number = par.number;
 opt.min    = par.min;
 opt.max    = par.max;
-% opt.obj_type = par.obj_type;
+checkSamplingOptions(par,opt);
 
 %% Wrap objective function
 wrappedObjFkt = @(theta) -objectiveWrap( theta, objFkt, opt.obj_type, opt.objOutNumber );

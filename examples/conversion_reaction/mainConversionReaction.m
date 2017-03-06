@@ -181,12 +181,7 @@ parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultista
 % algorithm. This way, the underlying probability density of the parameter 
 % distribution can be captured. 
 
-% For Sampling all options must be covered in one struct
-% General options:
-samplingOpt.name          = {'log_{10}(k_1)','log_{10}(k_2)'};
-samplingOpt.min           = [-7,-7]';
-samplingOpt.max           = [ 3, 3]';
-samplingOpt.number        = length(parameters.name);
+% Building a struct covering all sampling options:
 samplingOpt.obj_type      = 'log-posterior';
 samplingOpt.objOutNumber  = 1;
 samplingOpt.rndSeed       = 3;
@@ -214,13 +209,13 @@ parameters = getParameterSamples(parameters, objectiveFunction, samplingOpt);
 samplingPlottingOpt = PestoPlottingOptions();
 samplingPlottingOpt.S.plot_type = 1; % Histogram
 % samplingPlottingOpt.S.plot_type = 2; % Density estimate
-samplingPlottingOpt.S.ind = 3; % 3 to show all temperatures
+samplingPlottingOpt.S.ind = 1; % 3 to show all temperatures
 samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
 samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
 
-% plotParameterSamples(parameters,'1D',[],[],samplingPlottingOpt)
+plotParameterSamples(parameters,'1D',[],[],samplingPlottingOpt)
 
-plotParameterSamples(parameters,'2D',[],[],samplingPlottingOpt)
+% plotParameterSamples(parameters,'2D',[],[],samplingPlottingOpt)
 
 %% Confidence interval evaluation -- Parameters
 % Confidence intervals to the confidence levels fixed in the array alpha
@@ -245,7 +240,7 @@ properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
 properties = getPropertyProfiles(properties, parameters, objectiveFunction, optionsProperties);
 
 %% Evaluation of properties for sampling results -- Properties
-% From the smaples of the parameters, the properties are calculated and
+% From the samples of the parameters, the properties are calculated and
 % hence a probabality distribution for the properties can be reconstructed
 % from that.
 

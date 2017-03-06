@@ -202,6 +202,7 @@ for l = 1:length(I)
     end
 
     % Plot: Visualizaion of MCMC samples of tempered posterior distribution
+    h = [];
     switch options.S.plot_type
         case 0
             % no plot
