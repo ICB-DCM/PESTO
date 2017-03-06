@@ -94,15 +94,6 @@ end
 
 if ~isfield(parameters,'S')
     options.S.plot_type = 0;
-else
-    if isfield(parameters.S,'PT');
-        options.S.PT.plot_type = options.S.plot_type;
-        options.S.PT.ind = size(parameters.S.PT.par,3):-1:1;
-        options.S.PT.col = [linspace(0,1,size(parameters.S.PT.par,3))',...
-                            0.2*ones(size(parameters.S.PT.par,3),1),...
-                            linspace(1,0,size(parameters.S.PT.par,3))'];
-        options.S.PT.sp_col = options.S.PT.col;
-    end
 end
 
 if ~isfield(parameters,'MS')
@@ -211,68 +202,38 @@ for l = 1:length(I)
     end
 
     % Plot: Visualizaion of MCMC samples of tempered posterior distribution
-    switch options.S.PT.plot_type
-        case 0
-            % no plot
-        case 1
-            % histogram
-            if isfield(parameters.S,'PT') && options.S.PT.plot_type
-                for k = options.S.PT.ind
-                    switch options.S.bins
-                        case 'optimal'
-                            h = 3.49*std(parameters.S.PT.par(i,:,k))/(length(parameters.S.PT.par(i,:,k))^(1/3));
-                            nbin = round((max(parameters.S.PT.par(i,:,k))-min(parameters.S.PT.par(i,:,k)))/h);
-                        case 'conservative'
-                            h = 2*3.49*std(parameters.S.PT.par(i,:,k))/(length(parameters.S.PT.par(i,:,k))^(1/3));
-                            nbin = round((max(parameters.S.PT.par(i,:,k))-min(parameters.S.PT.par(i,:,k)))/h);
-                        otherwise
-                            nbin = options.S.bins;
-                    end
-                    [N,X] = hist(parameters.S.PT.par(i,:,k),nbin);
-                    bar(X,N/max(N),1,'facecolor',options.S.PT.col(k,:),'edgecolor',options.S.PT.col(k,:)); hold on;
-                    % bar(X,N/max(N),1,'facecolor','none','edgecolor',options.S.PT.col(k,:)); hold on;
-                end
-            end
-        case 2
-            % kernel-density estimate
-            if isfield(parameters.S,'PT') && options.S.PT.plot_type
-                for k = options.S.PT.ind
-                    x_grid = linspace(min(parameters.S.PT.par(i,:,k)),max(parameters.S.PT.par(i,:,k)),100);
-                    [KDest] = getKernelDensityEstimate(squeeze(parameters.S.PT.par(i,:,k)),x_grid);
-                    plot(x_grid,KDest/max(KDest),'-','color',options.S.PT.col(k,:),'linewidth',options.S.PT.lw); hold on;
-                end
-            end
-        otherwise
-            error('Selected value for ''options.S.plot_type'' is not available.');
-    end
-        
-    % Plot: Visualizaion of MCMC samples of posterior distribution
     h = [];
     switch options.S.plot_type
         case 0
             % no plot
         case 1
             % histogram
-            switch options.S.bins
-                case 'optimal'
-                    b = 3.49*std(parameters.S.par(i,:))/(length(parameters.S.par(i,:))^(1/3));
-                    nbin = round((max(parameters.S.par(i,:))-min(parameters.S.par(i,:)))/b);
-                case 'conservative'
-                    b = 2*3.49*std(parameters.S.par(i,:))/(length(parameters.S.par(i,:))^(1/3));
-                    nbin = round((max(parameters.S.par(i,:))-min(parameters.S.par(i,:)))/b);
-                otherwise
-                    nbin = options.S.bins;
-            end
-            [N,X] = hist(parameters.S.par(i,:),nbin);
-            h = bar(X,N/max(N),1,'facecolor',options.S.hist_col); hold on;
+                for k = 1
+                    switch options.S.bins
+                        case 'optimal'
+                            h = 3.49*std(parameters.S.par(i,:,k))/(length(parameters.S.par(i,:,k))^(1/3));
+                            nbin = round((max(parameters.S.par(i,:,k))-min(parameters.S.par(i,:,k)))/h);
+                        case 'conservative'
+                            h = 2*3.49*std(parameters.S.par(i,:,k))/(length(parameters.S.par(i,:,k))^(1/3));
+                            nbin = round((max(parameters.S.par(i,:,k))-min(parameters.S.par(i,:,k)))/h);
+                        otherwise
+                            nbin = options.S.bins;
+                    end
+                    [N,X] = hist(parameters.S.par(i,:,k),nbin);
+                    h = bar(X,N/max(N),1,'facecolor',options.S.col(k,:),'edgecolor',[0.4,0.4,0.4]); hold on;
+                    % bar(X,N/max(N),1,'facecolor','none','edgecolor',options.S.col(k,:)); hold on;
+                end
         case 2
             % kernel-density estimate
-            x_grid = linspace(min(parameters.S.par(i,:)),max(parameters.S.par(i,:)),100);
-            [KDest] = getKernelDensityEstimate(squeeze(parameters.S.par(i,:)),x_grid);
-            h = plot(x_grid,KDest/max(KDest),'-','color',options.S.lin_col,'linewidth',options.S.lin_lw); hold on;
+             for k = 1:options.S.ind
+                 x_grid = linspace(min(parameters.S.par(i,:,k)),max(parameters.S.par(i,:,k)),100);
+                 [KDest] = getKernelDensityEstimate(squeeze(parameters.S.par(i,:,k)),x_grid);
+                 h = plot(x_grid,KDest/max(KDest),'-','color',options.S.col(k,:),'linewidth',options.S.lw); hold on;
+             end
         otherwise
             error('Selected value for ''options.S.plot_type'' is not available.');
     end
+
     if ~isempty(h)
         legh(end+1) = h;
         legs{end+1} = options.S.name;
@@ -601,38 +562,18 @@ for l2 = 1:length(I)
                     
     % Plot: MCMC samples of tempered posterior distribution
     h = [];
-    switch options.S.PT.plot_type
-        case 0
-            % no plot
-        case 1
-            % scatter plot
-            if isfield(parameters.S,'PT') && options.S.PT.plot_type
-                for k = options.S.PT.ind
-                    h = plot(parameters.S.PT.par(i1,:,k),parameters.S.PT.par(i2,:,k),options.S.PT.sp_m,...
-                        'color',options.S.PT.sp_col(k,:),'markersize',options.S.PT.sp_ms); hold on;
-                end
-            end
-        otherwise
-            error('Selected value for ''options.S.PT.plot_type'' is not available.');
-    end
-    if ~isempty(h)
-        legh(end+1) = h;
-        legs{end+1} = options.S.name;
-    end
-
-    % Plot: MCMC samples
-    h = [];
     switch options.S.plot_type
         case 0
             % no plot
         case 1
             % scatter plot
-            h = plot(parameters.S.par(i1,:),parameters.S.par(i2,:),options.S.sp_m(1),...
-                'color',options.S.sp_col(1,:),'markersize',options.S.sp_ms); hold on;
+             for k = 1:options.S.ind
+                 h = plot(parameters.S.par(i1,:,k),parameters.S.par(i2,:,k),options.S.sp_m,...
+                     'color',options.S.sp_col(k,:),'markersize',options.S.sp_ms); hold on;
+             end
         otherwise
             error('Selected value for ''options.S.plot_type'' is not available.');
     end
-    
     if ~isempty(h)
         legh(end+1) = h;
         legs{end+1} = options.S.name;

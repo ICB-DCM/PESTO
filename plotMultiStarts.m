@@ -92,7 +92,7 @@ else
     ColClust = flipud(parula(sum(sizecluster>1)));
 end
 
-for iclust = 1:length(uclust);
+for iclust = 1:length(uclust)
     if(sizecluster(iclust)>1)
     Col(clust == uclust(iclust),:) = repmat(ColClust(sum(sizecluster(1:iclust)>1),:),[sizecluster(iclust),1]);
     end

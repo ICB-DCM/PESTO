@@ -1,288 +1,148 @@
-function [parameters,fh_logPost_trace,fh_par_trace,fh_par_dis_1D,fh_par_dis_2D] = getParameterSamples(parameters, objective_function, varargin)
-% getParameterSamples.m performs adaptive MCMC sampling of the posterior
-%   distribution. The DRAM library routine tooparameters.minox is used internally.
-%
-% USAGE:
-% ======
-% [...] = getParameterSamples(parameters,objective_function)
-% [...] = getParameterSamples(parameters,objective_function,options)
-% [parameters] = getParameterSamples(...)
-% [parameters,fh_logPost_trace] = getParameterSamples(...)
-% [parameters,fh_logPost_trace,fh_par_trace] = getParameterSamples(...)
-% [parameters,fh_logPost_trace,fh_par_trace,fh_par_dis] = getParameterSamples(...)
-%
-% Parameters:
-%   parameters: parameter struct
-%   logPosterior: log-posterior of model as function of the parameters.
-%   varargin:
-%     options: A PestoOptions object holding various options for the
-%         sampling
-%
-% Required fields of parameters:
-%   number: Number of parameters
-%   min: Lower bound for each parameter
-%   max: upper bound for each parameter
-%   ml: maximum likelihood estimate
-%
-% Return values:
-%   parameters: updated parameter object
-%   fh_logPost_trace: figure handle for log-posterior trace
-%   fh_par_trace: figure handle for parameter traces
-%   fh_par_dis: figure handle for parameter distribution
-%
-% Generated fields of parameters:
-%   S: parameter and posterior sample.
-%     * logPost: log-posterior function along chain
-%     * par: parameters along chain
-%
-% 2012/07/11 Jan Hasenauer
-% 2015/04/29 Jan Hasenauer
-% 2016/10/17 Benjamin Ballnus
-% 2016/10/19 Daniel Weindl
-% 2016/11/04 Paul Stapor
-
-%% Check and assign inputs
-parameters = parametersSanityCheck(parameters);
-
-if length(varargin) >= 1
-    options = varargin{1};
-    if ~isa(options, 'PestoOptions')
-        error('Third argument is not of type PestoOptions.')
-    end
-else
-    options = PestoOptions();
-    % Implement a check for the sample-subclass here...
-end
-
-if isempty(options.MCMC.nsimu_warmup)
-    options.MCMC.nsimu_warmup = 1e3 * parameters.number;
-end
-if isempty(options.MCMC.nsimu_run)
-    options.MCMC.nsimu_run = 1e4 * parameters.number;
-end
-if isempty(options.SC.AM.init_memory_length)
-    options.SC.AM.init_memory_length = 20*parameters.number;
-end
-
-rng(options.rng);
-
-% Use MS distribution to find sufficient start values and inital 
-% covariances for tempered chains. To do so, we take into account both 
-% - the height and basin of the modes in our target
-if isempty(options.MAP_index)
-    iMAP = 1;
-else
-    iMAP = options.MAP_index;
-end
-
-if isfield(parameters,'MS')
-    % If multi-start local optimization was performed, use the results
-    
-    % tossed_idx will be important for multi-chains
-    tossed_idx = iMAP;
-
-    % Checking for user-provided intialization of Markoc Chain
-    if strcmp(options.MCMC.initialization, 'user-provided')
-        if isfield(parameters, 'user')
-            userProv = 'all';
-            
-            if ((~isfield(parameters.user, 'theta_0')) || isempty(parameters.user.theta_0))
-                warning('Options for user provided sampling initialization is set, but parameters.user.theta_0 is empty! Trying to use information from Multistart.');
-                userProv = 'sigmaOnly';
-            end
-            if ((~isfield(parameters.user, 'Sigma_0')) || isempty(parameters.user.Sigma_0))
-                warning('Options for user provided sampling initialization is set, but parameters.user.Sigma_0 is empty! Trying to use information from Multistart.');
-                userProv = 'no';
-            end
-        else
-            warning('Options for user provided sampling initialization is set, but parameters.user is not set! Trying to use information from Multistart.');
-            userProv = 'no';
-        end
-    else
-        userProv = 'no';
-    end
-    
-    if (strcmp(userProv, 'no') || strcmp(userProv, 'sigmaOnly'))
-        parameters.user.theta_0 = parameters.MS.par(:,tossed_idx);
-    end
-    if strcmp(userProv, 'no')
-        % Check if Hessian was calculated
-        if ( (~isfield(parameters.MS, 'hessian')) || (size(parameters.MS.hessian,3) < 1) )
-            error('No value for Sigma_0 found (neither user-provided nor computed by getMultiStarts()).');
-        else
-            Sigma_0 = nan([size(parameters.MS.hessian(:,:,1)),length(tossed_idx)]);
-        end
-        
-        for i = 1:length(tossed_idx)
-            if (rcond(Sigma_0(:,:,i)) < 1e-12)
-                warning(['The ' num2str(i) '-th Hessian is ill-conditioned. Using pseudo-inverse instead!']);
-                Sigma_0(:,:,i) = pinv(parameters.MS.hessian(:,:,tossed_idx(i)), 1e-12);
-            else
-                Sigma_0(:,:,i) = inv(parameters.MS.hessian(:,:,tossed_idx(i)));
-            end
-            Sigma_0(:,:,i) = Sigma_0(:,:,i) + options.SC.AM.min_regularisation*eye(parameters.number);
-            Sigma_0(:,:,i) = (Sigma_0(:,:,i)+Sigma_0(:,:,i)')/2;
-            [~,p] = cholcov(Sigma_0(:,:,i),0);
-            if (p~=0)
-                if (i==1)
-                    warning('The Sigma_0 for the best value of your Posterior has negative eigenvalues! Setting it to options.SC.AM.min_regularisation * Identity!');
-                    Sigma_0(:,:,1) = options.SC.AM.min_regularisation * eye(size(parameters.MS.hessian(:,:,1)));
-                else
-                    warning(['Sigma_0[' num2str(i) '] has negative eigenvalues! Using previous Sigma_0 again!']);
-                    Sigma_0(:,:,i) = Sigma_0(:,:,i-1);
-                end
-            end
-        end
-        parameters.user.Sigma_0 = Sigma_0;
-    end
-
-else
-    % if no multi-start local optimization was done, we need an input for
-    % Sigma_0 and theta_0 to do sampling
-    if (~isfield(parameters, 'user') || isempty(parameters.user) ...
-        || ~isfield(parameters.user, 'Sigma_0') || ~isfield(parameters.user, 'theta_0') ...
-        || isempty(parameters.user.Sigma_0) || isempty(parameters.user.theta_0))
-        error(['You have to specify an initial parameters vector theta_0 and covariance matrix Sigma_0' ...
-             ' or perform a optimization first.']);
-    else
-        Sigma_0 = parameters.user.Sigma_0;
-        theta_0 = parameters.user.theta_0;
-    end
-    
-    % Checking in Sigma_0 for eigenvalues and condition
-    for i = 1 : size(Sigma_0,3)
-        [~,p] = cholcov(Sigma_0(:,:,i),0);
-        if ((p~=0) || (rcond(Sigma_0(:,:,i)) < 1e-12))
-            if (i==1)
-                warning('The Sigma_0 for the best value of your Posterior has negative eigenvalues or is ill-conditioned! Setting it to 1e-3 * Identity!');
-                Sigma_0(:,:,1) = 1e-3 * eye(size(Sigma_0(:,:,1)));
-            else
-                warning(['Sigma_0[' num2str(i) '] has negative eigenvalues or is ill-conditioned! Using previous Sigma_0 again!']);
-                Sigma_0(:,:,i) = Sigma_0(:,:,i-1);
-            end
-        end
-    end
-    parameters.user.Sigma_0 = Sigma_0;
-    
-    % Checking the input parameter vectors for correctness
-    logP = nan(size(theta_0,2),1);
-    for i = 1:size(theta_0,2)
-        success = 0;
-        j = 1;
-        while (success == 0)
-            logP(i) = -objectiveWrap(theta_0(:,i),objective_function,options.obj_type,options.objOutNumber,[],options.MCMC.show_warning);
-            if (isnan(logP(i))) || (logP(i) == -inf)
-                warning(['Some of your initital parameter vectors theta_0 are ill conditioned! Therefore' ...
-                    ' randomize theta_0 and test it again. Temperature number: ' num2str(i) ...
-                    ' Try number: ' num2str(j)]);
-                j = j + 1;
-                theta_0(:,i) = parameters.min + rand(size(theta_0(:,i))).* (parameters.max - parameters.min);
-            else
-                success = 1;
-            end
-        end
-    end
-    parameters.user.theta_0 = theta_0;
-end
-
-%% Selection of sampling procedure
-% Main part of getParameterSamples()
-
-switch options.MCMC.sampling_scheme    
+function par = getParameterSamples(par, objFkt, opt)
+   % getParameterSamples.m performs MCMC sampling of the posterior
+   %   distribution. Note, the DRAM library routine tooparameters.minox is
+   %   used internally. This function is capable of sampling with MH, AM,
+   %   DRAM, MALA, PT and PHS. The sampling plotting routines should no longer
+   %   be contained in here but as standalone scripts capable of using the
+   %   resulting par.S.
+   %
+   %   par   : parameter struct covering model options and results obtained by
+   %               optimization, profiles and sampling. Optimization results
+   %               can be used for initialization. The parameter struct should
+   %               at least contain:
+   %               par.min: Lower parameter bounds
+   %               par.max: Upper parameter bounds
+   %               par.number: Number of parameters
+   %               par.obj_type: Type of objective function, e.g. 'log-posterior'
+   %   objFkt: Objective function which measures the difference of model output and data
+   %   opt   : An options object holding various options for the
+   %              sampling. Depending on the algorithm and particular flavor,
+   %              different options must be set:
+   %
+   %   --- General ---
+   %   opt.rndSeed: Either a number or 'shuffle'
+   %   opt.nIterations: Number of iterations, e.g. 1e6
+   %   opt.samplingAlgorithm: Specifies the code body which will be used.
+   %     Further options (details below) depend on the choice made here:
+   %     'DRAM' for Delayed Rejection Adaptive Metropolis
+   %     'MALA' for Metropolis Adaptive Langevin Algorithm
+   %     'PT' (default) for Metropolis-Hastings, Adaptive Metropolis, Parallel Tempering
+   %     'PHS'for Parallel Hierarchical Sampling
+   %   opt.theta0: Initial points for all chains. If the algorithm uses
+   %               multiple chains (as 'PT'), one can specify multiple theta0
+   %               as in example: opt.theta0 = repmat([0.1,1.05,-2.5,-0.5,0.4],opt.nTemps,1)';
+   %               If there is just one chain, please specify as
+   %               opt.theta0 = [1;2;3;4]; It is recommendet to set theta0
+   %               by taking into account the results from a preceeding optimization.
+   %   opt.sigma0: Initial covariance matrix for all chains.
+   %               Example for single-chain algorithms: opt.sigma0 = 1e5*diag(ones(1,5));
+   %               Example for multi-chain algorithms : opt.sigma0 = repmat(1e5*diag(ones(1,5)),opt.nTemps,1);
+   %               It is recommendet to set sigma0
+   %               by taking into account the results from a preceeding optimization.
+   %
+   %   --- Delayed Rejection Adaptive Metropolis ---
+   %   opt.DRAM.regFactor          : This factor is used for regularization in
+   %                                 cases where the single-chain proposal
+   %                                 covariance matrices are ill conditioned.
+   %                                 Larger values equal stronger
+   %                                 regularization.
+   %   opt.DRAM.nTry               : The number of tries in the delayed
+   %                                 rejection scheme
+   %   opt.DRAM.verbosityMode      : Defines the level of verbosity 'silent', 'visual',
+   %                                 'debug' or 'text'
+   %   opt.DRAM.adaptionInterval   : Updates the proposal density only every opt.DRAM.adaptionInterval
+   %                                 time
+   %
+   %   --- Metropolis Adaptive Langevin Algorithm ---
+   %   Note: This algorithm uses gradients & hessian either calculated by
+   %   sensitivites or finite differences.
+   %   opt.MALA.regFactor          : This factor is used for regularization in
+   %                                 cases where the proposal
+   %                                 covariance matrices are ill conditioned.
+   %                                 Larger values equal stronger
+   %                                 regularization.
+   %
+   %   --- Parallel Tempering ---
+   %   opt.PT.nTemps: Initial number of temperatures (default 10)
+   %   opt.PT.exponentT: The initial temperatures are set by a power law to ^opt.exponentT. (default 4)
+   %   opt.PT.alpha: Parameter which controlls the adaption degeneration
+   %                   velocity of the single-chain proposals.
+   %                   Value between 0 and 1. Default 0.51. No adaption for
+   %                   value = 0.
+   %   opt.PT.temperatureAlpha: Parameter which controlls the adaption degeneration
+   %                   velocity of the temperature adaption.
+   %                   Value between 0 and 1. Default 0.51. No effect for
+   %                   value = 0.
+   %   opt.PT.memoryLength: The higher the value the more it lowers the impact of early
+   %                          adaption steps. Default 1.
+   %   opt.PT.regFactor: Regularization factor for ill conditioned covariance
+   %                  matrices of the adapted proposal density. Regularization might
+   %                  happen if the eigenvalues of the covariance matrix
+   %                  strongly differ in order of magnitude. In this case, the algorithm
+   %                  adds a small diag-matrix to
+   %                  the covariance matrix with elements opt.regFactor.
+   %   opt.PT.temperatureAdaptionScheme: Follows the temperature adaption scheme from 'Vousden16'
+   %                                  or 'Lacki15'. Can be set to 'none' for
+   %                                  no temperature adaption.
+   %
+   %   --- Parallel Hierarchical Sampling ---
+   %   opt.PHS.nChains             : Number of chains (1 'mother'-chain and opt.PHS.nChains-1
+   %                               auxillary chains)
+   %   opt.PHS.alpha               : Control parameter for adaption decay.
+   %                               Needs values between 0 and 1. Higher values
+   %                               lead to faster decays, meaning that new
+   %                               iterations influence the single-chain
+   %                               proposal adaption only very weakly very
+   %                               quickly.
+   %   opt.PHS.memoryLength        : Control parameter for adaption. Higher
+   %                               values supress strong ealy adaption.
+   %   opt.PHS.regFactor           : This factor is used for regularization in
+   %                               cases where the single-chain proposal
+   %                               covariance matrices are ill conditioned.
+   %                               nChainsarger values equal stronger
+   %                               regularization.
+   %   opt.PHS.trainingTime        : The iterations before the first chain swap
+   %                               is invoked
+   %
+   %
+   %
+   % 2012/07/11 Jan Hasenauer
+   % 2015/04/29 Jan Hasenauer
+   % 2016/10/17 Benjamin Ballnus
+   % 2016/10/19 Daniel Weindl
+   % 2016/11/04 Paul Stapor
+   % 2017/02/01 Benjamin Ballnus
    
-    % DRAM
-    case 'DRAM'
-        parameters = computeSamplesDram(parameters, objective_function, options);
-    
-    % Single-Chain
-    case 'single-chain'
-        parameters = computeSamplesSinglechain(parameters, objective_function, options);
-          
+   %% Check and assign inputs, note that theta0 and sigma0 are always set manually outside this function
+   opt.number = par.number;
+   opt.min    = par.min;
+   opt.max    = par.max;
+   checkSamplingOptions(par,opt);
+   
+   %% Wrap objective function
+   wrappedObjFkt = @(theta) -objectiveWrap( theta, objFkt, opt.obj_type, opt.objOutNumber );
+   
+   %% Selection of sampling procedure
+   switch opt.samplingAlgorithm
+      
+      % DRAM
+      case 'DRAM'
+         par.S = performDRAM( wrappedObjFkt, opt );
+         
+         % MALA
+      case 'MALA'
+         par.S = performMALA( wrappedObjFkt, opt );
+         
+         % MH, AM and PT
+      case 'PT'
+         par.S = performPT( wrappedObjFkt, opt );
+         
+         % PHS
+      case 'PHS'
+         par.S = performPHS( wrappedObjFkt, opt );
+   end
+   
+   
 end
 
-%% Visualization and Output of results
 
-% Pass to visualization interface
-[fh_logPost_trace,fh_par_trace,fh_par_dis_1D,fh_par_dis_2D] = ...
-    visualizeResults(parameters, options);
-
-% Chain statistics
-% chainstats(parameters.S.par');
-
-% Output
-switch options.mode
-    case {'visual','text'}, disp('-> Sampling FINISHED.');
-end
-
-end
-
-
-
-%% PTEE swap probability
-% function p = PTEE_swap_probability(logP)
-% 
-%     p = zeros(length(logP));
-%     for k1 = 1:length(logP)
-%         for k2 = 1:k1-1
-%             p(k1,k2) = exp(-abs(logP(k1)-logP(k2)));
-%         end
-%     end
-%     p = p/sum(p(:));
-% 
-% end
-
-
-
-%% Call the visual ouput routine
-function [fh_logPost_trace,fh_par_trace,fh_par_dis_1D,fh_par_dis_2D] = visualizeResults(parameters, options)
-
-    % figure generation
-    fh_logPost_trace = [];
-    fh_par_trace = [];
-    fh_par_dis_1D = [];
-    fh_par_dis_2D = [];
-    switch options.mode
-        case 'visual'
-            % logL trace
-            if isempty(options.plot_options.fh_logPost_trace)
-                fh_logPost_trace = figure('Name','plotParameterSamples - Posterior Trace');
-            else
-                fh_logPost_trace = figure(options.plot_options.fh_logPost_trace);
-            end
-            % parameter traces
-            if isempty(options.plot_options.fh_par_trace)
-                fh_par_trace = figure('Name','plotParameterSamples - Parameter Trace');
-            else
-                fh_par_trace = figure(options.plot_options.fh_par_trace);
-            end
-            % parameter distribution
-            if isempty(options.plot_options.fh_par_dis_1D)
-                fh_par_dis_1D = figure('Name','plotParameterSamples - Parameter Distribution 1D');
-            else
-                fh_par_dis_1D = figure(options.plot_options.fh_par_dis_1D);
-            end
-            if isempty(options.plot_options.fh_par_dis_2D)
-                fh_par_dis_2D = figure('Name','plotParameterSamples - Parameter Distribution 2D');
-            else
-                fh_par_dis_2D = figure(options.plot_options.fh_par_dis_2D);
-            end
-        case 'text'
-            fprintf(' \nSampling:\n=========\n');
-        case 'silent' % no output
-    end
-
-    %  passing things to the plot routine
-    if strcmp(options.mode,'visual')
-        % Diagnosis plots
-        plotMCMCdiagnosis(parameters, 'log-posterior', fh_logPost_trace);
-        plotMCMCdiagnosis(parameters, 'parameters', fh_par_trace);
-        
-        % Set the correct options
-        options.plot_options.S.plot_type = 1;
-        
-        % Parameter distribution
-        plotParameterSamples(parameters, '1D', fh_par_dis_1D, [], options.plot_options);
-        plotParameterSamples(parameters, '2D', fh_par_dis_2D, [], options.plot_options);
-    end
-
-end
