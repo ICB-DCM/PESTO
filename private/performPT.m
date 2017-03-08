@@ -3,9 +3,9 @@ function res = performPT( logPostHandle, par, opt )
 % 'logPostHandle'. The tempered chains are getting swapped using an equi
 % energy scheme. The temperatures are getting adapted as well as the
 % proposal density covariance matrix. The options 'opt' cover:
-% opt.theta0                  : The inital parameter points for each of the
+% opt.theta0                  : The initial parameter points for each of the
 %                               tempered chains
-% opt.sigma0                  : The inital proposal covariance matrix of
+% opt.sigma0                  : The initial proposal covariance matrix of
 %                               the parameters
 % par.min and par.max         : The lower and upper bounds for the
 %                               parameters. Proposed points outside this
@@ -26,13 +26,13 @@ function res = performPT( logPostHandle, par, opt )
 %                               temperature adaption. Sample properties as
 %                               described for opt.PT.alpha.
 % opt.PT.memoryLength         : Control parameter for adaption. Higher
-%                               values supress strong ealy adaption.
+%                               values suppress strong early adaption.
 % opt.PT.regFactor            : This factor is used for regularization in
 %                               cases where the single-chain proposal
 %                               covariance matrices are ill conditioned.
 %                               Larger values equal stronger
 %                               regularization.
-% opt.PT.termpatureAdaptionScheme: Defines the termperature adation scheme. 
+% opt.PT.temperatureAdaptionScheme: Defines the temperature adaption scheme. 
 %                               Either 'Vousden16' or 'Lacki15'.   
 %
 %
@@ -40,7 +40,7 @@ function res = performPT( logPostHandle, par, opt )
 % res.par               : The Markov chain of the parameters for each temperature
 % res.logPost           : The objective value corresponding to parameter
 %                         vector for each temperature
-% res.acc               : The cummulative acceptance rate of the chains
+% res.acc               : The cumulative acceptance rate of the chains
 % res.accSwap           : The acceptance rate of swaps between tempered chains
 % res.propSwap          : Number of times a swap between tempered chains
 %                         was proposed
@@ -48,7 +48,7 @@ function res = performPT( logPostHandle, par, opt )
 %                         covariance matrices, which is adapted to
 %                         accomplish an overall 23% acceptance rate
 % res.sigmaHist         : Single-chain proposal covariance matrix
-% res.temperatures      : The termperatures of all tempered chains
+% res.temperatures      : The temperatures of all tempered chains
 %
 %
 % Written by Benjamin Ballnus 2/2017
@@ -155,7 +155,7 @@ for i = 1:(nIter)
          % New sigma
          sigmaProp(:,:,l) = sigmaScale(l)^2 * sigmaHist(:,:,l);
          
-         % Regularization of propos sigma
+         % Regularization of proposed sigma
          [~,p] = cholcov(sigmaProp(:,:,l),0);
          if p ~= 0
             sigmaProp(:,:,l) = sigmaProp(:,:,l) + regFactor*eye(nPar);
@@ -171,7 +171,7 @@ for i = 1:(nIter)
          inbounds = 0;
       end
       
-      % Transition and Acceptance Propbabilities
+      % Transition and Acceptance Probabilities
       if (inbounds == 1) && (logPostProp(l) > -inf)
          logTransFor(l) = 1;
          logTransBack(l) = 1;
@@ -297,16 +297,3 @@ for i = 1:(nIter)
    res.temperatures(i,:) = 1./beta;
 end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-

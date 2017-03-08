@@ -5,7 +5,7 @@ function res = performMALA( logPostHandle, par, opt )
 % value, gradient and hessian at the current parameter point.
 %
 % The options 'opt' cover:
-% opt.theta0                  : The inital parameter points for each of the
+% opt.theta0                  : The initial parameter points for each of the
 %                               tempered chains
 % par.min and par.max         : The lower and upper bounds for the
 %                               parameters. Proposed points outside this
@@ -23,7 +23,7 @@ function res = performMALA( logPostHandle, par, opt )
 % res.par               : The Markov chain of the parameters
 % res.logPost           : The objective value corresponding to parameter
 %                         vector
-% res.acc               : The cummulative acceptance rate of the chains
+% res.acc               : The cumulative acceptance rate of the chains
 %
 %
 % Written by Benjamin Ballnus 2/2017
@@ -95,7 +95,7 @@ for i = 1:(nIter)
       inbounds = 0;
    end
    
-   % Transition and Acceptance Propbabilities
+   % Transition and Acceptance Probabilities
    if (inbounds == 1) && (logPostProp > -inf)
       logTransFor = logmvnpdf(theta, thetaProp, sigma);
       logTransBack = logmvnpdf(thetaProp, theta, sigmaProp);
