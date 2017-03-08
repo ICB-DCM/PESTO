@@ -53,6 +53,14 @@ if nargin >= 5
 else
     ig = 2;
 end
+
+if nargin >= 6
+    fplot = varargin{6};
+else
+    fplot = false;
+end
+
+
 theta = theta(:);
 
 if(~ischar(ig))
@@ -173,4 +181,77 @@ for i = 1:length(theta)
         % central differences
         eval(['g_fd_c(' repmat(':,',1,numel(size(g))-1) 'i) = (l_i_f-l_i_b)/(2*eps);'])
     end
+end
+
+if(fplot)
+   figure
+   subplot(2,2,1)
+   error_plot(g_fd_f(:)-g_fd_c(:),g_fd_b(:)-g_fd_c(:),g(:)-g_fd_c(:))
+   
+   subplot(2,2,2)
+   error_plot(g(:),g_fd_c(:),g(:)-g_fd_c(:))
+   
+   subplot(2,2,3)
+   ratio_plot(g_fd_f(:)-g_fd_c(:),g_fd_b(:)-g_fd_c(:),g(:)./g_fd_c(:),g_fd_f(:)-g_fd_c(:))
+   
+   subplot(2,2,4)
+   ratio_plot(g(:),g_fd_c(:),g(:)./g_fd_c(:),g_fd_f(:)-g_fd_c(:))
+end
+end
+
+function error_plot(g1,g2,ee)
+    scatter(abs(g1),abs(ee),'rx')
+    hold on
+    scatter(abs(g2),abs(ee),'bo')
+    set(gca,'YScale','log')
+    set(gca,'XScale','log')
+    e = [abs(ee);abs(g1);abs(g2)];
+    mine = min(e(e>0))*0.5;
+    maxe = max(e(e>0))*2;
+    if(isempty(mine))
+       mine = 1e-1;
+       maxe = 1e0;
+    end
+    xlim([mine,maxe])
+    ylim([mine,maxe])
+    if(isempty(mine))
+        mine = 1e-1;
+        maxe = 1e0;
+    end
+    plot([mine,maxe],[mine,maxe],'k:');
+    legend('Gradient','FD','Location','NorthWest')
+    xlabel('derivative value')
+    ylabel('difference |Gradient-FD|')
+    axis square
+    box on
+end
+
+function ratio_plot(g1,g2,rr,ee)
+   scatter(abs(g1),abs(rr),'rx')
+   hold on
+   scatter(abs(g2),abs(rr),'bo')
+   set(gca,'YScale','log')
+   set(gca,'XScale','log') 
+   e = [abs(ee);abs(g1);abs(g2)];
+   mine = min(e(e>0))*0.5;
+   maxe = max(e(e>0))*2;
+   if(isempty(mine))
+       mine = 1e-1;
+       maxe = 1e0;
+   end
+   r = [abs(rr)];
+   minr = min(r(r>0))*0.5;
+   maxr = max(r(r>0))*2;
+   xlim([mine,maxe])
+   try
+       ylim([minr,maxr])
+   catch
+       ylim([1e-1,1e1])
+   end
+   plot([mine,maxe],[1,1],'k:');
+   legend('Gradient','FD','Location','SouthEast')
+   xlabel('derivative value')
+   ylabel('ratio Gradient/FD')
+   axis square
+   box on
 end
