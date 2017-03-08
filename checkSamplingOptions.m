@@ -18,13 +18,13 @@ if ~Check('par')
          'parameter struct at least covering bounds and number of parameters.'])
 end
 if ~Check('opt.obj_type')
-   error(['Please specify the type of objective function, e.g. opt.obj_type = ''log-posterior''']);
+   error('Please specify the type of objective function, e.g. opt.obj_type = "log-posterior"');
 end
 if ~Check('par.number')
    error('Please specify the number of parameters, e.g. par.number = 7.')
 end
 if ~Check('opt.rndSeed')
-   error('Please specify the random seed, e.g. opt.rndSeed = 7 or opt.rndSeed = ''shuffle''.')
+   error('Please specify the random seed, e.g. opt.rndSeed = 7 or opt.rndSeed = "shuffle".')
 end
 if ~Check('par.min')
    error('Please define lower parameter borders, e.g. par.min = [-1;2;4]')
@@ -77,7 +77,7 @@ switch opt.samplingAlgorithm
          error('Please enter an options sub-struct for DRAM options, e.g. options.DRAM. ... .')
       end     
       if ~Check('opt.objOutNumber')
-         error(['Please specify opt.objOutNumber = 1'])
+         error('Please specify opt.objOutNumber = 1')
       end      
       if ~Check('opt.theta0')
          error(['Please define an inital parameter point, e.g. opt.theta0 = [-1;2;4]'''
@@ -100,13 +100,13 @@ switch opt.samplingAlgorithm
                 'opt.DRAM.regFactor = 1e-5'])
       end  
       if ~Check('opt.DRAM.nTry')
-         error(['Please specify the number of delayed rejection tries, e.g. opt.DRAM.nTry = 5'])
+         error('Please specify the number of delayed rejection tries, e.g. opt.DRAM.nTry = 5')
       end  
       if ~Check('opt.DRAM.verbosityMode')
-         error(['Please specify the level of verbosity, e.g. opt.DRAM.nTry = ''text'''])
+         error('Please specify the level of verbosity, e.g. opt.DRAM.nTry = "text"')
       end    
       if ~Check('opt.DRAM.adaptionInterval')
-         error(['Please specify the adaption interval, e.g. opt.DRAM.adaptionInterval = 20'])
+         error('Please specify the adaption interval, e.g. opt.DRAM.adaptionInterval = 20')
       end           
       
    case 'PT'
@@ -115,7 +115,7 @@ switch opt.samplingAlgorithm
          error('Please enter an options sub-struct for PT options, e.g. options.PT. ... .')
       end    
       if ~Check('opt.objOutNumber')
-         error(['Please specify opt.objOutNumber = 1'])
+         error('Please specify opt.objOutNumber = 1')
       end          
       if ~Check('opt.PT.nTemps')
          error(['Please enter the initial number of temperatures, e.g. ' ...
@@ -179,10 +179,10 @@ switch opt.samplingAlgorithm
          error('Please enter an options sub-struct for PHS options, e.g. options.PHS. ... .')
       end    
       if ~Check('opt.objOutNumber')
-         error(['Please specify opt.objOutNumber = 1'])
+         error('Please specify opt.objOutNumber = 1')
       end          
       if ~Check('opt.PHS.nChains')
-         error(['Please enter the number of chains, e.g. options.PHS.nChains = 10.'])
+         error('Please enter the number of chains, e.g. options.PHS.nChains = 10.')
       end
       if ~Check('opt.theta0')
          error(['Please define an inital parameter point, e.g. opt.theta0 = [-1;2;4]'...
@@ -270,7 +270,7 @@ function flag = Check(str)
    
    % If str is a struct check if last child exists, if str is a varable,
    % check if the variable exists in the workspace
-   if length(k) > 0
+   if ~isempty(k) > 0
       errCnt = errCnt + ~isfield(eval(str(1:k(end)-1)),str(k(end)+1:end));
    else
       errCnt = errCnt + ~exist(str,'var');
