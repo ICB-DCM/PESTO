@@ -46,7 +46,7 @@ set(0,TextSizes);
 % See logLikelihood.m for a detailed description
 
 %% Create Artificial Data for Parameter Estimation
-% The necessery variables are set (Parameter bounds, variance, ...)
+% The necessary variables are set (Parameter bounds, variance, ...)
 nTimepoints = 100;      % Time points of Measurement
 nMeasure    = 5;        % Number of experiments
 sigma2      = 0.05^2;   % Variance of Measurement noise
@@ -103,7 +103,7 @@ samplingOptions.PT.memoryLength     = 1;
 samplingOptions.PT.regFactor        = 1e-4;
 samplingOptions.PT.temperatureAdaptionScheme =  'Lacki15'; %'Vousden16'; %
 
-% Initialize the chains by choosing a random inital point and a 'large'
+% Initialize the chains by choosing a random initial point and a 'large'
 % covariance matrix
 samplingOptions.theta0 = lowerBound * ones(4, 1) + ...
     (upperBound * ones(4, 1) - lowerBound * ones(4, 1)) .* rand(4,1); 
