@@ -1,6 +1,6 @@
-% mainExampleGauss.m shows how to use sampling methods in PESTO. The
+% mainExampleRing.m shows how to use sampling methods in PESTO. The
 % example problem is a smudged hyper-ring. Its properties can be altered in
-% define_Gauss_LLH.m and its dimension via ringDimension.
+% defineRingLLH.m and its dimension via ringDimension.
 %
 % Written by Benjamin Ballnus 2/2017
 
@@ -84,8 +84,6 @@ opt.sigma0                = 1e5*diag(ones(1,ringDimension));
 
 
 % Perform the parameter estimation via sampling
-par = rmfield(par, 'P');
-par = rmfield(par, 'MS');
 par = getParameterSamples(par, logP, opt);
 
 
