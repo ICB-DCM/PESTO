@@ -115,9 +115,6 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
    
    
    %% Check and assign inputs, note that theta0 and sigma0 are always set manually outside this function
-   opt.number = parameters.number;
-   opt.min    = parameters.min;
-   opt.max    = parameters.max;
    checkSamplingOptions(parameters,opt);
    
    %% Wrap objective function
@@ -128,19 +125,19 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
       
       % DRAM
       case 'DRAM'
-         parameters.S = performDRAM( wrappedObjFkt, opt );
+         parameters.S = performDRAM( wrappedObjFkt, par, opt );
          
          % MALA
       case 'MALA'
-         parameters.S = performMALA( wrappedObjFkt, opt );
+         parameters.S = performMALA( wrappedObjFkt, par, opt );
          
          % MH, AM and PT
       case 'PT'
-         parameters.S = performPT( wrappedObjFkt, opt );
+         parameters.S = performPT( wrappedObjFkt, par, opt );
          
          % PHS
       case 'PHS'
-         parameters.S = performPHS( wrappedObjFkt, opt );
+         parameters.S = performPHS( wrappedObjFkt, par, opt );
    end
    
    

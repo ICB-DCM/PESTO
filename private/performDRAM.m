@@ -1,4 +1,4 @@
-function res = performDRAM( logPostHandle, opt )
+function res = performDRAM( logPostHandle, par, opt )
 % performDRAM.m uses an Delayed Rejection Adaptive Metropolis algorithm to sample from an objective function
 % 'logPostHandle' by using the DRAM library routine tooparameters.minox.
 % It provides the interface to the MATLAB tooparameters.minox for
@@ -11,9 +11,10 @@ function res = performDRAM( logPostHandle, opt )
 %                               tempered chains
 % opt.sigma0                  : The inital proposal covariance matrix of
 %                               the parameters
-% opt.min and opt.max         : The lower and upper bounds for the
+% par.min and par.max         : The lower and upper bounds for the
 %                               parameters. Proposed points outside this
 %                               area are getting rejected
+% par.number                  : Number of parameters
 % opt.nIterations             : Number of desired sampling iterations
 % opt.DRAM.regFactor          : This factor is used for regularization in
 %                               cases where the single-chain proposal
@@ -38,7 +39,7 @@ function res = performDRAM( logPostHandle, opt )
 
 
 % Initialization
-nPar = opt.number;
+nPar = par.number;
 
 dramOptions.adaptint    = opt.DRAM.adaptionInterval; 
 dramOptions.method      = 'dram';

@@ -609,8 +609,8 @@ for l2 = 1:length(I)
                         Sigma = pinv(parameters.MS.hessian([i1,i2],[i1,i2],1));
                         theta_0 = parameters.MS.par([i1,i2],1);
                         plot_appr = true;
-                    else
-                        warning('No valid values for sigma found! Not plotting approximation.');
+                    elseif isfield(parameters, 'MS')
+                        warning('No valid values for sigma found! No plotting approximation.');
                     end
                 case 'sigmaOnly'
                     if (~isfield(parameters, 'MS') || ~isfield(parameters.MS, 'par') || isempty(parameters.MS.par,3))
@@ -618,7 +618,7 @@ for l2 = 1:length(I)
                         theta_0 = parameters.MS.par([i1,i2],1);
                         plot_appr = true;
                     else
-                        warning('No valid values for theta found! Not plotting approximation.');
+                        warning('No valid values for theta found! No plotting approximation.');
                     end
                 case 'all'
                     Sigma = parameters.user.Sigma_0([i1,i2],[i1,i2]);

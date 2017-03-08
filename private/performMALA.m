@@ -1,4 +1,4 @@
-function res = performMALA( logPostHandle, opt )
+function res = performMALA( logPostHandle, par, opt )
 % performPT.m uses single-chain MALA to sample from the posterior given by
 % 'logPostHandle' as a function of the parameters. MALA uses gradients and hessian to improve
 % the convergence rate. 'logPostHandle' must return the cost function
@@ -7,10 +7,10 @@ function res = performMALA( logPostHandle, opt )
 % The options 'opt' cover:
 % opt.theta0                  : The inital parameter points for each of the
 %                               tempered chains
-% opt.min and opt.max         : The lower and upper bounds for the
+% par.min and par.max         : The lower and upper bounds for the
 %                               parameters. Proposed points outside this
 %                               area are getting rejected
-% opt.number                  : Number of parameters
+% par.number                  : Number of parameters
 % opt.nIterations             : Number of desired sampling iterations
 % opt.MALA.regFactor          : This factor is used for regularization in
 %                               cases where the proposal
@@ -32,10 +32,10 @@ function res = performMALA( logPostHandle, opt )
 % Initialization
 nIter = opt.nIterations;
 theta0 = opt.theta0;
-thetaMin = opt.min;
-thetaMax = opt.max;
+thetaMin = par.min;
+thetaMax = par.max;
 regFactor = opt.MALA.regFactor;
-nPar = opt.number;
+nPar = par.number;
 
 res.par = nan(nPar, nIter);
 res.logPost = nan(nIter, 1);

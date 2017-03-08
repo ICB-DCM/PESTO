@@ -1,4 +1,4 @@
-function res = performPT( logPostHandle, opt )
+function res = performPT( logPostHandle, par, opt )
 % performPT.m uses an adaptive Parallel Tempering algorithm to sample from an objective function
 % 'logPostHandle'. The tempered chains are getting swapped using an equi
 % energy scheme. The temperatures are getting adapted as well as the
@@ -7,10 +7,10 @@ function res = performPT( logPostHandle, opt )
 %                               tempered chains
 % opt.sigma0                  : The inital proposal covariance matrix of
 %                               the parameters
-% opt.min and opt.max         : The lower and upper bounds for the
+% par.min and par.max         : The lower and upper bounds for the
 %                               parameters. Proposed points outside this
 %                               area are getting rejected
-% opt.number                  : Number of parameters
+% par.number                  : Number of parameters
 % opt.nIterations             : Number of desired sampling iterations
 % opt.PT.nTemps               : Number of tempered chains
 % opt.PT.exponentT            : The exponent of the power law for initial
@@ -59,15 +59,15 @@ nTemps = opt.PT.nTemps;
 nIter = opt.nIterations;
 theta0 = opt.theta0;
 sigma0 = opt.sigma0;
-thetaMin = opt.min;
-thetaMax = opt.max;
+thetaMin = par.min;
+thetaMax = par.max;
 exponentT = opt.PT.exponentT;
 alpha = opt.PT.alpha;
 temperatureAlpha = opt.PT.temperatureAlpha;
 memoryLength = opt.PT.memoryLength;
 regFactor = opt.PT.regFactor;
 temperatureAdaptionScheme = opt.PT.temperatureAdaptionScheme;
-nPar = opt.number;
+nPar = par.number;
 
 res.par = nan(nPar, nIter, nTemps);
 res.logPost = nan(nIter, nTemps);

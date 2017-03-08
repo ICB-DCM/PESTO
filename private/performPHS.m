@@ -1,4 +1,4 @@
-function res = performPHS( logPostHandle, opt )
+function res = performPHS( logPostHandle, par, opt )
 % performPHS.m uses Parallel Hierarchical Sampling algorithm to sample from an objective function
 % 'logPostHandle'. The code is based on [RigatMira2012]. 
 % The 'mother' chain is swaped with one of the auxillary chains in each iteration.
@@ -8,10 +8,10 @@ function res = performPHS( logPostHandle, opt )
 %                               tempered chains
 % opt.sigma0                  : The inital proposal covariance matrix of
 %                               the parameters
-% opt.min and opt.max         : The lower and upper bounds for the
+% par.min and par.max         : The lower and upper bounds for the
 %                               parameters. Proposed points outside this
 %                               area are getting rejected
-% opt.number                  : Number of parameters
+% par.number                  : Number of parameters
 % opt.nIterations             : Number of desired sampling iterations
 % opt.PHS.nChains             : Number of chains (1 'mother'-chain and opt.PHS.nChains-1 
 %                               auxillary chains)
@@ -53,12 +53,12 @@ nChains = opt.PHS.nChains;
 nIter = opt.nIterations;
 theta0 = opt.theta0;
 sigma0 = opt.sigma0;
-thetaMin = opt.min;
-thetaMax = opt.max;
+thetaMin = par.min;
+thetaMax = par.max;
 alpha = opt.PHS.alpha;
 memoryLength = opt.PHS.memoryLength;
 regFactor = opt.PHS.regFactor;
-nPar = opt.number;
+nPar = par.number;
 trainingTime = opt.PHS.trainingTime;
 
 res.par = nan(nPar, nIter, nChains);
