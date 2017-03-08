@@ -87,16 +87,6 @@ samplingPlottingOpt.S.ind = 1; % 3 to show all temperatures
 samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
 samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
 
-plotParameterSamples(par,'1D',[],[],samplingPlottingOpt)
+plotParameterSamples(par,'1D',[],[],samplingPlottingOpt);
 
-plotParameterSamples(par,'2D',[],[],samplingPlottingOpt)
-
-
-
-
-
-
-
-
-
-
+plotParameterSamples(par,'2D',[],[],samplingPlottingOpt);
