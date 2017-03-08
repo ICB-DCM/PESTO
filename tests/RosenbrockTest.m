@@ -49,8 +49,8 @@ function RosenbrockTest()
     % Call the routies
     parameters = getMultiStarts(parameters, objectiveFunction, options);
     parameters = getParameterProfiles(parameters, objectiveFunction, options);
-%     parameters = getParameterSamples(parameters, objectiveFunction, options);
-%     getParameterConfidenceIntervals(parameters, [0.8, 0.9,0.95,0.99]);
+    parameters = getParameterSamples(parameters, objectiveFunction, options);
+    getParameterConfidenceIntervals(parameters, [0.8, 0.9,0.95,0.99]);
 end
 
 function [y, dy, ddy] = rosenbrock(x, a, b)

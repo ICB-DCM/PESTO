@@ -30,7 +30,7 @@ optMS.obj_type = 'log-posterior';
 optMS.objOutNumber = 1;
 optMS.n_starts = 20;
 optMS.comp_type = 'sequential';
-optMS.mode = 'text';
+optMS.mode = 'visual';
 % optMS.plot_options.add_points.par = theta_true;
 % optMS.plot_options.add_points.logPost = objectiveFunction(theta_true);
 % optMS.plot_options.add_points.prop = nan(properties.number,1);
@@ -84,7 +84,8 @@ opt.sigma0                = 1e5*diag(ones(1,ringDimension));
 
 
 % Perform the parameter estimation via sampling
-par.MS = [];
+par = rmfield(par, 'P');
+par = rmfield(par, 'MS');
 par = getParameterSamples(par, logP, opt);
 
 

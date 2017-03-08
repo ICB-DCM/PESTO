@@ -88,29 +88,29 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 
 %% Parameter Sampling
 % Covering all sampling options in one struct
-samplingOpt.obj_type      = 'log-posterior';
-samplingOpt.objOutNumber  = 1;
-samplingOpt.rndSeed       = 3;
-samplingOpt.nIterations   = 2e4;
+samplingOptions.obj_type     = 'log-posterior';
+samplingOptions.objOutNumber = 1;
+samplingOptions.rndSeed      = 3;
+samplingOptions.nIterations  = 2e4;
 
 % PT (with only 1 chain -> AM) specific options:
-samplingOpt.samplingAlgorithm     = 'PT';
-samplingOpt.PT.nTemps             = 1;
-samplingOpt.PT.exponentT          = 4;    
-samplingOpt.PT.alpha              = 0.51;
-samplingOpt.PT.temperatureAlpha   = 0.51;
-samplingOpt.PT.memoryLength       = 1;
-samplingOpt.PT.regFactor          = 1e-4;
-samplingOpt.PT.temperatureAdaptionScheme =  'Lacki15'; %'Vousden16'; %
+samplingOptions.samplingAlgorithm   = 'PT';
+samplingOptions.PT.nTemps           = 1;
+samplingOptions.PT.exponentT        = 4;    
+samplingOptions.PT.alpha            = 0.51;
+samplingOptions.PT.temperatureAlpha = 0.51;
+samplingOptions.PT.memoryLength     = 1;
+samplingOptions.PT.regFactor        = 1e-4;
+samplingOptions.PT.temperatureAdaptionScheme =  'Lacki15'; %'Vousden16'; %
 
 % Initialize the chains by choosing a random inital point and a 'large'
 % covariance matrix
-samplingOpt.theta0                = lowerBound * ones(4, 1) + ...
-                                    (upperBound * ones(4, 1) - lowerBound * ones(4, 1)) .* rand(4,1); 
-samplingOpt.sigma0                = 1e4 * diag(ones(1,4));
+samplingOptions.theta0 = lowerBound * ones(4, 1) + ...
+    (upperBound * ones(4, 1) - lowerBound * ones(4, 1)) .* rand(4,1); 
+samplingOptions.sigma0 = 1e4 * diag(ones(1,4));
 
 % Run the sampling
-parameters = getParameterSamples(parameters, objectiveFunction, samplingOpt);
+% parameters = getParameterSamples(parameters, objectiveFunction, samplingOptions);
 
 %% Plot the sampling results
 samplingPlottingOpt = PestoPlottingOptions();
@@ -120,7 +120,7 @@ samplingPlottingOpt.S.ind = 1; % 3 to show all temperatures
 samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
 samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
 
-plotParameterSamples(parameters2,'1D',[],[],samplingPlottingOpt)
+% plotParameterSamples(parameters2,'1D',[],[],samplingPlottingOpt)
 
 % plotParameterSamples(parameters2,'2D',[],[],samplingPlottingOpt)
 
@@ -171,11 +171,11 @@ parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
 %% Perform a second Sampling, now based on Multistart Optimization
 % To compare the effect of previous multi-start optimization, we perform a
 % second sampling.
-samplingOpt.theta0                = parameters.MS.par(:,1); 
-samplingOpt.sigma0                = 0.5*inv(squeeze(parameters.MS.hessian(:,:,1)));
+samplingOptions.theta0                = parameters.MS.par(:,1); 
+samplingOptions.sigma0                = 0.5*inv(squeeze(parameters.MS.hessian(:,:,1)));
 
 % Run the sampling
-parameters2 = getParameterSamples(parameters, objectiveFunction, samplingOpt);
+parameters2 = getParameterSamples(parameters, objectiveFunction, samplingOptions);
 
 %% Plot the sampling results
 samplingPlottingOpt = PestoPlottingOptions();

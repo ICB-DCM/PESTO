@@ -291,12 +291,3 @@ function flag = Check(str)
 end
 
 end
-
-
-
-
-
-
-
-
-

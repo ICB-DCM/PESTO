@@ -1,4 +1,4 @@
-function par = getParameterSamples(par, objFkt, opt)
+function parameters = getParameterSamples(parameters, objFkt, opt)
    % getParameterSamples.m performs MCMC sampling of the posterior
    %   distribution. Note, the DRAM library routine tooparameters.minox is
    %   used internally. This function is capable of sampling with MH, AM,
@@ -6,7 +6,7 @@ function par = getParameterSamples(par, objFkt, opt)
    %   be contained in here but as standalone scripts capable of using the
    %   resulting par.S.
    %
-   %   par   : parameter struct covering model options and results obtained by
+   %   parameters: parameter struct covering model options and results obtained by
    %               optimization, profiles and sampling. Optimization results
    %               can be used for initialization. The parameter struct should
    %               at least contain:
@@ -104,20 +104,21 @@ function par = getParameterSamples(par, objFkt, opt)
    %   opt.PHS.trainingTime        : The iterations before the first chain swap
    %                               is invoked
    %
-   %
-   %
-   % 2012/07/11 Jan Hasenauer
-   % 2015/04/29 Jan Hasenauer
-   % 2016/10/17 Benjamin Ballnus
-   % 2016/10/19 Daniel Weindl
-   % 2016/11/04 Paul Stapor
-   % 2017/02/01 Benjamin Ballnus
+   % History:
+   % * 2012/07/11 Jan Hasenauer
+   % * 2015/04/29 Jan Hasenauer
+   % * 2016/10/17 Benjamin Ballnus
+   % * 2016/10/19 Daniel Weindl
+   % * 2016/11/04 Paul Stapor
+   % * 2017/02/01 Benjamin Ballnus
+   
+   
    
    %% Check and assign inputs, note that theta0 and sigma0 are always set manually outside this function
-   opt.number = par.number;
-   opt.min    = par.min;
-   opt.max    = par.max;
-   checkSamplingOptions(par,opt);
+   opt.number = parameters.number;
+   opt.min    = parameters.min;
+   opt.max    = parameters.max;
+   checkSamplingOptions(parameters,opt);
    
    %% Wrap objective function
    wrappedObjFkt = @(theta) -objectiveWrap( theta, objFkt, opt.obj_type, opt.objOutNumber );
@@ -127,19 +128,19 @@ function par = getParameterSamples(par, objFkt, opt)
       
       % DRAM
       case 'DRAM'
-         par.S = performDRAM( wrappedObjFkt, opt );
+         parameters.S = performDRAM( wrappedObjFkt, opt );
          
          % MALA
       case 'MALA'
-         par.S = performMALA( wrappedObjFkt, opt );
+         parameters.S = performMALA( wrappedObjFkt, opt );
          
          % MH, AM and PT
       case 'PT'
-         par.S = performPT( wrappedObjFkt, opt );
+         parameters.S = performPT( wrappedObjFkt, opt );
          
          % PHS
       case 'PHS'
-         par.S = performPHS( wrappedObjFkt, opt );
+         parameters.S = performPHS( wrappedObjFkt, opt );
    end
    
    
