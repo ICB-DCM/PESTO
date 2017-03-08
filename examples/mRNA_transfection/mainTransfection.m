@@ -254,9 +254,9 @@ samplingOpt.PT.temperatureAdaptionScheme =  'Vousden16'; %'Lacki15'; %
 
 % Initialize the chains by choosing a random inital point and a 'large'
 % covariance matrix
-samplingOpt.theta0                = (parameters.min' + ...
-   (parameters.max' - parameters.min') .* rand(5,5))';
-samplingOpt.sigma0                = 1e4 * diag(ones(1,5));
+samplingOpt.theta0 = bsxfun(@plus, parameters.min', ...
+   bsxfun(@times, parameters.max' - parameters.min', rand(5,5)))';
+samplingOpt.sigma0 = 1e4 * diag(ones(1,5));
 
 % Initialize the chains by making use of the preceeding multi-start local
 % optimization, all of them starting from the same point
