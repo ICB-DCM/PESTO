@@ -125,19 +125,19 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
       
       % DRAM
       case 'DRAM'
-         parameters.S = performDRAM( wrappedObjFkt, par, opt );
+         parameters.S = performDRAM( wrappedObjFkt, parameters, opt );
          
          % MALA
       case 'MALA'
-         parameters.S = performMALA( wrappedObjFkt, par, opt );
+         parameters.S = performMALA( wrappedObjFkt, parameters, opt );
          
          % MH, AM and PT
       case 'PT'
-         parameters.S = performPT( wrappedObjFkt, par, opt );
+         parameters.S = performPT( wrappedObjFkt, parameters, opt );
          
          % PHS
       case 'PHS'
-         parameters.S = performPHS( wrappedObjFkt, par, opt );
+         parameters.S = performPHS( wrappedObjFkt, parameters, opt );
    end
    
    

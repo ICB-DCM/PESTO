@@ -28,18 +28,18 @@ if ~Check('opt.rndSeed')
 end
 if ~Check('par.min')
    error('Please define lower parameter borders, e.g. par.min = [-1;2;4]')
-elseif length(par.min) ~= opt.number 
+elseif length(par.min) ~= par.number 
    error('Please make sure par.number and the length of par.min are consistent.')
-elseif size(opt.min,2) > 1
-   opt.min = opt.min';
+elseif size(par.min,2) > 1
+   par.min = par.min';
    warning('Transposed par.min.')
 end
 if ~Check('par.max')
    error('Please define upper parameter borders, e.g. par.max = [-1;2;4]')
-elseif length(opt.max) ~= opt.number 
+elseif length(par.max) ~= par.number 
    error('Please make sure par.number and the length of par.max are consistent.')
-elseif size(opt.max,2) > 1
-   opt.max = opt.max';
+elseif size(par.max,2) > 1
+   par.max = par.max';
    warning('Transposed par.max.')
 end
 if ~Check('opt.nIterations')
@@ -83,15 +83,15 @@ switch opt.samplingAlgorithm
          error(['Please define an inital parameter point, e.g. opt.theta0 = [-1;2;4]'''
                 '. It is recommended to set theta0 and sigma0'...
                 ' by taking into account the results from a preceeding optimization.'])
-      elseif size(opt.theta0,1) ~= opt.number
+      elseif size(opt.theta0,1) ~= par.number
          error('Please make sure opt.theta0 and par.number are consistent.')             
       end      
       if ~Check('opt.sigma0')
          error(['Please define an inital parameter covariance matrix, e.g. opt.sigma0 = ' ...
                 '1e5*diag(ones(1,5)); It is recommended to set theta0 and sigma0'...
                 ' by taking into account the results from a preceeding optimization.'])
-      elseif  size(opt.sigma0,1) ~= opt.number || ...
-              size(opt.sigma0,2) ~= opt.number 
+      elseif  size(opt.sigma0,1) ~= par.number || ...
+              size(opt.sigma0,2) ~= par.number 
          error('Please make sure opt.sigma0 and par.number are consistent.')
       end        
       if ~Check('opt.DRAM.regFactor')
@@ -126,7 +126,7 @@ switch opt.samplingAlgorithm
                 'for single chain algorithms or opt.theta0 = repmat([0.1,1.05,-2.5,-0.5,0.4]'','...
                 '1,10) for multi-chain algorithms. It is recommended to set theta0 and sigma0'...
                 ' by taking into account the results from a preceeding optimization.'])
-      elseif size(opt.theta0,1) ~= opt.number || ...
+      elseif size(opt.theta0,1) ~= par.number || ...
             (size(opt.theta0,2) ~= opt.PT.nTemps && size(opt.theta0,2) ~= 1)
          error('Please make sure opt.theta0, the par.number and opt.PT.nTemps are consistent.')
       end      
@@ -136,8 +136,8 @@ switch opt.samplingAlgorithm
                 'for single chain algorithms or opt.sigma0 = repmat(1e5*diag(ones(1,5)),1,1,10)'...
                 ' for multi-chain algorithms. It is recommended to set theta0 and sigma0'...
                 ' by taking into account the results from a preceeding optimization.'])
-      elseif  size(opt.sigma0,1) ~= opt.number || ...
-              size(opt.sigma0,2) ~= opt.number || ...
+      elseif  size(opt.sigma0,1) ~= par.number || ...
+              size(opt.sigma0,2) ~= par.number || ...
               (size(opt.sigma0,3) ~= opt.PT.nTemps && size(opt.sigma0,3) ~= 1)
          error('Please make sure opt.sigma0, the par.number and opt.PT.nTemps are consistent.')
       end        
@@ -189,7 +189,7 @@ switch opt.samplingAlgorithm
                 'for single chain algorithms or opt.theta0 = repmat([0.1,1.05,-2.5,-0.5,0.4]'','...
                 '1,10) for multi-chain algorithms. It is recommended to set theta0 and sigma0'...
                 ' by taking into account the results from a preceeding optimization.'])
-      elseif size(opt.theta0,1) ~= opt.number || ...
+      elseif size(opt.theta0,1) ~= par.number || ...
             (size(opt.theta0,2) ~= opt.PHS.nChains && size(opt.theta0,2) ~= 1)
          error('Please make sure opt.theta0, the par.number and opt.PT.nTemps are consistent.')
       end      
@@ -199,8 +199,8 @@ switch opt.samplingAlgorithm
                 'for single chain algorithms or opt.sigma0 = repmat(1e5*diag(ones(1,5)),1,1,10)'...
                 ' for multi-chain algorithms. It is recommended to set theta0 and sigma0'...
                 ' by taking into account the results from a preceeding optimization.'])
-      elseif  size(opt.sigma0,1) ~= opt.number || ...
-              size(opt.sigma0,2) ~= opt.number || ...
+      elseif  size(opt.sigma0,1) ~= par.number || ...
+              size(opt.sigma0,2) ~= par.number || ...
               (size(opt.sigma0,3) ~= opt.PHS.nChains && size(opt.sigma0,3) ~= 1)
          error('Please make sure opt.sigma0, the par.number and opt.PHS.nChains are consistent.')
       end        
