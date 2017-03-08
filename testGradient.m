@@ -186,76 +186,60 @@ end
 if(fplot)
    figure
    subplot(2,2,1)
-   scatter(abs(g_fd_f(:)-g_fd_c(:)),abs(g(:)-g_fd_c(:)),'rx')
-   hold on
-   scatter(abs(g_fd_b(:)-g_fd_c(:)),abs(g(:)-g_fd_c(:)),'bo')
-   set(gca,'YScale','log')
-   set(gca,'XScale','log') 
-   e = [abs(g_fd_f(:)-g_fd_c(:));abs(g_fd_b(:)-g_fd_c(:));abs(g(:)-g_fd_c(:))];
-   mine = min(e(e>0))*0.5;
-   maxe = max(e(e>0))*2;
-   xlim([mine,maxe])
-   ylim([mine,maxe])
-   plot([mine,maxe],[mine,maxe],'k:');
-   xlabel('FD precision (upper bound)')
-   ylabel('difference |Gradient-FD|')
-   axis square
-   box on
-   legend('forward FD','backward FD','Location','NorthWest')
+   error_plot(g_fd_f(:)-g_fd_c(:),g_fd_b(:)-g_fd_c(:),g(:)-g_fd_c(:))
    
    subplot(2,2,2)
-   scatter(abs(g(:)),abs(g(:)-g_fd_c(:)),'rx')
-   hold on
-   scatter(abs(g_fd_c(:)),abs(g(:)-g_fd_c(:)),'bo')
-   set(gca,'YScale','log')
-   set(gca,'XScale','log') 
-   e = [abs(g_fd_f(:)-g_fd_c(:));abs(g(:));abs(g_fd_c(:))];
-   mine = min(e(e>0))*0.5;
-   maxe = max(e(e>0))*2;
-   xlim([mine,maxe])
-   ylim([mine,maxe])
-   plot([mine,maxe],[mine,maxe],'k:');
-   legend('Gradient','FD','Location','NorthWest')
-   xlabel('derivative value')
-   ylabel('difference |Gradient-FD|')
-   axis square
-   box on
+   error_plot(g(:),g_fd_c(:),g(:)-g_fd_c(:))
    
    subplot(2,2,3)
-   scatter(abs(g_fd_f(:)-g_fd_c(:)),abs(g(:)./g_fd_c(:)),'rx')
-   hold on
-   scatter(abs(g_fd_b(:)-g_fd_c(:)),abs(g(:)./g_fd_c(:)),'bo')
-   set(gca,'YScale','log')
-   set(gca,'XScale','log') 
-   e = [abs(g_fd_f(:)-g_fd_c(:));abs(g_fd_b(:)-g_fd_c(:));abs(g(:)-g_fd_c(:))];
-   mine = min(e(e>0))*0.5;
-   maxe = max(e(e>0))*2;
-   r = [abs(g(:)./g_fd_c(:))];
-   minr = min(r(r>0))*0.5;
-   maxr = max(r(r>0))*2;
-   xlim([mine,maxe])
-   try  
-       ylim([minr,maxr])
-   catch
-       ylim([1e-1,1e1])
-   end
-   plot([mine,maxe],[1,1],'k:');
-   xlabel('FD precision (upper bound)')
-   ylabel('ratio Gradient/FD')
-   axis square
-   box on
-   legend('forward FD','backward FD','Location','SouthEast')
+   ratio_plot(g_fd_f(:)-g_fd_c(:),g_fd_b(:)-g_fd_c(:),g(:)./g_fd_c(:),g_fd_f(:)-g_fd_c(:))
    
    subplot(2,2,4)
-   scatter(abs(g(:)),abs(g(:)./g_fd_c(:)),'rx')
+   ratio_plot(g(:),g_fd_c(:),g(:)./g_fd_c(:),g_fd_f(:)-g_fd_c(:))
+end
+end
+
+function error_plot(g1,g2,ee)
+    scatter(abs(g1),abs(ee),'rx')
+    hold on
+    scatter(abs(g2),abs(ee),'bo')
+    set(gca,'YScale','log')
+    set(gca,'XScale','log')
+    e = [abs(ee);abs(g1);abs(g2)];
+    mine = min(e(e>0))*0.5;
+    maxe = max(e(e>0))*2;
+    if(isempty(mine))
+       mine = 1e-1;
+       maxe = 1e0;
+    end
+    xlim([mine,maxe])
+    ylim([mine,maxe])
+    if(isempty(mine))
+        mine = 1e-1;
+        maxe = 1e0;
+    end
+    plot([mine,maxe],[mine,maxe],'k:');
+    legend('Gradient','FD','Location','NorthWest')
+    xlabel('derivative value')
+    ylabel('difference |Gradient-FD|')
+    axis square
+    box on
+end
+
+function ratio_plot(g1,g2,rr,ee)
+   scatter(abs(g1),abs(rr),'rx')
    hold on
-   scatter(abs(g_fd_c(:)),abs(g(:)./g_fd_c(:)),'bo')
+   scatter(abs(g2),abs(rr),'bo')
    set(gca,'YScale','log')
    set(gca,'XScale','log') 
-   e = [abs(g_fd_f(:)-g_fd_c(:));abs(g(:));abs(g_fd_c(:))];
+   e = [abs(ee);abs(g1);abs(g2)];
    mine = min(e(e>0))*0.5;
    maxe = max(e(e>0))*2;
-   r = [abs(g(:)./g_fd_c(:))];
+   if(isempty(mine))
+       mine = 1e-1;
+       maxe = 1e0;
+   end
+   r = [abs(rr)];
    minr = min(r(r>0))*0.5;
    maxr = max(r(r>0))*2;
    xlim([mine,maxe])
@@ -271,6 +255,3 @@ if(fplot)
    axis square
    box on
 end
-
-
-
