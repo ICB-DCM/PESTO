@@ -127,17 +127,27 @@ for l = 1:nTemps
 end
 sigma = sigmaHist;
 
+% Reporting sampling progress
+if strcmp(opt.mode, 'text');
+    fprintf('\n  Sampling Progress: (# = 0.1)\n');
+end
+
 % Perform MCMC
 j = 0;
 for i = 1:(nIter)
    
-   j = j + 1; % Relative Index for each Phase
+    j = j + 1; % Relative Index for each Phase
    
-   % Report Progress
-   clc
-   disp(['Progress: ' num2str(i/(nIter)*100) ' %'])
-   
-   
+    % Reporting Progress
+    switch opt.mode
+        case 'visual'
+        case 'text'
+            if (abs(mod(i, 100)) < 0.5)
+                fprintf('#');
+            end
+       case 'silent'
+    end
+
    % Do MCMC step for each temperature
    for l = 1:nTemps
       

@@ -115,7 +115,7 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
    
    
    %% Check and assign inputs, note that theta0 and sigma0 are always set manually outside this function
-   checkSamplingOptions(parameters,opt);
+   % checkSamplingOptions(parameters,opt);
    
    %% Wrap objective function
    wrappedObjFkt = @(theta) -objectiveWrap( theta, objFkt, opt.obj_type, opt.objOutNumber );

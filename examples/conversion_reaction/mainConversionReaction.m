@@ -184,28 +184,27 @@ parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultista
 % distribution can be captured. 
 
 % Building a struct covering all sampling options:
-samplingOptions.obj_type      = 'log-posterior';
-samplingOptions.objOutNumber  = 1;
-samplingOptions.rndSeed       = 3;
-samplingOptions.nIterations   = 2e3;
+optionsSampling = PestoSamplingOptions();
+optionsSampling.rndSeed       = 3;
+optionsSampling.nIterations   = 2e3;
 
 % PT specific options:
-samplingOptions.samplingAlgorithm     = 'PT';
-samplingOptions.PT.nTemps             = 3;
-samplingOptions.PT.exponentT          = 4;    
-samplingOptions.PT.alpha              = 0.51;
-samplingOptions.PT.temperatureAlpha   = 0.51;
-samplingOptions.PT.memoryLength       = 1;
-samplingOptions.PT.regFactor          = 1e-4;
-samplingOptions.PT.temperatureAdaptionScheme = 'Lacki15'; %'Vousden16'; %
+optionsSampling.samplingAlgorithm     = 'PT';
+optionsSampling.PT.nTemps             = 3;
+optionsSampling.PT.exponentT          = 4;    
+optionsSampling.PT.alpha              = 0.51;
+optionsSampling.PT.temperatureAlpha   = 0.51;
+optionsSampling.PT.memoryLength       = 1;
+optionsSampling.PT.regFactor          = 1e-4;
+optionsSampling.PT.temperatureAdaptionScheme = 'Lacki15'; %'Vousden16'; %
 
 % Initialize the chains by making use of the preceeding multi-start local
 % optimization, all of them starting from the same point
-samplingOptions.theta0 = parameters.MS.par(:,1); 
-samplingOptions.sigma0 = 0.5*inv(squeeze(parameters.MS.hessian(:,:,1)));
+optionsSampling.theta0 = parameters.MS.par(:,1); 
+optionsSampling.sigma0 = 0.5 * inv(squeeze(parameters.MS.hessian(:,:,1)));
 
 % Run the sampling
-parameters = getParameterSamples(parameters, objectiveFunction, samplingOptions);
+parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
 
 %% Plot the sampling results
 samplingPlottingOpt = PestoPlottingOptions();

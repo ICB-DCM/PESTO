@@ -95,12 +95,23 @@ for l = 1:nChains
 end
 sigma = sigmaHist;
 
+% Reporting sampling progress
+if strcmp(opt.mode, 'text');
+    fprintf('\n  Sampling Progress: (# = 0.1)\n');
+end
+
 % Perform MCMC
 for i = 1:(nIter)
    
-   % Report Progress
-   clc
-   disp(['Progress: ' num2str(i/(nIter)*100) ' %'])
+    % Reporting Progress
+    switch opt.mode
+        case 'visual'
+        case 'text'
+            if (abs(mod(i, 100)) < 0.5)
+                fprintf('#');
+            end
+       case 'silent'
+    end
    
    % Swap mother chain with one of the auxillary chains
    if trainingTime <= i
