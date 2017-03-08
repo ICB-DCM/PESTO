@@ -860,10 +860,14 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = doc \
+EXCLUDE                = doc/*.m \
+                         doc/config \
+                         doc/images \
+                         doc/out \
                          DRAM \
                          private \
-                         examples \
+                         examples/*/ \
+                         examples/*.m \
                          tests \
                          README.md
 
@@ -974,7 +978,7 @@ FILTER_SOURCE_PATTERNS =
 # (index.html). This can be useful if you have a project on for instance GitHub
 # and want to reuse the introduction page also for the doxygen output.
 
-USE_MDFILE_AS_MAINPAGE = documentation.md
+USE_MDFILE_AS_MAINPAGE = doc/documentation.md
 
 #---------------------------------------------------------------------------
 # Configuration options related to source browsing
