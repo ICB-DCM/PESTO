@@ -109,7 +109,7 @@ ym = [   0
 %% Definition of the Parameter Estimation Problem
 % In order to run any PESTO routine, at least the parameters struct with
 % the fields shown here and the objective function need to be defined,
-% since they are manadatory for getMultiStarts, which is usually the first
+% since they are mandatory for getMultiStarts, which is usually the first
 % routine needed for any parameter estimation problem.
 % In this case, also a properties struct is created. For this struct,
 % basically the same routines can be called as for the parameters, just the
@@ -201,7 +201,7 @@ parametersAlt = parameters;
 
 %% Visualization of fit
 % The measured data is visualized in a plot, together with fit for the best
-% parameter value found during getMutliStarts.
+% parameter value found during getMultiStarts.
 
 if strcmp(optionsMultistart.mode,'visual')
    % Simulation
@@ -311,8 +311,8 @@ properties = getPropertyMultiStarts(properties, parameters, optionsMultistart);
 properties = getPropertyProfiles(properties, parameters, objectiveFunction, optionsMultistart);
 
 %% Evaluation of properties for sampling results -- Properties
-% From the smaples of the parameters, the properties are calculated and
-% hence a probabality distribution for the properties can be reconstructed
+% From the samples of the parameters, the properties are calculated and
+% hence a probability distribution for the properties can be reconstructed
 % from that.
 
 properties = getPropertySamples(properties, parameters, optionsMultistart);
