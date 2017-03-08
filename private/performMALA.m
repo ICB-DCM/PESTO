@@ -1,11 +1,11 @@
 function res = performMALA( logPostHandle, opt )
-% performPT.m uses single-chain MALA to sample from the posterior given by
+% performMALA.m uses single-chain MALA to sample from the posterior given by
 % 'logPostHandle' as a function of the parameters. MALA uses gradients and hessian to improve
 % the convergence rate. 'logPostHandle' must return the cost function
 % value, gradient and hessian at the current parameter point.
 %
 % The options 'opt' cover:
-% opt.theta0                  : The inital parameter points for each of the
+% opt.theta0                  : The initial parameter points for each of the
 %                               tempered chains
 % opt.min and opt.max         : The lower and upper bounds for the
 %                               parameters. Proposed points outside this
@@ -23,7 +23,7 @@ function res = performMALA( logPostHandle, opt )
 % res.par               : The Markov chain of the parameters
 % res.logPost           : The objective value corresponding to parameter
 %                         vector
-% res.acc               : The cummulative acceptance rate of the chains
+% res.acc               : The cumulative acceptance rate of the chains
 %
 %
 % Written by Benjamin Ballnus 2/2017
@@ -95,7 +95,7 @@ for i = 1:(nIter)
       inbounds = 0;
    end
    
-   % Transition and Acceptance Propbabilities
+   % Transition and Acceptance Probabilities
    if (inbounds == 1) && (logPostProp > -inf)
       logTransFor = logmvnpdf(theta, thetaProp, sigma);
       logTransBack = logmvnpdf(thetaProp, theta, sigmaProp);
