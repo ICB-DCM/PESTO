@@ -20,4 +20,4 @@ rot1 = blkdiag(rot1,diag([ones(length(scale)-length(rot1),1)]));
 cov1 = rot1'*scale*rot1;
 sig = cat(3,repmat(cov1,1,1,n));
 rng('shuffle');
-logP = @(theta) simulate_Gauss_LLH(theta,mu,sig);
+logP = @(theta) simulateGaussLLH(theta,mu,sig);
