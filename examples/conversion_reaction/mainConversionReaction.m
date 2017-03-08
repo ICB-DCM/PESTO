@@ -45,8 +45,8 @@ set(0,TextSizes);
 
 %% Data
 % We fix an artificial data set. It consists of a vector of time points t
-% and a measurement vector Y. This data was created using the parameter 
-% values which are assigned to theta_true and by adding normaly distributed 
+% and a measurement vector y. This data was created using the parameter 
+% values which are assigned to theta_true and by adding normally distributed 
 % measurement noise with variance sigma2. 
 
 % True parameters
@@ -57,10 +57,10 @@ sigma2 = 0.015^2;   % measurement noise
 y = [0.0244; 0.0842; 0.1208; 0.1724; 0.2315; 0.2634; ... 
     0.2831; 0.3084; 0.3079; 0.3097; 0.3324]; % Measurement data
 
-%% Definition of the Paramter Estimation Problem
+%% Definition of the Parameter Estimation Problem
 % In order to run any PESTO routine, at least the parameters struct with 
 % the fields shown here and the objective function need to be defined, 
-% since they are manadatory for getMultiStarts, which is usually the first 
+% since they are mandatory for getMultiStarts, which is usually the first 
 % routine needed for any parameter estimation problem
 
 % parameters
@@ -124,7 +124,7 @@ parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
 
 %% Visualization of fit
 % The measured data is visualized in plot, together with fit for the best
-% parameter value found during getMutliStarts
+% parameter value found during getMultiStarts
 
 if strcmp(optionsMultistart.mode,'visual')
     % Simulation
@@ -215,7 +215,7 @@ samplingPlottingOpt.S.ind = 1; % 3 to show all temperatures
 samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
 samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
 
-plotParameterSamples(parameters,'1D',[],[],samplingPlottingOpt)
+plotParameterSamples(parameters,'1D',[],[],samplingPlottingOpt);
 
 % plotParameterSamples(parameters,'2D',[],[],samplingPlottingOpt)
 
@@ -243,7 +243,7 @@ properties = getPropertyProfiles(properties, parameters, objectiveFunction, opti
 
 %% Evaluation of properties for sampling results -- Properties
 % From the samples of the parameters, the properties are calculated and
-% hence a probabality distribution for the properties can be reconstructed
+% hence a probability distribution for the properties can be reconstructed
 % from that.
 
 properties = getPropertySamples(properties, parameters, optionsProperties);
