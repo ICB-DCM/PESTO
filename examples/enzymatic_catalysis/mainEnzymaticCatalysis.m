@@ -42,6 +42,8 @@ TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
+addpath(genpath([pwd filesep '..' filesep '..']));
+
 %% Model Definition
 % See logLikelihood.m for a detailed description
 
@@ -87,9 +89,10 @@ optionsPesto.plot_options.add_points.par = theta;
 optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 
 %% Parameter Sampling
+fprintf('\n Sampling...')
+
 % Covering all sampling options in one struct
-samplingOptions.obj_type     = 'log-posterior';
-samplingOptions.objOutNumber = 1;
+samplingOptions = PestoSamplingOptions();
 samplingOptions.rndSeed      = 3;
 samplingOptions.nIterations  = 2e4;
 
@@ -110,19 +113,8 @@ samplingOptions.theta0 = lowerBound * ones(4, 1) + ...
 samplingOptions.sigma0 = 1e4 * diag(ones(1,4));
 
 % Run the sampling
-% parameters = getParameterSamples(parameters, objectiveFunction, samplingOptions);
+parameters = getParameterSamples(parameters, objectiveFunction, samplingOptions);
 
-%% Plot the sampling results
-samplingPlottingOpt = PestoPlottingOptions();
-samplingPlottingOpt.S.plot_type = 1; % Histogram
-% samplingPlottingOpt.S.plot_type = 2; % Density estimate
-samplingPlottingOpt.S.ind = 1; % 3 to show all temperatures
-samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
-samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
-
-% plotParameterSamples(parameters2,'1D',[],[],samplingPlottingOpt)
-
-% plotParameterSamples(parameters2,'2D',[],[],samplingPlottingOpt)
 
 %% Perform Multistart optimization
 % A multi-start local optimization is performed within the bound defined in
@@ -146,9 +138,8 @@ samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
 % parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
 % Options for an alternative multi-start local optimization
-% 
-% optionsPesto.n_starts = 10;
-% parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+optionsPesto.n_starts = 10;
+parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
 %% Calculate Confidence Intervals
 % Confidence Intervals for the Parameters are inferred from the local 
