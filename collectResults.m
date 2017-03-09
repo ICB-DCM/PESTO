@@ -85,8 +85,9 @@ end
 %% Sort and save results
 switch type
     case 'parameters'
-        obj = sortMultiStarts(obj);
-        save(fullfile(foldername,'result_' foldername),'obj');
+        parameters = sortMultiStarts(obj);
+        save(fullfile(foldername,'parameters_' foldername),'parameters');
+        obj = parameters;
 end
 
 %% Visualization
