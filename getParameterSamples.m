@@ -140,6 +140,18 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
          parameters.S = performPHS( wrappedObjFkt, parameters, opt );
    end
    
+   %% Output
+   switch opt.mode
+      case 'visual'
+         samplingPlottingOpt = PestoPlottingOptions();
+         samplingPlottingOpt.S.plot_type = 1; % Histogram
+         samplingPlottingOpt.S.ind = 1;
+         samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
+         plotParameterSamples(parameters,'2D',[],[],samplingPlottingOpt);
+      case 'text', disp('-> Property evaluation for multi-start results FINISHED.');
+      case 'silent'
+   end
+   
    
 end
 
