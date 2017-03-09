@@ -71,8 +71,8 @@ con0 = getInitialConcentrations();
 % parameters
 fprintf('\n Prepare structs and options...')
 parameters.name   = {'log(theta_1)', 'log(theta_2)', 'log(theta_3)', 'log(theta_4)'};
-parameters.min    = lowerBound * ones(1, 4);
-parameters.max    = upperBound * ones(1, 4);
+parameters.min    = lowerBound * ones(4, 1);
+parameters.max    = upperBound * ones(4, 1);
 parameters.number = length(parameters.name);
 
 % objective function
@@ -88,29 +88,31 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 
 %% Parameter Sampling
 % Covering all sampling options in one struct
-samplingOptions.obj_type     = 'log-posterior';
-samplingOptions.objOutNumber = 1;
-samplingOptions.rndSeed      = 3;
-samplingOptions.nIterations  = 2e4;
+optionsSampling = PestoSamplingOptions();
+optionsSampling.obj_type     = 'log-posterior';
+optionsSampling.mode     = 'text';
+optionsSampling.objOutNumber = 3;
+optionsSampling.rndSeed      = 3;
+optionsSampling.nIterations  = 1e2;
 
 % PT (with only 1 chain -> AM) specific options:
-samplingOptions.samplingAlgorithm   = 'PT';
-samplingOptions.PT.nTemps           = 1;
-samplingOptions.PT.exponentT        = 4;    
-samplingOptions.PT.alpha            = 0.51;
-samplingOptions.PT.temperatureAlpha = 0.51;
-samplingOptions.PT.memoryLength     = 1;
-samplingOptions.PT.regFactor        = 1e-4;
-samplingOptions.PT.temperatureAdaptionScheme =  'Lacki15'; %'Vousden16'; %
+optionsSampling.samplingAlgorithm   = 'PT';
+optionsSampling.PT.nTemps           = 1;
+optionsSampling.PT.exponentT        = 4;    
+optionsSampling.PT.alpha            = 0.51;
+optionsSampling.PT.temperatureAlpha = 0.51;
+optionsSampling.PT.memoryLength     = 1;
+optionsSampling.PT.regFactor        = 1e-4;
+optionsSampling.PT.temperatureAdaptionScheme =  'Lacki15'; %'Vousden16'; %
 
 % Initialize the chains by choosing a random initial point and a 'large'
 % covariance matrix
-samplingOptions.theta0 = lowerBound * ones(4, 1) + ...
+optionsSampling.theta0 = lowerBound * ones(4, 1) + ...
     (upperBound * ones(4, 1) - lowerBound * ones(4, 1)) .* rand(4,1); 
-samplingOptions.sigma0 = 1e4 * diag(ones(1,4));
+optionsSampling.sigma0 = 1e4 * diag(ones(1,4));
 
 % Run the sampling
-% parameters = getParameterSamples(parameters, objectiveFunction, samplingOptions);
+parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
 
 %% Plot the sampling results
 samplingPlottingOpt = PestoPlottingOptions();
@@ -146,9 +148,9 @@ samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
 % parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
 % Options for an alternative multi-start local optimization
-% 
-% optionsPesto.n_starts = 10;
-% parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+
+optionsPesto.n_starts = 10;
+parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
 %% Calculate Confidence Intervals
 % Confidence Intervals for the Parameters are inferred from the local 
@@ -171,11 +173,11 @@ parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
 %% Perform a second Sampling, now based on Multistart Optimization
 % To compare the effect of previous multi-start optimization, we perform a
 % second sampling.
-samplingOptions.theta0                = parameters.MS.par(:,1); 
-samplingOptions.sigma0                = 0.5*inv(squeeze(parameters.MS.hessian(:,:,1)));
+optionsSampling.theta0                = parameters.MS.par(:,1); 
+optionsSampling.sigma0                = 0.5*inv(squeeze(parameters.MS.hessian(:,:,1)));
 
 % Run the sampling
-parameters2 = getParameterSamples(parameters, objectiveFunction, samplingOptions);
+parameters2 = getParameterSamples(parameters, objectiveFunction, optionsSampling);
 
 %% Plot the sampling results
 samplingPlottingOpt = PestoPlottingOptions();

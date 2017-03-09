@@ -142,7 +142,8 @@ for i = 1:(nIter)
     switch opt.mode
         case 'visual'
         case 'text'
-            if (abs(mod(i, 100)) < 0.5)
+            moduloCount = round(nIter/10);
+            if (abs(mod(i, moduloCount)) < 0.5)
                 fprintf('#');
             end
        case 'silent'
