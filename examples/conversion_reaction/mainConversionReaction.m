@@ -4,8 +4,10 @@
 % * getMultiStarts()
 % * getParameterProfiles()
 % * getParameterSamples()
-% * plotParameterUncertainty()
+% * getParameterConfidenceIntervals()
+% * getPropertyMultiStarts()
 % * getPropertyProfiles()
+% * getPropertySamples()
 % * getPropertyConfidenceIntervals()
 %
 % This example provides a model for the interconversion of two species 
@@ -24,8 +26,8 @@
 % 
 % Profile likelihood calculation is done using getParameterProfiles().
 %
-% Multi-chain Monte-Carlo sampling is performed by getParameterSamples() 
-% and plotted using plotParameterUncertainty().
+% Single-chain Monte-Carlo sampling is performed by getParameterSamples() 
+% and plotted.
 
 
 
@@ -205,6 +207,7 @@ parameters = getParameterConfidenceIntervals(parameters, alpha);
 % multi-start optimization runs by getPropertyMultiStarts.
 
 optionsProperties = optionsMultistart.copy();
+optionsProperties.fh = [];
 properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
 
 %% Profile likelihood calculation -- Properties

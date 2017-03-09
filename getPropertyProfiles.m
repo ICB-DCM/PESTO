@@ -405,7 +405,7 @@ end
 
 %% Output
 switch options.mode
-    case {'visual','text'}, disp('-> Profile calculation FINISHED.');
+    case {'visual','text'}, disp('-> Profile calculation for properties FINISHED.');
     case 'silent' % no output
 end
 

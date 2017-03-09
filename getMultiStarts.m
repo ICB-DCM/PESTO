@@ -105,8 +105,7 @@ end
 parameters = parametersSanityCheck(parameters);
 
 if strcmp(options.localOptimizer, 'fmincon')
-    options.localOptimizerOptions = optimset(options.localOptimizerOptions,...
-        'MaxFunEvals', 400*parameters.number);
+    options.localOptimizerOptions.MaxFunEvals = 400*parameters.number;
 end
 
 %% Initialization and figure generation
@@ -122,7 +121,9 @@ switch options.mode
         fprintf(' \nOptimization:\n=============\n');
     case 'silent' % no output
         % Force fmincon to be silent.
-        options.localOptimizerOptions.Display = 'off';
+        if strcmp(options.localOptimizer, 'fmincon')
+            options.localOptimizerOptions.Display = 'off';
+        end
 end
 
 %% Initialization of random number generator
@@ -144,8 +145,16 @@ switch options.proposal
                              rand(parameters.number,options.n_starts - size(parameters.guess,2))))];
     case 'user-supplied'
         % Sampling from user-supplied function
-        par0 = [parameters.guess,...
-                parameters.init_fun(parameters.guess,parameters.min,parameters.max,options.n_starts - size(parameters.guess,2))];
+        if (~isfield(parameters, 'init_fun') || isempty(parameters.init_fun))
+            if size(parameters.guess,2) < options.n_starts
+                error('You did not define an initial function and do not provide enough starting points in parameters.guess. Aborting.');
+            else
+                par0 = [parameters.guess(:,1:options.n_starts)];
+            end
+        else
+            par0 = [parameters.guess,...
+            parameters.init_fun(parameters.guess,parameters.min,parameters.max,options.n_starts - size(parameters.guess,2))];
+        end 
 end
 parameters.MS.n_starts = options.n_starts;
 parameters.MS.par0 = par0(:,options.start_index);
@@ -162,6 +171,11 @@ if or(options.save,options.tempsave)
 end
 
 %% Initialization
+if strcmp(options.localOptimizer, 'fmincon')
+    maxOptimSteps = options.localOptimizerOptions.MaxIter;
+elseif strcmp(options.localOptimizer, 'meigo-ess') || strcmp(options.localOptimizer, 'meigo-vns')
+    maxOptimSteps = options.localOptimizerOptions.maxeval;
+end
 parameters.MS.par = nan(parameters.number,length(options.start_index));
 parameters.MS.logPost0 = nan(length(options.start_index),1);
 parameters.MS.logPost = nan(length(options.start_index),1);
@@ -172,10 +186,16 @@ parameters.MS.n_iter = nan(length(options.start_index),1);
 parameters.MS.t_cpu = nan(length(options.start_index),1);
 parameters.MS.exitflag = nan(length(options.start_index),1);
 if(options.trace)
-    parameters.MS.par_trace = nan(parameters.number,options.localOptimizerOptions.MaxIter+1,length(options.start_index));
-    parameters.MS.fval_trace = nan(options.localOptimizerOptions.MaxIter+1,length(options.start_index));
-    parameters.MS.time_trace = nan(options.localOptimizerOptions.MaxIter+1,length(options.start_index));
+    parameters.MS.par_trace = nan(parameters.number,maxOptimSteps+1,length(options.start_index));
+    parameters.MS.fval_trace = nan(maxOptimSteps+1,length(options.start_index));
+    parameters.MS.time_trace = nan(maxOptimSteps+1,length(options.start_index));
 end
+
+% Define the negative log-posterior funtion
+% (fmincon needs the neagtive log posterior for optimization)
+negLogPost = @(theta) @(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
+negLogPostWErrorCount = @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber);
+        
 
 waitbarFields1 = {'logPost', 'logPost0', 'n_objfun', 'n_iter', 't_cpu', 'exitflag'};
 waitbarFields2 = {'par', 'par0', 'gradient', 'fval_trace', 'time_trace'};
@@ -196,7 +216,7 @@ if strcmp(options.comp_type, 'sequential')
     % initialize the waitbar
     if(strcmp(options.mode,'visual'))
         waitBar = waitbar(0, '1', 'name', 'Parameter estimation in process, please wait...', 'CreateCancelBtn', 'setappdata(gcbf, ''canceling'', 1)');
-        stringTimePrediction = updateWaitBar(0.004 * length(options.start_index) * parameters.number);
+        stringTimePrediction = updateWaitBar(nan);
         waitbar(0, waitBar, stringTimePrediction);
         C = onCleanup(@() delete(waitBar));
     end
@@ -214,13 +234,17 @@ if strcmp(options.comp_type, 'sequential')
         % Reset error count
         error_count = 0;
         
-        % Evaluation of objective function at starting point
-        if (~strcmp(options.localOptimizer, 'fmincon') || ~strcmp(options.localOptimizerOptions.GradObj, 'on'))
-            J_0 = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
-        elseif (strcmp(options.localOptimizerOptions.GradObj, 'on') && ~strcmp(options.localOptimizerOptions.Hessian,'on'))
-            [J_0, grad_J_0] = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
+        % Test evaluation of objective function at starting point
+        if (strcmp(options.localOptimizer, 'fmincon'))
+            if (strcmp(options.localOptimizerOptions.Hessian, 'on'))
+                [J_0,~,~] = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+            elseif (strcmp(options.localOptimizerOptions.GradObj, 'on'))
+                [J_0,~] = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+            else
+                J_0 = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+            end
         else
-            [J_0, grad_J_0, H_J_0] = obj_w_error_count(parameters.MS.par0(:,i),objective_function,options.obj_type);
+            J_0 = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
         end
         parameters.MS.logPost0(i) = -J_0;
         
@@ -232,7 +256,7 @@ if strcmp(options.comp_type, 'sequential')
                 %% fmincon as local optimizer
                 % Optimization using fmincon
                 [theta,J_opt,parameters.MS.exitflag(i),results_fmincon,~,gradient_opt,hessian_opt] = ...
-                    fmincon(@(theta) obj_w_error_count(theta,objective_function,options.obj_type),...  % negative log-likelihood function
+                    fmincon(negLogPostWErrorCount,...  % negative log-likelihood function
                     parameters.MS.par0(:,i),...    % initial parameter
                     parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
                     parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
@@ -240,23 +264,27 @@ if strcmp(options.comp_type, 'sequential')
                     parameters.max,...     % upper bound
                     [],options.localOptimizerOptions);   % options
                 
-                % Assignment of reseults
+                % Assignment of results
                 parameters.MS.J(1, i) = -J_0;
                 parameters.MS.logPost(i) = -J_opt;
                 parameters.MS.par(:,i) = theta;
                 parameters.MS.gradient(:,i) = gradient_opt;
                 if isempty(hessian_opt)
                     if strcmp(options.localOptimizerOptions.Hessian,'on')
-                        [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
+                        [~,~,hessian_opt] = negLogPost(theta); % objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
                     end
                 elseif max(hessian_opt(:)) == 0
                     if strcmp(options.localOptimizerOptions.Hessian,'on')
-                        [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
+                        [~,~,hessian_opt] = negLogPost(theta); % objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
                     end
                 end
                 parameters.MS.n_objfun(i) = results_fmincon.funcCount;
                 parameters.MS.n_iter(i) = results_fmincon.iterations;
-                parameters.MS.hessian(:,:,i) = full(hessian_opt);
+                try
+                    parameters.MS.hessian(:,:,i) = full(hessian_opt);
+                catch err_msg
+                    warning(['Error in assigning final Hessian matrix. Original errror message: ' err_msg.message]);
+                end
                 
             elseif strcmp(options.localOptimizer, 'meigo-ess') || strcmp(options.localOptimizer, 'meigo-vns')
                 %% Use MEIGO as local optimizer
@@ -273,7 +301,7 @@ if strcmp(options.comp_type, 'sequential')
                 if strcmp(options.localOptimizer, 'meigo-vns')
                     meigoAlgo = 'VNS';
                 end
-                objFunHandle = @(theta) obj_w_error_count(theta,objective_function,options.obj_type);
+                objFunHandle = @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber);
                 Results = MEIGO(problem, options.localOptimizerOptions, meigoAlgo, objFunHandle);
                 
                 %TODO
@@ -286,7 +314,7 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.n_objfun(i) = Results.numeval;
                 parameters.MS.n_iter(i) = size(Results.neval, 2);
                 
-                [~, G_opt, H_opt] = objective_function(parameters.MS.par);
+                [~, G_opt, H_opt] = objectiveWrapWErrorCount(parameters.MS.par(:,i),objective_function,options.obj_type,options.objOutNumber);
                 parameters.MS.hessian(:,:,i) = -H_opt;
                 parameters.MS.gradient(:,i) = -G_opt;
                 
@@ -309,7 +337,7 @@ if strcmp(options.comp_type, 'sequential')
                 problem.A = parameters.constraints.A;
                 problem.b = parameters.constraints.b;
                 
-                objFunHandle = @(theta) obj_w_error_count(theta,objective_function,options.obj_type);
+                objFunHandle = @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber);
                 [theta,J,RunData] = PSwarm(problem, struct('x', parameters.MS.par0(:,i)), options.localOptimizerOptions, objFunHandle);
                 
                 parameters.MS.logPost(i) = -J;
@@ -317,7 +345,7 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.n_objfun(i) = RunData.ObjFunCounter;
                 parameters.MS.n_iter(i) = RunData.IterCounter;
                 
-                [~, G_opt, H_opt] = objective_function(parameters.MS.par);
+                [~, G_opt, H_opt] = objectiveWrapWErrorCount(parameters.MS.par(:,i),objective_function,options.obj_type,options.objOutNumber);
                 parameters.MS.hessian(:,:,i) = -H_opt;
                 parameters.MS.gradient(:,i) = -G_opt;
 
@@ -401,11 +429,11 @@ if strcmp(options.comp_type,'parallel')
         
         % Evaluation of objective function at starting point
         if (~strcmp(options.localOptimizerOptions.GradObj, 'on'))
-            J_0 = obj(parameters.MS.par0(:,i),objective_function,options.obj_type);
+            J_0 = objectiveWrap(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
         elseif (strcmp(options.localOptimizerOptions.GradObj, 'on') && ~strcmp(options.localOptimizerOptions.Hessian,'on'))
-            [J_0,grad_J_0] = obj(parameters.MS.par0(:,i),objective_function,options.obj_type);
+            [J_0,grad_J_0] = objectiveWrap(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
         else
-            [J_0,grad_J_0,H_J_0] = obj(parameters.MS.par0(:,i),objective_function,options.obj_type);
+            [J_0,grad_J_0,H_J_0] = objectiveWrap(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
         end
         logPost0(i) = -J_0;
         
@@ -414,7 +442,7 @@ if strcmp(options.comp_type,'parallel')
         if J_0 < -options.init_threshold
             % Optimization using fmincon
             [theta,J_opt,exitflag(i),results_fmincon,~,gradient_opt,hessian_opt] = ...
-                fmincon(@(theta) obj(theta,objective_function,options.obj_type),...  % negative log-posterior function
+                fmincon(@(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber),...  % negative log-posterior function
                 parameters.MS.par0(:,i),...    % initial parameter
                 parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
                 parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
@@ -428,11 +456,11 @@ if strcmp(options.comp_type,'parallel')
             gradient(:,i) = gradient_opt;
             if isempty(hessian_opt)
                 if strcmp(options.localOptimizerOptions.Hessian,'on')
-                    [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
+                    [~,~,hessian_opt] = objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
                 end
             elseif max(abs(hessian_opt(:))) == 0
                 if strcmp(options.localOptimizerOptions.Hessian,'on')
-                    [~,~,hessian_opt] = obj(theta,objective_function,options.obj_type);
+                    [~,~,hessian_opt] = objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
                 end
             end
             hessian(:,:,i) = full(hessian_opt);
@@ -669,8 +697,9 @@ function stringTimePrediction = updateWaitBar(timePredicted)
 %   
 % Return Values:
 % * stringTimePrediction: String, Updating Message
-
-    if (timePredicted < 60)
+    if isnan(timePredicted)
+        stringTimePrediction = 'Unknown.';
+    elseif (timePredicted < 60)
         stringTimePrediction = 'One minute or less...';
     elseif (timePredicted >= 60 && timePredicted < 3600)
         stringTimePrediction = ['About ' num2str(round(timePredicted/60)) + 1 ' minutes'];

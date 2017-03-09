@@ -9,7 +9,8 @@
 % Demonstrates furthermore:
 % * how to do sampling without multi-start local optimization beforehand
 % * the value of multi-start local optimization before sampling
-% * how to use Hessian information for optimization
+% * how to use the MEIGO toolbox for optimization
+% * how to compute profile likelihoods via ODE integration
 %
 % This example provides a model for the reaction of a species X_1 to a
 % species X_4, which is catalyzed by an enzyme X_2.
@@ -26,17 +27,16 @@
 % optimization based on these measurements, demonstrating the use of
 % getMultiStarts().
 %
-% The Profile likelihoods are calculated in two different ways: First, the
-% calculation is done by repeated reoptimization using 
-% getParameterProfiles(), then it is done by integrating the an ODE along
-% the profile path using integrateParameterProfiles().
+% The Profile likelihoods are calculated by integrating an ODE following
+% the profile path using getParameterProfiles with the option
+% optionsPesto.profile_method = 'integration'.
 
 
 
 %% Preliminary
 clear all;
 close all;
-%clc;
+clc;
 
 TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
@@ -88,9 +88,10 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 
 %% Parameter Sampling
 % An adapted Metropolis-Hastings-Algorithm is used to explore the parameter
-% space. Without Multi-start local optimization, this is not extremly
-% effective, but for small problems, this is feasible and PESTO also allows
-% sampling without previous parameter optimization.
+% space. Without Multi-start local optimization, this is not recommended
+% (since it is in genereal ineffective), but for small problems, this is 
+% feasible and PESTO also allows sampling without previous parameter 
+% optimization.
 
 % Length of the chain
 % optionsPesto.MCMC.nsimu_warmup = 2e4;
@@ -119,21 +120,26 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 % parameters.min and .max in order to infer the unknown parameters from 
 % measurement data.
 
-% Set number of Multistarts
-optionsPesto.n_starts  = 3;
+% The following section uses the MEIGO toolbox with following settings:
+% (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
+% uncomment:
 
-% Define the Hessian Function
-type = 'FIM'; % 'FD', 'FIM'
-HessianApprox = @(theta, lambda) HessianApproxEC(theta, objectiveFunction, type, lambda);
+MeigoOptions = struct(...
+    'maxeval', 1000, ...
+    'local', struct('solver', 'fmincon', ...
+    'finish', 'fmincon', ...
+    'iterprint', 0) ...
+    );
 
-% Set options for using a Hessian approximation for optimization
-optionsPesto.localOptimizer = 'fmincon';
-optionsPesto.localOptimizerOptions.Hessian = 'on';
-optionsPesto.localOptimizerOptions.GradConstr = 'on';
-optionsPesto.localOptimizerOptions.Display = 'iter';
-optionsPesto.localOptimizerOptions.HessFcn = HessianApprox;
-
+optionsPesto.localOptimizer = 'meigo-ess';
+optionsPesto.localOptimizerOptions = MeigoOptions;
+optionsPesto.n_starts = 1;
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+
+% Options for an alternative multi-start local optimization
+% 
+% optionsPesto.n_starts = 10;
+% parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
 %% Calculate Confidence Intervals
 % Confidence Intervals for the Parameters are inferred from the local 
@@ -147,6 +153,10 @@ parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
 %% Calculate Profile Likelihoods
 % The result of the sampling is compared with profile likelihoods.
 
+optionsPesto.profile_method = 'integration';
+optionsPesto.solver.gamma = 10;
+optionsPesto.solver.hessian = 'user-supplied';
+
 parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
 
 %% Perform a second Sampling, now based on Multistart Optimization
@@ -159,7 +169,7 @@ optionsPesto.plot_options.MCMC   = 'multistart';
 
 % Length of the chain
 optionsPesto.MCMC.nsimu_warmup = 1e3;
-optionsPesto.MCMC.nsimu_run    = 1e4;
+optionsPesto.MCMC.nsimu_run    = 1e3;
 
 parameters = getParameterSamples(parameters, objectiveFunction, optionsPesto);
 
