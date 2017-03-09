@@ -15,11 +15,11 @@ function obj = collectResults(foldername)
 %% Initialization
 warning off;
 try
-    init = load([foldername '/init'],'parameters');
+    init = load(fullfile(foldername,'init'),'parameters');
     obj = init.parameters;
     type = 'parameters';
 catch
-    init = load([foldername '/init'],'properties');
+    init = load(fullfile(foldername,'init'),'properties');
     obj = init.properties;
     type = 'properties';
 end
@@ -46,7 +46,7 @@ obj.MS.exitflag = NaN(nstarts,1);
 % Loop: files
 for j = 1:length(files)
     % Read file
-    v = csvread([foldername '/' files(j).name]);
+    v = csvread(fullfile(foldername,files(j).name));
     
     % Determine index and fieldname
     fn1 = files(j).name(1);
@@ -85,15 +85,15 @@ end
 %% Sort and save results
 switch type
     case 'parameters'
-        parameters = sortMultiStarts(obj);
-        % save([foldername '/result'],'parameters');
+        obj = sortMultiStarts(obj);
+        save(fullfile(foldername,'result_' foldername),'obj');
 end
 
 %% Visualization
 switch type
     case 'parameters'
         if isfield(obj,'MS')
-            disp(['progress of MS = ' num2str(100*sum(~isnan(parameters.MS.par(1,:)))/parameters.MS.n_starts) '%']);
+            disp(['progress of MS = ' num2str(100*sum(~isnan(obj.MS.par(1,:)))/obj.MS.n_starts) '%']);
             plotMultiStarts(obj);
         end
         if isfield(obj,'P')
