@@ -86,7 +86,7 @@ end
 switch type
     case 'parameters'
         parameters = sortMultiStarts(obj);
-        save(fullfile(foldername,'parameters_' foldername),'parameters');
+        save(fullfile(foldername,['parameters_' foldername]),'parameters');
         obj = parameters;
 end
 
