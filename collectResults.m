@@ -69,6 +69,21 @@ for j = 1:length(files)
                 case 'exitflag', obj.MS.exitflag(i,1) = v;
                 case 'prop', obj.MS.prop(:,i) = v;
                 case 'prop_Sigma', obj.MS.prop_Sigma(:,:,i) = v;
+                case 'fval_trace'
+                    if(~isfield(obj.MS,'fval_trace'))
+                        obj.MS.fval_trace = NaN(size(v,1),nstarts);
+                    end
+                    obj.MS.fval_trace(:,i) = v;
+                case 'time_trace'
+                    if(~isfield(obj.MS,'time_trace'))
+                        obj.MS.time_trace = NaN(size(v,1),nstarts);
+                    end
+                    obj.MS.time_trace(:,i) = v;
+                case 'par_trace'
+                    if(~isfield(obj.MS,'par_trace'))
+                        obj.MS.par_trace = NaN(ntheta,size(v,2),nstarts);
+                    end
+                    obj.MS.par_trace(:,:,i) = v;
             end
         case 'P' % -> Profile calculation results
             i = str2num(files(j).name(2:(strfind(files(j).name,'__')-1)));
