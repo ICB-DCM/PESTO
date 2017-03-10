@@ -47,10 +47,9 @@ defaultOptions.add_points.ms = 8;
 defaultOptions.add_points.name = 'add. point';
 
 if length(varargin) >= 2
-    if ~isa(varargin{2}, 'PestoPlottingOptions')
-        error('Third argument is not of type PestoPlottingOptions.')
-    end
-    options = setdefault(varargin{2}.copy(), defaultOptions);
+    options = varargin{2};
+    options = handlePlottingOptionArgument(options);
+    options = setdefault(options, defaultOptions);
     options.add_points = setdefault(options.add_points, defaultOptions.add_points);
 else
     options = defaultOptions;

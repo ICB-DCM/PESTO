@@ -79,10 +79,7 @@ end
 % Options
 % General plot options
 if length(varargin) >= 4
-    if ~isa(varargin{4}, 'PestoPlottingOptions')
-        error('Argument 4 is not of type PestoPlottingOptions.')
-    end
-    options = varargin{4}.copy();
+    options = handlePlottingOptionArgument(varargin{4});
 else
     options = PestoPlottingOptions();
 end

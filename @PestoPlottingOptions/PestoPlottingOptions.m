@@ -279,7 +279,7 @@ classdef PestoPlottingOptions < matlab.mixin.SetGet
             if nargin > 0
                 
                 % Deal with the case where the first input to the
-                % constructor is a amioptions/struct object.
+                % constructor is a struct object.
                 if isa(varargin{1},'PestoPlottingOptions')
                     if strcmp(class(varargin{1}),class(obj))
                         obj = varargin{1};

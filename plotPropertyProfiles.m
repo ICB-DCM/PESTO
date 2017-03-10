@@ -1,4 +1,4 @@
-function fh = plotPropertyProfiles(properties, varargin)
+ffunction fh = plotPropertyProfiles(properties, varargin)
 % plotPropertyProfiles.m visualizes profile likelihood of model properties.
 % Note: This routine provides an interface for plotPropertyUncertainty.m.
 %
