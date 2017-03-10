@@ -30,6 +30,7 @@ function fh = plotConfidenceIntervals(pStruct, alpha, varargin)
 %       information about parameters and results of optimization (.MS) 
 %       and uncertainty analysis (.P and .S). This structures is the output
 %       of plotMultiStarts.m, getProfiles.m or plotSamples.m.
+%  alpha: significance levels
 %   varargin:
 %     method: integer array, from which method confidence intervals 
 %         should be plotted: 
@@ -250,6 +251,15 @@ end
 
 
 function methodsOut = checkMeth(methodsIn, pStruct, boolWarning)
+    % checkMeth
+    %
+    % Parameters:
+    %  methodsIn:
+    %  pStruct: 
+    %  boolWarning:
+    %
+    % Return values:
+    %  methodsOut:
     tempMethType = {'PL', 'local_PL', 'local_B', 'S'};
     tempMethName = {'Profile L.', 'L.App, th.', 'L.App, mass', 'Bay., Sampl.'};
 

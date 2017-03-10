@@ -49,7 +49,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
         % opt.sigma0 = 1e5 * diag(ones(1,5));
         % Example for multi-chain algorithms: 
         % opt.sigma0 = repmat(1e5*diag(ones(1,5)),opt.nTemps,1);
-        % It is recommendet to set sigma0 by taking into account the 
+        % It is recommended to set sigma0 by taking into account the 
         % results from a preceeding optimization.
         sigma0 = [];
         
@@ -161,7 +161,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
     end
     
     methods
-        function obj = PestoOptions(varargin)
+        function obj = PestoSamplingOptions(varargin)
             % PestoSamplingOptions Construct a new PestoSamplingOptions object
             %
             %   OPTS = PestoSamplingOptions() creates a set of options with 
@@ -177,13 +177,16 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
             %
             %   Note to see the parameters, check the
             %   documentation page for PestoSamplingOptions
-            
+            %
+            % Parameters:
+            %   varargin:
+
             % adapted from SolverOptions
             
             if nargin > 0 
                 
                 % Deal with the case where the first input to the
-                % constructor is a amioptions/struct object.
+                % constructor is a struct object.
                 if isa(varargin{1},'PestoSamplingOptions')
                     if strcmp(class(varargin{1}),class(obj))
                         obj = varargin{1};
@@ -274,6 +277,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
         end
         
         function new = copy(this)
+            % Creates a copy of the passed PestoSamplingOptions instance
             new = feval(class(this));
             
             p = properties(this);

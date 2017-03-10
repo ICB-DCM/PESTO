@@ -18,6 +18,8 @@ function parameters = getParameterConfidenceIntervals(parameters, alpha, varargi
 % Parameters:
 %   parameters: parameter struct
 %   alpha: vector with desired confidence levels for the intervals
+%   varargin: 
+%    options: A PestoOptions instance
 %
 % Return values:
 %   parameters: updated parameter struct

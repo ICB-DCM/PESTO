@@ -200,6 +200,13 @@ end
 end
 
 function error_plot(g1,g2,ee)
+    % Plots the differences between gradient and finite differences
+    %
+    % Parameters:
+    % g1: Gradient 
+    % g2: Finite differences
+    % ee: 
+    
     scatter(abs(g1),abs(ee),'rx')
     hold on
     scatter(abs(g2),abs(ee),'bo')
@@ -227,7 +234,15 @@ function error_plot(g1,g2,ee)
 end
 
 function ratio_plot(g1,g2,rr,ee)
-   scatter(abs(g1),abs(rr),'rx')
+    % Plots the differences between gradient and finite differences
+    %
+    % Parameters:
+    % g1: Gradient 
+    % g2: Finite differences
+    % rr: 
+    % ee: 
+    
+    scatter(abs(g1),abs(rr),'rx')
    hold on
    scatter(abs(g2),abs(rr),'bo')
    set(gca,'YScale','log')

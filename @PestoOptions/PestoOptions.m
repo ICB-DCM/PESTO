@@ -2,16 +2,16 @@
 % @brief A class for checking and holding options for PESTO functions
 
 classdef PestoOptions < matlab.mixin.SetGet
-    %PestoOptions provides an option container to pass options to various
-    %PESTO functions. Not all options are used by all functions, consult the respective function documentation for details.
+    % PestoOptions provides an option container to pass options to various
+    % PESTO functions. Not all options are used by all functions, consult the respective function documentation for details.
     %
     % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
     
     properties
-        %% General options
+        % <!-- General options -->
         
         % Type of objective function provided:
-        % 'log-posterior' (default) or 'negative log-posterior'
+        % 'log-posterior' or 'negative log-posterior'
         %
         % Tells the algorithm that log-posterior or log-likelihood are provided so it performs
         % a maximization of the objective function or that the negative
@@ -21,15 +21,15 @@ classdef PestoOptions < matlab.mixin.SetGet
         obj_type = 'log-posterior';
         
         % Maximum number of outputs, the objective function can provide:
-        % 1 ... only objective value
-        % 2 ... objective value with gradient
-        % 3 ... objective value, gradient and Hessian (Default)
+        % * 1 ... only objective value
+        % * 2 ... objective value with gradient
+        % * 3 ... objective value, gradient and Hessian
         %
         % Missing values will be approximated by finite differences.
 
         objOutNumber = 3;
         
-        % Perform calculations sequantially (''sequential'', default), or
+        % Perform calculations sequentially (''sequential'', default), or
         % in parallel (''parallel''). Parallel mode will speed-up the
         % calculations on multi-core systems, but requires the 
         % [MATLAB Parallel Computing Toolbox](https://mathworks.com/products/parallel-computing/) 
@@ -72,7 +72,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             'TolCon', 1e-6 ...
             );
 
-        % Initialization of random number generator (default = 0).
+        % Initialization of random number generator.
         % * Any real number r: random generator is initialized with r.
         % * []: random number generator is not initialized.
         % (Initializing the random number generator with a specific seed can be
@@ -81,7 +81,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         rng = 0;
         
         % Output mode of algorithm: 
-        % * 'visual' (default): plots showing the progress are generated
+        % * 'visual': plots showing the progress are generated
         % * 'text': optimization results for multi-start are printed on screen
         % * 'silent': no output during the multi-start local optimization
         % * 'debug': print extra debug information (only available in
@@ -109,8 +109,8 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         foldername = strrep(datestr(now,31),' ','__'); 
 
-        %% Multi-start options
-        
+        % <!-- Multi-start options -->
+
         % Number of local optimizations.
         n_starts = 20;
         
@@ -119,18 +119,15 @@ classdef PestoOptions < matlab.mixin.SetGet
         start_index = [];
 
         % log-likelihood / log-posterior threshold for initialization of 
-        % optimization (default = -inf).
+        % optimization.
         init_threshold = -inf;
         
         % Method used to propose starting points. Can be
-        % * 'latin hypercube': latin hypercube sampling (default)
+        % * 'latin hypercube': latin hypercube sampling
         % * 'uniform': uniform random sampling
         % * 'user-supplied': user supplied function PestoOptions.init_fun
         proposal = 'latin hypercube'; 
-        
-        % TODO
-        init_fun = NaN;
-                       
+                              
         % determine whether objective function, parameter values and
         % computation time are stored over iterations
         % * false:  not saved
@@ -139,30 +136,35 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         % determine whether intermediate results are stored every
         % 10 iterations
-        % * false (default): not saved
+        % * false: not saved
         % * true: results are stored to an extra folder
         tempsave = false;
                          
         % clears the objective function before every multi-start.
-        % * false: (default) persistent variables are preserved.
+        % * false: persistent variables are preserved.
         % * true: remove all temporary/persistent variables.
         % 
         % WHEN TRUE THIS OPTION REMOVES ALL OBJECTIVE FUNCTION BREAK POINTS
         resetobjective = false;
 
-        %% get(Parameter|Property)Profiles options        
+        % <!-- get(Parameter|Property)Profiles options -->
         
         % The following options are for getParameterProfiles only:
         
         % Indices of the parameters for which the profile is calculated. 
+        %
         % Default: profile_optim_index will be set to 1:parameters.number
         % if both indices are left empty
         parameter_index = [];
+        
+        % Indices of the parameters for which the profile is calculated by reoptimization. 
         profile_optim_index = [];
+        
+        % Indices of the parameters for which the profile is calculated by integration. 
         profile_integ_index = [];
         
         % How should profiles be computed? ('optimization', 'integration',
-        % 'mixed') Default: 'optimization'
+        % 'mixed')
         profile_method = 'optimization';
         
         % Indices of the properties for which the profile
@@ -170,9 +172,9 @@ classdef PestoOptions < matlab.mixin.SetGet
         property_index = [];
 
         % profiling parameters
-        % .P.min ... lower bound for profiling parameters, having same
+        % * .P.min ... lower bound for profiling parameters, having same
         %   dimension as the parameter vector (default = parameters.min).
-        % .P.max ... lower bound for profiling parameters, having same
+        % * .P.max ... lower bound for profiling parameters, having same
         %   dimension as the parameter vector (default = parameters.max).
         P = {};
 
@@ -180,7 +182,6 @@ classdef PestoOptions < matlab.mixin.SetGet
         S = {};
         
         % minimal ratio down to which the profile is calculated
-        % (default = 0.03).
         R_min = 0.03;
         
         % maximal relative decrease of ratio allowed
@@ -188,20 +189,20 @@ classdef PestoOptions < matlab.mixin.SetGet
         % options.dJ = 0;
         dR_max = 0.10;
         
-        % influnces step size at small likelihood ratio values (default = 0.5).
+        % influences step size at small likelihood ratio values
         dJ = 0.5;
         
         % options for the generation fo the next profile point
-        %       .mode ... choice of proposal direction
-        %           = 'multi-dimensional' (default) ... all parameters are updated.
-        %               The direct is the same as between the last two points.
-        %           = 'one-dimensional' ... only parameter for which profile is
-        %               currently calculated is updated.
-        %       .guess = 1e-2 ... guess for initial update stepsize
-        %       .min = 1e-6 ... lower bound for update stepsize
-        %       .min = 1e2 ... upper bound for update stepsize
-        %       .update = 1.25 ... incremental change if stepsize is too large or
-        %           too small, must be > 1.
+        % *     .mode ... choice of proposal direction
+        % *         = 'multi-dimensional' (default) ... all parameters are updated.
+        % *             The direct is the same as between the last two points.
+        % *         = 'one-dimensional' ... only parameter for which profile is
+        % *             currently calculated is updated.
+        % *     .guess = 1e-2 ... guess for initial update stepsize
+        % *     .min = 1e-6 ... lower bound for update stepsize
+        % *     .min = 1e2 ... upper bound for update stepsize
+        % *     .update = 1.25 ... incremental change if stepsize is too large or
+        % *         too small, must be > 1.
         options_getNextPoint = struct('mode', 'multi-dimensional', ...
             'guess', 1e-2, ...
             'min', 1e-6, ...
@@ -236,35 +237,51 @@ classdef PestoOptions < matlab.mixin.SetGet
         MAP_index = 1;
         
         % Tolance for the maximal distance of the list point 
-        % the lower and upper bounds for the properties (default = 1e-5).
+        % the lower and upper bounds for the properties.
         boundary_tol = 1e-5;
 
+        % <!-- MCMC options -->
+        
         % MCMC options
-        MCMC = struct('sampling_scheme', 'single-chain', ... % 'single-chain' 'DRAM' 'single-chain multi-core' -> replace by comp_type
-                      'nsimu_warmup', [], ... % length of MCMC warm-up run (default 1e3 * parameters.number)
-                      'nsimu_run', [], ... % length of MCMC run (default 1e4 * parameters.number)
-                      'algorithm', 'dram', ... MCMC sampling scheme (default = 'dram')
+        %
+        % * sampling_scheme: 'single-chain' 'DRAM' 'single-chain multi-core' -> replace by comp_type
+        % * nsimu_warmup: length of MCMC warm-up run (default 1e3 * parameters.number)
+        % * nsimu_run: length of MCMC run (default 1e4 * parameters.number)
+        % * algorithm:  MCMC sampling scheme (default = 'dram')
+        % * report_interval:
+        % * thinning: In the default setting only the properties for every 10th parameter vector is evaluated
+        % * initialization:  'user-provided'... How should sampling be initialized?
+        MCMC = struct('sampling_scheme', 'single-chain', ...
+                      'nsimu_warmup', [], ...
+                      'nsimu_run', [], ...
+                      'algorithm', 'dram', ...
                       'report_interval', 100, ...
                       'show_warning', true, ...
-                      'thinning', 10, ... In the default setting only the properties for every 10th parameter vector is evaluated
-                      'initialization', 'multistart'... 'user-provided'... How should sampling be initialized?
+                      'thinning', 10, ...
+                      'initialization', 'multistart' ...
                   );
         
         % Single-chain MCMC options
-        SC = struct('proposal_scheme', 'AM', ... %  Random Walk Options  'MH','AM', 'MALA'
-                    'DRAM', struct(... % DRAM options
+        % 
+        % * .proposal_scheme: Random Walk Options  'MH','AM', 'MALA'
+        % * .MALA.min_regularisation: minimal regularistion for hessian matrix
+        % * .MALA.w_hist: interpolation between MALA and AM proposal
+        % * .AM.min_regularisation: minimal regularistion for covariance matrix
+        % * .AM.proposal_scaling_scheme: 'Haario' 'Lacki_cumAcc'
+        SC = struct('proposal_scheme', 'AM', ...
+                    'DRAM', struct(...
                         'algorithm', 'dram', ... 
                         'ntry', 3 ...
                     ), ...
-                    'MALA', struct(...  % MALA options 
-                        'min_regularisation', 1e-6, ... % minimal regularistion for hessian matrix
-                        'w_hist', 0 ... % interpolation between MALA and AM proposal
+                    'MALA', struct(...
+                        'min_regularisation', 1e-6, ...
+                        'w_hist', 0 ...
                     ), ...
-                    'AM', struct( ... % AM options
-                        'min_regularisation', 1e-6, ... % minimal regularistion for covariance matrix
+                    'AM', struct( ...
+                        'min_regularisation', 1e-6, ...
                         'init_memory_length', [], ...
                         'adaption_interval', 1, ...
-                        'proposal_scaling_scheme', 'Lacki', ...  %'Haario' 'Lacki_cumAcc'
+                        'proposal_scaling_scheme', 'Lacki', ...
                         'Haario', struct(...
                             'min_acc', 0.15, ...
                             'max_acc', 0.30, ...
@@ -300,6 +317,9 @@ classdef PestoOptions < matlab.mixin.SetGet
             %
             %   Note to see the parameters, check the
             %   documentation page for PestoOptions
+            %
+            % Parameters:
+            %   varargin:
             
             % adapted from SolverOptions
             
@@ -397,6 +417,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         end
         
         function new = copy(this)
+            % Creates a copy of the passed PestoOptions instance
             new = feval(class(this));
             
             p = properties(this);
@@ -405,7 +426,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
 
-        %% Part for checking the correct setting of options
+        % Part for checking the correct setting of options
         
         function set.obj_type(this, value)
             if(strcmpi(value, 'log-posterior') || strcmpi(value, 'negative log-posterior'))
