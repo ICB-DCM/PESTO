@@ -117,24 +117,24 @@ Details are provided in the documentation of the specific plotting functions:
 Here some examples: 
 
 Plot of model fit using plotMultiStarts.m:
-![](../images/fig_fit.jpg "Plot of model fit using plotMultiStarts.m")
-@image latex "../../images/fig_fit.jpg" "Plot of model fit using plotMultiStarts.m" width=0.6\textwidth
+![](fig_fit.jpg "Plot of model fit using plotMultiStarts.m")
+@image latex "fig_fit.jpg" "Plot of model fit using plotMultiStarts.m" width=0.6\textwidth
 
 Plot of different variants of parameter confidence intervals using plotParameterUncertainty.m:
-![](../images/fig_par_confint.jpg "Plot of different variants of parameter confidence intervals using plotParameterUncertainty.m")
-@image latex "../../images/fig_par_confint.jpg" "Plot of different variants of parameter confidence intervals using plotParameterUncertainty.m" width=0.7\textwidth
+![](fig_par_confint.jpg "Plot of different variants of parameter confidence intervals using plotParameterUncertainty.m")
+@image latex "fig_par_confint.jpg" "Plot of different variants of parameter confidence intervals using plotParameterUncertainty.m" width=0.7\textwidth
 
 2D plot of parameter samples using plotParameterSamples.m:
-![](../images/fig_par_samples2d.jpg "2D plot of parameter samples using plotParameterSamples.m")
-@image latex "../../images/fig_par_samples2d.jpg" "2D plot of parameter samples using plotParameterSamples.m" width=0.7\textwidth
+![](fig_par_samples2d.jpg "2D plot of parameter samples using plotParameterSamples.m")
+@image latex "fig_par_samples2d.jpg" "2D plot of parameter samples using plotParameterSamples.m" width=0.7\textwidth
 
 Plot of parameter samples using plotParameterSamples.m:
-![](../images/fig_par_samples.jpg "Plot of parameter samples using plotParameterSamples.m")
-@image latex "../../images/fig_par_samples.jpg" "Plot of parameter samples using plotParameterSamples.m" width=0.6\textwidth
+![](fig_par_samples.jpg "Plot of parameter samples using plotParameterSamples.m")
+@image latex "fig_par_samples.jpg" "Plot of parameter samples using plotParameterSamples.m" width=0.6\textwidth
 
 Plot of property samples using plotPropertySamples.m:
-![](../images/fig_prop_samples.jpg "Plot of property samples using plotPropertySamples.m")
-@image latex "../../images/fig_prop_samples.jpg" "Plot of property samples using plotPropertySamples.m" width=0.6\textwidth
+![](fig_prop_samples.jpg "Plot of property samples using plotPropertySamples.m")
+@image latex "fig_prop_samples.jpg" "Plot of property samples using plotPropertySamples.m" width=0.6\textwidth
 
 See mainConversionReaction.m for live examples.
 
