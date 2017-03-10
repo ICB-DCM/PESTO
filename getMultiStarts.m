@@ -91,13 +91,7 @@ global error_count
 
 %% Check inputs
 if length(varargin) >= 1
-    options = varargin{1};
-    if isstruct(options)
-        warning('Third argument is not of type PestoOptions: Initializing PestoOption instance from user-provided struct. Make sure all options are set correctly in PestoOptions(myOptionsStruct).');
-        options = PestoOptions(options);
-    elseif ~isa(options, 'PestoOptions')
-        error('Third argument is neither of type PestoOptions or struct.')
-    end
+    options = handleOptionArgument(varargin{1});
 else
     options = PestoOptions();
 end
