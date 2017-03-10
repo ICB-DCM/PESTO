@@ -9,11 +9,11 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
    %   parameters: parameter struct covering model options and results obtained by
    %               optimization, profiles and sampling. Optimization results
    %               can be used for initialization. The parameter struct should
-   %               at least contain:
-   %               par.min: Lower parameter bounds
-   %               par.max: Upper parameter bounds
-   %               par.number: Number of parameters
-   %               par.obj_type: Type of objective function, e.g. 'log-posterior'
+   %               at least contain
+   %               * par.min: Lower parameter bounds
+   %               * par.max: Upper parameter bounds
+   %               * par.number: Number of parameters
+   %               * par.obj_type: Type of objective function, e.g. 'log-posterior'
    %   objFkt: Objective function which measures the difference of model output and data
    %   opt   : An options object holding various options for the
    %              sampling. Depending on the algorithm and particular flavor,
@@ -103,6 +103,10 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
    %                               regularization.
    %   opt.PHS.trainingTime        : The iterations before the first chain swap
    %                               is invoked
+   %
+   % Return values:
+   % parameters: The provided parameters struct with the obtained sampling
+   % results added.
    %
    % History:
    % * 2012/07/11 Jan Hasenauer

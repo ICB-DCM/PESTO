@@ -16,6 +16,8 @@ function properties = getPropertyConfidenceIntervals(properties, alpha, varargin
 % Parameters:
 %   properties: property struct
 %   alpha: vector with desired confidence levels for the intervals
+%   varargin: 
+%    options: A PestoOptions instance
 %
 % Return values:
 %   properties: updated properties struct

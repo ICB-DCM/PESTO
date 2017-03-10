@@ -13,6 +13,7 @@ function [fh] = plotMCMCdiagnosis(parameters, varargin)
 %       and results of optimization (.MS) and uncertainty analysis
 %       (.S). This structures is the output of plotMultiStarts.m,
 %       getProfiles.m or plotSamples.m.
+% varargin:
 % type: string indicating the type of visualization:
 %       'parameters' (default) and 'log-posterior'
 % fh: handle of figure. If no figure handle is provided, a new figure
