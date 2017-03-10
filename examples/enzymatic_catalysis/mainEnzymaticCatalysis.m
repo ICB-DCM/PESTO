@@ -87,23 +87,21 @@ optionsPesto.plot_options.add_points.par = theta;
 optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 
 %% Parameter Sampling
+display(' Sampling...');
+
 % Covering all sampling options in one struct
 optionsSampling = PestoSamplingOptions();
-optionsSampling.obj_type     = 'log-posterior';
-optionsSampling.mode     = 'text';
-optionsSampling.objOutNumber = 3;
-optionsSampling.rndSeed      = 3;
-optionsSampling.nIterations  = 1e2;
+optionsSampling.obj_type    = 'log-posterior';
+optionsSampling.mode        = 'visual';
+optionsSampling.rndSeed     = 3;
+optionsSampling.nIterations = 1e4;
 
 % PT (with only 1 chain -> AM) specific options:
-optionsSampling.samplingAlgorithm   = 'PT';
-optionsSampling.PT.nTemps           = 1;
-optionsSampling.PT.exponentT        = 4;    
-optionsSampling.PT.alpha            = 0.51;
-optionsSampling.PT.temperatureAlpha = 0.51;
-optionsSampling.PT.memoryLength     = 1;
-optionsSampling.PT.regFactor        = 1e-4;
-optionsSampling.PT.temperatureAdaptionScheme =  'Lacki15'; %'Vousden16'; %
+optionsSampling.samplingAlgorithm = 'PT';
+optionsSampling.PT.nTemps         = 5;
+optionsSampling.PT.exponentT      = 4;    
+optionsSampling.PT.regFactor      = 1e-8;
+optionsSampling.PT.temperatureAdaptionScheme = 'Lacki15'; %'Vousden16';
 
 % Initialize the chains by choosing a random initial point and a 'large'
 % covariance matrix
@@ -114,17 +112,6 @@ optionsSampling.sigma0 = 1e4 * diag(ones(1,4));
 % Run the sampling
 parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
 
-%% Plot the sampling results
-samplingPlottingOpt = PestoPlottingOptions();
-samplingPlottingOpt.S.plot_type = 1; % Histogram
-% samplingPlottingOpt.S.plot_type = 2; % Density estimate
-samplingPlottingOpt.S.ind = 1; % 3 to show all temperatures
-samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
-samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
-
-% plotParameterSamples(parameters2,'1D',[],[],samplingPlottingOpt)
-
-% plotParameterSamples(parameters2,'2D',[],[],samplingPlottingOpt)
 
 %% Perform Multistart optimization
 % A multi-start local optimization is performed within the bound defined in
@@ -148,9 +135,10 @@ samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
 % parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
 % Options for an alternative multi-start local optimization
-
-optionsPesto.n_starts = 10;
+display(' Optimizing parameters...');
+optionsPesto.n_starts = 5;
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+
 
 %% Calculate Confidence Intervals
 % Confidence Intervals for the Parameters are inferred from the local 
@@ -159,40 +147,49 @@ parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 % Set alpha levels
 alpha = [0.8, 0.9, 0.95, 0.99];
 
+display(' Computing confidence intervals...');
 parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
+
 
 %% Calculate Profile Likelihoods
 % The result of the sampling is compared with profile likelihoods.
 
 optionsPesto.profile_method = 'integration';
-optionsPesto.solver.gamma = 10;
+optionsPesto.parameter_index = 2;
+optionsPesto.solver.gamma = 1;
+optionsPesto.objOutNumber = 2;
 optionsPesto.solver.hessian = 'user-supplied';
 
+display(' Computing parameter profiles...');
 parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
+
 
 %% Perform a second Sampling, now based on Multistart Optimization
 % To compare the effect of previous multi-start optimization, we perform a
 % second sampling.
-optionsSampling.theta0                = parameters.MS.par(:,1); 
-optionsSampling.sigma0                = 0.5*inv(squeeze(parameters.MS.hessian(:,:,1)));
+optionsSampling.theta0 = parameters.MS.par(:,1); 
+optionsSampling.sigma0 = 0.5*inv(squeeze(parameters.MS.hessian(:,:,1)));
 
 % Run the sampling
-parameters2 = getParameterSamples(parameters, objectiveFunction, optionsSampling);
+display(' Sampling with information from optimization...');
+parametersNew = parameters;
+parametersNew = getParameterSamples(parametersNew, objectiveFunction, optionsSampling);
+
 
 %% Plot the sampling results
-samplingPlottingOpt = PestoPlottingOptions();
-samplingPlottingOpt.S.plot_type = 1; % Histogram
-% samplingPlottingOpt.S.plot_type = 2; % Density estimate
-samplingPlottingOpt.S.ind = 1; % 3 to show all temperatures
-samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
-samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
-
-plotParameterSamples(parameters2,'1D',[],[],samplingPlottingOpt)
-
+% samplingPlottingOpt = PestoPlottingOptions();
+% samplingPlottingOpt.S.plot_type = 1; % Histogram
+% % samplingPlottingOpt.S.plot_type = 2; % Density estimate
+% samplingPlottingOpt.S.ind = 1; % 3 to show all temperatures
+% samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
+% samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
+% 
+% plotParameterSamples(parametersNew,'1D',[],[],samplingPlottingOpt)
+% 
 % plotParameterSamples(parameters2,'2D',[],[],samplingPlottingOpt)
 
 %% Calculate Confidence Intervals
 % Confidence Intervals for the Parameters are inferred from the local 
 % optimization and the sampling information.
 
-parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
+parameters = getParameterConfidenceIntervals(parametersNew, alpha, optionsPesto);

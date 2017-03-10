@@ -119,10 +119,6 @@ if isempty(options.parameter_index)
     end
     options.parameter_index = sort(unique([options.profile_optim_index options.profile_integ_index]));
 else
-    if (length(unique([options.profile_optim_index, options.profile_integ_index])) < length(unique([options.parameter_index, options.profile_optim_index, options.profile_integ_index])))
-        error('Inconsistent settings for indices in profile calculation.');
-    end
-    
     switch options.profile_method
         case 'optimization'
             options.profile_optim_index = options.parameter_index;
@@ -137,6 +133,9 @@ else
             end
             
         case 'mixed'
+            if (length(unique([options.profile_optim_index, options.profile_integ_index])) < length(unique([options.parameter_index, options.profile_optim_index, options.profile_integ_index])))
+                error('Inconsistent settings for indices in profile calculation.');
+            end
             options.parameter_index = sort(unique([options.profile_optim_index options.profile_integ_index]));
     end
 end
