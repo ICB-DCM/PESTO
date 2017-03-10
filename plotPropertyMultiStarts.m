@@ -30,10 +30,7 @@ end
 
 % Options
 if length(varargin) >= 2
-    if ~isa(varargin{2}, 'PestoPlottingOptions')
-        error('Argument 3 is not of type PestoPlottingOptions.')
-    end
-    options = varargin{2}.copy();
+    options = handlePlottingOptionArgument(varargin{2});
 else
     options = PestoPlottingOptions();
 end

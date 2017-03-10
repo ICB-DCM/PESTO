@@ -87,11 +87,8 @@ options.CL.type = 'point-wise'; % 'simultanous', {'point-wise','simultanous'}
 options.CL.col = [1,0,0];
 options.CL.lw = 1.5;
 
-if nargin >= 6
-    if ~isa(varargin{5}, 'PestoPlottingOptions')
-        error('Third argument is not of type PestoPlottingOptions.')
-    end
-    options = setdefault(varargin{5}, options);
+if length(varargin) >= 5
+    options = setdefault(handlePlottingOptionArgument(varargin{5}), options);
 end
 
 

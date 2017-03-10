@@ -45,6 +45,17 @@ classdef ConversionReactionTest < matlab.unittest.TestCase
             testCase.fatalAssertEqual(actLLH, testCase.llh_true, 'AbsTol', eps, 'Likelihood function result is wrong.')
         end
         
+        function testGetMultiStartsOptionStruct(testCase)
+            % check autoconversion to PestoOptions
+            optionsMS.obj_type = 'log-posterior';
+            optionsMS.n_starts = 1;
+            optionsMS.comp_type = 'sequential';
+            optionsMS.mode = 'silent';
+
+            multiStartParams = getMultiStarts(testCase.parameters, testCase.objectiveFunction, optionsMS);
+            testCase.verifyMultiStartResults(multiStartParams, optionsMS);
+        end
+        
         function testGetMultiStartsFminconSingleStart(testCase)
             optionsMS = PestoOptions();
             optionsMS.obj_type = 'log-posterior';

@@ -70,10 +70,8 @@ end
 
 % Assignment of user-provided options
 if length(varargin) >= 4
-    if ~isa(varargin{4}, 'PestoPlottingOptions')
-        error('Argument 4 is not of type PestoPlottingOptions.')
-    end
-    options = setdefault(varargin{4}.copy(), defaultOptions);
+    options = handlePlottingOptionArgument(varargin{4});
+    options = setdefault(options, defaultOptions);
 else
     options = defaultOptions;
 end
