@@ -164,7 +164,7 @@ optionsPesto.plot_options.group_CI_by = 'methods';
 % n_workers = 20;
 
 % Open matlabpool
-if strcmp(optionsPesto.comp_type, 'parallel') && (n_workers >= 2)
+if (strcmp(optionsPesto.comp_type, 'parallel') && (n_workers >= 2))
    parpool(n_workers);
 end
 
@@ -230,7 +230,7 @@ end
 % getParameterProfiles() with profile_method = 'mixed'.
 % Profiles for parameters 1, 2, and 5 are integrated, profiles for
 % parameters 3 and 4 are optimized.
-optionsPesto.profile_method = 'mixed';
+optionsPesto.profile_method      = 'mixed';
 optionsPesto.profile_optim_index = [2 3];
 optionsPesto.profile_integ_index = [1 4 5];
 
@@ -244,7 +244,7 @@ parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
 
 % Computation for the second mode
 optionsPesto.MAP_index = MAP_index2;
-optionsPesto.fh = figure();
+optionsPesto.fh = [];
 
 % Now only the profiles 3 and 4 should be recomputed, since all the other
 % profiles are identical for the second mode
@@ -263,45 +263,36 @@ optionsPesto.objOutNumber = 3;
 
 % Building a struct covering all sampling options:
 optionsSampling = PestoSamplingOptions();
-optionsSampling.rndSeed       = 2;
-optionsSampling.nIterations   = 2e4;
+optionsSampling.rndSeed     = 2;
+optionsSampling.nIterations = 2e4;
 
 % PT specific options:
-optionsSampling.samplingAlgorithm     = 'PT';
-optionsSampling.PT.nTemps             = 5;
-optionsSampling.PT.exponentT          = 4;
-optionsSampling.PT.alpha              = 0.51;
-optionsSampling.PT.temperatureAlpha   = 0.51;
-optionsSampling.PT.memoryLength       = 1;
-optionsSampling.PT.regFactor          = 1e-4;
+optionsSampling.samplingAlgorithm   = 'PT';
+optionsSampling.PT.nTemps           = 5;
+optionsSampling.PT.exponentT        = 4;
+optionsSampling.PT.alpha            = 0.51;
+optionsSampling.PT.temperatureAlpha = 0.51;
+optionsSampling.PT.memoryLength     = 1;
+optionsSampling.PT.regFactor        = 1e-8;
 optionsSampling.PT.temperatureAdaptionScheme =  'Vousden16'; %'Lacki15'; %
 
-% Initialize the chains by choosing a random inital point and a 'large'
-% covariance matrix
-optionsSampling.theta0 = bsxfun(@plus, parameters.min', ...
-   bsxfun(@times, parameters.max' - parameters.min', rand(5,5)))';
-optionsSampling.sigma0 = 1e4 * diag(ones(1,5));
+% % Initialize the chains by choosing a random inital point and a 'large'
+% % covariance matrix
+% optionsSampling.theta0 = bsxfun(@plus, parameters.min', ...
+%    bsxfun(@times, parameters.max' - parameters.min', rand(5,5)))';
+% optionsSampling.sigma0 = 1e4 * diag(ones(1,5));
 
 % Initialize the chains by making use of the preceeding multi-start local
 % optimization, all of them starting from the same point
-% drawFromMSinteger                 = randi(5,1,10);
-% samplingOpt.theta0                = parameters.MS.par(:,drawFromMSinteger );
-% samplingOpt.sigma0                = 0.5*arrayfun(@inv,squeeze(parameters.MS.hessian(:,:,drawFromMSinteger )));
+drawFromMSinteger = randi(8, 1, optionsSampling.PT.nTemps);
+optionsSampling.theta0 = parameters.MS.par(:, drawFromMSinteger);
+for j = 1 : optionsSampling.PT.nTemps
+    optionsSampling.sigma0(:,:,j) = inv(squeeze(parameters.MS.hessian(:, :, drawFromMSinteger(j))));
+end
 
 % Run the sampling
 parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
 
-%% Visualize Sample
-samplingPlottingOpt = PestoPlottingOptions();
-samplingPlottingOpt.S.plot_type = 1; % Histogram
-% samplingPlottingOpt.S.plot_type = 2; % Density estimate
-samplingPlottingOpt.S.ind = 1; % 3 to show all temperatures
-samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
-samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
-
-plotParameterSamples(parameters,'1D',[],[],samplingPlottingOpt)
-
-plotParameterSamples(parameters,'2D',[],[],samplingPlottingOpt)
 
 %% Confidence interval evaluation -- Parameters
 % Confidence intervals to the confidence levels fixed in the array alpha

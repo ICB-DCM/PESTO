@@ -172,11 +172,6 @@ for l = 1:length(I)
                     end
                 end
             end
-
-            if options.S.plot_type >= 1
-                xl(1) = min(xl(1),min(parameters.S.par(i,:)));
-                xl(2) = max(xl(2),max(parameters.S.par(i,:)));
-            end
             
             if xl(1) == xl(2)
                 xl(1) = xl(1) - 1e-10;
@@ -217,7 +212,13 @@ for l = 1:length(I)
                             nbin = options.S.bins;
                     end
                     [N,X] = hist(parameters.S.par(i,:,k),nbin);
-                    h = bar(X,N/max(N),1,'facecolor',options.S.col(k,:),'edgecolor',[0.4,0.4,0.4]); hold on;
+                    h = bar(X,N/max(N),1,'facecolor',options.S.hist_col(k,:),'edgecolor',[0.4,0.4,0.4]);
+                    hold on;
+                    
+                    if strcmp(options.interval, 'dynamic')
+                        xl(1) = min(xl(1), min(X));
+                        xl(2) = max(xl(2), max(X));
+                    end
                     % bar(X,N/max(N),1,'facecolor','none','edgecolor',options.S.col(k,:)); hold on;
                 end
         case 2
@@ -225,7 +226,7 @@ for l = 1:length(I)
              for k = 1:options.S.ind
                  x_grid = linspace(min(parameters.S.par(i,:,k)),max(parameters.S.par(i,:,k)),100);
                  [KDest] = getKernelDensityEstimate(squeeze(parameters.S.par(i,:,k)),x_grid);
-                 h = plot(x_grid,KDest/max(KDest),'-','color',options.S.col(k,:),'linewidth',options.S.lw); hold on;
+                 h = plot(x_grid,KDest/max(KDest),'-','color',options.S.hist_col(k,:),'linewidth',options.S.lw); hold on;
              end
         otherwise
             error('Selected value for ''options.S.plot_type'' is not available.');
@@ -351,25 +352,25 @@ for l = 1:length(I)
     
     % Bounds
     if (options.P.plot_type >= 1) * flag_plot_P
-    switch options.boundary.mark
-        case 0
-            % no plot
-        case 1
-            ind = find(sum( bsxfun(@gt,parameters.min+options.boundary.eps,parameters.P(i).par)...
-                           +bsxfun(@gt,parameters.P(i).par,parameters.max-options.boundary.eps),1));
-            if ~isempty(ind)
-                switch options.P.plot_type
-                    case 1
-                        % likelihood ratio
-                        plot(parameters.P(i).par(i,ind),exp(parameters.P(i).logPost(ind) - logPost_max),'x','linewidth',options.P.lw,'color',options.P.col); hold on;    
-                    case 2
-                        % negative log-likelihood
-                        plot(parameters.P(i).par(i,ind),parameters.P(i).logPost(ind),'x','linewidth',options.P.lw,'color',options.P.col); hold on;    
+        switch options.boundary.mark
+            case 0
+                % no plot
+            case 1
+                ind = find(sum( bsxfun(@gt,parameters.min+options.boundary.eps,parameters.P(i).par)...
+                               +bsxfun(@gt,parameters.P(i).par,parameters.max-options.boundary.eps),1));
+                if ~isempty(ind)
+                    switch options.P.plot_type
+                        case 1
+                            % likelihood ratio
+                            plot(parameters.P(i).par(i,ind),exp(parameters.P(i).logPost(ind) - logPost_max),'x','linewidth',options.P.lw,'color',options.P.col); hold on;    
+                        case 2
+                            % negative log-likelihood
+                            plot(parameters.P(i).par(i,ind),parameters.P(i).logPost(ind),'x','linewidth',options.P.lw,'color',options.P.col); hold on;    
+                    end
                 end
-            end
-        otherwise
-            error('Selected value for ''options.boundary.mark'' is not available.');
-    end
+            otherwise
+                error('Selected value for ''options.boundary.mark'' is not available.');
+        end
     end
     
     % Plot: Local optima
