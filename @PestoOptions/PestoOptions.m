@@ -8,7 +8,7 @@ classdef PestoOptions < matlab.mixin.SetGet
     % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
     
     properties        
-    %% General options
+        %% <!-- General options -->
         
         % Perform calculations sequentially (''sequential'', default), or
         % in parallel (''parallel''). Parallel mode will speed-up the
@@ -35,7 +35,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         
         
-    %% Options for the objective function
+        %% <!-- Options for the objective function -->
         
         % Type of objective function provided: 'log-posterior' or 'negative log-posterior'
         % Tells the algorithm that log-posterior or log-likelihood are provided so it performs
@@ -45,11 +45,11 @@ classdef PestoOptions < matlab.mixin.SetGet
         obj_type = 'log-posterior';
         
         % Maximum number of outputs, the objective function can provide:
-        % (Missing values will be approximated by finite differences.)
         % * 1 ... only objective value
         % * 2 ... objective value with gradient
         % * 3 ... objective value, gradient and Hessian
         %
+        % (Missing values will be approximated by finite differences.)
         % Don't confuse this with the number of outputs from the objective
         % function that Pesto really calls! objOutNumber just tells Pesto,
         % with how many outputs it can call the objective function. Also,
@@ -59,7 +59,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         
         
-    %% Options concerning the output
+        %% <!-- Options concerning the output -->
         
         % Output mode of algorithm: 
         % * 'visual': plots showing the progress are generated
@@ -78,7 +78,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         
         
-    %% Options for getMultiStarts
+        %% <!-- Options for getMultiStarts -->
 
         % Number of local optimizations.
         n_starts = 20;
@@ -142,7 +142,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         
         
-    %% Options for getParameterProfiles
+        %% <!-- Options for getParameterProfiles -->
         
         % flag for profile calculation
         % * true: profiles are calculated
@@ -186,9 +186,20 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         
         
-    %% Detailed options for profile optimization
+        %% <!-- Detailed options for profile optimization -->
         
         % Optimizer options for profile likelihood
+        % *     .algorithm ... choice of algorithm
+        % *         = 'interior-point' (default) 
+        % *         = 'trust-region-reflective'
+        % *         = 'active-set'
+        % *     .display ... output of optimization process
+        % *         = 'off' (default) ... no output
+        % *         = 'iter' ... output for every optimization step
+        % *     .MaxIter ... maximum of optimization steps
+        % *     .GradObj ... are gradients provided?
+        % *     .GradConstr ... do we have constraints?
+        % *     .TolCon ... Tolerance for constraints
         profileReoptimizationOptions = optimset( ...
             'algorithm', 'interior-point', ...
             'display', 'off', ...
@@ -224,9 +235,36 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         
         
-    %% Detailed options for profile integration
+        %% <!-- Detailed options for profile integration -->
         
-        % options for Profile integration 
+        % Options for profile integration 
+        % *     .type ... choice of ODE integrator
+        % *         = 'ode113' (default) ... Adams-Bashf.-Solver by Matlab
+        % *         = 'ode15s' ... BDF-Solver by Matlab
+        % *         = 'ode45' ... Runge-Kutta-Solver by Matlab
+        % *         = 'CVODE' ... BDF and AB-Solver by sundials (to be implemented!)
+        % *     .algorithm ... choice of algorithm (CVODE only)
+        % *         = 'Adams' (default) ... Adams-Bashford solver
+        % *         = 'BDF' ... BDF solver
+        % *     .nonlinSolver ... choice of nonlinear solver (CVODE only)
+        % *         = 'Newton' (default)
+        % *         = 'Functional'
+        % *     .linSolver ... choice of linear solver (CVODE only)
+        % *         = 'Dense' (default) ... solver for small problems
+        % *         = 'Band' ... solver for bigger problems
+        % *     .gamma ... Retraction factor
+        % *     .eps ... regularization for poorly conditioned Hessian
+        % *     .minCond ... Minimum condition number, when regularization is to be used 
+        % *     .hessian ... how is the Hessian Matrix provided?
+        % *         = 'user-supplied' (default) ... Hessian is 3rd output of ObjFun 
+        % *         = 'bfgs' ... BFGS approximation to Hessian
+        % *         = 'sr1' ... symmetric-rank 1 approximation to Hessian
+        % *     .gradient ... is a gradient provided?        
+        % *     .MaxStep ... minimum step size of the solver
+        % *     .MaxStep ... maximum step size of the solver
+        % *     .MaxNumSteps ... maximum steps to be taken
+        % *     .RelTol ... maximum relative integration error
+        % *     .AbsTol ... maximum absolute integration error
         solver = struct('type', 'ode113', ...
             'algorithm', 'Adams', ...
             'nonlinSolver', 'Newton', ...
@@ -245,7 +283,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         
 
         
-    %% Options for getPropertyProfiles
+        %% <!-- Options for getPropertyProfiles -->
         
         % Tolance for the maximal distance of the list point 
         % the lower and upper bounds for the properties.
