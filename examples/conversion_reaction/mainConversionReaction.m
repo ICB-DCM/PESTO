@@ -57,6 +57,7 @@ sigma2 = 0.015^2;   % measurement noise
 y = [0.0244; 0.0842; 0.1208; 0.1724; 0.2315; 0.2634; ... 
     0.2831; 0.3084; 0.3079; 0.3097; 0.3324]; % Measurement data
 
+
 %% Definition of the Parameter Estimation Problem
 % In order to run any PESTO routine, at least the parameters struct with 
 % the fields shown here and the objective function need to be defined, 
@@ -85,6 +86,7 @@ properties.function = {@propertyFunction_theta1,...
 properties.min = [-2.6;-2.2;-5;-10; 0; 0];
 properties.max = [-2.4;-1.7; 5; 10; 1; 1];
 properties.number = length(properties.name);
+
 
 %% Multi-start local optimization
 % A multi-start local optimization is performed within the bounds defined in
@@ -122,6 +124,7 @@ end
 % Optimization
 parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
 
+
 %% Visualization of fit
 % The measured data is visualized in plot, together with fit for the best
 % parameter value found during getMultiStarts
@@ -139,6 +142,7 @@ if strcmp(optionsMultistart.mode,'visual')
     ylabel('output y');
     legend('data','fit');
 end
+
 
 %% Choosing different optimizers
 
@@ -172,11 +176,13 @@ end
 % optionsMultistartPSwarm.n_starts = 10;
 % parametersPSwarm = getMultiStarts(parameters, objectiveFunction, optionsMultistartPSwarm);
 
+
 %% Profile likelihood calculation -- Parameters
 % The uncertainty of the estimated parameters is visualized by computing
 % and plotting profile likelihoods. In getParameterProfiles, this is done
 % by using repeated reoptimization
 parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultistart);
+
 
 %% Markov Chain Monte Carlo sampling -- Parameters
 % Values for the parameters are sampled by using an Parallel Tempering (PT)
@@ -185,17 +191,13 @@ parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultista
 
 % Building a struct covering all sampling options:
 optionsSampling = PestoSamplingOptions();
-optionsSampling.rndSeed       = 3;
-optionsSampling.nIterations   = 2e3;
+optionsSampling.rndSeed     = 3;
+optionsSampling.nIterations = 2e3;
 
 % PT specific options:
-optionsSampling.samplingAlgorithm     = 'PT';
-optionsSampling.PT.nTemps             = 3;
-optionsSampling.PT.exponentT          = 4;    
-optionsSampling.PT.alpha              = 0.51;
-optionsSampling.PT.temperatureAlpha   = 0.51;
-optionsSampling.PT.memoryLength       = 1;
-optionsSampling.PT.regFactor          = 1e-4;
+optionsSampling.samplingAlgorithm   = 'PT';
+optionsSampling.PT.nTemps           = 3;
+optionsSampling.PT.exponentT        = 4;    
 optionsSampling.PT.temperatureAdaptionScheme = 'Lacki15'; %'Vousden16'; %
 
 % Initialize the chains by making use of the preceeding multi-start local
@@ -206,17 +208,6 @@ optionsSampling.sigma0 = 0.5 * inv(squeeze(parameters.MS.hessian(:,:,1)));
 % Run the sampling
 parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
 
-%% Plot the sampling results
-samplingPlottingOpt = PestoPlottingOptions();
-samplingPlottingOpt.S.plot_type = 1; % Histogram
-% samplingPlottingOpt.S.plot_type = 2; % Density estimate
-samplingPlottingOpt.S.ind = 1; % 3 to show all temperatures
-samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
-samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
-
-plotParameterSamples(parameters,'1D',[],[],samplingPlottingOpt);
-
-% plotParameterSamples(parameters,'2D',[],[],samplingPlottingOpt)
 
 %% Confidence interval evaluation -- Parameters
 % Confidence intervals to the confidence levels fixed in the array alpha
@@ -226,6 +217,7 @@ plotParameterSamples(parameters,'1D',[],[],samplingPlottingOpt);
 alpha = [0.9,0.95,0.99];
 parameters = getParameterConfidenceIntervals(parameters, alpha);
 
+
 %% Evaluation of properties for multi-start local optimization results -- Properties
 % The values of the properties are evaluated at the end points of the
 % multi-start optimization runs by getPropertyMultiStarts.
@@ -234,11 +226,13 @@ optionsProperties = optionsMultistart.copy();
 optionsProperties.fh = [];
 properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
 
+
 %% Profile likelihood calculation -- Properties
 % Profile likelihoods are computed for the properties in the same fashion,
 % as they were computed for the parameters.
 
 properties = getPropertyProfiles(properties, parameters, objectiveFunction, optionsProperties);
+
 
 %% Evaluation of properties for sampling results -- Properties
 % From the samples of the parameters, the properties are calculated and
@@ -247,12 +241,14 @@ properties = getPropertyProfiles(properties, parameters, objectiveFunction, opti
 
 properties = getPropertySamples(properties, parameters, optionsProperties);
 
+
 %% Confidence interval evaluation -- Properties
 % As for the parameters, confidence intervals are computed for the
 % properties in different fashion, based on local approximations, profile
 % likelihoods and samples.
 
 properties = getPropertyConfidenceIntervals(properties, alpha);
+
 
 %% Comparison of calculated parameter profiles
 
@@ -272,6 +268,7 @@ if strcmp(optionsMultistart.mode, 'visual')
         end
     end
 end
+
 
 %% Close the pools of parallel working threads
 
