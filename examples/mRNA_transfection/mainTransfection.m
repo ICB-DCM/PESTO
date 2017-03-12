@@ -264,7 +264,7 @@ optionsPesto.objOutNumber = 3;
 % Building a struct covering all sampling options:
 optionsSampling = PestoSamplingOptions();
 optionsSampling.rndSeed     = 2;
-optionsSampling.nIterations = 2e4;
+optionsSampling.nIterations = 1e5;
 
 % PT specific options:
 optionsSampling.samplingAlgorithm   = 'PT';
@@ -276,19 +276,19 @@ optionsSampling.PT.memoryLength     = 1;
 optionsSampling.PT.regFactor        = 1e-8;
 optionsSampling.PT.temperatureAdaptionScheme =  'Vousden16'; %'Lacki15'; %
 
-% % Initialize the chains by choosing a random inital point and a 'large'
-% % covariance matrix
-% optionsSampling.theta0 = bsxfun(@plus, parameters.min', ...
-%    bsxfun(@times, parameters.max' - parameters.min', rand(5,5)))';
-% optionsSampling.sigma0 = 1e4 * diag(ones(1,5));
+% Initialize the chains by choosing a random inital point and a 'large'
+% covariance matrix
+optionsSampling.theta0 = bsxfun(@plus, parameters.min', ...
+   bsxfun(@times, parameters.max' - parameters.min', rand(5,5)))';
+optionsSampling.sigma0 = 1e4 * diag(ones(1,5));
 
-% Initialize the chains by making use of the preceeding multi-start local
-% optimization, all of them starting from the same point
-drawFromMSinteger = randi(8, 1, optionsSampling.PT.nTemps);
-optionsSampling.theta0 = parameters.MS.par(:, drawFromMSinteger);
-for j = 1 : optionsSampling.PT.nTemps
-    optionsSampling.sigma0(:,:,j) = inv(squeeze(parameters.MS.hessian(:, :, drawFromMSinteger(j))));
-end
+% % Initialize the chains by making use of the preceeding multi-start local
+% % optimization, all of them starting from the same point
+% drawFromMSinteger = randi(8, 1, optionsSampling.PT.nTemps);
+% optionsSampling.theta0 = parameters.MS.par(:, drawFromMSinteger);
+% for j = 1 : optionsSampling.PT.nTemps
+%     optionsSampling.sigma0(:,:,j) = inv(squeeze(parameters.MS.hessian(:, :, drawFromMSinteger(j))));
+% end
 
 % Run the sampling
 parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);

@@ -7,78 +7,59 @@ classdef PestoOptions < matlab.mixin.SetGet
     %
     % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
     
-    properties
-        % <!-- General options -->
-        
-        % Type of objective function provided:
-        % 'log-posterior' or 'negative log-posterior'
-        %
-        % Tells the algorithm that log-posterior or log-likelihood are provided so it performs
-        % a maximization of the objective function or that the negative
-        % log-posterior or negative log-likelihood are provided so that
-        % a minimization of the objective function is performed.
-
-        obj_type = 'log-posterior';
-        
-        % Maximum number of outputs, the objective function can provide:
-        % * 1 ... only objective value
-        % * 2 ... objective value with gradient
-        % * 3 ... objective value, gradient and Hessian
-        %
-        % Missing values will be approximated by finite differences.
-
-        objOutNumber = 3;
+    properties        
+    %% General options
         
         % Perform calculations sequentially (''sequential'', default), or
         % in parallel (''parallel''). Parallel mode will speed-up the
         % calculations on multi-core systems, but requires the 
         % [MATLAB Parallel Computing Toolbox](https://mathworks.com/products/parallel-computing/) 
         % to be installed.
-        
         comp_type = 'sequential';
-
-        % Which optimizer to use? Current options: ['fmincon', 'meigo-ess', 'meigo-vns', 'pswarm']
-        %
-        % For 'meigo-ess' or 'meigo-vns', MEIGO
-        % (http://gingproc.iim.csic.es/meigom.html) has to be installed separately.
-        %
-        % For 'pswarm' PSwarm (http://www.norg.uminho.pt/aivaz/pswarm/) has
-        % to be installed separately
-
-        localOptimizer = 'fmincon';
-               
-        % Options for the chosen local optimizer. Setting fmincon options as default local optimizer. See *help('fmincon')*
-        %
-        % MaxIter: fmincon default, necessary to be set for tracing
-        %
-        % Options for 'meigo-ess' are described in ess_kernel.m in the
-        % MEIGO folder.
         
-        localOptimizerOptions = optimset( ...
-            'algorithm', 'interior-point',...
-            'display', 'off', ...
-            'GradObj', 'on', ...
-            'MaxIter', 2000, ...
-            'PrecondBandWidth', inf);
-        
-        % Optimizer options for profile likelihood
-        
-        profileReoptimizationOptions = optimset( ...
-            'algorithm', 'interior-point', ...
-            'display', 'off', ...
-            'MaxIter', 400, ...
-            'GradObj', 'on', ...
-            'GradConstr', 'on', ...
-            'TolCon', 1e-6 ...
-            );
-
         % Initialization of random number generator.
         % * Any real number r: random generator is initialized with r.
         % * []: random number generator is not initialized.
         % (Initializing the random number generator with a specific seed can be
         % helpful to reproduce problems.)
-        
         rng = 0;
+        
+        % Determine whether results are saved or not.
+        % * false: results are not saved
+        % * true: results are stored to an extra folder
+        save = false;
+        
+        % Name of the folder in which results are stored. If no folder is 
+        % provided, a random foldername is generated.
+        foldername = strrep(datestr(now,31),' ','__'); 
+        
+        
+        
+    %% Options for the objective function
+        
+        % Type of objective function provided: 'log-posterior' or 'negative log-posterior'
+        % Tells the algorithm that log-posterior or log-likelihood are provided so it performs
+        % a maximization of the objective function or that the negative
+        % log-posterior or negative log-likelihood are provided so that
+        % a minimization of the objective function is performed.
+        obj_type = 'log-posterior';
+        
+        % Maximum number of outputs, the objective function can provide:
+        % (Missing values will be approximated by finite differences.)
+        % * 1 ... only objective value
+        % * 2 ... objective value with gradient
+        % * 3 ... objective value, gradient and Hessian
+        %
+        % Don't confuse this with the number of outputs from the objective
+        % function that Pesto really calls! objOutNumber just tells Pesto,
+        % with how many outputs it can call the objective function. Also,
+        % optimization is still possible to be done without gradient 
+        % information and without the Pesto FD routine.
+        objOutNumber = 3;
+        
+        
+        
+    %% Options concerning the output
         
         % Output mode of algorithm: 
         % * 'visual': plots showing the progress are generated
@@ -86,30 +67,18 @@ classdef PestoOptions < matlab.mixin.SetGet
         % * 'silent': no output during the multi-start local optimization
         % * 'debug': print extra debug information (only available in
         % certain functions
-        
         mode = 'visual';
         
         % Figure handle in which results are printed. If no handle is 
         % provided, a new figure is used. TODO: move to plot options
-        
         fh = [];
         
         % Plotting options of class PestoPlottingOptions.m
-        
         plot_options = PestoPlottingOptions();
         
-        % Determine whether results are saved or not.
-        % * false: results are not saved
-        % * true: results are stored to an extra folder
         
-        save = false;
         
-        % Name of the folder in which results are stored. If no folder is 
-        % provided, a random foldername is generated.
-        
-        foldername = strrep(datestr(now,31),' ','__'); 
-
-        % <!-- Multi-start options -->
+    %% Options for getMultiStarts
 
         % Number of local optimizations.
         n_starts = 20;
@@ -122,12 +91,36 @@ classdef PestoOptions < matlab.mixin.SetGet
         % optimization.
         init_threshold = -inf;
         
-        % Method used to propose starting points. Can be
+        % Which optimizer to use?
+        % Current options: ['fmincon', 'meigo-ess', 'meigo-vns', 'pswarm']
+        %
+        % For 'meigo-ess' or 'meigo-vns', MEIGO
+        % (http://gingproc.iim.csic.es/meigom.html) has to be installed 
+        % separately.
+        %
+        % For 'pswarm' PSwarm (http://www.norg.uminho.pt/aivaz/pswarm/) has
+        % to be installed separately
+        localOptimizer = 'fmincon';
+               
+        % Options for the chosen local optimizer. Setting fmincon options as default local optimizer. See *help('fmincon')*
+        %
+        % MaxIter: fmincon default, necessary to be set for tracing
+        %
+        % Options for 'meigo-ess' are described in ess_kernel.m in the
+        % MEIGO folder.
+        localOptimizerOptions = optimset( ...
+            'algorithm', 'interior-point',...
+            'display', 'off', ...
+            'GradObj', 'on', ...
+            'MaxIter', 2000, ...
+            'PrecondBandWidth', inf);
+        
+        % Method used to propose starting points for fmincon. Can be
         % * 'latin hypercube': latin hypercube sampling
         % * 'uniform': uniform random sampling
         % * 'user-supplied': user supplied function PestoOptions.init_fun
         proposal = 'latin hypercube'; 
-                              
+        
         % determine whether objective function, parameter values and
         % computation time are stored over iterations
         % * false:  not saved
@@ -146,47 +139,67 @@ classdef PestoOptions < matlab.mixin.SetGet
         % 
         % WHEN TRUE THIS OPTION REMOVES ALL OBJECTIVE FUNCTION BREAK POINTS
         resetobjective = false;
-
-        % <!-- get(Parameter|Property)Profiles options -->
         
-        % The following options are for getParameterProfiles only:
         
-        % Indices of the parameters for which the profile is calculated. 
-        %
-        % Default: profile_optim_index will be set to 1:parameters.number
-        % if both indices are left empty
-        parameter_index = [];
         
-        % Indices of the parameters for which the profile is calculated by reoptimization. 
-        profile_optim_index = [];
+    %% Options for getParameterProfiles
         
-        % Indices of the parameters for which the profile is calculated by integration. 
-        profile_integ_index = [];
+        % flag for profile calculation
+        % * true: profiles are calculated
+        % * false: profiles are not calculated
+        calc_profiles = true;
         
-        % How should profiles be computed? ('optimization', 'integration',
-        % 'mixed')
-        profile_method = 'optimization';
-        
-        % Indices of the properties for which the profile
-        % is to be calculated (default = 1:properties.number).
-        property_index = [];
-
-        % profiling parameters
+        % parameter bounds (can be removed in a future release, since
+        % parameters.min/max can be used instead)
         % * .P.min ... lower bound for profiling parameters, having same
         %   dimension as the parameter vector (default = parameters.min).
         % * .P.max ... lower bound for profiling parameters, having same
         %   dimension as the parameter vector (default = parameters.max).
         P = {};
-
-        % sampling parameters
-        S = {};
+                
+        % index MAP - parameter vector starting from which the
+        %       profile is calculated. This option is helpful if local
+        %       optima are present.
+        MAP_index = 1;
         
-        % minimal ratio down to which the profile is calculated
+        % Minimal ratio down to which the profile is calculated
         R_min = 0.03;
         
-        % maximal relative decrease of ratio allowed
-        % for two adjacent points in the profile (default = 0.10) if
-        % options.dJ = 0;
+        % Indices of the parameters for which the profile is calculated. 
+        %
+        % Default: profile_optim_index will be set to 1:parameters.number
+        % if left empty
+        parameter_index = [];
+        
+        % Indices of the parameters for which the profile is calculated by 
+        % reoptimization. 
+        profile_optim_index = [];
+        
+        % Indices of the parameters for which the profile is calculated by 
+        % integration. 
+        profile_integ_index = [];
+        
+        % How should profiles be computed (if no more precise options are 
+        % set like profile_optim_index or profile_integ_index)? 
+        % Possibilities: {'optimization' (default), 'integration', 'mixed'}
+        profile_method = 'optimization';
+        
+        
+        
+    %% Detailed options for profile optimization
+        
+        % Optimizer options for profile likelihood
+        profileReoptimizationOptions = optimset( ...
+            'algorithm', 'interior-point', ...
+            'display', 'off', ...
+            'MaxIter', 400, ...
+            'GradObj', 'on', ...
+            'GradConstr', 'on', ...
+            'TolCon', 1e-6 ...
+            );
+        
+        % Maximal relative decrease of ratio allowed for two adjacent 
+        % points in the profile (default = 0.10) if options.dJ = 0;
         dR_max = 0.10;
         
         % influences step size at small likelihood ratio values
@@ -208,7 +221,11 @@ classdef PestoOptions < matlab.mixin.SetGet
             'min', 1e-6, ...
             'max', 1, ...
             'update', 1.25);
-
+        
+        
+        
+    %% Detailed options for profile integration
+        
         % options for Profile integration 
         solver = struct('type', 'ode113', ...
             'algorithm', 'Adams', ...
@@ -226,76 +243,17 @@ classdef PestoOptions < matlab.mixin.SetGet
             'AbsTol', 1e-8 ...
             );
         
-        % flag for profile calculation
-        % * true: profiles are calculated
-        % * false: profiles are not calculated
-        calc_profiles = true;
-                
-        % index MAP - parameter vector starting from which the
-        %       profile is calculated. This option is helpful if local
-        %       optima are present.
-        MAP_index = 1;
+
+        
+    %% Options for getPropertyProfiles
         
         % Tolance for the maximal distance of the list point 
         % the lower and upper bounds for the properties.
         boundary_tol = 1e-5;
 
-        % <!-- MCMC options -->
-        
-        % MCMC options
-        %
-        % * sampling_scheme: 'single-chain' 'DRAM' 'single-chain multi-core' -> replace by comp_type
-        % * nsimu_warmup: length of MCMC warm-up run (default 1e3 * parameters.number)
-        % * nsimu_run: length of MCMC run (default 1e4 * parameters.number)
-        % * algorithm:  MCMC sampling scheme (default = 'dram')
-        % * report_interval:
-        % * thinning: In the default setting only the properties for every 10th parameter vector is evaluated
-        % * initialization:  'user-provided'... How should sampling be initialized?
-        MCMC = struct('sampling_scheme', 'single-chain', ...
-                      'nsimu_warmup', [], ...
-                      'nsimu_run', [], ...
-                      'algorithm', 'dram', ...
-                      'report_interval', 100, ...
-                      'show_warning', true, ...
-                      'thinning', 10, ...
-                      'initialization', 'multistart' ...
-                  );
-        
-        % Single-chain MCMC options
-        % 
-        % * .proposal_scheme: Random Walk Options  'MH','AM', 'MALA'
-        % * .MALA.min_regularisation: minimal regularistion for hessian matrix
-        % * .MALA.w_hist: interpolation between MALA and AM proposal
-        % * .AM.min_regularisation: minimal regularistion for covariance matrix
-        % * .AM.proposal_scaling_scheme: 'Haario' 'Lacki_cumAcc'
-        SC = struct('proposal_scheme', 'AM', ...
-                    'DRAM', struct(...
-                        'algorithm', 'dram', ... 
-                        'ntry', 3 ...
-                    ), ...
-                    'MALA', struct(...
-                        'min_regularisation', 1e-6, ...
-                        'w_hist', 0 ...
-                    ), ...
-                    'AM', struct( ...
-                        'min_regularisation', 1e-6, ...
-                        'init_memory_length', [], ...
-                        'adaption_interval', 1, ...
-                        'proposal_scaling_scheme', 'Lacki', ...
-                        'Haario', struct(...
-                            'min_acc', 0.15, ...
-                            'max_acc', 0.30, ...
-                            'adap_sigma_scale', 0.95 ...
-                         ), ...
-                        'Lacki', struct(...
-                            'alpha_update', 1, ...
-                            'alpha_scale', 0.51 ...
-                        ) ...
-                    ) ...
-                    );
-
-        % Multi-chain: Not used yet
-        MC = {};
+        % Indices of the properties for which the profile is to be 
+        % calculated (default = 1:properties.number, reoptimization only).
+        property_index = [];
 
     end
     
