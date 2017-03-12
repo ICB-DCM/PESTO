@@ -57,7 +57,7 @@ theta       = [1.1770; -2.3714; -0.4827; -5.5387]; % True parameter values
 % Creation of data
 % Once the two files getMeasuredData.m and getInitialConcentrations.m are
 % written, the two following lines can be commented
-fprintf('\n Write new measurement data...');
+display(' Write new measurement data...');
 performNewMeasurement(theta, nMeasure, nTimepoints, sigma2);
 
 % The measurement data is read out from the files where it is saved
@@ -69,7 +69,7 @@ con0 = getInitialConcentrations();
 % PESTO routines to work are created and set to convenient values
 
 % parameters
-fprintf('\n Prepare structs and options...')
+display(' Prepare structs and options...')
 parameters.name   = {'log(theta_1)', 'log(theta_2)', 'log(theta_3)', 'log(theta_4)'};
 parameters.min    = lowerBound * ones(4, 1);
 parameters.max    = upperBound * ones(4, 1);
@@ -110,7 +110,7 @@ optionsSampling.theta0 = lowerBound * ones(4, 1) + ...
 optionsSampling.sigma0 = 1e4 * diag(ones(1,4));
 
 % Run the sampling
-parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
+%parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
 
 
 %% Perform Multistart optimization
@@ -175,18 +175,6 @@ display(' Sampling with information from optimization...');
 parametersNew = parameters;
 parametersNew = getParameterSamples(parametersNew, objectiveFunction, optionsSampling);
 
-
-%% Plot the sampling results
-% samplingPlottingOpt = PestoPlottingOptions();
-% samplingPlottingOpt.S.plot_type = 1; % Histogram
-% % samplingPlottingOpt.S.plot_type = 2; % Density estimate
-% samplingPlottingOpt.S.ind = 1; % 3 to show all temperatures
-% samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
-% samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
-% 
-% plotParameterSamples(parametersNew,'1D',[],[],samplingPlottingOpt)
-% 
-% plotParameterSamples(parameters2,'2D',[],[],samplingPlottingOpt)
 
 %% Calculate Confidence Intervals
 % Confidence Intervals for the Parameters are inferred from the local 

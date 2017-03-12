@@ -122,7 +122,7 @@ pos = nan(indexLen, 4);
 %% Generate the Plots
 switch options.group_CI_by
     case 'parprop'
-        for iP = indexSet
+        for iP = 1 : indexLen %indexSet
             subplot(plots(1), plots(2), iP);
             pos(iP,:) = get(gca, 'Position');
             del = 0.1 / plots(2);
@@ -133,7 +133,7 @@ switch options.group_CI_by
 
             set(gca, 'YLim', [0.5, numConf + 0.5]);
             ylabel('');
-            xlabel(pStruct.name{iP});
+            xlabel(pStruct.name{indexSet(iP)});
             if (mod(iP-1, plots(2)) == 0)
                 set(gca, 'ytick', 1 : numConf, 'yticklabel', methods.name);
             else
@@ -145,31 +145,31 @@ switch options.group_CI_by
                 CI = pStruct.CI.(methods.type{j});
                 for k = methods.numLevels : -1 : 1;
                     h = methods.bars(k);
-                    if (CI(iP,1,k) == -inf)
-                        CI(iP,1,k) = pStruct.min(iP);
+                    if (CI(indexSet(iP),1,k) == -inf)
+                        CI(indexSet(iP),1,k) = pStruct.min(indexSet(iP));
                     end
-                    if ((CI(iP,2,k)) == inf)
-                        CI(iP,2,k) = pStruct.max(iP);
+                    if ((CI(indexSet(iP),2,k)) == inf)
+                        CI(indexSet(iP),2,k) = pStruct.max(indexSet(iP));
                     end
-                    patch([CI(iP,1,k), CI(iP,2,k), CI(iP,2,k), CI(iP,1,k)], [j-h, j-h, j+h, j+h], 'k', 'FaceColor', methods.colors(j,:,k), 'EdgeColor', 'k');
+                    patch([CI(indexSet(iP),1,k), CI(indexSet(iP),2,k), CI(indexSet(iP),2,k), CI(indexSet(iP),1,k)], [j-h, j-h, j+h, j+h], 'k', 'FaceColor', methods.colors(j,:,k), 'EdgeColor', 'k');
                 end
                 if (strcmp(type, 'Parameters'))
-                    plot([pStruct.MS.par(iP,1), pStruct.MS.par(iP,1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                    plot([pStruct.MS.par(indexSet(iP),1), pStruct.MS.par(indexSet(iP),1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
                 else
-                    plot([pStruct.MS.prop(iP,1), pStruct.MS.prop(iP,1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                    plot([pStruct.MS.prop(indexSet(iP),1), pStruct.MS.prop(indexSet(iP),1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
                 end
             end
 
             if (options.draw_bounds)
                 xLimits = get(gca, 'XLim');
-                if (xLimits(1) <= pStruct.min(iP) && xLimits(2) >= pStruct.min(iP))
-                    plot([pStruct.min(iP), pStruct.min(iP)], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
-                    set(gca, 'XLim', [pStruct.min(iP), xLimits(2)]);
+                if (xLimits(1) <= pStruct.min(indexSet(iP)) && xLimits(2) >= pStruct.min(indexSet(iP)))
+                    plot([pStruct.min(indexSet(iP)), pStruct.min(indexSet(iP))], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
+                    set(gca, 'XLim', [pStruct.min(indexSet(iP)), xLimits(2)]);
                 end
                 xLimits = get(gca, 'XLim');
-                if (xLimits(1) <= pStruct.max(iP) && xLimits(2) >= pStruct.max(iP))
-                    plot([pStruct.max(iP), pStruct.max(iP)], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
-                    set(gca, 'XLim', [xLimits(1), pStruct.max(iP)]);
+                if (xLimits(1) <= pStruct.max(indexSet(iP)) && xLimits(2) >= pStruct.max(indexSet(iP)))
+                    plot([pStruct.max(indexSet(iP)), pStruct.max(indexSet(iP))], [0.5, numConf+0.5], 'b--', 'linewidth', 2);
+                    set(gca, 'XLim', [xLimits(1), pStruct.max(indexSet(iP))]);
                 end
             end
             hold off;
@@ -180,7 +180,7 @@ switch options.group_CI_by
         % mad... The Matlab syntax for figure handles is, well... o.O'
         fig = gcf;
         fig.Children = flip(fig.Children);
-        for iP = indexSet 
+        for iP = 1 : indexLen %indexSet 
             set(fig.Children(iP), 'Position', pos(iP,:));
         end
         

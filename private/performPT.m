@@ -138,7 +138,7 @@ function res = performPT( logPostHandle, par, opt )
       % Reporting Progress
       switch opt.mode
          case {'visual','text'}
-            if ~mod(i-1, 1000)
+            if ~mod(i-1, 100)
                fprintf(1, repmat('\b',1,numel(msg)-2)) ;
                msg = ['Progress: ' num2str(i/(nIter)*100,'%2.2f') ' %%\n'];
                fprintf(1,msg);

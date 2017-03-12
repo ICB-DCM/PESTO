@@ -264,7 +264,7 @@ optionsPesto.objOutNumber = 3;
 % Building a struct covering all sampling options:
 optionsSampling = PestoSamplingOptions();
 optionsSampling.rndSeed     = 2;
-optionsSampling.nIterations = 1e5;
+optionsSampling.nIterations = 2e4;
 
 % PT specific options:
 optionsSampling.samplingAlgorithm   = 'PT';
@@ -273,8 +273,8 @@ optionsSampling.PT.exponentT        = 4;
 optionsSampling.PT.alpha            = 0.51;
 optionsSampling.PT.temperatureAlpha = 0.51;
 optionsSampling.PT.memoryLength     = 1;
-optionsSampling.PT.regFactor        = 1e-8;
-optionsSampling.PT.temperatureAdaptionScheme =  'Vousden16'; %'Lacki15'; %
+optionsSampling.PT.regFactor        = 1e-4;
+optionsSampling.PT.temperatureAdaptionScheme = 'Vousden16'; %'Lacki15'; %
 
 % Initialize the chains by choosing a random inital point and a 'large'
 % covariance matrix
