@@ -8,7 +8,7 @@ classdef PestoOptions < matlab.mixin.SetGet
     % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
     
     properties        
-        %% <!-- General options -->
+        % <!-- General options -->
         
         % Perform calculations sequentially (''sequential'', default), or
         % in parallel (''parallel''). Parallel mode will speed-up the
@@ -35,7 +35,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         
         
-        %% <!-- Options for the objective function -->
+        % <!-- Options for the objective function -->
         
         % Type of objective function provided: 'log-posterior' or 'negative log-posterior'
         % Tells the algorithm that log-posterior or log-likelihood are provided so it performs
@@ -59,7 +59,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         
         
-        %% <!-- Options concerning the output -->
+        % <!-- Options concerning the output -->
         
         % Output mode of algorithm: 
         % * 'visual': plots showing the progress are generated
@@ -78,7 +78,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         
         
-        %% <!-- Options for getMultiStarts -->
+        % <!-- Options for getMultiStarts -->
 
         % Number of local optimizations.
         n_starts = 20;
@@ -142,7 +142,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         
         
-        %% <!-- Options for getParameterProfiles -->
+        % <!-- Options for getParameterProfiles -->
         
         % flag for profile calculation
         % * true: profiles are calculated
@@ -186,7 +186,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         
         
-        %% <!-- Detailed options for profile optimization -->
+        % <!-- Detailed options for profile optimization -->
         
         % Optimizer options for profile likelihood
         % *     .algorithm ... choice of algorithm
@@ -235,7 +235,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         
         
-        %% <!-- Detailed options for profile integration -->
+        % <!-- Detailed options for profile integration -->
         
         % Options for profile integration 
         % *     .type ... choice of ODE integrator
@@ -283,7 +283,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         
 
         
-        %% <!-- Options for getPropertyProfiles -->
+        % <!-- Options for getPropertyProfiles -->
         
         % Tolance for the maximal distance of the list point 
         % the lower and upper bounds for the properties.
