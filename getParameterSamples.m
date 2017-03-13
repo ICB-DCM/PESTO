@@ -33,6 +33,9 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
    
    
    
+   %% Check and assign inputs, note that theta0 and sigma0 are always set manually outside this function
+   opt = opt.checkDependentDefaults(parameters);
+   
    %% Wrap objective function
    wrappedObjFkt = @(theta) -objectiveWrap( theta, objFkt, opt.obj_type, opt.objOutNumber );
    
@@ -61,16 +64,10 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
       case 'visual'
          samplingPlottingOpt = PestoPlottingOptions();
          samplingPlottingOpt.S.ind = 1;
-         
-         fh = figure('Name','getParameterSamples - 1D');
-         samplingPlottingOpt.S.plot_type = 1; % Histogram
-         plotParameterSamples(parameters,'1D',fh,[],samplingPlottingOpt);
-         
-         fh = figure('Name','getParameterSamples - 2D');
-         samplingPlottingOpt.S.plot_type = 1; % Histogram
-         plotParameterSamples(parameters,'2D',fh,[],samplingPlottingOpt);
-         disp('-> Sampling of parameters FINISHED.');
-      case 'text', disp('-> Sampling of parameters FINISHED.');
+         samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
+         plotParameterSamples(parameters,'2D',[],[],samplingPlottingOpt);
+         disp('-> Sampling FINISHED.');
+      case 'text', disp('-> Sampling FINISHED.');
       case 'silent'
    end
    

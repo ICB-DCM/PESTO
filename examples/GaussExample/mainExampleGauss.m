@@ -7,6 +7,9 @@
 % Written by Benjamin Ballnus 2/2017
 
 % Initialize example problem
+clear all
+close all
+clc
 path(pathdef);
 addpath(genpath([pwd filesep '..' filesep '..']));
 define_Gauss_LLH();
@@ -23,7 +26,7 @@ for i = 1:dimi+2
    par.name{end+1}     = ['\theta_' num2str(i)];
 end
 
-opt.obj_type           = 'log-posterior';
+opt                    = PestoSamplingOptions();
 opt.rndSeed            = 3;
 opt.nIterations        = 1e5;
 
@@ -88,5 +91,3 @@ samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
 samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
 
 plotParameterSamples(par,'1D',[],[],samplingPlottingOpt);
-
-plotParameterSamples(par,'2D',[],[],samplingPlottingOpt);

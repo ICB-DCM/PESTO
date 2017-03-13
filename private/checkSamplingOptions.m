@@ -10,67 +10,17 @@ function [] = checkSamplingOptions(par,opt)
 
 
 % General option checks
-if ~Check('opt')
-   error('Options do not exist or are empty. Please specify an options struct.')
-end
-if ~Check('par')
-   error(['Parameter struct does not exist or is empty. Please specify an ' ...
-         'parameter struct at least covering bounds and number of parameters.'])
-end
-if ~Check('opt.obj_type')
-   error('Please specify the type of objective function, e.g. opt.obj_type = "log-posterior"');
-end
-if ~Check('par.number')
-   error('Please specify the number of parameters, e.g. par.number = 7.')
-end
-if ~Check('opt.rndSeed')
-   error('Please specify the random seed, e.g. opt.rndSeed = 7 or opt.rndSeed = "shuffle".')
-end
-if ~Check('par.min')
-   error('Please define lower parameter borders, e.g. par.min = [-1;2;4]')
-elseif length(par.min) ~= par.number 
-   error('Please make sure par.number and the length of par.min are consistent.')
-elseif size(par.min,2) > 1
-   par.min = par.min';
-   warning('Transposed par.min.')
-end
-if ~Check('par.max')
-   error('Please define upper parameter borders, e.g. par.max = [-1;2;4]')
-elseif length(par.max) ~= par.number 
-   error('Please make sure par.number and the length of par.max are consistent.')
-elseif size(par.max,2) > 1
-   par.max = par.max';
-   warning('Transposed par.max.')
-end
-if ~Check('opt.nIterations')
-   error('Please enter the number of desired iterations, e.g. opt.nIterations = 1e6.')
-end
-if ~Check('opt.samplingAlgorithm')
-   error('Please specify the algorithm which should be used, e.g. opt.samplingAlgorithm = ''PT''')
-elseif ~strcmp(opt.samplingAlgorithm,'MALA') && ...
-       ~strcmp(opt.samplingAlgorithm,'DRAM') && ...
-       ~strcmp(opt.samplingAlgorithm,'PT') && ...
-       ~strcmp(opt.samplingAlgorithm,'PHS')
-   error('You have entered an sampling algorithm which does not exist.')
-end
+
+
+
+
+
 
 
 % Depending on the used Algorithm different options have to be specified
 switch opt.samplingAlgorithm
    
-   case 'MALA'
-      if ~Check('opt.MALA')
-         error('Please enter an options sub-struct for MALA options, e.g. options.MALA. ... .')
-      end         
-      if ~Check('opt.objOutNumber')
-         error(['Please enter wheter finite differences and Hessians opt.objOutNumber = 1' ...
-                'or sensitivity based gradients and Hessians opt.objOutNumber = 3 should be used.'])
-      end
-      if ~Check('opt.MALA.regFactor')
-         error(['Please specify Regularization factor for ill conditioned covariance'...
-                ' matrices of the adapted proposal density, e.g. ' ...
-                'opt.MALA.regFactor = 1e-5'])
-      end       
+     
 
    case 'DRAM'
       if ~Check('opt.DRAM')
@@ -109,69 +59,7 @@ switch opt.samplingAlgorithm
          error('Please specify the adaption interval, e.g. opt.DRAM.adaptionInterval = 20')
       end           
       
-   case 'PT'
-
-      if ~Check('opt.PT')
-         error('Please enter an options sub-struct for PT options, e.g. options.PT. ... .')
-      end    
-      if ~Check('opt.objOutNumber')
-         error('Please specify opt.objOutNumber = 1')
-      end          
-      if ~Check('opt.PT.nTemps')
-         error(['Please enter the initial number of temperatures, e.g. ' ...
-                'options.PT.nTemps = 10.'])
-      end
-      if ~Check('opt.theta0')
-         error(['Please define an inital parameter point, e.g. opt.theta0 = [-1;2;4]'...
-                'for single chain algorithms or opt.theta0 = repmat([0.1,1.05,-2.5,-0.5,0.4]'','...
-                '1,10) for multi-chain algorithms. It is recommended to set theta0 and sigma0'...
-                ' by taking into account the results from a preceeding optimization.'])
-      elseif size(opt.theta0,1) ~= par.number || ...
-            (size(opt.theta0,2) ~= opt.PT.nTemps && size(opt.theta0,2) ~= 1)
-         error('Please make sure opt.theta0, the par.number and opt.PT.nTemps are consistent.')
-      end      
-      if ~Check('opt.sigma0')
-         error(['Please define an inital parameter covariance matrix, e.g. opt.sigma0 = ' ...
-                '1e5*diag(ones(1,5)); '...
-                'for single chain algorithms or opt.sigma0 = repmat(1e5*diag(ones(1,5)),1,1,10)'...
-                ' for multi-chain algorithms. It is recommended to set theta0 and sigma0'...
-                ' by taking into account the results from a preceeding optimization.'])
-      elseif  size(opt.sigma0,1) ~= par.number || ...
-              size(opt.sigma0,2) ~= par.number || ...
-              (size(opt.sigma0,3) ~= opt.PT.nTemps && size(opt.sigma0,3) ~= 1)
-         error('Please make sure opt.sigma0, the par.number and opt.PT.nTemps are consistent.')
-      end        
-      if ~Check('opt.PT.exponentT')
-         error(['Please enter the power law exponent for the inital temperatures, e.g. ' ...
-                'opt.PT.exponentT = 4.'])
-      end
-      if ~Check('opt.PT.alpha')
-         error(['Please enter the parameter which controlls the adaption degeneration'...
-                'velocity of the single-chain proposals., e.g. ' ...
-                'opt.PT.alpha = 0.51.'])
-      elseif opt.PT.alpha < 0 || opt.PT.alpha > 1
-         error('opt.PT.alpha must have a value between 0 and 1.')
-      end        
-      if ~Check('opt.PT.temperatureAdaptionScheme')
-         error(['Please specify the the temperature adaption scheme, e.g. ' ...
-                'opt.PT.temperatureAdaptionScheme = ''Vousden16'' or ''Lacki15'''])
-      end         
-      if ~Check('opt.PT.temperatureAlpha')
-         error(['Please enter the parameter which controlls the adaption degeneration'...
-                'velocity of the single-chain proposals., e.g. ' ...
-                'opt.PT.temperatureAlpha = 0.51.'])
-      elseif opt.PT.temperatureAlpha < 0 || opt.PT.temperatureAlpha > 1
-         error('opt.PT.temperatureAlpha must have a value between 0 and 1.')
-      end  
-      if ~Check('opt.PT.memoryLength')
-         error(['Please add the delay before starting the adaption, e.g. ' ...
-                'opt.PT.memoryLength = 1.'])
-      end        
-      if ~Check('opt.PT.regFactor')
-         error(['Please specify Regularization factor for ill conditioned covariance'...
-                ' matrices of the adapted proposal density, e.g. ' ...
-                'opt.PT.regFactor = 1e-5'])
-      end    
+ 
 
    case 'PHS'
 

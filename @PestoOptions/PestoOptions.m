@@ -289,9 +289,8 @@ classdef PestoOptions < matlab.mixin.SetGet
         % the lower and upper bounds for the properties.
         boundary_tol = 1e-5;
 
-        % Indices of the properties for which the profile is to be 
-        % calculated (default = 1:properties.number, reoptimization only).
-        property_index = [];
+        % Set MCMC options by calling an PestoSamplingOptions Class object
+        MCMC = PestoSamplingOptions();
 
     end
     

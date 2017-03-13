@@ -5,6 +5,9 @@
 % Written by Benjamin Ballnus 2/2017
 
 % Initialize example problem
+clear all
+close all
+clc
 path(pathdef);
 addpath(genpath([pwd filesep '..' filesep '..']));
 radius = 15;
@@ -19,10 +22,6 @@ par.number             = ringDimension;
 par.min                = -25*ones(ringDimension,1);
 par.max                = 25*ones(ringDimension,1);
 par.name               = {'X_1','X_2'};
-
-opt.obj_type           = 'log-posterior';
-opt.rndSeed            = 3;
-opt.nIterations        = 1e5;
 
 % Optimization
 optMS = PestoOptions();
@@ -41,9 +40,12 @@ par = getParameterProfiles(par, logP, optMS);
 
 
 
-% Using PT
+% Using PT Sampling
+opt                       = PestoSamplingOptions();
+opt.rndSeed               = 3;
+opt.nIterations           = 1e5;
+
 opt.samplingAlgorithm     = 'PT';
-opt.objOutNumber          = 1;
 opt.PT.nTemps             = 3;
 opt.PT.exponentT          = 4;    
 opt.PT.alpha              = 0.51;
@@ -102,9 +104,6 @@ samplingPlottingOpt.S.plot_type = 1; % Histogram
 samplingPlottingOpt.S.ind = 1; % 3 to show all temperatures
 samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
 samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
-
 plotParameterSamples(par,'1D',[],[],samplingPlottingOpt);
-
-plotParameterSamples(par,'2D',[],[],samplingPlottingOpt);
-
+% plotParameterSamples(par,'2D',[],[],samplingPlottingOpt);
 par = getParameterConfidenceIntervals(par, [0.9,0.95,0.99]);
