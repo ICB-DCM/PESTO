@@ -40,7 +40,7 @@ classdef PTOptions < matlab.mixin.SetGet
       temperatureAlpha           = 0.51;
       memoryLength               = 1;
       regFactor                  = 1e-6;
-      temperatureAdaptionScheme  = 'Vousden16'
+      temperatureAdaptionScheme  = 'Vousden16';
       
       
    end
@@ -182,7 +182,7 @@ classdef PTOptions < matlab.mixin.SetGet
       end
       
       function set.nTemps(this, value)
-         if(isninteger(value) && value > 0)
+         if(value == floor(value) && value > 0)
             this.nTemps = lower(value);
          else
             error(['Please enter a positive integer for the number of temperatures, e.g. PestoSamplingOptions.nTemps = 10.']);
@@ -216,7 +216,7 @@ classdef PTOptions < matlab.mixin.SetGet
       end   
       
       function set.memoryLength(this, value)
-         if(isinteger(value) && value > 0)
+         if(value == floor(value) && value > 0)
             this.memoryLength = lower(value);
          else
             error(['Please enter a positive interger memoryLength constant, '...

@@ -17,7 +17,8 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
    %   objFkt: Objective function which measures the difference of model output and data
    %   opt   : An options object holding various options for the
    %              sampling. Depending on the algorithm and particular flavor,
-   %              different options must be set:
+   %              different options must be set: For details, please visit
+   %              PESTOSamplingOptions.m
    %
    % Return values:
    % parameters: The provided parameters struct with the obtained sampling

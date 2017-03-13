@@ -128,6 +128,7 @@ function res = performPT( logPostHandle, par, opt )
    sigma = sigmaHist;
    
    msg = '';
+   tic; dspTime = toc;
    
    % Perform MCMC
    j = 0;
@@ -138,10 +139,11 @@ function res = performPT( logPostHandle, par, opt )
       % Reporting Progress
       switch opt.mode
          case {'visual','text'}
-            if ~mod(i-1, 100)
+            if toc-dspTime > 0.5
                fprintf(1, repmat('\b',1,numel(msg)-2)) ;
                msg = ['Progress: ' num2str(i/(nIter)*100,'%2.2f') ' %%\n'];
                fprintf(1,msg);
+               dspTime = toc;
             end
          case 'silent'
       end

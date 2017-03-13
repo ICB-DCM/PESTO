@@ -57,6 +57,7 @@ function res = performMALA( logPostHandle, par, opt )
    end
    
    msg = '';
+   tic; dspTime = toc;   
    
    % Perform MCMC
    for i = 1:(nIter)
@@ -64,10 +65,11 @@ function res = performMALA( logPostHandle, par, opt )
       % Reporting Progress
       switch opt.mode
          case {'visual','text'}
-            if ~mod(i-1, 100)
-               fprintf(1,[repmat('\b',1,numel(msg)-2)]);
+            if toc-dspTime > 0.5
+               fprintf(1, repmat('\b',1,numel(msg)-2)) ;
                msg = ['Progress: ' num2str(i/(nIter)*100,'%2.2f') ' %%\n'];
                fprintf(1,msg);
+               dspTime = toc;
             end
          case 'silent'
       end

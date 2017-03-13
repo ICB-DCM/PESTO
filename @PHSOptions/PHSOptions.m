@@ -8,20 +8,13 @@ classdef PHSOptions < matlab.mixin.SetGet
    % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
    
    properties      
-      %% Parallel Tempering Options
-      
+      %% Parallel Hierarchical Sampling Options
       % PHS, struct containing the fields
-      %      .nTemps: Initial number of temperatures (default 10)
-      %      .exponentT: The initial temperatures are set by a power law
-      %              to ^opt.exponentT. (default 4)
+      %      .nChains: Initial number of temperatures (default 10)
       %      .alpha: Parameter which controlls the adaption degeneration
       %              velocity of the single-chain proposals.
       %              Value between 0 and 1. Default 0.51.
       %              No adaption (classical Metropolis-Hastings) for 0.
-      %      .temperatureAlpha: Parameter which controlls the adaption
-      %              degeneration velocity of the temperature adaption.
-      %              Value between 0 and 1. Default 0.51. No effect for
-      %              value = 0.
       %      .memoryLength: The higher the value the more it lowers the
       %              impact of early adaption steps. Default 1.
       %      .regFactor: Regularization factor for ill conditioned
@@ -31,16 +24,14 @@ classdef PHSOptions < matlab.mixin.SetGet
       %              magnitude. In this case, the algorithm adds a small
       %              diag-matrix to the covariance matrix with elements
       %              regFactor.
-      %      .temperatureAdaptionScheme: Follows the temperature adaption
-      %              scheme from 'Vousden16' or 'Lacki15'. Can be set to
-      %              'none' for no temperature adaption.
-      nTemps                     = 10;
-      exponentT                  = 4;
+      %      .trainingTime: The number of iterations before the chains
+      %              start to swap. Might get used to ensure a proper local
+      %              adaption of the single chains before exchanging them.
+      nChains                    = 10;
       alpha                      = 0.51;
-      temperatureAlpha           = 0.51;
       memoryLength               = 1;
       regFactor                  = 1e-6;
-      temperatureAdaptionScheme  = 'Vousden16'
+      trainingTime               = 1;
       
       
    end
@@ -181,22 +172,14 @@ classdef PHSOptions < matlab.mixin.SetGet
          end
       end
       
-      function set.nTemps(this, value)
-         if(isninteger(value) && value > 0)
-            this.nTemps = lower(value);
+      function set.nChains(this, value)
+         if(value == floor(value) && value > 0)
+            this.nChains = lower(value);
          else
-            error(['Please enter a positive integer for the number of temperatures, e.g. PestoSamplingOptions.nTemps = 10.']);
+            error(['Please enter a positive integer for the number auxiliary chains,' ...
+               'e.g. PestoSamplingOptions.PHS.nChains = 10.']);
          end
-      end    
-      
-      function set.exponentT(this, value)
-         if(isnumeric(value) && value > 0)
-            this.exponentT = lower(value);
-         else
-            error(['Please enter a positive double for the exponent of inital temperature heuristic' ...
-               ', e.g. PestoSamplingOptions.PHS.exponentT = 4.']);
-         end
-      end          
+      end            
 
       function set.alpha(this, value)
          if(isnumeric(value) && value > 0.5 && value < 1)
@@ -206,17 +189,8 @@ classdef PHSOptions < matlab.mixin.SetGet
          end
       end  
       
-      function set.temperatureAlpha(this, value)
-         if(isnumeric(value) && value > 0.5 && value < 1)
-            this.temperatureAlpha = lower(value);
-         else
-            error(['Please an temperature adaption decay constant between 0.5 and 1.0, '...
-               'e.g. PestoSamplingOptions.PHS.temperatureAlpha = 0.51']);
-         end
-      end   
-      
       function set.memoryLength(this, value)
-         if(isinteger(value) && value > 0)
+         if(value == floor(value) && value > 0)
             this.memoryLength = lower(value);
          else
             error(['Please enter a positive interger memoryLength constant, '...
@@ -224,14 +198,16 @@ classdef PHSOptions < matlab.mixin.SetGet
          end
       end   
       
-      function set.temperatureAdaptionScheme(this, value)
-         if (strcmp(value, 'Vousden16') || strcmp(value, 'Lacki15'))
-            this.temperatureAdaptionScheme = value;
+      function set.trainingTime(this, value)
+         if(value == floor(value) && value > 0)
+            this.trainingTime = lower(value);
          else
-            error(['Please enter the temperature adaption scheme, e.g. '...
-               'PestoSamplingOptions.PHS.temperatureAdaptionScheme = ''Vousden16''']);
+            error(['Please enter a positive interger training time constant, '...
+               'e.g. PestoSamplingOptions.PHS.trainingTime = 1']);
          end
-      end      
+      end         
+      
+   
             
    end
 end

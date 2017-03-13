@@ -66,14 +66,6 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       % Missing values will be approximated by finite differences.
       objOutNumber = 1;
       
-      % The initial values for theta0 and sigma0 have to get checked
-      % against the parameter dimension in the parameters struct and depend
-      % on the algorithm. Thus they are getting set and checked in
-      % getParameterSamples.m
-      theta0 = [];
-      sigma0 = [];
-      
-      
       
       %% Parallel Tempering Options
       
@@ -101,7 +93,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       %      .temperatureAdaptionScheme: Follows the temperature adaption
       %              scheme from 'Vousden16' or 'Lacki15'. Can be set to
       %              'none' for no temperature adaption.
-      PT = PTOptions();
+      PT;
       
       
       
@@ -272,6 +264,10 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                   obj.(optionSet{1}) = ip.Results.(optionSet{1});
                end
             end
+            
+            % Add required subclasses
+            obj.PT = PTOptions;
+            
          end
       end
       
@@ -302,7 +298,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       end
       
       function set.rndSeed(this, value)
-         if (isstr(value) && strcmp(value, 'shuffle')) || (isinteger(value) && value >= 0)
+         if (isstr(value) && strcmp(value, 'shuffle')) || (value == floor(value) && value >= 0)
             this.rndSeed = value;
          else
             error('Please specify the random seed as integer, e.g. PestoSamplingOptions.rndSeed = 7 or PestoSamplingOptions.rndSeed = "shuffle".');
@@ -310,7 +306,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       end
       
       function set.nIterations(this, value)
-         if (isinteger(value) && value > 0)
+         if (value == floor(value) && value > 0)
             this.nIterations = value;
          else
             error('Please enter the number of desired iterations as integer, e.g. opt.nIterations = 1e6.');
@@ -331,19 +327,19 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                   this.PHS  = struct;
                case 'DRAM'
                   this.MALA = struct;
-                  this.DRAM = MALAOptions();
+                  this.DRAM = DRAMOptions();
                   this.PT   = struct;
                   this.PHS  = struct;
                case 'PT'
                   this.MALA = struct;
                   this.DRAM = struct;
-                  this.PT   = MALAOptions();
+                  this.PT   = PTOptions();
                   this.PHS  = struct;
                case 'PHS'
                   this.MALA = struct;
                   this.DRAM = struct;
                   this.PT   = struct;
-                  this.PHS  = MALAOptions();
+                  this.PHS  = PHSOptions();
             end
          else
             error('You have entered an sampling algorithm which does not exist.')
@@ -351,7 +347,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       end
       
       function set.objOutNumber(this, value)
-         if isinteger(value) && ( value == 1 || value == 2 || value == 3 )
+         if value == floor(value) && ( value == 1 || value == 2 || value == 3 )
             this.objOutNumber = lower(value);
          else
             error(['Please enter wheter finite differences and Hessians opt.objOutNumber = 1' ...
@@ -383,11 +379,25 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
             end
          end
          if ~isempty(this.sigma0)
-            if size(this.sigma0,1) ~= par.number || ...
-                  size(this.sigma0,2) ~= par.number || ...
-                  (size(this.sigma0,3) ~= this.PHS.nChains && size(this.sigma0,3) ~= 1)
-               error('Please make sure opt.sigma0, the par.number and opt.PHS.nChains are consistent.')
-            end
+            switch this.samplingAlgorithm
+               case {'DRAM','MALA'}
+                  if size(this.sigma0,1) ~= par.number || ...
+                        size(this.sigma0,2) ~= par.number
+                     error('Please make sure opt.sigma0, the par.number are consistent.')
+                  end
+               case 'PT'
+                  if size(this.sigma0,1) ~= par.number || ...
+                        size(this.sigma0,2) ~= par.number || ...
+                        (size(this.sigma0,3) ~= this.PT.nTemps && size(this.sigma0,3) ~= 1)
+                     error('Please make sure opt.sigma0, the par.number and opt.PT.nTemps are consistent.')
+                  end
+               case 'PHS'
+                  if size(this.sigma0,1) ~= par.number || ...
+                        size(this.sigma0,2) ~= par.number || ...
+                        (size(this.sigma0,3) ~= this.PHS.nChains && size(this.sigma0,3) ~= 1)
+                     error('Please make sure opt.sigma0, the par.number and opt.PHS.nChains are consistent.')
+                  end
+            end            
          else
             warning('No user-provided initial covariance sigma0 found. Setting to diagonal matrix with small entries.')
             switch this.samplingAlgorithm
@@ -399,11 +409,9 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                   this.sigma0 = 1e4 * diag(ones(1,5));
             end
          end
-         
-         
       end
-      
    end
+end
    
    
    

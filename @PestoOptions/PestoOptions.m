@@ -288,9 +288,13 @@ classdef PestoOptions < matlab.mixin.SetGet
         % Tolance for the maximal distance of the list point 
         % the lower and upper bounds for the properties.
         boundary_tol = 1e-5;
+        
+        % Indices of the properties for which the profile is to be  
+        % calculated (default = 1:properties.number, reoptimization only). 
+        property_index = [];         
 
         % Set MCMC options by calling an PestoSamplingOptions Class object
-        MCMC = PestoSamplingOptions();
+        MCMC;
 
     end
     
@@ -317,7 +321,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             %   varargin:
             
             % adapted from SolverOptions
-            
+                        
             if nargin > 0 
                 
                 % Deal with the case where the first input to the
@@ -408,7 +412,11 @@ classdef PestoOptions < matlab.mixin.SetGet
                         obj.(optionSet{1}) = ip.Results.(optionSet{1});
                     end
                 end
-            end            
+            end      
+            
+            % Add required subclasses
+            obj.MCMC = PestoSamplingOptions();
+            
         end
         
         function new = copy(this)
