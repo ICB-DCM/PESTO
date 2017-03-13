@@ -360,10 +360,23 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       % options and defaulting based on par if not set yet.
       function this = checkDependentDefaults(this, par)
          if ~isempty(this.theta0)
-            if size(this.theta0,1) ~= par.number || ...
-                  (size(this.theta0,2) ~= this.PT.nTemps && size(this.theta0,2) ~= 1)
-               error('Please make sure opt.theta0, the par.number and opt.PT.nTemps are consistent.')
+            switch this.samplingAlgorithm
+               case {'DRAM','MALA'}
+                  if size(this.theta0,1) ~= par.number
+                     error('Please make sure opt.theta0, the par.number are consistent.')
+                  end
+               case 'PT'
+                  if size(this.theta0,1) ~= par.number || ...
+                        (size(this.theta0,2) ~= this.PT.nTemps && size(this.theta0,2) ~= 1)
+                     error('Please make sure opt.theta0, the par.number and opt.PT.nTemps are consistent.')
+                  end
+               case 'PHS'
+                  if size(this.theta0,1) ~= par.number || ...
+                        (size(this.theta0,2) ~= this.PHS.nChains && size(this.theta0,2) ~= 1)
+                     error('Please make sure opt.theta0, the par.number and opt.PHS.nChains are consistent.')
+                  end
             end
+            
          else
             warning('No user-provided initial point found. Setting Initial points randomly.')
             switch this.samplingAlgorithm
@@ -397,7 +410,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                         (size(this.sigma0,3) ~= this.PHS.nChains && size(this.sigma0,3) ~= 1)
                      error('Please make sure opt.sigma0, the par.number and opt.PHS.nChains are consistent.')
                   end
-            end            
+            end
          else
             warning('No user-provided initial covariance sigma0 found. Setting to diagonal matrix with small entries.')
             switch this.samplingAlgorithm
@@ -412,28 +425,28 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       end
    end
 end
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

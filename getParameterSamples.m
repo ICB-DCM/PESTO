@@ -38,7 +38,7 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
    opt = opt.checkDependentDefaults(parameters);
    
    %% Wrap objective function
-   wrappedObjFkt = @(theta) -objectiveWrap( theta, objFkt, opt.obj_type, opt.objOutNumber );
+   wrappedObjFkt = @(theta) objectiveWrap( theta, @(x)-objFkt(x), opt.obj_type, opt.objOutNumber );
    
    %% Selection of sampling procedure
    switch opt.samplingAlgorithm
@@ -64,6 +64,7 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
    switch opt.mode
       case 'visual'
          samplingPlottingOpt = PestoPlottingOptions();
+         samplingPlottingOpt.S.plot_type = 1;
          samplingPlottingOpt.S.ind = 1;
          samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
          plotParameterSamples(parameters,'2D',[],[],samplingPlottingOpt);
@@ -74,5 +75,6 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
    
    
 end
+
 
 

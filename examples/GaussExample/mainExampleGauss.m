@@ -10,8 +10,8 @@
 clear all
 close all
 clc
-path(pathdef);
-addpath(genpath([pwd filesep '..' filesep '..']));
+% path(pathdef);
+% addpath(genpath([pwd filesep '..' filesep '..']));
 define_Gauss_LLH();
 gaussDimension          = 2 + dimi;
 

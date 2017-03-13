@@ -8,8 +8,8 @@
 clear all
 close all
 clc
-path(pathdef);
-addpath(genpath([pwd filesep '..' filesep '..']));
+% path(pathdef);
+% addpath(genpath([pwd filesep '..' filesep '..']));
 radius = 15;
 sigma = 2;
 logP = @(theta) simulateRingLLH(theta,radius,sigma);
@@ -40,11 +40,12 @@ par = getParameterProfiles(par, logP, optMS);
 
 
 
-% Using PT Sampling
+% Sampling Options
 opt                       = PestoSamplingOptions();
 opt.rndSeed               = 3;
 opt.nIterations           = 1e5;
 
+% Using PT
 opt.samplingAlgorithm     = 'PT';
 opt.PT.nTemps             = 3;
 opt.PT.exponentT          = 4;    
@@ -58,7 +59,6 @@ opt.sigma0                = 1e5*diag(ones(1,ringDimension));
 
 % Using DRAM
 % opt.samplingAlgorithm     = 'DRAM';
-% opt.objOutNumber          = 1;
 % opt.DRAM.nTry             = 5;
 % opt.DRAM.verbosityMode    = 'debug';    
 % opt.DRAM.adaptionInterval = 1;
@@ -68,14 +68,12 @@ opt.sigma0                = 1e5*diag(ones(1,ringDimension));
 
 % Using MALA
 % opt.samplingAlgorithm     = 'MALA';
-% opt.objOutNumber          = 1;
 % opt.MALA.regFactor        = 1e-4;
 % opt.theta0                = -15*ones(ringDimension,1); 
 % opt.sigma0                = 1e5*diag(ones(1,ringDimension));
 
 % Using PHS
 % opt.samplingAlgorithm     = 'PHS';
-% opt.objOutNumber          = 1;
 % opt.PHS.nChains           = 3;
 % opt.PHS.alpha             = 0.51;
 % opt.PHS.memoryLength      = 1;

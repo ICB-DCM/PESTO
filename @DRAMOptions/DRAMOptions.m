@@ -179,7 +179,7 @@ classdef DRAMOptions < matlab.mixin.SetGet
       end     
       
       function set.verbosityMode(this, value)
-         if (strcmp(value, 'text') || strcmp(value, 'silent'))
+         if (strcmp(value, 'text') || strcmp(value, 'silent') || strcmp(value, 'debug'))
             this.verbosityMode = lower(value);
          else
             error(['Please specify a verbosity mode, e.g. ' ...
