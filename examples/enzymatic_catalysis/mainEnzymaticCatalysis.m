@@ -87,14 +87,13 @@ optionsPesto.plot_options.add_points.par = theta;
 optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 
 %% Parameter Sampling
-display(' Sampling...');
-
 % Covering all sampling options in one struct
 samplingOptions = PestoSamplingOptions();
 samplingOptions.rndSeed      = 3;
 samplingOptions.nIterations  = 2e2;
 
 % PT (with only 1 chain -> AM) specific options:
+optionsSampling                   = PestoSamplingOptions;
 optionsSampling.samplingAlgorithm = 'PT';
 optionsSampling.PT.nTemps         = 5;
 optionsSampling.PT.exponentT      = 4;    
@@ -108,7 +107,7 @@ optionsSampling.theta0 = lowerBound * ones(4, 1) + ...
 optionsSampling.sigma0 = 1e4 * diag(ones(1,4));
 
 % Run the sampling
-%parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
+parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
 
 
 %% Perform Multistart optimization
