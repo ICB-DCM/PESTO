@@ -88,9 +88,10 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 
 %% Parameter Sampling
 % Covering all sampling options in one struct
+display(' Sampling without prior information...');
 optionsSampling = PestoSamplingOptions();
 optionsSampling.rndSeed      = 3;
-optionsSampling.nIterations  = 2e2;
+optionsSampling.nIterations  = 1e4;
 
 % PT (with only 1 chain -> AM) specific options:
 optionsSampling.samplingAlgorithm = 'PT';
@@ -103,7 +104,7 @@ optionsSampling.PT.temperatureAdaptionScheme = 'Lacki15'; %'Vousden16';
 % covariance matrix
 optionsSampling.theta0 = lowerBound * ones(4, 1) + ...
     (upperBound * ones(4, 1) - lowerBound * ones(4, 1)) .* rand(4,1); 
-optionsSampling.sigma0 = 1e4 * diag(ones(1,4));
+optionsSampling.sigma0 = 1e5 * eye(4);
 
 % Run the sampling
 parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
@@ -151,7 +152,7 @@ parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
 % The result of the sampling is compared with profile likelihoods.
 
 optionsPesto.profile_method = 'integration';
-optionsPesto.parameter_index = 2;
+% optionsPesto.parameter_index = 2;
 optionsPesto.solver.gamma = 1;
 optionsPesto.objOutNumber = 2;
 optionsPesto.solver.hessian = 'user-supplied';
@@ -168,6 +169,7 @@ optionsSampling.sigma0 = 0.5*inv(squeeze(parameters.MS.hessian(:,:,1)));
 
 % Run the sampling
 display(' Sampling with information from optimization...');
+optionsSampling.nIterations  = 2e3;
 parametersNew = parameters;
 parametersNew = getParameterSamples(parametersNew, objectiveFunction, optionsSampling);
 
