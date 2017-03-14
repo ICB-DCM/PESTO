@@ -66,8 +66,10 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
          samplingPlottingOpt = PestoPlottingOptions();
          samplingPlottingOpt.S.plot_type = 1;
          samplingPlottingOpt.S.ind = 1;
-         samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
-         plotParameterSamples(parameters,'2D',[],[],samplingPlottingOpt);
+         fh = figure('Name','plotParameterSamples - 1D');
+         plotParameterSamples(parameters,'1D',fh,[],samplingPlottingOpt);
+         fh = figure('Name','plotParameterSamples - 2D');
+         plotParameterSamples(parameters,'2D',fh,[],samplingPlottingOpt);
          disp('-> Sampling FINISHED.');
       case 'text', disp('-> Sampling FINISHED.');
       case 'silent'
