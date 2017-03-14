@@ -1,6 +1,3 @@
-% @file PestoOptions
-% @brief A class for checking and holding options for PESTO functions
-
 classdef PestoOptions < matlab.mixin.SetGet
     % PestoOptions provides an option container to pass options to various
     % PESTO functions. Not all options are used by all functions, consult the respective function documentation for details.
