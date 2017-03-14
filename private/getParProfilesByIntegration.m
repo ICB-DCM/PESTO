@@ -78,8 +78,6 @@ function [parameters, fh] = getParProfilesByIntegration(parameters, objectiveFun
         fh = [];
     end
     
-    % !!! IMPORTANT: Implement a check for the negative log-posterior here...
-
     %% Preperation of folder
     if options.save
         [~,~,~] = mkdir(options.foldername);
@@ -88,18 +86,20 @@ function [parameters, fh] = getParProfilesByIntegration(parameters, objectiveFun
 
     %% Profile calculation -- SEQUENTIAL
 
+    % Assign the wrapped objective function
+    negLogPost = @(theta) @(theta) objectiveWrap(theta,objectiveFunction,options.obj_type,options.objOutNumber);
+    logPost = @(theta) posLogPost(theta, negLogPost);
+    
     % Profile calculation
     if strcmp(options.comp_type, 'sequential')
         
-        for j = options.parameter_index
-            tic;
+        for j = options.profile_integ_index
             parameters = integrateProfileForParameterI(parameters, objectiveFunction, j, options, fh);
-            disp(toc);
         end
         
         
     elseif strcmp(options.comp_type, 'parallel')
-        parfor j = options.parameter_index
+        parfor j = options.profile_integ_index
             integrateProfileForParameterI(parameters, objectiveFunction, j, options, fh);
         end
         
@@ -116,7 +116,7 @@ end
 
 
 
-function parameters = integrateProfileForParameterI(parameters, objectiveFunction, j, options, fh)
+function parameters = integrateProfileForParameterI(parameters, objective_function, j, options, fh)
  
 
     % Define global variables for communication across ODE solver
@@ -180,14 +180,14 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
         llhHistory = parameters.MS.logPost(options.MAP_index);
         reachedEnd = 0;
         OutputFunction = @(t, y, flag) checkOptimality(t, y, flag, s, j, ...
-            parameters.MS.logPost(options.MAP_index), objectiveFunction, borders, options);
+            parameters.MS.logPost(options.MAP_index), objective_function, borders, options);
 
         if ~strcmp(options.solver.hessian, 'user-supplied')
             approximateHessian(parameters.MS.par(:,options.MAP_index), -parameters.MS.gradient(:,options.MAP_index), parameters.MS.hessian(:,:,options.MAP_index), [], 'init');
         end
         
         % Pre-Output
-        if (strcmp(options.mode, 'text') || strcmp(options.mode, 'visual'))
+        if (strcmp(options.mode, 'text'))
             fprintf('\n  |  Integrating Parameter %4i, s = %2i  |', j, s);
             fprintf('\n  |======================================|');
             fprintf('\n  | Running axis |  Optimality |  Ratio  |');
@@ -207,20 +207,20 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
             switch options.solver.type
                 case {'ode45', 'ode15s', 'ode113'}
                     odeMatlabOptions.OutputFcn = OutputFunction;
-                    odeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, j, borders, objectiveFunction, options, parameters.MS.logPost(1));
+                    odeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, j, borders, objective_function, options, parameters.MS.logPost(1));
                     if (strcmp(options.solver.type, 'ode15s'))
-                        [t,y] = ode15s(@(t,y) getRhsRed(t, s, y, j, borders, objectiveFunction, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions); 
+                        [t,y] = ode15s(@(t,y) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions); 
                     elseif (strcmp(options.solver.type, 'ode45'))
-                        [t,y] = ode45(@(t,y) getRhsRed(t, s, y, j, borders, objectiveFunction, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
+                        [t,y] = ode45(@(t,y) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
                     else
-                        [t,y] = ode113(@(t,y) getRhsRed(t, s, y, j, borders, objectiveFunction, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
+                        [t,y] = ode113(@(t,y) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
                     end
 
 
                     % If yCorrection is set to inf, then the ODE is too stiff, 
                     % some steps of optimization based calculation have to be done
                     if (yCorrection == inf)
-                        addY = doOptimizationSteps(parameters, y, objectiveFunction, borders, j, s, options);
+                        addY = doOptimizationSteps(parameters, y, objective_function, borders, j, s, options);
                         y = [y; addY];
                     else
                     % If reoptimization has to be done, correct the values in y by the optimized ones
@@ -240,8 +240,8 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
                     end
 
                 case 'CVODE' 
-                    cvodeOptions.RootsFn = @(t,y) getEndProfile(t, s, y, j, borders, objectiveFunction, options, parameters.MS.logPost(1));
-                    CVodeInit(@(t,y,data) getRhsRed(t, s, y, j, borders, objectiveFunction, parameterFunction, options), options.solver.algorithm, options.solver.nonlinSolver, s*t0, theta, cvodeOptions);
+                    cvodeOptions.RootsFn = @(t,y) getEndProfile(t, s, y, j, borders, objective_function, options, parameters.MS.logPost(1));
+                    CVodeInit(@(t,y,data) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options), options.solver.algorithm, options.solver.nonlinSolver, s*t0, theta, cvodeOptions);
 
                     killCounter = 0;
                     reachedEndCVODE = 0;
@@ -260,7 +260,7 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
                                                 'LinearSolver', options.solver.linSolver, ...'StabilityLimDet', true, ...
                                                 'MaxNumSteps', options.solver.MaxNumSteps ...'MaxOrder', 12
                                                 );
-                                CVodeInit(@(t,y,data) getRhsRed(t, s, y, j, borders, objectiveFunction, parameterFunction, options), 'BDF', 'Newton', s*t_00, y_00, cvodeKillOptions);  
+                                CVodeInit(@(t,y,data) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options), 'BDF', 'Newton', s*t_00, y_00, cvodeKillOptions);  
                                 killCounter = 0;
                             end
                             [~, t_tmp, y_tmp] = CVode(s*T, 'OneStep');
@@ -276,7 +276,7 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
                                     'LinearSolver', options.solver.linSolver, ...'StabilityLimDet', true, ...
                                     'MaxNumSteps', options.solver.MaxNumSteps ...'MaxOrder', 12
                                     );
-                                CVodeInit(@(t,y,data) getRhsRed(t, s, y, j, borders, objectiveFunction, parameterFunction, options), options.solver.algorithm, options.solver.nonlinSolver, s*t_00, y_00, cvodeOptions);  
+                                CVodeInit(@(t,y,data) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options), options.solver.algorithm, options.solver.nonlinSolver, s*t_00, y_00, cvodeOptions);  
                                 [~, t_tmp, y_tmp] = CVode(s*(t_00 + 0.025), 'OneStep');
                             end
                             killCounter = 1;
@@ -304,10 +304,10 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
                     CVodeFree;               
 
                 case 'ode15sDAE' 
-                    daeMatlabOptions.Mass = @(t, y) getMassmatrixDAE(t, s, y, j, objectiveFunction, parameterFunction, options);
-                    daeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, j, borders, objectiveFunction, options, parameters.MS.logPost(1));
-                    daeMatlabOptions.Mass = @(t,y) getMassmatrixDAE(t, s, y, j, objectiveFunction, parameterFunction, options);
-                    [~, y] = ode15s(@(t,y) getRhsDAE(t, s, y, 1, j, objectiveFunction, options), [s*t0, s*T], theta, daeMatlabOptions);
+                    daeMatlabOptions.Mass = @(t, y) getMassmatrixDAE(t, s, y, j, objective_function, parameterFunction, options);
+                    daeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, j, borders, objective_function, options, parameters.MS.logPost(1));
+                    daeMatlabOptions.Mass = @(t,y) getMassmatrixDAE(t, s, y, j, objective_function, parameterFunction, options);
+                    [~, y] = ode15s(@(t,y) getRhsDAE(t, s, y, 1, j, objective_function, options), [s*t0, s*T], theta, daeMatlabOptions);
 
                     if (s == 1)
                         theta = y';
@@ -342,7 +342,7 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
         end
 
         % Final output and storage
-        if (strcmp(options.mode, 'text') || strcmp(options.mode, 'visual'))
+        if (strcmp(options.mode, 'text'))
             fprintf('\n  |======================================|\n');
             fprintf('\n  Total RHS evaluations: %i', ObjFuncCounter - lastCounter);
             fprintf('\n  Total Steps: %i\n', length(llhHistory));
@@ -358,12 +358,10 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
 
         % Output
         if ~strcmp(options.comp_type,'parallel')
-            if strcmp(options.profile_method, 'integration')
-                switch options.mode
-                    case 'visual', fh = plotParameterProfiles(parameters, '1D', fh, options.parameter_index, options.plot_options);
-                    case 'text'   % no output
-                    case 'silent' % no output
-                end
+            switch options.mode
+                case 'visual', fh = plotParameterProfiles(parameters, '1D', fh, options.parameter_index, options.plot_options);
+                case 'text'   % no output
+                case 'silent' % no output
             end
         end        
     end 
@@ -425,11 +423,14 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
 
             R = exp(-L - logPostMax);
             
-            if (strcmp(options.mode, 'text') || strcmp(options.mode, 'visual'))
+            if (strcmp(options.mode, 'text'))
                 fprintf('\n  |  %11.8f | %11.7f | %7.5f |', ...
                     s*t(iT), sqrt(sum(GL.*GL)), R);
             end
             llhHistory = [llhHistory, -L];
+            if (R < options.R_min)
+                status = 1;
+            end
         end
         
     end
@@ -671,7 +672,7 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
         new_Data = [];
         return;
     end
-    
+
     % calculate hessian of parameter function
     [~, GG, ~] = parameterFunction(y, ind);
 
@@ -679,8 +680,8 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
     try    
         % Reduce linear system by implicit funtion theorem
         A1 = [HL(1 : ind-1, :); HL(ind+1 : npar, :); s*GG'];
-        b1 = [-GL(1 : ind-1) * s * options.solver.gamma; ...
-             -GL(ind+1 : npar) * s * options.solver.gamma; ...
+        b1 = [-GL(1 : ind-1) * options.solver.gamma; ...
+             -GL(ind+1 : npar) * options.solver.gamma; ...
              1];
         A2 = [A1(1:end-1, 1:ind-1), A1(1:end-1, ind+1:end)];
         b2 = b1(1:end-1) - s * A1(1:end-1, ind);
@@ -723,8 +724,8 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
         try    
             % Reduce linear system by implicit funtion theorem
             A1 = [HL(1 : ind-1, :); HL(ind+1 : npar, :); s*GG'];
-            b1 = [-GL(1 : ind-1) * s * options.solver.gamma; ...
-                 -GL(ind+1 : npar) * s * options.solver.gamma; ...
+            b1 = [-GL(1 : ind-1) * options.solver.gamma; ...
+                 -GL(ind+1 : npar) * options.solver.gamma; ...
                  1];
             A2 = [A1(1:end-1, 1:ind-1), A1(1:end-1, ind+1:end)];
             b2 = b1(1:end-1) - s * A1(1:end-1, ind);
@@ -763,7 +764,7 @@ function hessian = approximateHessian(theta, grad, hess, method, flag)
     elseif strcmp(flag, 'reinit')
         % Replace old by new values for next call
         lastTheta = theta;    
-        [~,ind] = max(hess);
+        [~,ind] = max(max(hess));
         ind = ind(1);
         lastHess = [hess(1:ind-1,1:ind-1), lastHess(1:ind-1,ind), hess(1:ind-1,ind+1:end); ...
             lastHess(ind,:); hess(ind+1:end,1:ind-1), lastHess(ind+1:end,ind), hess(ind+1:end,ind+1:end)];
@@ -909,3 +910,20 @@ function Mt = getMassmatrixDAE(c ,s, y, ind, objectiveFunction, parameterFunctio
     end
 end
 
+function varargout = posLogPost(theta, negLogPost)
+    switch nargout
+        case 1
+            J = negLogPost(theta);
+            varargout{1} = -J;
+        case 2
+            [J,G] = negLogPost(theta);
+            varargout{1} = -J;
+            varargout{2} = -G;
+            
+        case 3
+            [J,G,H] = negLogPost(theta);
+            varargout{1} = -J;
+            varargout{2} = -G;
+            varargout{3} = -H;
+    end
+end

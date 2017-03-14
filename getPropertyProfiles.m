@@ -85,10 +85,7 @@ function [properties,fh] = getPropertyProfiles(properties, parameters, objective
 
 %% Check and assign inputs
 if length(varargin) >= 1
-    options = varargin{1};
-    if ~isa(options, 'PestoOptions')
-        error('Third argument is not of type PestoOptions.')
-    end
+    options = handleOptionArgument(varargin{1});
 else
     options = PestoOptions();
 end
@@ -405,7 +402,7 @@ end
 
 %% Output
 switch options.mode
-    case {'visual','text'}, disp('-> Profile calculation FINISHED.');
+    case {'visual','text'}, disp('-> Profile calculation for properties FINISHED.');
     case 'silent' % no output
 end
 

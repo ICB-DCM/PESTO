@@ -10,7 +10,7 @@ PESTO features include:
 * Visualization routines
 * and more
 
-These function are demonstrated in several systems biology examples included in the `examples/` directory.
+These function are demonstrated in several systems biology examples included in the [`examples/`](examples/) directory.
 
 ## Installation
 
@@ -26,4 +26,4 @@ See [ ```LICENSE```](LICENSE) file in the PESTO source directory.
 
 ## Documentation
 
-Further PESTO documentation is available in the [ ```/doc```](doc) folder.
+PESTO usage is demonstrated in various [examples](examples/). Further documentation is available in [```doc/PESTO-doc.pdf```](doc/PESTO-doc.pdf).

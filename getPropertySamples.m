@@ -57,10 +57,7 @@ function [properties,fh] = getPropertySamples(properties, parameters, varargin)
 
 %% Check and assign inputs
 if length(varargin) >= 1
-    options = varargin{1};
-    if ~isa(options, 'PestoOptions')
-        error('Third argument is not of type PestoOptions.')
-    end
+    options = handleOptionArgument(varargin{1});
 else
     options = PestoOptions();
 end
@@ -116,7 +113,7 @@ if strcmp(options.comp_type,'sequential')
         end
 
         % Output
-        if (mod(j,100) == 0) || (j == length(properties.S.logPost))
+        if (mod(j,ceil(length(properties.S.logPost)/10)) == 0) || (j == length(properties.S.logPost))
             str = ['Property evaluation for MCMC sampling completed to ' num2str(100*j/length(properties.S.logPost),'%d') ' %'];
             switch options.mode
                 case 'visual', fh = plotPropertySamples(properties,'1D',fh,options.property_index,options.plot_options);
@@ -172,7 +169,7 @@ end
 
 %% Output
 switch options.mode
-    case {'visual','text'}, disp('-> Property evaluation for sample FINISHED.');
+    case {'visual','text'}, disp('-> Property evaluation for samples FINISHED.');
     case 'silent' % no output
 end
 

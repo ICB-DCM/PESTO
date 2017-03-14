@@ -17,6 +17,13 @@ function [parameters] = sortMultiStarts(parameters)
 [~,ind] = sort(parameters.MS.logPost,1,'descend');
 ind = ind([find(~isnan(parameters.MS.logPost(ind)));...
            find( isnan(parameters.MS.logPost(ind)))]);
+if(isfield(parameters.MS,'fval_trace'))
+    min_fval = transpose(min(parameters.MS.fval_trace(:,isnan(parameters.MS.logPost(ind)))));
+    [~,sort_unfinished] = sort(min_fval,1,'ascend');
+    ind_unfinished = ind(find( isnan(parameters.MS.logPost(ind))));
+    ind = [ind(~isnan(parameters.MS.logPost(ind)));...
+           ind_unfinished(sort_unfinished)];    
+end
 
 %% Assignment of variables which are always contained in the struct
 if isfield(parameters.MS,'par0')
@@ -68,3 +75,6 @@ if isfield(parameters.MS,'fval_trace')
     parameters.MS.fval_trace = parameters.MS.fval_trace(:,ind);
 end
 
+if isfield(parameters.MS,'time_trace')
+    parameters.MS.time_trace = parameters.MS.time_trace(:,ind);
+end

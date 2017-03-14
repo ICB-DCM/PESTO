@@ -47,10 +47,9 @@ defaultOptions.add_points.ms = 8;
 defaultOptions.add_points.name = 'add. point';
 
 if length(varargin) >= 2
-    if ~isa(varargin{2}, 'PestoPlottingOptions')
-        error('Third argument is not of type PestoPlottingOptions.')
-    end
-    options = setdefault(varargin{2}.copy(), defaultOptions);
+    options = varargin{2};
+    options = handlePlottingOptionArgument(options);
+    options = setdefault(options, defaultOptions);
     options.add_points = setdefault(options.add_points, defaultOptions.add_points);
 else
     options = defaultOptions;
@@ -92,7 +91,7 @@ else
     ColClust = flipud(parula(sum(sizecluster>1)));
 end
 
-for iclust = 1:length(uclust);
+for iclust = 1:length(uclust)
     if(sizecluster(iclust)>1)
     Col(clust == uclust(iclust),:) = repmat(ColClust(sum(sizecluster(1:iclust)>1),:),[sizecluster(iclust),1]);
     end
@@ -100,6 +99,7 @@ end
 
 %% PLOT OBJECTIVES
 subplot(2,2,1);
+n_finished_starts = 0;
 for j = 1 : n_starts
     if ~isnan(parameters.MS.logPost(j))
         n_finished_starts = j;

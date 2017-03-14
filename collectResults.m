@@ -15,11 +15,11 @@ function obj = collectResults(foldername)
 %% Initialization
 warning off;
 try
-    init = load([foldername '/init'],'parameters');
+    init = load(fullfile(foldername,'init'),'parameters');
     obj = init.parameters;
     type = 'parameters';
 catch
-    init = load([foldername '/init'],'properties');
+    init = load(fullfile(foldername,'init'),'properties');
     obj = init.properties;
     type = 'properties';
 end
@@ -46,7 +46,7 @@ obj.MS.exitflag = NaN(nstarts,1);
 % Loop: files
 for j = 1:length(files)
     % Read file
-    v = csvread([foldername '/' files(j).name]);
+    v = csvread(fullfile(foldername,files(j).name));
     
     % Determine index and fieldname
     fn1 = files(j).name(1);
@@ -69,6 +69,21 @@ for j = 1:length(files)
                 case 'exitflag', obj.MS.exitflag(i,1) = v;
                 case 'prop', obj.MS.prop(:,i) = v;
                 case 'prop_Sigma', obj.MS.prop_Sigma(:,:,i) = v;
+                case 'fval_trace'
+                    if(~isfield(obj.MS,'fval_trace'))
+                        obj.MS.fval_trace = NaN(size(v,1),nstarts);
+                    end
+                    obj.MS.fval_trace(:,i) = v;
+                case 'time_trace'
+                    if(~isfield(obj.MS,'time_trace'))
+                        obj.MS.time_trace = NaN(size(v,1),nstarts);
+                    end
+                    obj.MS.time_trace(:,i) = v;
+                case 'par_trace'
+                    if(~isfield(obj.MS,'par_trace'))
+                        obj.MS.par_trace = NaN(ntheta,size(v,2),nstarts);
+                    end
+                    obj.MS.par_trace(:,:,i) = v;
             end
         case 'P' % -> Profile calculation results
             i = str2num(files(j).name(2:(strfind(files(j).name,'__')-1)));
@@ -86,14 +101,15 @@ end
 switch type
     case 'parameters'
         parameters = sortMultiStarts(obj);
-        % save([foldername '/result'],'parameters');
+        save(fullfile(foldername,['parameters_' foldername]),'parameters');
+        obj = parameters;
 end
 
 %% Visualization
 switch type
     case 'parameters'
         if isfield(obj,'MS')
-            disp(['progress of MS = ' num2str(100*sum(~isnan(parameters.MS.par(1,:)))/parameters.MS.n_starts) '%']);
+            disp(['progress of MS = ' num2str(100*sum(~isnan(obj.MS.par(1,:)))/obj.MS.n_starts) '%']);
             plotMultiStarts(obj);
         end
         if isfield(obj,'P')

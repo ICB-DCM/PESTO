@@ -73,7 +73,7 @@ function varargout = objectiveWrap(varargin)
                     case 'log-posterior'          , varargout = {-J,-G(I),-H(I,I)};
                     case 'negative log-posterior' , varargout = { J, G(I), H(I,I)};
                 end
-                if(any(isnan(H)))
+                if any(any(isnan(H)))
                     error('Hessian contains NaNs')
                 end
         end
