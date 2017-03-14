@@ -87,11 +87,6 @@ optionsPesto.plot_options.add_points.par = theta;
 optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 
 %% Parameter Sampling
-% Covering all sampling options in one struct
-samplingOptions = PestoSamplingOptions();
-samplingOptions.rndSeed      = 3;
-samplingOptions.nIterations  = 2e2;
-
 % PT (with only 1 chain -> AM) specific options:
 optionsSampling                   = PestoSamplingOptions;
 optionsSampling.samplingAlgorithm = 'PT';
