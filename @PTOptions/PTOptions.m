@@ -1,51 +1,41 @@
-% @file PTOptions
-% @brief A class for sanity checks of PT algorithm (MCMC samling) in PESTO
-
 classdef PTOptions < matlab.mixin.SetGet
-   % PTOptions provides an option container to pass options as subclass
-   % into the PestoSamplingOptions class.
+   % PTOptions provides an option container to specify parallel tempering (PT) options 
+   % in PestoSamplingOptions.PT.
    %
    % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
    
    properties      
-      %% Parallel Tempering Options
+      % Initial number of temperatures
+      nTemps = 10;
       
-      % PT, struct containing the fields
-      %      .nTemps: Initial number of temperatures (default 10)
-      %      .exponentT: The initial temperatures are set by a power law
-      %              to ^opt.exponentT. (default 4)
-      %      .alpha: Parameter which controlls the adaption degeneration
-      %              velocity of the single-chain proposals.
-      %              Value between 0 and 1. Default 0.51.
-      %              No adaption (classical Metropolis-Hastings) for 0.
-      %      .temperatureAlpha: Parameter which controlls the adaption
-      %              degeneration velocity of the temperature adaption.
-      %              Value between 0 and 1. Default 0.51. No effect for
-      %              value = 0.
-      %      .memoryLength: The higher the value the more it lowers the
-      %              impact of early adaption steps. Default 1.
-      %      .regFactor: Regularization factor for ill conditioned
-      %              covariance matrices of the adapted proposal density.
-      %              Regularization might happen if the eigenvalues of
-      %              the covariance matrix strongly differ in order of
-      %              magnitude. In this case, the algorithm adds a small
-      %              diag-matrix to the covariance matrix with elements
-      %              regFactor.
-      %      .temperatureAdaptionScheme: Follows the temperature adaption
-      %              scheme from 'Vousden16' or 'Lacki15'. Can be set to
-      %              'none' for no temperature adaption.
-      nTemps                     = 10;
-      exponentT                  = 4;
-      alpha                      = 0.51;
-      temperatureAlpha           = 0.51;
-      memoryLength               = 1;
-      regFactor                  = 1e-6;
+      % The initial temperatures are set by a power law to ^opt.exponentT.
+      exponentT = 4;
+      
+      % Parameter which controlls the adaption degeneration
+      % velocity of the single-chain proposals.
+      % Value between 0 and 1.
+      % No adaption (classical Metropolis-Hastings) for 0.
+
+      alpha = 0.51;
+
+      % Parameter which controlls the adaption degeneration velocity of
+      % the temperature adaption. Value between 0 and 1. No effect for value = 0.
+      temperatureAlpha = 0.51;
+      
+      % The higher the value the more it lowers the impact of early adaption steps.
+      memoryLength = 1;
+      
+      % Regularization factor for ill conditioned covariance matrices of
+      % the adapted proposal density. Regularization might happen if the
+      % eigenvalues of the covariance matrix strongly differ in order of 
+      % magnitude. In this case, the algorithm adds a small diag-matrix to
+      % the covariance matrix with elements regFactor.
+      regFactor = 1e-6;
+      
+      % Follows the temperature adaption scheme from 'Vousden16' or 'Lacki15'. Can be set to
+      % 'none' for no temperature adaption.
       temperatureAdaptionScheme  = 'Vousden16';
-      
-      
-   end
-   
-   properties (Hidden)
+
    end
    
    methods
@@ -65,6 +55,9 @@ classdef PTOptions < matlab.mixin.SetGet
          %
          %   Note to see the parameters, check the
          %   documentation page for PTOptions
+         %
+         % Parameters:
+         %  varargin:
          
          % adapted from SolverOptions
          
@@ -162,6 +155,7 @@ classdef PTOptions < matlab.mixin.SetGet
       end
       
       function new = copy(this)
+          % Creates a copy of the passed PTOptions instance
          new = feval(class(this));
          
          p = properties(this);

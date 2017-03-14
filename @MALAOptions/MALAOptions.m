@@ -1,29 +1,19 @@
-% @file MALAOptions
-% @brief A class for sanity checks of MALA algorithm (MCMC samling) in PESTO
-
 classdef MALAOptions < matlab.mixin.SetGet
    % MALAOptions provides an option container to pass options as subclass
-   % into the PestoSamplingOptions class.
+   % into the PestoSamplingOptions class for the Metropolis Adaptive Langevin Algorithm (MALA).
+   %
+   % Note: This algorithm uses gradients & Hessians either provided
+   % by the user or computed by finite differences.
    %
    % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
    
    properties      
-      %% Metropolis Adaptive Langevin Algorithm options
-      % Note: This algorithm uses gradients & Hessians either provided
-      % by the user or computed by finite differences.
-      
-      % MALA, struct containing the fields
-      %      .regFactor: This factor is used for regularization in
-      %              cases where the proposal covariance matrices are
-      %              ill conditioned. Larger values equal stronger
-      %              regularization.
+      % This factor is used for regularization in cases where the proposal covariance matrices are
+      % ill conditioned. Larger values equal stronger regularization.
       regFactor = 1e-6;
-      
       
    end
    
-   properties (Hidden)
-   end
    
    methods
       function obj = MALAOptions(varargin)
@@ -42,7 +32,10 @@ classdef MALAOptions < matlab.mixin.SetGet
          %
          %   Note to see the parameters, check the
          %   documentation page for MALAOptions
-         
+         %
+         % Parameters:
+         % varargin:
+
          % adapted from SolverOptions
          
          if nargin > 0
@@ -139,6 +132,8 @@ classdef MALAOptions < matlab.mixin.SetGet
       end
       
       function new = copy(this)
+        % Creates a copy of the passed MALAOptions instance
+        
          new = feval(class(this));
          
          p = properties(this);
