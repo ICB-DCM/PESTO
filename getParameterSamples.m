@@ -1,28 +1,34 @@
 function parameters = getParameterSamples(parameters, objFkt, opt)
    % getParameterSamples.m performs MCMC sampling of the posterior
-   %   distribution. Note, the DRAM library routine tooparameters.minox is
+   %   distribution. 
+   %
+   %   Note, the DRAM library routine tooparameters.minox is
    %   used internally. This function is capable of sampling with MH, AM,
    %   DRAM, MALA, PT and PHS. The sampling plotting routines should no longer
    %   be contained in here but as standalone scripts capable of using the
    %   resulting par.S.
    %
+   % Parameters:
    %   parameters: parameter struct covering model options and results obtained by
    %               optimization, profiles and sampling. Optimization results
-   %               can be used for initialization. The parameter struct should
-   %               at least contain
-   %               * par.min: Lower parameter bounds
-   %               * par.max: Upper parameter bounds
-   %               * par.number: Number of parameters
-   %               * par.obj_type: Type of objective function, e.g. 'log-posterior'
+   %               can be used for initialization.
    %   objFkt: Objective function which measures the difference of model output and data
-   %   opt   : An options object holding various options for the
+   %   opt:    An options object holding various options for the
    %              sampling. Depending on the algorithm and particular flavor,
    %              different options must be set: For details, please visit
    %              PESTOSamplingOptions.m
    %
+   % Required fields of parameters:
+   %  min: Lower parameter bounds
+   %  max: Upper parameter bounds
+   %  number: Number of parameters
+   %  obj_type: Type of objective function, e.g. 'log-posterior'
+   %
    % Return values:
-   % parameters: The provided parameters struct with the obtained sampling
-   % results added.
+   %  parameters: The provided parameters struct
+   %
+   % Generated fields of parameters:
+   %  S: The obtained sampling results
    %
    % History:
    % * 2012/07/11 Jan Hasenauer
