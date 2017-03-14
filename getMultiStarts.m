@@ -544,147 +544,6 @@ options.localOptimizerOptions.OutputFcn = [];
 end
 
 
-%% Objective function interface
-function varargout = obj(varargin)
-% This function is used as interface to the user-provided objective
-% function. It adapts the sign and supplies the correct number of outputs.
-% Furthermore, it catches errors in the user-supplied objective function.
-%   theta ... parameter vector
-%   fun ... user-supplied objective function
-%   type ... type of user-supplied objective function
-%   options (optional) ... additional options, like subset for minibatch
-
-% Catch up possible overload
-switch nargin
-    case {0, 1, 2}
-        error('Call to objective function giving not enough inputs.')
-    case 3
-        theta   = varargin{1};
-        fun     = varargin{2}; %#ok<NASGU>
-        type    = varargin{3};
-        callFct = 'fun(theta)';
-    otherwise
-        error('Call to objective function giving too many inputs.')
-end
-
-try
-    switch nargout
-        case {0,1}
-            J = eval(callFct);
-            switch type
-                case 'log-posterior'          , varargout = {-J};
-                case 'negative log-posterior' , varargout = { J};
-            end
-        case 2
-            [J,G] = eval(callFct);
-            switch type
-                case 'log-posterior'          , varargout = {-J,-G};
-                case 'negative log-posterior' , varargout = { J, G};
-            end
-        case 3
-            [J,G,H] = eval(callFct);
-            switch type
-                case 'log-posterior'          , varargout = {-J,-G,-H};
-                case 'negative log-posterior' , varargout = { J, G, H};
-            end
-            if(any(isnan(H)))
-                error('Hessian contains NaNs')
-            end
-    end
-    
-catch error_msg
-    % disp(error_msg.message)
-    
-    % Derive output
-    switch nargout
-        case {0,1}
-            varargout = {inf};
-        case 2
-            varargout = {inf,zeros(length(theta),1)};
-        case 3
-            varargout = {inf,zeros(length(theta),1),zeros(length(theta))};
-    end
-end
-
-end
-
-%% Objective function interface
-function varargout = obj_w_error_count(varargin)
-% This function is used as interface to the user-provided objective
-% function. It adapts the sign and supplies the correct number of outputs.
-% Furthermore, it catches errors in the user-supplied objective function.
-%   theta ... parameter vector
-%   fun ... user-supplied objective function
-%   type ... type of user-supplied objective function
-%   options (optional) ... additional options, like subset for minibatch
-
-global error_count
-
-% Catch up possible overload
-switch nargin
-    case {0, 1, 2}
-        error('Call to objective function giving not enough inputs.');
-    case 3
-        theta   = varargin{1};
-        fun     = varargin{2};
-        type    = varargin{3};
-        callFct = 'fun(theta)';
-    case 4
-        theta   = varargin{1};
-        fun     = varargin{2};
-        type    = varargin{3};
-        options = varargin{4};
-        callFct = 'fun(theta, options)';
-    otherwise
-        error('Call to objective function giving too many inputs.');
-end
-
-try
-    switch nargout
-        case {0,1}
-            J = eval(callFct);
-            switch type
-                case 'log-posterior'          , varargout = {-J};
-                case 'negative log-posterior' , varargout = { J};
-            end
-        case 2
-            [J,G] = eval(callFct);
-            switch type
-                case 'log-posterior'          , varargout = {-J,-G};
-                case 'negative log-posterior' , varargout = { J, G};
-            end
-        case 3
-            [J,G,H] = eval(callFct);
-            switch type
-                case 'log-posterior'          , varargout = {-J,-G,-H};
-                case 'negative log-posterior' , varargout = { J, G, H};
-            end
-            if(any(isnan(H)))
-                error('Hessian contains NaNs')
-            end
-    end
-    % Reset error count
-    error_count = error_count - 1;
-catch error_msg
-    % Increase error count
-    error_count = error_count + 1;
-    
-    % Display a warning with error message
-    warning(['Evaluation of likelihood failed because: ' error_msg.message]);
-    
-    % Derive output
-    switch nargout
-        case {0,1}
-            varargout = {inf};
-        case 2
-            varargout = {inf,zeros(length(theta),1)};
-        case 3
-            varargout = {inf,zeros(length(theta),1),zeros(length(theta))};
-    end
-end
-
-end
-
 %% Waitbar Update
 function stringTimePrediction = updateWaitBar(timePredicted)
 % This function update the waitbar
@@ -728,6 +587,8 @@ function stringTimePrediction = updateWaitBar(timePredicted)
     
 end
 
+
+%% Saving results
 function saveResults(parameters,options,i)
     dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost.csv']),parameters.MS.logPost(i),'delimiter',',','precision',12);
     dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost0.csv']),parameters.MS.logPost0(i),'delimiter',',','precision',12);
