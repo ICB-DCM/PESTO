@@ -16,13 +16,12 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
    %   opt:    An options object holding various options for the
    %              sampling. Depending on the algorithm and particular flavor,
    %              different options must be set: For details, please visit
-   %              PESTOSamplingOptions.m
+   %              PestoSamplingOptions.m
    %
    % Required fields of parameters:
    %  min: Lower parameter bounds
    %  max: Upper parameter bounds
    %  number: Number of parameters
-   %  obj_type: Type of objective function, e.g. 'log-posterior'
    %
    % Return values:
    %  parameters: The provided parameters struct
