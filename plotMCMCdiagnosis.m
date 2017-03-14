@@ -13,6 +13,7 @@ function [fh] = plotMCMCdiagnosis(parameters, varargin)
 %       and results of optimization (.MS) and uncertainty analysis
 %       (.S). This structures is the output of plotMultiStarts.m,
 %       getProfiles.m or plotSamples.m.
+% varargin:
 % type: string indicating the type of visualization:
 %       'parameters' (default) and 'log-posterior'
 % fh: handle of figure. If no figure handle is provided, a new figure
@@ -87,11 +88,8 @@ options.CL.type = 'point-wise'; % 'simultanous', {'point-wise','simultanous'}
 options.CL.col = [1,0,0];
 options.CL.lw = 1.5;
 
-if nargin >= 6
-    if ~isa(varargin{5}, 'PestoPlottingOptions')
-        error('Third argument is not of type PestoPlottingOptions.')
-    end
-    options = setdefault(varargin{5}, options);
+if length(varargin) >= 5
+    options = setdefault(handlePlottingOptionArgument(varargin{5}), options);
 end
 
 

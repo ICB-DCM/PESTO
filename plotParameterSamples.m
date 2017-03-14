@@ -30,18 +30,19 @@ function fh = plotParameterSamples(parameters, varargin)
 % * 2014/06/20 Jan Hasenauer
 % * 2016/10/10 Daniel Weindl
 
-switch length(varargin) 
-    case 0
-        fh = plotParameterUncertainty(parameters);
-    case 1
-        fh = plotParameterUncertainty(parameters, varargin{1});
-    case 2
-        fh = plotParameterUncertainty(parameters, varargin{1}, varargin{2});
-    case 3
-        fh = plotParameterUncertainty(parameters, varargin{1}, varargin{2}, varargin{3});
-    case 4
-        fh = plotParameterUncertainty(parameters, varargin{1}, varargin{2}, varargin{3}, varargin{4});
-    otherwise
-        error('Too many arguments for plotPropertyProfiles().');
-end
+    switch length(varargin) 
+        case 0
+            fh = plotParameterUncertainty(parameters);
+        case 1
+            fh = plotParameterUncertainty(parameters, varargin{1});
+        case 2
+            fh = plotParameterUncertainty(parameters, varargin{1}, varargin{2});
+        case 3
+            fh = plotParameterUncertainty(parameters, varargin{1}, varargin{2}, varargin{3});
+        case 4
+            fh = plotParameterUncertainty(parameters, varargin{1}, varargin{2}, varargin{3}, varargin{4});
+        otherwise
+            error('Too many arguments for plotParameterSamples().');
+    end
+    
 end

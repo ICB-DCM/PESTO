@@ -7,9 +7,9 @@ Computational models are commonly used in diverse disciplines such as computatio
 
 PESTO is a freely available Parameter EStimation TOolbox for MATLAB (MathWorks) implementing a number of state-of-the-art algorithms for parameter estimation. It provides the following features, which are explained in more detail [below](@ref features):
 
-* Parameter estimation from measurement data by global optimization based on multi-start local optimization (requires [MATLAB Optimization Toolbox](https://de.mathworks.com/products/optimization/)) 
+* Parameter estimation from measurement data by global optimization based on multi-start local optimization (some algorithms require the [MATLAB Optimization Toolbox](https://de.mathworks.com/products/optimization/)) 
 * Parameter sampling using Markov Chain Monte Carlo (MCMC) algorithms
-* Uncertainty analysis based on local approximations, parameter samples and profile-likelihood analysis (requires [MATLAB Optimization Toolbox](https://de.mathworks.com/products/optimization/)) 
+* Uncertainty analysis based on local approximations, parameter samples and profile-likelihood analysis (some algorithms require the  [MATLAB Optimization Toolbox](https://de.mathworks.com/products/optimization/)) 
 * Visualization routines for all analyses
 * Parallel processing (requires [MATLAB Parallel Computing Toolbox](https://mathworks.com/products/parallel-computing/)) 
 * ...
@@ -29,15 +29,15 @@ If the zip archive was downloaded, it needs to be unzipped and the main folder h
 
 If the repository was cloned, the main folder needs to be added to the MATLAB search path (non-recursively).
 
-*Note:* Detailed instructions on how to modify your MATLAB search path are provided here: https://de.mathworks.com/help/matlab/matlab_env/add-remove-or-reorder-folders-on-the-search-path.html
+*Note:* Detailed instructions on how to modify your MATLAB search path are provided on the [web](https://de.mathworks.com/help/matlab/matlab_env/add-remove-or-reorder-folders-on-the-search-path.html).
 
 ## Third-party packages
 
 PESTO provides an interfaces to several other toolboxes which are not included in the PESTO archive:
 
-* PSwarm: http://www.norg.uminho.pt/aivaz/pswarm/
-* MEIGO: http://gingproc.iim.csic.es/meigo.html
-* DRAM: http://helios.fmi.fi/~lainema/dram/
+* PSwarm (optimizer): http://www.norg.uminho.pt/aivaz/pswarm/
+* MEIGO (optimizer): http://gingproc.iim.csic.es/meigo.html
+* DRAM (MCMC): http://helios.fmi.fi/~lainema/dram/
 
 To use their functionality, these toolboxes have to be installed separately. Please consult the respective user manuals for details.
 
@@ -51,11 +51,11 @@ This section will be updated upon publication of PESTO.
 
 # Code organization         {#org}
 
-The end-user interface is provided by the MATLAB functions and classes in the top-level directory. PESTO [examples](@ref examples) applications are provided in `/examples/`. All other folders only contain files used internally in PESTO.
+The end-user interface is provided by the MATLAB functions and classes in the top-level directory. PESTO [example](@ref examples) applications are provided in `/examples/`. All other folders only contain files used internally in PESTO.
 
 # Features ## {#features}
 
-PESTO implements a number of state-of-the-art algorithms related to parameter estimations. The main features are described below. Various [Examples](@ref examples) demonstrate their application.
+PESTO implements a number of state-of-the-art algorithms related to parameter estimation. The main features are described below. Various [examples](@ref examples) demonstrate their application.
 
 ## Notations and Terminology
 
@@ -69,10 +69,10 @@ There are different techniques for this kind of problem. PESTO provides a multi-
 ### Multi-start local optimization
 
 Multi-start local optimization has turned out to be a very efficient method for "global optimization": Here, random points from across the parameter space are chosen as starting points for local optimization. 
-If an adequate number of starting points spanning the domain of interest of the parameter space is selected, the lowest/highest minimum/maximum is accepted to be the global minimum/maximum. By default, fmincon is used as a local solver.
+If an adequate number of starting points spanning the domain of interest of the parameter space is selected, the lowest/highest minimum/maximum is accepted to be the global minimum/maximum. By default, ```fmincon``` from the MATLAB optimization toolbox is used as a local solver.
 
-This functionality is provided in getMultiStarts.m, getPropertyMultiStarts.m and the respective plotting routines plotMultiStarts.m and plotPropertyMultiStarts.m.
-See mainConversionReaction.m for an example.
+Multi-start local optimization functionality is provided by getMultiStarts.m, getPropertyMultiStarts.m and the respective plotting routines plotMultiStarts.m and plotPropertyMultiStarts.m.
+See examples/conversion_reaction/mainConversionReaction.m for an example.
 
 ### Global optimizers
 
@@ -85,13 +85,13 @@ An example is included in mainConversionReaction.m.
 
 ## Uncertainty analysis ### {#uncertainty-analysis}
 
-When parameters are inferred from measurement data, the deviation of the data from the fit for the best parameter guess is usually supposed to be of stochastic nature. This means that the estimated parameters themselves underly are stochastic and underly an uncertainty. This can be quantified by performing uncertainty analysis and computing confidence intervals.
+When parameters are inferred from measurement data, the deviation of the data from the fit for the best parameter guess is usually assumed to be of stochastic nature. This means that the estimated parameters themselves are stochastic and underly an uncertainty. This can be quantified by performing uncertainty analysis and computing confidence intervals.
 
 The easiest way to do this is using local approximations (based on the Hessian matrix of the objective function) at the best parameter guess. From those approximations, either threshold-based or mass-based methods can be used to compute confidence intervals for the inferred parameters. Another approach uses sampling based methods in combination with local approximations.
 
-The most reliable way to compute confidence intervals is a third approach, based on profile likelihoods. Here, each model parameter is varied separately while the others are constantly reoptimized. In this way one finds profiles for every parameter. By fixing a confidence level using the inverse chi-squared-distribution, one gets a threshold which, together with the profile likelihood, gives reliable confidence intervals for each parameter. In this way, non-identifiable parameter can be found.
+The most reliable way to compute confidence intervals is a third approach, based on profile likelihoods. Here, each model parameter is varied separately while the others are constantly reoptimized. In this way one finds profiles for every parameter. By fixing a confidence level using the inverse chi-squared-distribution, one gets a threshold which, together with the profile likelihood, gives reliable confidence intervals for each parameter. In this way, non-identifiable parameter can be detected.
 
-Those functionalities are provided in getParameterProfiles.m, getPropertyProfiles.m (for the profile likelihoods), getParameterConfidenceIntervals.m and getPropertyConfidenceIntervals.m (for the confidence intervals). In order to get confidence intervals based on local approximations or sampling methods, one needs to run the routines getMultiStart.m/getPropertyMultiStarts.m or getParameterSamples.m/getPropertySamples.m first. The respective visualization routines are plotParameterProfiles.m and plotPropertyProfiles.m.
+Those functionalities are provided in getParameterProfiles.m, getPropertyProfiles.m (for the profile likelihoods), getParameterConfidenceIntervals.m and getPropertyConfidenceIntervals.m (for the confidence intervals). In order to get confidence intervals based on local approximations or sampling methods, one needs to run the routines getMultiStarts.m / getPropertyMultiStarts.m or getParameterSamples.m / getPropertySamples.m first. The respective visualization routines are plotParameterProfiles.m and plotPropertyProfiles.m.
 See mainConversionReaction.m for an example.
 
 ## Parameter sampling ### {#parameter-sampling}
@@ -117,20 +117,24 @@ Details are provided in the documentation of the specific plotting functions:
 Here some examples: 
 
 Plot of model fit using plotMultiStarts.m:
-
-![](../images/fig_fit.jpg "Plot of model fit using plotMultiStarts.m")
+![](fig_fit.jpg "Plot of model fit using plotMultiStarts.m")
+@image latex "fig_fit.jpg" "Plot of model fit using plotMultiStarts.m" width=0.6\textwidth
 
 Plot of different variants of parameter confidence intervals using plotParameterUncertainty.m:
-![](../images/fig_par_confint.jpg "Plot of different variants of parameter confidence intervals using plotParameterUncertainty.m")
+![](fig_par_confint.jpg "Plot of different variants of parameter confidence intervals using plotParameterUncertainty.m")
+@image latex "fig_par_confint.jpg" "Plot of different variants of parameter confidence intervals using plotParameterUncertainty.m" width=0.7\textwidth
 
 2D plot of parameter samples using plotParameterSamples.m:
-![](../images/fig_par_samples2d.jpg "2D plot of parameter samples using plotParameterSamples.m")
+![](fig_par_samples2d.jpg "2D plot of parameter samples using plotParameterSamples.m")
+@image latex "fig_par_samples2d.jpg" "2D plot of parameter samples using plotParameterSamples.m" width=0.7\textwidth
 
 Plot of parameter samples using plotParameterSamples.m:
-![](../images/fig_par_samples.jpg "Plot of parameter samples using plotParameterSamples.m")
+![](fig_par_samples.jpg "Plot of parameter samples using plotParameterSamples.m")
+@image latex "fig_par_samples.jpg" "Plot of parameter samples using plotParameterSamples.m" width=0.6\textwidth
 
 Plot of property samples using plotPropertySamples.m:
-![](../images/fig_prop_samples.jpg "Plot of property samples using plotPropertySamples.m")
+![](fig_prop_samples.jpg "Plot of property samples using plotPropertySamples.m")
+@image latex "fig_prop_samples.jpg" "Plot of property samples using plotPropertySamples.m" width=0.6\textwidth
 
 See mainConversionReaction.m for live examples.
 

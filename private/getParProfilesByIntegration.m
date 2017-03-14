@@ -187,7 +187,7 @@ function parameters = integrateProfileForParameterI(parameters, objective_functi
         end
         
         % Pre-Output
-        if (strcmp(options.mode, 'text') || strcmp(options.mode, 'visual'))
+        if (strcmp(options.mode, 'text'))
             fprintf('\n  |  Integrating Parameter %4i, s = %2i  |', j, s);
             fprintf('\n  |======================================|');
             fprintf('\n  | Running axis |  Optimality |  Ratio  |');
@@ -342,7 +342,7 @@ function parameters = integrateProfileForParameterI(parameters, objective_functi
         end
 
         % Final output and storage
-        if (strcmp(options.mode, 'text') || strcmp(options.mode, 'visual'))
+        if (strcmp(options.mode, 'text'))
             fprintf('\n  |======================================|\n');
             fprintf('\n  Total RHS evaluations: %i', ObjFuncCounter - lastCounter);
             fprintf('\n  Total Steps: %i\n', length(llhHistory));
@@ -423,11 +423,14 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
 
             R = exp(-L - logPostMax);
             
-            if (strcmp(options.mode, 'text') || strcmp(options.mode, 'visual'))
+            if (strcmp(options.mode, 'text'))
                 fprintf('\n  |  %11.8f | %11.7f | %7.5f |', ...
                     s*t(iT), sqrt(sum(GL.*GL)), R);
             end
             llhHistory = [llhHistory, -L];
+            if (R < options.R_min)
+                status = 1;
+            end
         end
         
     end

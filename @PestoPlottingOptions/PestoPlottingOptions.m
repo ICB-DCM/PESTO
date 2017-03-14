@@ -3,7 +3,7 @@
 % parameters
 
 classdef PestoPlottingOptions < matlab.mixin.SetGet
-    % PestoPlottingOptions is class for checking and holding information on optimization
+    % PestoPlottingOptions is a class for checking and holding information on optimization
     % parameters
     %
     % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
@@ -244,15 +244,17 @@ classdef PestoPlottingOptions < matlab.mixin.SetGet
         % figure handle for parameter trace plots.
         fh_par_trace = [];
         
-        % figure handle for the parameter distribution plot.
-        %fh_par_dis = [];
+        % figure handle for the 1D parameter distribution plot.
         fh_par_dis_1D = [];
+
+        % figure handle for the 2D parameter distribution plot.
         fh_par_dis_2D = [];
         
+        % plot type
         plot_type = {'parameter','posterior'};
-        n_max = 1e4;
         
-
+        % max
+        n_max = 1e4;
     end
     
     properties (Hidden)
@@ -273,13 +275,17 @@ classdef PestoPlottingOptions < matlab.mixin.SetGet
             %
             %   Note to see the parameters, check the
             %   documentation page for PestoPlottingOptions
+            %
+            % Parameters:
+            %   varargin:
+
             
             % adapted from SolverOptions
             
             if nargin > 0
                 
                 % Deal with the case where the first input to the
-                % constructor is a amioptions/struct object.
+                % constructor is a struct object.
                 if isa(varargin{1},'PestoPlottingOptions')
                     if strcmp(class(varargin{1}),class(obj))
                         obj = varargin{1};
@@ -370,6 +376,8 @@ classdef PestoPlottingOptions < matlab.mixin.SetGet
     end
     
     function new = copy(this)
+        % Creates a copy of the passed PestoPlottingOptions instance
+
         new = feval(class(this));
         
         p = properties(this);
