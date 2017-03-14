@@ -47,8 +47,8 @@ set(0,TextSizes);
 
 %% Create Artificial Data for Parameter Estimation
 % The necessary variables are set (Parameter bounds, variance, ...)
-nTimepoints = 100;      % Time points of Measurement
-nMeasure    = 5;        % Number of experiments
+nTimepoints = 50;      % Time points of Measurement
+nMeasure    = 1;        % Number of experiments
 sigma2      = 0.05^2;   % Variance of Measurement noise
 lowerBound  = -10;      % Lower bound for parameters
 upperBound  = 5;        % Upper bound for parameters
@@ -88,12 +88,11 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 
 %% Parameter Sampling
 % Covering all sampling options in one struct
-samplingOptions = PestoSamplingOptions();
-samplingOptions.rndSeed      = 3;
-samplingOptions.nIterations  = 2e2;
+optionsSampling = PestoSamplingOptions();
+optionsSampling.rndSeed      = 3;
+optionsSampling.nIterations  = 2e2;
 
 % PT (with only 1 chain -> AM) specific options:
-optionsSampling                   = PestoSamplingOptions;
 optionsSampling.samplingAlgorithm = 'PT';
 optionsSampling.PT.nTemps         = 5;
 optionsSampling.PT.exponentT      = 4;    
@@ -172,14 +171,6 @@ display(' Sampling with information from optimization...');
 parametersNew = parameters;
 parametersNew = getParameterSamples(parametersNew, objectiveFunction, optionsSampling);
 
-%% Plot the sampling results
-samplingPlottingOpt = PestoPlottingOptions();
-samplingPlottingOpt.S.plot_type = 1; % Histogram
-% samplingPlottingOpt.S.plot_type = 2; % Density estimate
-samplingPlottingOpt.S.ind = 1; % 3 to show all temperatures
-samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
-samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
-plotParameterSamples(parameters2,'1D',[],[],samplingPlottingOpt)
 
 %% Calculate Confidence Intervals
 % Confidence Intervals for the Parameters are inferred from the local 
