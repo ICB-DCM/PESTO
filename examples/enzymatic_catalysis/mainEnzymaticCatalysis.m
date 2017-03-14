@@ -3,14 +3,16 @@
 % Demonstrates the use of:
 % * getParameterSamples()
 % * getMultiStarts()
-% * getParameterConfidenceIntervals()
 % * getParameterProfiles()
+% * getParameterConfidenceIntervals()
 %
 % Demonstrates furthermore:
 % * how to do sampling without multi-start local optimization beforehand
-% * the value of multi-start local optimization before sampling
-% * how to use the MEIGO toolbox for optimization
+% * how to use the MEIGO toolbox for optimization (commented)
 % * how to compute profile likelihoods via ODE integration
+% * how to use plotting functions outside the get... routines
+% * the reliability of sampling and profiling in the case of
+%   non-identifiabilites
 %
 % This example provides a model for the reaction of a species X_1 to a
 % species X_4, which is catalyzed by an enzyme X_2.
@@ -22,7 +24,7 @@
 %
 % Measurements of [X_1] and [X_4] are provided as: Y = [[X_1]; [X_4]]
 %
-% This file set a parameter vector, creates and saves artificial
+% This file sets a parameter vector, creates and saves artificial
 % measurement data as a time series and performs a multi-start local
 % optimization based on these measurements, demonstrating the use of
 % getMultiStarts().
@@ -110,6 +112,17 @@ optionsSampling.sigma0 = 1e5 * eye(4);
 parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
 
 
+%% Calculate Confidence Intervals
+% Confidence Intervals for the Parameters are inferred from the local 
+% optimization and the sampling information.
+
+% Set alpha levels
+alpha = [0.8, 0.9, 0.95, 0.99];
+
+display(' Computing confidence intervals...');
+parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
+
+
 %% Perform Multistart optimization
 % A multi-start local optimization is performed within the bound defined in
 % parameters.min and .max in order to infer the unknown parameters from 
@@ -140,19 +153,13 @@ parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 %% Calculate Confidence Intervals
 % Confidence Intervals for the Parameters are inferred from the local 
 % optimization and the sampling information.
-
-% Set alpha levels
-alpha = [0.8, 0.9, 0.95, 0.99];
-
 display(' Computing confidence intervals...');
 parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
 
 
 %% Calculate Profile Likelihoods
 % The result of the sampling is compared with profile likelihoods.
-
 optionsPesto.profile_method = 'integration';
-% optionsPesto.parameter_index = 2;
 optionsPesto.solver.gamma = 1;
 optionsPesto.objOutNumber = 2;
 optionsPesto.solver.hessian = 'user-supplied';
@@ -160,6 +167,19 @@ optionsPesto.solver.hessian = 'user-supplied';
 display(' Computing parameter profiles...');
 parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
 
+
+%% Do additional plots
+% In order to check how well sampling and profiling agree with each other,
+% we do two additional plots.
+PlottingOptionsSampling = PestoPlottingOptions();
+PlottingOptionsSampling.S.plot_type = 1;
+PlottingOptionsSampling.S.ind = 1;
+
+fh = figure('Name','plotParameterSamples - 1D');
+plotParameterSamples(parameters,'1D',fh,[],PlottingOptionsSampling);
+
+fh = figure('Name','plotParameterSamples - 2D');
+plotParameterSamples(parameters,'2D',fh,[],PlottingOptionsSampling);
 
 %% Perform a second Sampling, now based on Multistart Optimization
 % To compare the effect of previous multi-start optimization, we perform a
@@ -176,6 +196,5 @@ parametersNew = getParameterSamples(parametersNew, objectiveFunction, optionsSam
 
 %% Calculate Confidence Intervals
 % Confidence Intervals for the Parameters are inferred from the local 
-% optimization and the sampling information.
-
+% optimization, the sampling and the profile information.
 parameters = getParameterConfidenceIntervals(parametersNew, alpha, optionsPesto);

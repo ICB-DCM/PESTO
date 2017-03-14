@@ -153,10 +153,12 @@ switch options.group_CI_by
                     end
                     patch([CI(indexSet(iP),1,k), CI(indexSet(iP),2,k), CI(indexSet(iP),2,k), CI(indexSet(iP),1,k)], [j-h, j-h, j+h, j+h], 'k', 'FaceColor', methods.colors(j,:,k), 'EdgeColor', 'k');
                 end
-                if (strcmp(type, 'Parameters'))
-                    plot([pStruct.MS.par(indexSet(iP),1), pStruct.MS.par(indexSet(iP),1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
-                else
-                    plot([pStruct.MS.prop(indexSet(iP),1), pStruct.MS.prop(indexSet(iP),1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                if isfield(pStruct, 'MS')
+                    if (strcmp(type, 'Parameters'))
+                        plot([pStruct.MS.par(indexSet(iP),1), pStruct.MS.par(indexSet(iP),1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                    else
+                        plot([pStruct.MS.prop(indexSet(iP),1), pStruct.MS.prop(indexSet(iP),1)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                    end
                 end
             end
 
@@ -217,10 +219,12 @@ switch options.group_CI_by
                     CI(iM,1,k) = min(CI(iM,1,k), XMax);
                     patch([CI(j,1,k), CI(j,2,k), CI(j,2,k), CI(j,1,k)], [iP-h, iP-h, iP+h, iP+h], 'k', 'FaceColor', methods.colors(iM,:,k), 'EdgeColor', 'k');
                 end
-                if (strcmp(type, 'Parameters'))
-                    plot([pStruct.MS.par(j,iMAP), pStruct.MS.par(j,iMAP)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
-                else
-                    plot([pStruct.MS.prop(j,iMAP), pStruct.MS.prop(j,iMAP)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                if isfield(pStruct, 'MS')
+                    if (strcmp(type, 'Parameters'))
+                        plot([pStruct.MS.par(j,iMAP), pStruct.MS.par(j,iMAP)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                    else
+                        plot([pStruct.MS.prop(j,iMAP), pStruct.MS.prop(j,iMAP)], [j-0.4, j+0.4], 'k-', 'linewidth', 2);
+                    end
                 end
                 iP = iP + 1;
             end

@@ -35,8 +35,7 @@
 % optionsMultistart.profile_method = 'mixed'to have comparison of both
 % methods.
 %
-% Multi-chain Monte-Carlo sampling is performed by getParameterSamples()
-% and plotted using plotParameterUncertainty().
+% Multi-chain Monte-Carlo sampling is performed by getParameterSamples().
 
 
 

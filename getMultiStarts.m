@@ -186,7 +186,13 @@ if(options.trace)
     parameters.MS.par_trace = nan(parameters.number,maxOptimSteps+1,length(options.start_index));
     parameters.MS.fval_trace = nan(maxOptimSteps+1,length(options.start_index));
     parameters.MS.time_trace = nan(maxOptimSteps+1,length(options.start_index));
-end      
+end
+
+% Define the negative log-posterior funtion
+% (fmincon needs the neagtive log posterior for optimization)
+negLogPost = @(theta) @(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
+negLogPostWErrorCount = @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber);
+        
 
 waitbarFields1 = {'logPost', 'logPost0', 'n_objfun', 'n_iter', 't_cpu', 'exitflag'};
 waitbarFields2 = {'par', 'par0', 'gradient', 'fval_trace', 'time_trace'};
@@ -228,14 +234,14 @@ if strcmp(options.comp_type, 'sequential')
         % Test evaluation of objective function at starting point
         if (strcmp(options.localOptimizer, 'fmincon'))
             if (strcmp(options.localOptimizerOptions.Hessian, 'on'))
-                [J_0,~,~] = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+                [J_0,~,~] = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
             elseif (strcmp(options.localOptimizerOptions.GradObj, 'on'))
-                [J_0,~] = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+                [J_0,~] = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
             else
-                J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+                J_0 = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
             end
         else
-            J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+            J_0 = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
         end
         parameters.MS.logPost0(i) = -J_0;
         
@@ -247,7 +253,7 @@ if strcmp(options.comp_type, 'sequential')
                 %% fmincon as local optimizer
                 % Optimization using fmincon
                 [theta,J_opt,parameters.MS.exitflag(i),results_fmincon,~,gradient_opt,hessian_opt] = ...
-                    fmincon(@(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber),...  % negative log-likelihood function
+                    fmincon(negLogPostWErrorCount,...  % negative log-likelihood function
                     parameters.MS.par0(:,i),...    % initial parameter
                     parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
                     parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
@@ -262,11 +268,11 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.gradient(:,i) = gradient_opt;
                 if isempty(hessian_opt)
                     if strcmp(options.localOptimizerOptions.Hessian,'on')
-                        [~,~,hessian_opt] = objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
+                        [~,~,hessian_opt] = negLogPost(theta); % objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
                     end
                 elseif max(hessian_opt(:)) == 0
                     if strcmp(options.localOptimizerOptions.Hessian,'on')
-                        [~,~,hessian_opt] = objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
+                        [~,~,hessian_opt] = negLogPost(theta); % objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
                     end
                 end
                 parameters.MS.n_objfun(i) = results_fmincon.funcCount;
@@ -538,147 +544,6 @@ options.localOptimizerOptions.OutputFcn = [];
 end
 
 
-%% Objective function interface
-function varargout = obj(varargin)
-% This function is used as interface to the user-provided objective
-% function. It adapts the sign and supplies the correct number of outputs.
-% Furthermore, it catches errors in the user-supplied objective function.
-%   theta ... parameter vector
-%   fun ... user-supplied objective function
-%   type ... type of user-supplied objective function
-%   options (optional) ... additional options, like subset for minibatch
-
-% Catch up possible overload
-switch nargin
-    case {0, 1, 2}
-        error('Call to objective function giving not enough inputs.')
-    case 3
-        theta   = varargin{1};
-        fun     = varargin{2}; %#ok<NASGU>
-        type    = varargin{3};
-        callFct = 'fun(theta)';
-    otherwise
-        error('Call to objective function giving too many inputs.')
-end
-
-try
-    switch nargout
-        case {0,1}
-            J = eval(callFct);
-            switch type
-                case 'log-posterior'          , varargout = {-J};
-                case 'negative log-posterior' , varargout = { J};
-            end
-        case 2
-            [J,G] = eval(callFct);
-            switch type
-                case 'log-posterior'          , varargout = {-J,-G};
-                case 'negative log-posterior' , varargout = { J, G};
-            end
-        case 3
-            [J,G,H] = eval(callFct);
-            switch type
-                case 'log-posterior'          , varargout = {-J,-G,-H};
-                case 'negative log-posterior' , varargout = { J, G, H};
-            end
-            if(any(isnan(H)))
-                error('Hessian contains NaNs')
-            end
-    end
-    
-catch error_msg
-    % disp(error_msg.message)
-    
-    % Derive output
-    switch nargout
-        case {0,1}
-            varargout = {inf};
-        case 2
-            varargout = {inf,zeros(length(theta),1)};
-        case 3
-            varargout = {inf,zeros(length(theta),1),zeros(length(theta))};
-    end
-end
-
-end
-
-%% Objective function interface
-function varargout = obj_w_error_count(varargin)
-% This function is used as interface to the user-provided objective
-% function. It adapts the sign and supplies the correct number of outputs.
-% Furthermore, it catches errors in the user-supplied objective function.
-%   theta ... parameter vector
-%   fun ... user-supplied objective function
-%   type ... type of user-supplied objective function
-%   options (optional) ... additional options, like subset for minibatch
-
-global error_count
-
-% Catch up possible overload
-switch nargin
-    case {0, 1, 2}
-        error('Call to objective function giving not enough inputs.');
-    case 3
-        theta   = varargin{1};
-        fun     = varargin{2};
-        type    = varargin{3};
-        callFct = 'fun(theta)';
-    case 4
-        theta   = varargin{1};
-        fun     = varargin{2};
-        type    = varargin{3};
-        options = varargin{4};
-        callFct = 'fun(theta, options)';
-    otherwise
-        error('Call to objective function giving too many inputs.');
-end
-
-try
-    switch nargout
-        case {0,1}
-            J = eval(callFct);
-            switch type
-                case 'log-posterior'          , varargout = {-J};
-                case 'negative log-posterior' , varargout = { J};
-            end
-        case 2
-            [J,G] = eval(callFct);
-            switch type
-                case 'log-posterior'          , varargout = {-J,-G};
-                case 'negative log-posterior' , varargout = { J, G};
-            end
-        case 3
-            [J,G,H] = eval(callFct);
-            switch type
-                case 'log-posterior'          , varargout = {-J,-G,-H};
-                case 'negative log-posterior' , varargout = { J, G, H};
-            end
-            if(any(isnan(H)))
-                error('Hessian contains NaNs')
-            end
-    end
-    % Reset error count
-    error_count = error_count - 1;
-catch error_msg
-    % Increase error count
-    error_count = error_count + 1;
-    
-    % Display a warning with error message
-    warning(['Evaluation of likelihood failed because: ' error_msg.message]);
-    
-    % Derive output
-    switch nargout
-        case {0,1}
-            varargout = {inf};
-        case 2
-            varargout = {inf,zeros(length(theta),1)};
-        case 3
-            varargout = {inf,zeros(length(theta),1),zeros(length(theta))};
-    end
-end
-
-end
-
 %% Waitbar Update
 function stringTimePrediction = updateWaitBar(timePredicted)
 % This function update the waitbar
@@ -722,6 +587,8 @@ function stringTimePrediction = updateWaitBar(timePredicted)
     
 end
 
+
+%% Saving results
 function saveResults(parameters,options,i)
     dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost.csv']),parameters.MS.logPost(i),'delimiter',',','precision',12);
     dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost0.csv']),parameters.MS.logPost0(i),'delimiter',',','precision',12);
