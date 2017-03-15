@@ -219,6 +219,8 @@ if strcmp(options.comp_type, 'sequential')
         % Reset error count
         error_count = 0;
         
+        %% OPTIMIZATION ROUTINES ARE INTIALIZED
+        
         % Test evaluation of objective function at starting point
         if (strcmp(options.localOptimizer, 'fmincon'))
             if (strcmp(options.localOptimizerOptions.Hessian, 'on'))
@@ -247,6 +249,8 @@ if strcmp(options.comp_type, 'sequential')
         % Optimization
         startTimeLocalOptimization = cputime;
         if J_0 < -options.init_threshold
+            
+            %% OPTIMIZATION ROUTINES ARE CHOSEN
             
             switch options.localOptimizer
                 case 'fmincon'   
