@@ -1,42 +1,31 @@
-% @file PHSOptions
-% @brief A class for sanity checks of PHS algorithm (MCMC samling) in PESTO
-
 classdef PHSOptions < matlab.mixin.SetGet
-   % PHSOptions provides an option container to pass options as subclass
-   % into the PestoSamplingOptions class.
+   % PHSOptions provides an option container to set options for Parallel
+   % Hierarchical Sampling (PHS) in PestoSamplingOptions.PHS .
    %
    % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
    
    properties      
-      %% Parallel Hierarchical Sampling Options
-      % PHS, struct containing the fields
-      %      .nChains: Initial number of temperatures (default 10)
-      %      .alpha: Parameter which controlls the adaption degeneration
-      %              velocity of the single-chain proposals.
-      %              Value between 0 and 1. Default 0.51.
-      %              No adaption (classical Metropolis-Hastings) for 0.
-      %      .memoryLength: The higher the value the more it lowers the
-      %              impact of early adaption steps. Default 1.
-      %      .regFactor: Regularization factor for ill conditioned
-      %              covariance matrices of the adapted proposal density.
-      %              Regularization might happen if the eigenvalues of
-      %              the covariance matrix strongly differ in order of
-      %              magnitude. In this case, the algorithm adds a small
-      %              diag-matrix to the covariance matrix with elements
-      %              regFactor.
-      %      .trainingTime: The number of iterations before the chains
-      %              start to swap. Might get used to ensure a proper local
-      %              adaption of the single chains before exchanging them.
-      nChains                    = 10;
-      alpha                      = 0.51;
-      memoryLength               = 1;
-      regFactor                  = 1e-6;
-      trainingTime               = 1;
+      % Initial number of temperatures
+      nChains = 10;
       
+      % Parameter which controlls the adaption degeneration
+      % velocity of the single-chain proposals.
+      % Value between 0 and 1.
+      % No adaption (classical Metropolis-Hastings) for 0.
+      alpha = 0.51;
+
+      % The higher the value the more it lowers the impact of early adaption steps.
+      memoryLength = 1;
       
-   end
-   
-   properties (Hidden)
+      % Regularization factor for ill conditioned covariance matrices of the adapted proposal density.
+      % Regularization might happen if the eigenvalues of the covariance matrix strongly differ in order of
+      % magnitude. In this case, the algorithm adds a small diag-matrix to the covariance matrix with elements
+      % regFactor.
+      regFactor = 1e-6;
+      
+      % The number of iterations before the chains start to swap. 
+      % Might get used to ensure a proper local adaption of the single chains before exchanging them.
+      trainingTime = 1;      
    end
    
    methods
@@ -56,7 +45,10 @@ classdef PHSOptions < matlab.mixin.SetGet
          %
          %   Note to see the parameters, check the
          %   documentation page for PHSOptions
-         
+         % 
+         % Parameters:
+         %  varargin:
+         % 
          % adapted from SolverOptions
          
          if nargin > 0
@@ -153,6 +145,7 @@ classdef PHSOptions < matlab.mixin.SetGet
       end
       
       function new = copy(this)
+        % Creates a copy of the passed PHSOptions instance
          new = feval(class(this));
          
          p = properties(this);

@@ -1,39 +1,25 @@
-% @file DRAMOptions
-% @brief A class for sanity checks of DRAM algorithm (MCMC samling) in PESTO
-
 classdef DRAMOptions < matlab.mixin.SetGet
-   % DRAMOptions provides an option container to pass options as subclass
-   % into the PestoSamplingOptions class.
-   %
+   % DRAMOptions provides an option container to pass options 
+   % into the PestoSamplingOptions class for Delayed Rejection Adaption Metropolis (DRAM).
+   % The DRAM algorithm uses a delayed rejection scheme for better mixing.
+   % 
    % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
    
    properties      
-      %% Delayed Rejection Adaption Metropolis options
-      % Note: This algorithm uses a delayed rejection scheme for better mixing.
+      % This factor is used for regularization in cases where the single-chain proposal
+      % covariance matrices are ill conditioned. Larger values equal
+      % stronger regularization.
+      regFactor = 1e-6;
       
-      %   --- Delayed Rejection Adaptive Metropolis ---
-      %   opt.DRAM.regFactor          : This factor is used for regularization in
-      %                                 cases where the single-chain proposal
-      %                                 covariance matrices are ill conditioned.
-      %                                 Larger values equal stronger
-      %                                 regularization.
-      %   opt.DRAM.nTry               : The number of tries in the delayed
-      %                                 rejection scheme
-      %   opt.DRAM.verbosityMode      : Defines the level of verbosity 'silent', 'visual',
-      %                                 'debug' or 'text'
-      %   opt.DRAM.adaptionInterval   : Updates the proposal density only every opt.DRAM.adaptionInterval
-      %                                 time
- 
-      regFactor         = 1e-6;
-      nTry              = 1;
-      verbosityMode     = 'text';
-      adaptionInterval  = 1;
+      % The number of tries in the delayed rejection scheme
+      nTry = 1;
       
+      % Defines the level of verbosity 'silent', 'visual', 'debug' or 'text'
+      verbosityMode = 'text';
       
+      %  Update the proposal density only every adaptionInterval time
+      adaptionInterval = 1;
       
-   end
-   
-   properties (Hidden)
    end
    
    methods
@@ -53,6 +39,9 @@ classdef DRAMOptions < matlab.mixin.SetGet
          %
          %   Note to see the parameters, check the
          %   documentation page for DRAMOptions
+         %
+         % Parameters:
+         % varargin:
          
          % adapted from SolverOptions
          
@@ -150,6 +139,7 @@ classdef DRAMOptions < matlab.mixin.SetGet
       end
       
       function new = copy(this)
+         % Creates a copy of the passed DRAMOptions instance
          new = feval(class(this));
          
          p = properties(this);
