@@ -10,7 +10,7 @@ PESTO features include:
 * Visualization routines
 * and more
 
-These function are demonstrated in several systems biology examples included in the [`examples/`](examples/) directory.
+These functions are demonstrated in several systems biology examples included in the [`examples/`](examples/) directory.
 
 ## Installation
 
