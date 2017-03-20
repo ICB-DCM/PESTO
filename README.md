@@ -27,3 +27,8 @@ See [ ```LICENSE```](LICENSE) file in the PESTO source directory.
 ## Documentation
 
 PESTO usage is demonstrated in various [examples](examples/). Further documentation is available in [```doc/PESTO-doc.pdf```](doc/PESTO-doc.pdf).
+
+
+## Compatibility
+
+PESTO is implemented fully in MATLAB and compatible with MATLAB releases from R2014b up to at least 2017a running on Windows, Mac and Linux.
