@@ -312,8 +312,8 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.n_iter(i) = size(Results.neval, 2);
                 
                 [~, G_opt, H_opt] = objectiveWrapWErrorCount(parameters.MS.par(:,i),objective_function,options.obj_type,options.objOutNumber);
-                parameters.MS.hessian(:,:,i) = -H_opt;
-                parameters.MS.gradient(:,i) = -G_opt;
+                parameters.MS.hessian(:,:,i) = H_opt;
+                parameters.MS.gradient(:,i) = G_opt;
                 
                 %% Output
                 switch options.mode
@@ -343,8 +343,8 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.n_iter(i) = RunData.IterCounter;
                 
                 [~, G_opt, H_opt] = objectiveWrapWErrorCount(parameters.MS.par(:,i),objective_function,options.obj_type,options.objOutNumber);
-                parameters.MS.hessian(:,:,i) = -H_opt;
-                parameters.MS.gradient(:,i) = -G_opt;
+                parameters.MS.hessian(:,:,i) = H_opt;
+                parameters.MS.gradient(:,i) = G_opt;
 
             end
             

@@ -71,7 +71,6 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
             fh = figure('Name','plotParameterSamples - 2D');
             plotParameterSamples(parameters,'2D',fh,[],samplingPlottingOpt);
             disp('-> Sampling FINISHED.');
-            disp('-> Sampling FINISHED.');
         case 'text', disp('-> Sampling FINISHED.');
         case 'silent'
     end
