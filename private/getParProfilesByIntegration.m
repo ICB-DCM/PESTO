@@ -402,8 +402,7 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
 
             % Abort and start reoptimization, if minimum step size was violated
             if (CounterMinStep >= 10)
-                fprintf('\n');
-                warning('Violated minimum step size at least 10 times in a row. Doing some optimization steps!');
+                display('Violated minimum step size at least 10 times in a row. Doing some optimization steps!');
                 yCorrection = inf;
                 status = 1;
             end
@@ -413,8 +412,7 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
             GL(ind) = 0;
             
             if (sqrt(sum(GL.^2)) > 1)
-                fprintf('\n');
-                warning('Lost optimal path, reoptimization necessary!');
+                display('Lost optimal path, doing a reoptimization!');
                 [newY, L, GL] = reoptimizePath(y(:,iT), ind, objectiveFunction, borders, options);
                 y(:,iT) = [newY(1:ind-1); y(ind,iT); newY(ind:end)];
                 yCorrection(:,iT) = y(:,iT);
@@ -517,7 +515,7 @@ function y = doOptimizationSteps(parameters, thetaFull, objectiveFunction, borde
         
         llhHistory = [llhHistory, logPost];
         R = exp(-L - parameters.MS.logPost(1));
-        if (strcmp(options.mode, 'text') || strcmp(options.mode, 'visual'))
+        if (strcmp(options.mode, 'text'))
             fprintf('\n  |  %11.8f | %11.7f | %7.5f |', ...
                 theta(ind), sqrt(sum(newGL.^2)), R);
         end
