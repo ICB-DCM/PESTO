@@ -50,7 +50,7 @@ set(0,TextSizes);
 % optimization will be used. This is helpful for debugging or comparing
 % results across different machines. 
 % Results might vary though if PestoOptions.comp_type is set to 'parallel'
-rng(1234);
+rng(0);
 
 %% Model Definition
 % See logLikelihoodCR.m for a detailed description

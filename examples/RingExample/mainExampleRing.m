@@ -8,6 +8,10 @@
 clear all
 close all
 clc
+
+% Seed random number generator
+rng(0);
+
 % path(pathdef);
 % addpath(genpath([pwd filesep '..' filesep '..']));
 radius = 15;

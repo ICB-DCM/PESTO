@@ -44,6 +44,9 @@ TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
+% Seed random number generator
+rng(0);
+
 %% Model Definition
 % See logLikelihood.m for a detailed description
 

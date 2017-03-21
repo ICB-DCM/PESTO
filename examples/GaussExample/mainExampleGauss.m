@@ -10,6 +10,10 @@
 clear all
 close all
 clc
+
+% Seed random number generator
+rng(0);
+
 % path(pathdef);
 % addpath(genpath([pwd filesep '..' filesep '..']));
 define_Gauss_LLH();
