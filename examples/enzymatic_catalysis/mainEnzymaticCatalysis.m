@@ -92,7 +92,6 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 % Covering all sampling options in one struct
 display(' Sampling without prior information...');
 optionsSampling = PestoSamplingOptions();
-optionsSampling.rndSeed      = 3;
 optionsSampling.nIterations  = 1e4;
 
 % PT (with only 1 chain -> AM) specific options:

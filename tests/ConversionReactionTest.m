@@ -114,7 +114,6 @@ classdef ConversionReactionTest < matlab.unittest.TestCase
             testCase.verifyMultiStartResults(multiStartParams, optionsMultistart);
 
             optionsSampling = PestoSamplingOptions();
-            optionsSampling.rndSeed     = 3;
             optionsSampling.nIterations = 100;
             
             optionsSampling.samplingAlgorithm   = 'PT';

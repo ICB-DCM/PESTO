@@ -42,7 +42,6 @@ par = getParameterProfiles(par, logP, optMS);
 
 % Sampling Options
 opt                       = PestoSamplingOptions();
-opt.rndSeed               = 3;
 opt.nIterations           = 1e5;
 
 % Using PT

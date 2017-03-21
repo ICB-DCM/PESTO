@@ -264,7 +264,6 @@ optionsPesto.objOutNumber = 3;
 
 % Building a struct covering all sampling options:
 optionsSampling = PestoSamplingOptions();
-optionsSampling.rndSeed     = 7;
 optionsSampling.nIterations = 1e5;
 
 % PT specific options:

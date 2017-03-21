@@ -27,7 +27,6 @@ for i = 1:dimi+2
 end
 
 opt                    = PestoSamplingOptions();
-opt.rndSeed            = 3;
 opt.nIterations        = 1e5;
 
 % Using PT
