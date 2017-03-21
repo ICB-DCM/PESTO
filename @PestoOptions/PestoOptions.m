@@ -16,14 +16,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         % [MATLAB Parallel Computing Toolbox](https://mathworks.com/products/parallel-computing/) 
         % to be installed.
         comp_type = 'sequential';
-        
-        % Initialization of random number generator.
-        % * Any real number r: random generator is initialized with r.
-        % * []: random number generator is not initialized.
-        % (Initializing the random number generator with a specific seed can be
-        % helpful to reproduce problems.)
-        rng = 0;
-        
+                
         % Determine whether results are saved or not.
         % * false: results are not saved
         % * true: results are stored to an extra folder

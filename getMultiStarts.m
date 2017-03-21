@@ -23,7 +23,6 @@ function [parameters,fh] = getMultiStarts(parameters, objective_function, vararg
 %  * PestoOptions::mode
 %  * PestoOptions::fh
 %  * PestoOptions::fmincon
-%  * PestoOptions::rng
 %  * PestoOptions::proposal
 %  * PestoOptions::save
 %  * PestoOptions::foldername
@@ -121,11 +120,6 @@ switch options.mode
         if strcmp(options.localOptimizer, 'fmincon')
             options.localOptimizerOptions.Display = 'off';
         end
-end
-
-%% Initialization of random number generator
-if ~isempty(options.rng)
-    rng(options.rng);
 end
 
 %% Sampling of starting points
