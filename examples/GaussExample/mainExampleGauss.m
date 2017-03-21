@@ -10,6 +10,10 @@
 clear all
 close all
 clc
+
+% Seed random number generator
+rng(0);
+
 % path(pathdef);
 % addpath(genpath([pwd filesep '..' filesep '..']));
 define_Gauss_LLH();
@@ -27,7 +31,6 @@ for i = 1:dimi+2
 end
 
 opt                    = PestoSamplingOptions();
-opt.rndSeed            = 3;
 opt.nIterations        = 1e5;
 
 % Using PT

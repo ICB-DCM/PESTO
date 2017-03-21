@@ -8,6 +8,10 @@
 clear all
 close all
 clc
+
+% Seed random number generator
+rng(0);
+
 % path(pathdef);
 % addpath(genpath([pwd filesep '..' filesep '..']));
 radius = 15;
@@ -42,7 +46,6 @@ par = getParameterProfiles(par, logP, optMS);
 
 % Sampling Options
 opt                       = PestoSamplingOptions();
-opt.rndSeed               = 3;
 opt.nIterations           = 1e5;
 
 % Using PT

@@ -12,11 +12,13 @@
 %
 % Demonstrates furthermore:
 % * how to carry out uncertainty analysis for local (non-global) optima
+% * how to use a multi-chain method for sampling which is initialized at
+%   different parameter optima
 % * how to use the PSwarm toolbox for optimization (commented code version)
 %   and what problems may occur when no gradient based approach is used
 % * How to use the profile computation mode 'mixed'
 % * How to use Hessian matrices computed by the automated finite difference
-%   scheme of PESTO
+%   scheme of PESTO (in getParameterProfiles)
 %
 % This example is a model for mRNA transfection, taken from the paper
 % "Single-cell mRNA transfection studies: Delivery, kinetics and statistics
@@ -35,7 +37,7 @@
 % optionsMultistart.profile_method = 'mixed'to have comparison of both
 % methods.
 %
-% Multi-chain Monte-Carlo sampling is performed by getParameterSamples().
+% Multi-chain Monte-Carlo sampling is performed by getParameterSamples()
 
 
 
@@ -47,6 +49,9 @@ clc;
 TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
+
+% Seed random number generator
+rng(0);
 
 %% Model Definition
 % See logLikelihoodT.m for a detailed description
@@ -262,23 +267,22 @@ optionsPesto.objOutNumber = 3;
 
 % Building a struct covering all sampling options:
 optionsSampling = PestoSamplingOptions();
-optionsSampling.rndSeed     = 2;
-optionsSampling.nIterations = 2e4;
+optionsSampling.nIterations = 1e5;
 
 % PT specific options:
 optionsSampling.samplingAlgorithm   = 'PT';
-optionsSampling.PT.nTemps           = 5;
-optionsSampling.PT.exponentT        = 4;
+optionsSampling.PT.nTemps           = 8;
+optionsSampling.PT.exponentT        = 7;
 optionsSampling.PT.alpha            = 0.51;
 optionsSampling.PT.temperatureAlpha = 0.51;
 optionsSampling.PT.memoryLength     = 1;
 optionsSampling.PT.regFactor        = 1e-4;
-optionsSampling.PT.temperatureAdaptionScheme = 'Vousden16'; %'Lacki15'; %
+optionsSampling.PT.temperatureAdaptionScheme = 'Vousden16'; % 'Lacki15'
 
 % % Initialize the chains by choosing a random inital point and a 'large'
 % % covariance matrix
 % optionsSampling.theta0 = bsxfun(@plus, parameters.min', ...
-%    bsxfun(@times, parameters.max' - parameters.min', rand(5,5)))';
+%    bsxfun(@times, parameters.max' - parameters.min', rand(8,5)))';
 % optionsSampling.sigma0 = 1e4 * diag(ones(1,5));
 
 % Initialize the chains by making use of the preceeding multi-start local
