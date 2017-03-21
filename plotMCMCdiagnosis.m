@@ -35,7 +35,7 @@ type = 'parameters';
 if nargin >= 2 && ~isempty(varargin{1})
     type = varargin{1};
     if ~max(strcmp({'parameters','log-posterior'},type))
-        error('The ''type'' of plot is unknown. ''type'' can only be ''parameter'' or ''log-posterior''.')
+        error('The ''type'' of plot is unknown. ''type'' can only be ''parameters'' or ''log-posterior''.')
     end
 end
 

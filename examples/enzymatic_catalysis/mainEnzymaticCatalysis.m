@@ -9,10 +9,12 @@
 % Demonstrates furthermore:
 % * how to do sampling without multi-start local optimization beforehand
 % * how to use the MEIGO toolbox for optimization (commented)
-% * how to compute profile likelihoods via ODE integration
+% * how to compute profile likelihoods via the integration method
 % * how to use plotting functions outside the get... routines
 % * the reliability of sampling and profiling in the case of
 %   non-identifiabilites
+% * how to use diagnosis tool (e.g. plotMCMCDiagnosis and
+%   plotMultiStartDiagnosis)
 %
 % This example provides a model for the reaction of a species X_1 to a
 % species X_4, which is catalyzed by an enzyme X_2.
@@ -28,6 +30,11 @@
 % measurement data as a time series and performs a multi-start local
 % optimization based on these measurements, demonstrating the use of
 % getMultiStarts().
+%
+% Parameter sampling is done first without prior information from
+% optimization, then with information from optimization.
+%
+% Parameter optimization is done using multi-start local optimization.
 %
 % The Profile likelihoods are calculated by integrating an ODE following
 % the profile path using getParameterProfiles with the option
@@ -97,8 +104,8 @@ optionsSampling.nIterations  = 1e4;
 
 % PT (with only 1 chain -> AM) specific options:
 optionsSampling.samplingAlgorithm = 'PT';
-optionsSampling.PT.nTemps         = 5;
-optionsSampling.PT.exponentT      = 4;    
+optionsSampling.PT.nTemps         = 6;
+optionsSampling.PT.exponentT      = 6;    
 optionsSampling.PT.regFactor      = 1e-8;
 optionsSampling.PT.temperatureAdaptionScheme = 'Lacki15'; %'Vousden16';
 
@@ -111,6 +118,8 @@ optionsSampling.sigma0 = 1e5 * eye(4);
 % Run the sampling
 parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
 
+% Use a diagnosis tool to see, how plotting worked (see burn-in etc.)
+plotMCMCdiagnosis(parameters, 'parameters');
 
 %% Calculate Confidence Intervals
 % Confidence Intervals for the Parameters are inferred from the local 
@@ -148,6 +157,9 @@ parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
 display(' Optimizing parameters...');
 optionsPesto.n_starts = 5;
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+
+% Use a diagnosis tool to see, how optimization worked
+plotMultiStartDiagnosis(parameters);
 
 
 %% Calculate Confidence Intervals

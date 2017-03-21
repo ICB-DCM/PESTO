@@ -77,7 +77,7 @@ function res = performPT( logPostHandle, par, opt )
    res.temperatures = nan(nIter, nTemps);
    
    beta = linspace(1,1/nTemps,nTemps).^exponentT;
-   if strcmp(temperatureAdaptionScheme,'Vousden16')
+   if strcmp(temperatureAdaptionScheme,'Vousden16') && nTemps > 1
       beta(end) = 0;
    end
    T = ones(1,nTemps);
