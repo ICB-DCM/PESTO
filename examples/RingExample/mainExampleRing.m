@@ -88,20 +88,12 @@ par = getParameterSamples(par, logP, opt);
 
 
 % Visualize
-figure
-subplot(2,1,1); plot(squeeze(par.S.par(:,:,1))')
+figure();
+subplot(2,1,1); 
+plot(squeeze(par.S.par(:,:,1))');
 subplot(2,1,2); 
-plotRing(); hold all
-plot(squeeze(par.S.par(1,:,1))',squeeze(par.S.par(2,:,1))','.')
+plotRing(); 
+hold all;
+plot(squeeze(par.S.par(1,:,1))',squeeze(par.S.par(2,:,1))','.');
 
-
-
-samplingPlottingOpt = PestoPlottingOptions();
-samplingPlottingOpt.S.plot_type = 1; % Histogram
-% samplingPlottingOpt.S.plot_type = 2; % Density estimate
-samplingPlottingOpt.S.ind = 1; % 3 to show all temperatures
-samplingPlottingOpt.S.col = [0.8,0.8,0.8;0.6,0.6,0.6;0.4,0.4,0.4];
-samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
-plotParameterSamples(par,'1D',[],[],samplingPlottingOpt);
-% plotParameterSamples(par,'2D',[],[],samplingPlottingOpt);
 par = getParameterConfidenceIntervals(par, [0.9,0.95,0.99]);

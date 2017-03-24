@@ -64,7 +64,7 @@ parameters.number = length(theta);
 
 % Set the PESTO-options
 optionsMultistart           = PestoOptions();
-optionsMultistart.n_starts  = 20;
+optionsMultistart.n_starts  = 5;
 optionsMultistart.comp_type = 'sequential';
 optionsMultistart.mode      = 'text';
 optionsMultistart.rng       = 0;
@@ -84,5 +84,9 @@ objectiveFunction = @(theta) logLikelihoodErbBSignaling(theta, D(1));
 % parameters.min and .max in order to infer the unknown parameters from 
 % measurement data.
 
+% REMARK: The problem is rather intermediate to large-scale, each 
+% evaluation of the objective function takes a while, parameter space is
+% high dimensional. Hence, optimization takes a while (up to some hours)
+% for this example.
 fprintf('\n Perform optimization...');
 parameters_adjoint = getMultiStarts(parameters, objectiveFunction, optionsMultistart);

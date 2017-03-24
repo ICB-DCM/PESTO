@@ -224,6 +224,12 @@ function res = performPHS( logPostHandle, par, opt )
       res.sigmaScale(i,:) = sigmaScale;
       res.sigmaHist = sigmaHist;
    end
+   
+    switch opt.mode
+        case {'visual','text'}
+               fprintf(1, repmat('\b',1,numel(msg)-2)) ;
+        case 'silent'
+    end
 end
 
 
