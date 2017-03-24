@@ -108,7 +108,7 @@ for k = 1:length(alpha)
         
         % Confidence intervals computed using sample
         if isfield(parameters,'S')
-            parameters.CI.S(i,:,k) = prctile(parameters.S.par(i,:),50 + 100*[-alpha(k)/2, alpha(k)/2]);
+            parameters.CI.S(i,:,k) = prctile(parameters.S.par(i,:,1),50 + 100*[-alpha(k)/2, alpha(k)/2]);
         end
     end
 end
