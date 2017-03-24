@@ -12,23 +12,21 @@ PESTO features include:
 
 These functions are demonstrated in several systems biology examples included in the [`examples/`](examples/) directory.
 
-## Installation
+## Download & installation
 
-If the zip archive was downloaded, it needs to be unzipped and the main folder has to be added to the MATLAB search path (non-recursively). 
-
-If the repository was cloned, the main folder needs to be added to the MATLAB search path (non-recursively).
+Clone the PESTO repository or download the latest [release archive](https://github.com/ICB-DCM/PESTO/releases).
+The top-level folder of the cloned repository or the unpacked archive needs to be added to the MATLAB search path (non-recursively).
 
 *Note:* Detailed instructions on how to modify your MATLAB search path are provided here: https://de.mathworks.com/help/matlab/matlab_env/add-remove-or-reorder-folders-on-the-search-path.html
-
-## Licensing
-
-See [ ```LICENSE```](LICENSE) file in the PESTO source directory.
 
 ## Documentation
 
 PESTO usage is demonstrated in various [examples](examples/). Further documentation is available in [```doc/PESTO-doc.pdf```](doc/PESTO-doc.pdf).
 
-
 ## Compatibility
 
 PESTO is implemented fully in MATLAB and compatible with MATLAB releases from R2014b up to at least 2017a running on Windows, Mac and Linux.
+
+## Licensing
+
+See [ ```LICENSE```](LICENSE) file in the PESTO source directory.
