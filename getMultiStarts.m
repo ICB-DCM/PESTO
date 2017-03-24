@@ -23,7 +23,6 @@ function [parameters,fh] = getMultiStarts(parameters, objective_function, vararg
 %  * PestoOptions::mode
 %  * PestoOptions::fh
 %  * PestoOptions::fmincon
-%  * PestoOptions::rng
 %  * PestoOptions::proposal
 %  * PestoOptions::save
 %  * PestoOptions::foldername
@@ -121,11 +120,6 @@ switch options.mode
         if strcmp(options.localOptimizer, 'fmincon')
             options.localOptimizerOptions.Display = 'off';
         end
-end
-
-%% Initialization of random number generator
-if ~isempty(options.rng)
-    rng(options.rng);
 end
 
 %% Sampling of starting points
@@ -546,13 +540,14 @@ end
 
 %% Waitbar Update
 function stringTimePrediction = updateWaitBar(timePredicted)
-% This function update the waitbar
-%
-% Parameters:
-% * timePredicted: Predicted time in seconds
-%   
-% Return Values:
-% * stringTimePrediction: String, Updating Message
+    % stringTimePrediction estimates the remaining time to display in the waitbar
+    %
+    % Parameters:
+    %  timePredicted: Predicted time in seconds
+    %
+    % Return values:
+    %  stringTimePrediction: String, Updating Message
+
     if isnan(timePredicted)
         stringTimePrediction = 'Unknown.';
     elseif (timePredicted < 60)
@@ -590,6 +585,12 @@ end
 
 %% Saving results
 function saveResults(parameters,options,i)
+    % saveResults saves Multi-start results to disk
+    %
+    % Parameters:
+    %  parameters: Parameter struct passed to getMultiStarts
+    %  options: getMultiStarts options
+    %  i: multi-start index
     dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost.csv']),parameters.MS.logPost(i),'delimiter',',','precision',12);
     dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost0.csv']),parameters.MS.logPost0(i),'delimiter',',','precision',12);
     dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__par.csv']),parameters.MS.par(:,i),'delimiter',',','precision',12);

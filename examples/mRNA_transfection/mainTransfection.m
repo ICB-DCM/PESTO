@@ -50,6 +50,9 @@ TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
+% Seed random number generator
+rng(0);
+
 %% Model Definition
 % See logLikelihoodT.m for a detailed description
 
@@ -264,7 +267,6 @@ optionsPesto.objOutNumber = 3;
 
 % Building a struct covering all sampling options:
 optionsSampling = PestoSamplingOptions();
-optionsSampling.rndSeed     = 7;
 optionsSampling.nIterations = 1e5;
 
 % PT specific options:

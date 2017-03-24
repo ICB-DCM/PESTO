@@ -13,6 +13,10 @@ classdef ConversionReactionTest < matlab.unittest.TestCase
     end
     
     methods(TestMethodSetup)
+        function initializeRng(testCase)
+            rng(0)
+        end
+        
         function setPath(testCase)
             testCase.oldPath = path();
             addpath(fullfile(fileparts(mfilename('fullpath')), '..','examples', 'conversion_reaction'));
@@ -110,7 +114,6 @@ classdef ConversionReactionTest < matlab.unittest.TestCase
             testCase.verifyMultiStartResults(multiStartParams, optionsMultistart);
 
             optionsSampling = PestoSamplingOptions();
-            optionsSampling.rndSeed     = 3;
             optionsSampling.nIterations = 100;
             optionsSampling.mode = 'silent';
             

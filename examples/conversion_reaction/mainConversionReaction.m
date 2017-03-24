@@ -44,6 +44,14 @@ TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
+% Seed the random number generator. Seeding the random number generator
+% ensures that everytime this example is run, the same sequence of random
+% numbers is generated, and thus, the starting points for multi-start 
+% optimization will be used. This is helpful for debugging or comparing
+% results across different machines. 
+% Results might vary though if PestoOptions.comp_type is set to 'parallel'
+rng(0);
+
 %% Model Definition
 % See logLikelihoodCR.m for a detailed description
 
@@ -197,7 +205,6 @@ parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultista
 
 % Building a struct covering all sampling options:
 optionsSampling = PestoSamplingOptions();
-optionsSampling.rndSeed     = 3;
 optionsSampling.nIterations = 1e4;
 optionsSampling.mode = 'visual';
 

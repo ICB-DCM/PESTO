@@ -51,6 +51,9 @@ TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
+% Seed random number generator
+rng(0);
+
 %% Model Definition
 % See logLikelihood.m for a detailed description
 
@@ -99,7 +102,6 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 % Covering all sampling options in one struct
 display(' Sampling without prior information...');
 optionsSampling = PestoSamplingOptions();
-optionsSampling.rndSeed      = 3;
 optionsSampling.nIterations  = 1e4;
 
 % PT (with only 1 chain -> AM) specific options:
