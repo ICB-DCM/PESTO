@@ -14,6 +14,9 @@
 % * how to carry out uncertainty analysis for local (non-global) optima
 % * how to use a multi-chain method for sampling which is initialized at
 %   different parameter optima
+% * how to use the PHS algorithm for sampling
+% * how to deal with burn-in time for sampling algorithms and how to plot
+%   only the samples which are important for the posterior
 % * how to use the PSwarm toolbox for optimization (commented code version)
 %   and what problems may occur when no gradient based approach is used
 % * How to use the profile computation mode 'mixed'
@@ -266,6 +269,7 @@ optionsPesto.objOutNumber = 3;
 optionsSampling = PestoSamplingOptions();
 optionsSampling.rndSeed     = 7;
 optionsSampling.nIterations = 1e5;
+trainingTime = ceil(optionsSampling.nIterations / 5);
 
 % PHS specific options:
 optionsSampling.samplingAlgorithm = 'PHS';
@@ -274,7 +278,7 @@ optionsSampling.PHS.nChains       = 2;
 optionsSampling.PHS.alpha         = 0.51;
 optionsSampling.PHS.memoryLength  = 1;
 optionsSampling.PHS.regFactor     = 1e-6;
-optionsSampling.PHS.trainingTime  = 1; %ceil(optionsSampling.nIterations / 5);
+optionsSampling.PHS.trainingTime  = trainingTime;
 
 
 optionsSampling.theta0(:,1) = parameters.MS.par(:, 1);
@@ -284,6 +288,26 @@ optionsSampling.sigma0(:,:,2) = inv(squeeze(parameters.MS.hessian(:, :, MAP_inde
 
 % Run the sampling
 parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
+
+% Now, the plots for the sampling include the burn-in phase, which the
+% sampling algorithm needs to explore the posterior. Those burn-in samples
+% corrupt the shape of the posterior, if they are not removed from the
+% histogram. So we clean the parameters.S struct from them (it may yet be
+% good to retain a copy of all samples, to do some more datailed analysis
+% and diagnosis with it.
+
+% Cleaning up
+parameters.S.par(:,1:trainingTime,:) = [];
+parameters.S.logPost(1:trainingTime,:) = [];
+
+% Plotting of the new sampling set
+optionsPesto.plot_options.S.plot_type = 1;
+optionsPesto.plot_options.S.ind = 1;
+optionsPesto.plot_options.S.bins = 'optimal';
+fh = figure('Name','plotParameterSamples after CleanUp - 1D');
+plotParameterSamples(parameters,'1D',fh,[],optionsPesto.plot_options);
+fh = figure('Name','plotParameterSamples after CleanUp - 2D');
+plotParameterSamples(parameters,'2D',fh,[],optionsPesto.plot_options);
 
 
 %% Confidence interval evaluation -- Parameters
