@@ -90,18 +90,33 @@ if (isempty(options.MAP_index))
 end
 
 % Process, which profiles should be computed in which manner
+if strcmp(options.profile_method, 'default')
+    if (isempty(options.profile_optim_index) && isempty(options.profile_integ_index))
+        options.profile_method = 'optimization';
+    elseif (~isempty(options.profile_optim_index) && isempty(options.profile_integ_index))
+        options.profile_method = 'optimization';
+    elseif (isempty(options.profile_optim_index) && ~isempty(options.profile_integ_index))
+        options.profile_method = 'integration';
+    elseif (~isempty(options.profile_optim_index) && ~isempty(options.profile_integ_index))
+        options.profile_method = 'mixed';
+    end
+end    
 if isempty(options.parameter_index)
     switch options.profile_method
         case 'optimization'
-            options.profile_optim_index = 1:parameters.number;
+            if isempty(options.profile_optim_index)
+                options.profile_optim_index = 1:parameters.number;
+            end
             if ~isempty(options.profile_integ_index)
-                options.profile_optim_index(options.profile_integ_index) = [];
+                error('Some profiles seem to be computed twice. Please redefine consistent options!');
             end
             
         case 'integration'
-            options.profile_integ_index = 1:parameters.number;
+            if isempty(options.profile_integ_index)
+                options.profile_integ_index = 1:parameters.number;
+            end
             if ~isempty(options.profile_optim_index)
-                options.profile_integ_index(options.profile_optim_index) = [];
+                error('Some profiles seem to be computed twice. Please redefine consistent options!');
             end
             
         case 'mixed'
@@ -113,6 +128,9 @@ if isempty(options.parameter_index)
             if length(unique([options.profile_optim_index options.profile_integ_index])) < length([options.profile_optim_index options.profile_integ_index])
                 error('Some profiles seem to be computed twice. Please redefine consistent options!');
             end
+            
+        otherwise
+            error('Unknown profile computationg method');
     end
     options.parameter_index = sort(unique([options.profile_optim_index options.profile_integ_index]));
 else
@@ -120,20 +138,24 @@ else
         case 'optimization'
             options.profile_optim_index = options.parameter_index;
             if ~isempty(options.profile_integ_index)
-                options.profile_optim_index(options.profile_integ_index) = [];
+                error('Some profiles seem to be computed twice. Please redefine consistent options!');
             end
             
         case 'integration'
             options.profile_integ_index = options.parameter_index;
             if ~isempty(options.profile_optim_index)
-                options.profile_integ_index(options.profile_optim_index) = [];
+                error('Some profiles seem to be computed twice. Please redefine consistent options!');
             end
             
         case 'mixed'
-            if (length(unique([options.profile_optim_index, options.profile_integ_index])) < length(unique([options.parameter_index, options.profile_optim_index, options.profile_integ_index])))
+            if (length(unique([options.profile_optim_index, options.profile_integ_index])) ~= length([options.profile_optim_index, options.profile_integ_index])) ...
+                    || (length([options.profile_optim_index, options.profile_integ_index]) ~= length(options.parameter_index))
                 error('Inconsistent settings for indices in profile calculation.');
             end
             options.parameter_index = sort(unique([options.profile_optim_index options.profile_integ_index]));
+        
+        otherwise
+            error('Unknown profile computationg method');
     end
 end
 

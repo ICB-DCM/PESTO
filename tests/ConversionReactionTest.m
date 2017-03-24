@@ -115,6 +115,7 @@ classdef ConversionReactionTest < matlab.unittest.TestCase
 
             optionsSampling = PestoSamplingOptions();
             optionsSampling.nIterations = 100;
+            optionsSampling.mode = 'silent';
             
             optionsSampling.samplingAlgorithm   = 'PT';
             optionsSampling.PT.nTemps           = 3;

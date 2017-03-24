@@ -172,7 +172,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         % How should profiles be computed (if no more precise options are 
         % set like profile_optim_index or profile_integ_index)? 
         % Possibilities: {'optimization' (default), 'integration', 'mixed'}
-        profile_method = 'optimization';
+        profile_method = 'default';
         
         
         
