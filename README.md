@@ -1,7 +1,6 @@
 # PESTO - Parameter EStimation TOolbox
 
-PESTO is a widely applicable and highly customizable toolbox for parameter estimation in MathWorks MATLAB. It offers state-of-the art algorithms for optimization and uncertainty analysis, which work in a very generic manner, treating the objective function as a black box. Hence, PESTO can be used for any parameter estimation problem, which provides an objective function in MATLAB.
-
+PESTO is a widely applicable and highly customizable toolbox for parameter estimation in MathWorks MATLAB. It offers state-of-the art algorithms for optimization and uncertainty analysis, which work in a very generic manner, treating the objective function as a black box. Hence, PESTO can be used for any parameter estimation problem, which provides an objective function in MATLAB. PESTO has been used in various computational biology [research projects](https://github.com/ICB-DCM/PESTO/wiki#references).
 
 PESTO features include:
 * Multistart optimization
