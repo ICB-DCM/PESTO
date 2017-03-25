@@ -37,9 +37,10 @@ for i = 1 : dimi + 2
    parameters.name{end+1} = ['\theta_' num2str(i)];
 end
 
-options             = PestoSamplingOptions();
-options.rndSeed     = 3;
-options.nIterations = 1e5;
+options              = PestoSamplingOptions();
+options.rndSeed      = 3;
+options.objOutNumber = 1;
+options.nIterations  = 1e5;
 
 % Using PT
 options.samplingAlgorithm   = 'PT';
