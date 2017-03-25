@@ -5,9 +5,12 @@
 % * getParameterProfiles()
 % * getParameterSamples()
 % * getParameterConfidenceIntervals()
+% * getPropertyMultiStarts()
+% * getPropertySamples()
 %
 % Demonstrates furthermore:
-% * how to use the MEIGO and the PSwarm toolbox for optimization (commented code version)
+% * how to do chain analysis
+% * how to define properties
 %
 % mainExampleRing.m shows how to use sampling methods in PESTO. The
 % example problem is a smudged hyper-ring. Its properties can be altered in
