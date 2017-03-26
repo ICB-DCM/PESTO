@@ -37,6 +37,10 @@ clc
 
 %% Problem initialization
 
+% Seed random number generator
+rng(0);
+
+% Settings for this example
 radius = 15;
 sigma = 2;
 logP = @(theta) simulateRingLLH(theta, radius, sigma);
@@ -71,49 +75,48 @@ parameters = getParameterProfiles(parameters, logP, optionsMultistart);
 %% Sampling
 
 % Sampling Options
-options                       = PestoSamplingOptions();
-options.rndSeed               = 3;
-options.nIterations           = 1e5;
+optionsSampling                     = PestoSamplingOptions();
+optionsSampling.nIterations         = 1e5;
 
 % Using PT
-options.samplingAlgorithm   = 'PT';
-options.PT.nTemps           = 3;
-options.PT.exponentT        = 4;    
-options.PT.alpha            = 0.51;
-options.PT.temperatureAlpha = 0.51;
-options.PT.memoryLength     = 1;
-options.PT.regFactor        = 1e-4;
-options.PT.temperatureAdaptionScheme =  'Lacki15'; %'Vousden16';
-options.theta0              = repmat(-15*ones(ringDimension,1), 1, options.PT.nTemps);
-options.sigma0              = 1e5*diag(ones(1,ringDimension));
+optionsSampling.samplingAlgorithm   = 'PT';
+optionsSampling.PT.nTemps           = 3;
+optionsSampling.PT.exponentT        = 4;    
+optionsSampling.PT.alpha            = 0.51;
+optionsSampling.PT.temperatureAlpha = 0.51;
+optionsSampling.PT.memoryLength     = 1;
+optionsSampling.PT.regFactor        = 1e-4;
+optionsSampling.PT.temperatureAdaptionScheme =  'Lacki15'; %'Vousden16';
+optionsSampling.theta0              = repmat(-15*ones(ringDimension,1), 1, optionsSampling.PT.nTemps);
+optionsSampling.sigma0              = 1e5*diag(ones(1,ringDimension));
 
 % Using DRAM
-% options.samplingAlgorithm     = 'DRAM';
-% options.DRAM.nTry             = 5;
-% options.DRAM.verbosityMode    = 'debug';    
-% options.DRAM.adaptionInterval = 1;
-% options.DRAM.regFactor        = 1e-4;
-% options.theta0                = -15*ones(ringDimension,1); 
-% options.sigma0                = 1e5*diag(ones(1,ringDimension));
+% optionsSampling.samplingAlgorithm     = 'DRAM';
+% optionsSampling.DRAM.nTry             = 5;
+% optionsSampling.DRAM.verbosityMode    = 'debug';    
+% optionsSampling.DRAM.adaptionInterval = 1;
+% optionsSampling.DRAM.regFactor        = 1e-4;
+% optionsSampling.theta0                = -15*ones(ringDimension,1); 
+% optionsSampling.sigma0                = 1e5*diag(ones(1,ringDimension));
 
 % Using MALA
-% options.samplingAlgorithm     = 'MALA';
-% options.MALA.regFactor        = 1e-4;
-% options.theta0                = -15*ones(ringDimension,1); 
-% options.sigma0                = 1e5*diag(ones(1,ringDimension));
+% optionsSampling.samplingAlgorithm     = 'MALA';
+% optionsSampling.MALA.regFactor        = 1e-4;
+% optionsSampling.theta0                = -15*ones(ringDimension,1); 
+% optionsSampling.sigma0                = 1e5*diag(ones(1,ringDimension));
 
 % Using PHS
-% options.samplingAlgorithm     = 'PHS';
-% options.PHS.nChains           = 3;
-% options.PHS.alpha             = 0.51;
-% options.PHS.memoryLength      = 1;
-% options.PHS.regFactor         = 1e-4;
-% options.PHS.trainingTime      = ceil(opt.nIterations / 5);
-% options.theta0                = repmat([-15*ones(ringDimension,1)],1,opt.PHS.nChains); 
-% options.sigma0                = 1e5*diag(ones(1,ringDimension));
+% optionsSampling.samplingAlgorithm     = 'PHS';
+% optionsSampling.PHS.nChains           = 3;
+% optionsSampling.PHS.alpha             = 0.51;
+% optionsSampling.PHS.memoryLength      = 1;
+% optionsSampling.PHS.regFactor         = 1e-4;
+% optionsSampling.PHS.trainingTime      = ceil(opt.nIterations / 5);
+% optionsSampling.theta0                = repmat([-15*ones(ringDimension,1)],1,opt.PHS.nChains); 
+% optionsSampling.sigma0                = 1e5*diag(ones(1,ringDimension));
 
 % Perform the parameter estimation via sampling
-parameters = getParameterSamples(parameters, logP, options);
+parameters = getParameterSamples(parameters, logP, optionsSampling);
 
 
 %% Visualize the chain history and the theoretical disttribution

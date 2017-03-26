@@ -33,6 +33,9 @@ TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
+% Seed random number generator
+rng(0);
+
 %% Model Definition
 % The ODE model is set up using the AMICI toolbox. To access the AMICI
 % model setup, see jakstat_pesto_syms.m

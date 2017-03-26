@@ -1,6 +1,3 @@
-% @file PestoSamplingOptions
-% @brief A class for checking and holding options for MCMC samling in PESTO
-
 classdef PestoSamplingOptions < matlab.mixin.SetGet
    % PestoSamplingOptions provides an option container to pass options to
    % various PESTO functions. Not all options are used by all functions,
@@ -9,7 +6,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
    % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
    
    properties
-      %% General options
+      % <!-- General options -->
       
       % Type of objective function provided:
       % 'log-posterior' (default) or 'negative log-posterior'
@@ -18,10 +15,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       % provided so it takes into account the corect sign for perfoming
       % all algorithms correctly.
       obj_type = 'log-posterior';
-      
-      % Random seed, either a number or 'shuffle' (default)
-      rndSeed = 'shuffle'
-      
+            
       % Sampling algorithm, can be 'PT' (parallel tempering), 'PHS',
       % (parallel hierarchical sampling), 'MALA' (Metropolis adjusted
       % Langevin algorithm), or 'DRAM' (delayed rejection adapted
@@ -59,101 +53,28 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       mode = 'visual';
       
       % Maximum number of outputs, the objective function can provide:
-      % 1 ... only objective value
-      % 2 ... objective value with gradient
-      % 3 ... objective value, gradient and Hessian (Default)
+      % * 1 ... only objective value
+      % * 2 ... objective value with gradient
+      % * 3 ... objective value, gradient and Hessian (Default)
       %
       % Missing values will be approximated by finite differences.
       objOutNumber = 1;
       
-      
-      %% Parallel Tempering Options
-      
-      % PT, struct containing the fields
-      %      .nTemps: Initial number of temperatures (default 10)
-      %      .exponentT: The initial temperatures are set by a power law
-      %              to ^opt.exponentT. (default 4)
-      %      .alpha: Parameter which controlls the adaption degeneration
-      %              velocity of the single-chain proposals.
-      %              Value between 0 and 1. Default 0.51.
-      %              No adaption (classical Metropolis-Hastings) for 0.
-      %      .temperatureAlpha: Parameter which controlls the adaption
-      %              degeneration velocity of the temperature adaption.
-      %              Value between 0 and 1. Default 0.51. No effect for
-      %              value = 0.
-      %      .memoryLength: The higher the value the more it lowers the
-      %              impact of early adaption steps. Default 1.
-      %      .regFactor: Regularization factor for ill conditioned
-      %              covariance matrices of the adapted proposal density.
-      %              Regularization might happen if the eigenvalues of
-      %              the covariance matrix strongly differ in order of
-      %              magnitude. In this case, the algorithm adds a small
-      %              diag-matrix to the covariance matrix with elements
-      %              regFactor.
-      %      .temperatureAdaptionScheme: Follows the temperature adaption
-      %              scheme from 'Vousden16' or 'Lacki15'. Can be set to
-      %              'none' for no temperature adaption.
+      % Parallel Tempering Options, an instance of PTOptions
       PT;
       
+      % Parallel Hierarchical Sampling options, an instance of PHSOptions
+      PHS;
+            
+      % Metropolis Adaptive Langevin Algorithm options, an instance of
+      % MALAOptions
+      MALA;
       
-      
-      
-      %% Parallel Hierarchical Sampling options
-      
-      % PHS, struct containing the filds
-      %      .nChains: Number of chains (1 'mother'-chain and nChains-1
-      %              auxillary chains)
-      %      .alpha: Control parameter for adaption decay. Needs values
-      %              between 0 and 1. Higher values lead to faster
-      %              decays, meaning that new iterations influence the
-      %              single-chain proposal adaption only very weakly very
-      %              quickly.
-      %      .memoryLength: Control parameter for adaption. Higher values
-      %              supress strong ealy adaption.
-      %      .regFactor: This factor is used for regularization in cases
-      %              where the single-chain proposal covariance matrices
-      %              are ill conditioned. nChainsarger values equal
-      %              stronger regularization.
-      %      .trainingTime: The iterations before the first chain swap
-      %              is invoked
-      PHS = struct;
-      
-      
-      
-      %% Metropolis Adaptive Langevin Algorithm options
-      % Note: This algorithm uses gradients & Hessians either provided
-      % by the user or computed by finite differences.
-      
-      % MALA, struct containing the fields
-      %      .regFactor: This factor is used for regularization in
-      %              cases where the proposal covariance matrices are
-      %              ill conditioned. Larger values equal stronger
-      %              regularization.
-      MALA = struct;
-      
-      
-      
-      %% Delayed Rejection Adaptive Metropolis options
-      
-      % DRAM, struct containing the fields
-      %      .adaptionInterval: Updates the proposal density only every
-      %              adaptionInterval-th time
-      %      .nTry: The number of tries in the delayed rejection scheme
-      %      .regFactor: This factor is used for regularization in cases
-      %              where the single-chain proposal covariance matrices
-      %              are ill conditioned. Larger values equal stronger
-      %              regularization.
-      %      .verbosityMode: Defines the level of verbosity 'silent',
-      %              'visual', 'debug', or 'text'
-      DRAM = struct;
-      
-      
-      
+      % Delayed Rejection Adaptive Metropolis options, an instance of
+      % DRAMOptions
+      DRAM;      
    end
-   
-   properties (Hidden)
-   end
-   
+      
    methods
       function obj = PestoSamplingOptions(varargin)
          % PestoSamplingOptions Construct a new PestoSamplingOptions object
@@ -171,7 +92,9 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
          %
          %   Note to see the parameters, check the
          %   documentation page for PestoSamplingOptions
-         
+         % Parameters:
+         % varargin:
+
          % adapted from SolverOptions
          
          if nargin > 0
@@ -272,6 +195,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       end
       
       function new = copy(this)
+        % Creates a copy of the passed PestoSamplingOptions instance
          new = feval(class(this));
          
          p = properties(this);
@@ -296,15 +220,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
             error('PestoSamplingOptions.mode must be set to either "visual", "text", "silent" or "debug".');
          end
       end
-      
-      function set.rndSeed(this, value)
-         if (isstr(value) && strcmp(value, 'shuffle')) || (value == floor(value) && value >= 0)
-            this.rndSeed = value;
-         else
-            error('Please specify the random seed as integer, e.g. PestoSamplingOptions.rndSeed = 7 or PestoSamplingOptions.rndSeed = "shuffle".');
-         end
-      end
-      
+            
       function set.nIterations(this, value)
          if (value == floor(value) && value > 0)
             this.nIterations = value;
@@ -355,10 +271,19 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
          end
       end
       
-      % Should be called providing the parameter struct for dependent
-      % defaults as theta0. Does both, checking already set dependent
-      % options and defaulting based on par if not set yet.
       function this = checkDependentDefaults(this, par)
+          % checkDependentDefaults sets default values for sampling options which are problem-specific
+          % and will be adapted to the problem properties in par.
+          % Should be called providing the parameter struct for dependent
+          % defaults as theta0. Does both, checking already set dependent
+          % options and defaulting based on par if not set yet.
+          %
+          % Parameters:
+          % par: parameters as passed getParameterSamples() to use for choosing default options
+          %
+          % Return values:
+          % this: the updated PestoSamplingOptions instance
+          
          if ~isempty(this.theta0)
             switch this.samplingAlgorithm
                case {'DRAM','MALA'}

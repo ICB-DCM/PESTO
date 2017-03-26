@@ -24,6 +24,13 @@ clear all
 close all
 clc
 
+
+%% Problem initialization
+
+% Seed random number generator
+rng(0);
+
+% Settings for this example
 define_Gauss_LLH();
 gaussDimension = 2 + dimi;
 
@@ -37,10 +44,10 @@ for i = 1 : dimi + 2
    parameters.name{end+1} = ['\theta_' num2str(i)];
 end
 
-options              = PestoSamplingOptions();
-options.rndSeed      = 3;
-options.objOutNumber = 1;
-options.nIterations  = 1e5;
+% Sampling Options
+options                     = PestoSamplingOptions();
+options.objOutNumber        = 1;
+options.nIterations         = 1e5;
 
 % Using PT
 options.samplingAlgorithm   = 'PT';
