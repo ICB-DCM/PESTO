@@ -15,10 +15,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       % provided so it takes into account the corect sign for perfoming
       % all algorithms correctly.
       obj_type = 'log-posterior';
-      
-      % Random seed, either a number or 'shuffle' (default)
-      rndSeed = 'shuffle'
-      
+            
       % Sampling algorithm, can be 'PT' (parallel tempering), 'PHS',
       % (parallel hierarchical sampling), 'MALA' (Metropolis adjusted
       % Langevin algorithm), or 'DRAM' (delayed rejection adapted
@@ -223,15 +220,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
             error('PestoSamplingOptions.mode must be set to either "visual", "text", "silent" or "debug".');
          end
       end
-      
-      function set.rndSeed(this, value)
-         if (isstr(value) && strcmp(value, 'shuffle')) || (value == floor(value) && value >= 0)
-            this.rndSeed = value;
-         else
-            error('Please specify the random seed as integer, e.g. PestoSamplingOptions.rndSeed = 7 or PestoSamplingOptions.rndSeed = "shuffle".');
-         end
-      end
-      
+            
       function set.nIterations(this, value)
          if (value == floor(value) && value > 0)
             this.nIterations = value;

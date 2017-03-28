@@ -23,7 +23,6 @@ function [parameters,fh] = getMultiStarts(parameters, objective_function, vararg
 %  * PestoOptions::mode
 %  * PestoOptions::fh
 %  * PestoOptions::fmincon
-%  * PestoOptions::rng
 %  * PestoOptions::proposal
 %  * PestoOptions::save
 %  * PestoOptions::foldername
@@ -121,11 +120,6 @@ switch options.mode
         if strcmp(options.localOptimizer, 'fmincon')
             options.localOptimizerOptions.Display = 'off';
         end
-end
-
-%% Initialization of random number generator
-if ~isempty(options.rng)
-    rng(options.rng);
 end
 
 %% Sampling of starting points
@@ -312,8 +306,8 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.n_iter(i) = size(Results.neval, 2);
                 
                 [~, G_opt, H_opt] = objectiveWrapWErrorCount(parameters.MS.par(:,i),objective_function,options.obj_type,options.objOutNumber);
-                parameters.MS.hessian(:,:,i) = -H_opt;
-                parameters.MS.gradient(:,i) = -G_opt;
+                parameters.MS.hessian(:,:,i) = H_opt;
+                parameters.MS.gradient(:,i) = G_opt;
                 
                 %% Output
                 switch options.mode
@@ -343,8 +337,8 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.n_iter(i) = RunData.IterCounter;
                 
                 [~, G_opt, H_opt] = objectiveWrapWErrorCount(parameters.MS.par(:,i),objective_function,options.obj_type,options.objOutNumber);
-                parameters.MS.hessian(:,:,i) = -H_opt;
-                parameters.MS.gradient(:,i) = -G_opt;
+                parameters.MS.hessian(:,:,i) = H_opt;
+                parameters.MS.gradient(:,i) = G_opt;
 
             end
             

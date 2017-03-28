@@ -28,6 +28,9 @@ TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
+% Seed random number generator
+rng(0);
+
 %% Model Definition
 % The ODE model is set up using the AMICI toolbox. To access the AMICI
 % model setup, see erbb_signaling_pesto_syms.m
@@ -67,7 +70,6 @@ optionsMultistart           = PestoOptions();
 optionsMultistart.n_starts  = 20;
 optionsMultistart.comp_type = 'sequential';
 optionsMultistart.mode      = 'text';
-optionsMultistart.rng       = 0;
 optionsMultistart.localOptimizerOptions = optimset('Algorithm','interior-point',...
     'GradObj', 'on',...
     'Display', 'iter', ...
