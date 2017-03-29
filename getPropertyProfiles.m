@@ -93,7 +93,6 @@ end
 % Check and assign options
 %TODO
 options.plot_options.mark_constraint = false;
-options.property_index = 1:properties.number;
 options.P.min = parameters.min;
 options.P.max = parameters.max;
 options.MAP_index = 1;
@@ -136,8 +135,7 @@ end
 
 options.profileReoptimizationOptions.algorithm = 'interior-point';
 options.profileReoptimizationOptions.MaxIter = 400;
-options.profileReoptimizationOptions.GradConstr = 'on';
-options.profileReoptimizationOptions.TolCon = 1e-6;
+options.profileReoptimizationOptions.TolCon = 1e-4;
 options.profileReoptimizationOptions.MaxFunEvals = 200*parameters.number;
 
 %% Initialization of property struct

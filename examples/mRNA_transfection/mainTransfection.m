@@ -14,6 +14,9 @@
 % * how to carry out uncertainty analysis for local (non-global) optima
 % * how to use a multi-chain method for sampling which is initialized at
 %   different parameter optima
+% * how to use the PHS algorithm for sampling
+% * how to deal with burn-in time for sampling algorithms and how to plot
+%   only the samples which are important for the posterior
 % * how to use the PSwarm toolbox for optimization (commented code version)
 %   and what problems may occur when no gradient based approach is used
 % * How to use the profile computation mode 'mixed'
@@ -268,33 +271,45 @@ optionsPesto.objOutNumber = 3;
 % Building a struct covering all sampling options:
 optionsSampling = PestoSamplingOptions();
 optionsSampling.nIterations = 1e5;
+trainingTime = ceil(optionsSampling.nIterations / 5);
 
-% PT specific options:
-optionsSampling.samplingAlgorithm   = 'PT';
-optionsSampling.PT.nTemps           = 8;
-optionsSampling.PT.exponentT        = 7;
-optionsSampling.PT.alpha            = 0.51;
-optionsSampling.PT.temperatureAlpha = 0.51;
-optionsSampling.PT.memoryLength     = 1;
-optionsSampling.PT.regFactor        = 1e-4;
-optionsSampling.PT.temperatureAdaptionScheme = 'Vousden16'; % 'Lacki15'
+% PHS specific options:
+optionsSampling.samplingAlgorithm = 'PHS';
+optionsSampling.objOutNumber      = 1;
+optionsSampling.PHS.nChains       = 2;
+optionsSampling.PHS.alpha         = 0.51;
+optionsSampling.PHS.memoryLength  = 1;
+optionsSampling.PHS.regFactor     = 1e-6;
+optionsSampling.PHS.trainingTime  = trainingTime;
 
-% % Initialize the chains by choosing a random inital point and a 'large'
-% % covariance matrix
-% optionsSampling.theta0 = bsxfun(@plus, parameters.min', ...
-%    bsxfun(@times, parameters.max' - parameters.min', rand(8,5)))';
-% optionsSampling.sigma0 = 1e4 * diag(ones(1,5));
 
-% Initialize the chains by making use of the preceeding multi-start local
-% optimization, all of them starting from the same point
-drawFromMSinteger = randi(8, 1, optionsSampling.PT.nTemps);
-optionsSampling.theta0 = parameters.MS.par(:, drawFromMSinteger);
-for j = 1 : optionsSampling.PT.nTemps
-    optionsSampling.sigma0(:,:,j) = inv(squeeze(parameters.MS.hessian(:, :, drawFromMSinteger(j))));
-end
+optionsSampling.theta0(:,1) = parameters.MS.par(:, 1);
+optionsSampling.sigma0(:,:,1) = inv(squeeze(parameters.MS.hessian(:, :, 1)));
+optionsSampling.theta0(:,2) = parameters.MS.par(:, MAP_index2);
+optionsSampling.sigma0(:,:,2) = inv(squeeze(parameters.MS.hessian(:, :, MAP_index2)));
 
 % Run the sampling
 parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
+
+% Now, the plots for the sampling include the burn-in phase, which the
+% sampling algorithm needs to explore the posterior. Those burn-in samples
+% corrupt the shape of the posterior, if they are not removed from the
+% histogram. So we clean the parameters.S struct from them (it may yet be
+% good to retain a copy of all samples, to do some more datailed analysis
+% and diagnosis with it.
+
+% Cleaning up
+parameters.S.par(:,1:trainingTime,:) = [];
+parameters.S.logPost(1:trainingTime,:) = [];
+
+% Plotting of the new sampling set
+optionsPesto.plot_options.S.plot_type = 1;
+optionsPesto.plot_options.S.ind = 1;
+optionsPesto.plot_options.S.bins = 'optimal';
+fh = figure('Name','plotParameterSamples after CleanUp - 1D');
+plotParameterSamples(parameters,'1D',fh,[],optionsPesto.plot_options);
+fh = figure('Name','plotParameterSamples after CleanUp - 2D');
+plotParameterSamples(parameters,'2D',fh,[],optionsPesto.plot_options);
 
 
 %% Confidence interval evaluation -- Parameters

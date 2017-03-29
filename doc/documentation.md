@@ -81,24 +81,24 @@ they can be used for parameter estimation.
 These optimizers are also accessed via getMultiStarts.m by setting PestoOptions::localOptimizer and PestoOptions::localOptimizerOptions accordingly. 
 In principle, a single optimizer run (PestoOptions::n_starts = 1) should be enough for these global optimizers.
 
-An example is included in mainConversionReaction.m.
+An example of both global optimizers is included in mainConversionReaction.m, another example for PSwarm in mainTransfection.m and an additional example for MEIGO can be found in mainEnzymaticCatalysis.m.
 
 ## Uncertainty analysis ### {#uncertainty-analysis}
 
 When parameters are inferred from measurement data, the deviation of the data from the fit for the best parameter guess is usually assumed to be of stochastic nature. This means that the estimated parameters themselves are stochastic and underly an uncertainty. This can be quantified by performing uncertainty analysis and computing confidence intervals.
 
-The easiest way to do this is using local approximations (based on the Hessian matrix of the objective function) at the best parameter guess. From those approximations, either threshold-based or mass-based methods can be used to compute confidence intervals for the inferred parameters. Another approach uses sampling based methods in combination with local approximations.
+The easiest way to do this is using local approximations (based on the Hessian matrix of the objective function) at the best parameter guess. From those approximations, either threshold-based or mass-based methods can be used to compute confidence intervals for the inferred parameters. Another more reliable approach uses sampling based methods in combination with local approximations. It is described in more detail in the next section.
 
-The most reliable way to compute confidence intervals is a third approach, based on profile likelihoods. Here, each model parameter is varied separately while the others are constantly reoptimized. In this way one finds profiles for every parameter. By fixing a confidence level using the inverse chi-squared-distribution, one gets a threshold which, together with the profile likelihood, gives reliable confidence intervals for each parameter. In this way, non-identifiable parameter can be detected.
+The probably most reliable way to compute confidence intervals is a third approach, based on profile likelihoods. There are two different ways to compute them: In the classical optimization based approach, each model parameter is varied separately while the others are constantly reoptimized. In this way one finds profiles for every parameter. A more recent approach uses an ODE, which follows the path in parameter space which describes the profile. After the profile computation, one fixes a confidence level using the inverse chi-squared-distribution to get a threshold. This threshold, together with the profile likelihood, gives reliable confidence intervals for each parameter. In this way, non-identifiable parameters can be detected.
 
 Those functionalities are provided in getParameterProfiles.m, getPropertyProfiles.m (for the profile likelihoods), getParameterConfidenceIntervals.m and getPropertyConfidenceIntervals.m (for the confidence intervals). In order to get confidence intervals based on local approximations or sampling methods, one needs to run the routines getMultiStarts.m / getPropertyMultiStarts.m or getParameterSamples.m / getPropertySamples.m first. The respective visualization routines are plotParameterProfiles.m and plotPropertyProfiles.m.
-See mainConversionReaction.m for an example.
+Examples for profile likelihoods can be found in mainConversionReaction.m and mainExampleRing.m (optimization based), mainEnzymaticCatalysis.m (integration based) and mainTransfection.m (a mixture of both).
 
 ## Parameter sampling ### {#parameter-sampling}
 
-PESTO provides Markov Chain Monte Carlo (MCMC) algorithms for sampling the posterior distribution. Sampling methods such as the [Metropolis-Hastings (MH)](https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm), adaptive Metropolis (AM) and [Metropolis-adjusted Langevin algorithm (MALA)](https://en.wikipedia.org/wiki/Metropolis-adjusted_Langevin_algorithm) are currently implemented. Additionally, PESTO provides an interface to the [Delayed Rejection Adaptive Metropolis (DRAM)](http://helios.fmi.fi/~lainema/dram/) toolbox.
+PESTO provides Markov Chain Monte Carlo (MCMC) algorithms for sampling the posterior distribution. Currently, two multi-chain methods (which can also be used in single-chain mode) and two additional single-chain methods can be chosen. The two multi-chain methods are [parallel tempering (PT)](https://en.wikipedia.org/wiki/Parallel_tempering), which is based on an adaptive version of the [Metropolis-Hastings algorithm (MH)](https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm), and [parallel hierarchical sampling (PHS)](https://arxiv.org/abs/0812.1484). For further single-chain sampling, also [Metropolis-adjusted Langevin algorithm (MALA)](https://en.wikipedia.org/wiki/Metropolis-adjusted_Langevin_algorithm) can be chosen. Additionally, PESTO provides an interface to the [Delayed Rejection Adaptive Metropolis (DRAM)](http://helios.fmi.fi/~lainema/dram/) toolbox.
 
-See getParameterSamples() for details and mainConversionReaction.m for examples.
+Details on the recommended settings can be found in PestoSamplingOptions.m and the corresponding option files for each algorithm. Examples for the algorithms can be found in mainConversionReaction.m (PT as single-chain algorithm), mainEnzymaticCatalysis.m (PT as multi-chain algorithm), mainTransfection.m (PHS as multi-chain algorithm) and mainExampleRing.m and mainExampleGauss.m (all algorithms, respectively).
 
 ## Plotting ### {#plotting}
 
