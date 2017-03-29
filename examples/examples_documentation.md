@@ -45,3 +45,13 @@ The following table provides an overview of which of the PESTO functions are dem
 | getPropertyConfidenceIntervals() |   X          |                     |                  |           |      X       |       |         |      |
 | testGradient()            |                     |                     |                  |           |              |       |         |      |
 | collectResults()          |                     |                     |                  |           |              |       |         |      |
+
+In addition to the principal routines, the examples also highlight how analysis results may look like in certain situations (especially in the case of modelling related problems), or how the results from the PESTO routines can be manipulated (the following list is of course non-exhaustive):
+* *multi-modal posterior distributions* (transfection and Gaussian mixture)
+* *structurally non-identifiable problems* (Hperring and transfection)
+* *practically non-identifiable problems* (enzymatic catalysis)
+* *analysis of sampling results and Markov chain properties* (enzymatic catalysis, Gaussian mixture, and Hyperring)
+* *cutting off burn-in phase of Markov chain after sampling* (transfection)
+* *advanced usage of PESTO plotting routines* (Gaussian mixture)
+* *integration of profile likelihoods* (enzymatic catalysis and transfection)
+* *usage of non-default sampling algorithms* (transfection, Gaussian mixture, Hyperring)
