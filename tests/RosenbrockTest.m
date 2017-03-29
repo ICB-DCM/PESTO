@@ -17,7 +17,7 @@ function RosenbrockTest()
     
     % OPtimization options
     options.localOptimizer = 'fmincon';
-    options.n_starts = 1;
+    options.n_starts = 10;
     
     % Profile options
     options.profile_method = 'integration';
@@ -30,10 +30,14 @@ function RosenbrockTest()
     options.solver.AbsTol = 1e-10;
     
     % Sampling Options
-    options.MCMC.sampling_scheme = 'single-chain';
-    options.SC.proposal_scheme   = 'AM';
-    options.MCMC.nsimu_warmup    = 1e3;
-    options.MCMC.nsimu_run       = 1e5;
+    optionsSampling = PestoSamplingOptions();
+    optionsSampling.nIterations = 1e5;
+    optionsSampling.obj_type = 'negative log-posterior';
+    optionsSampling.samplingAlgorithm   = 'PT';
+    optionsSampling.PT.regFactor        = 1e-8;
+    optionsSampling.PT.nTemps        = 1;
+    optionsSampling.PT.temperatureAdaptionScheme = 'Lacki15';
+
 
     % Plotting Options
     options.mode = 'visual';
@@ -49,7 +53,11 @@ function RosenbrockTest()
     % Call the routies
     parameters = getMultiStarts(parameters, objectiveFunction, options);
     parameters = getParameterProfiles(parameters, objectiveFunction, options);
-    parameters = getParameterSamples(parameters, objectiveFunction, options);
+    optionsSampling.theta0 = parameters.MS.par(:, 1);
+    for j = 1 : optionsSampling.PT.nTemps
+        optionsSampling.sigma0(:,:,j) = inv(squeeze(parameters.MS.hessian(:, :, 1))); %drawFromMSinteger(j))));
+    end
+    parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
     getParameterConfidenceIntervals(parameters, [0.8, 0.9,0.95,0.99]);
 end
 

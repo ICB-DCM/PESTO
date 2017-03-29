@@ -160,6 +160,9 @@ for l = 1:length(I)
                 end
                 xl(1) = min(xl(1),min(parameters.MS.par(i,L)));
                 xl(2) = max(xl(2),max(parameters.MS.par(i,L)));
+            else
+                xl(1) = parameters.min(i);
+                xl(2) = parameters.max(i);
             end
         
             flag_plot_P = 0;
@@ -223,10 +226,10 @@ for l = 1:length(I)
                 end
         case 2
             % kernel-density estimate
-             for k = 1:options.S.ind
+             for k = options.S.ind:-1:1
                  x_grid = linspace(min(parameters.S.par(i,:,k)),max(parameters.S.par(i,:,k)),100);
                  [KDest] = getKernelDensityEstimate(squeeze(parameters.S.par(i,:,k)),x_grid);
-                 h = plot(x_grid,KDest/max(KDest),'-','color',options.S.hist_col(k,:),'linewidth',options.S.lw); hold on;
+                 h = plot(x_grid,KDest/max(KDest),'-','color',options.S.sp_col(k,:),'linewidth',options.S.lw); hold on;
              end
         otherwise
             error('Selected value for ''options.S.plot_type'' is not available.');

@@ -46,7 +46,7 @@ set(0,TextSizes);
 
 % Seed the random number generator. Seeding the random number generator
 % ensures that everytime this example is run, the same sequence of random
-% numbers is generated, and thus, the starting points for multi-start 
+% numbers is generated, and thus, the same starting points for multi-start 
 % optimization will be used. This is helpful for debugging or comparing
 % results across different machines. 
 % Results might vary though if PestoOptions.comp_type is set to 'parallel'
