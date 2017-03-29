@@ -5,6 +5,7 @@
 %
 % Demostrates furhtermore
 % * how to implement a user-supplied guess for intial parameters
+% * that non-evaluable points in parameter space can occur
 %
 % This example provides a model for the JakStat signaling pathway with an
 % time resolved input of the drug EPO. The model has been taken from the
@@ -107,5 +108,11 @@ optionsMultistart.localOptimizerOptions = optimset(...
 % parameters.min and .max in order to infer the unknown parameters from 
 % measurement data.
 
+% REMARK: The optimization in this case is rather challenging and the
+% box constraints in the parameter space are set generously. So
+% optimization will encounter many points in which the ODE can not be
+% evaluated, leading to warnings of the ODE simulator AMICI. This is normal
+% and not a bug. It just shows how paramter estimation can look like in
+% complicated situations.
 fprintf('\n Perform optimization...');
 parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
