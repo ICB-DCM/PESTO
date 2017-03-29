@@ -16,7 +16,7 @@ The following examples are included:
 * *Enzymatic catalysis*, the third small example case, also demonstrating a variety of the PESTO features (`examples/enzymatic_catalysis/mainEnzymaticCatalysis.m`, ODE)
 * *Gaussian mixture*, a benchmark model for the MCMC sampling routines in PESTO (`examples/GaussExample/mainExampleGauss.m`)
 * *Hyperring*, a second benchmark model (with non-identifiabilities) for the MCMC sampling routines in PESTO, (`examples/RingExample/mainExampleRing.m`)
-* *Pom1p gradient formation*, a PDE problem which is discertized in space and reformulated as ODE § (`examples/Pom1p_gradient_formation/mainPom1.m`, PDE)
+* *Pom1p gradient formation*, a PDE problem which is discretized in space and reformulated as ODE § (`examples/Pom1p_gradient_formation/mainPom1.m`, PDE)
 * *Jak-Stat-signaling*, a challenging example for the optimization routines in PESTO, § (`examples/jakstat_signaling/mainJakstatSignaling.m`, ODE)
 * *ERBB signaling*, largest model among the examples § (`examples/erbb_signaling/mainErbBSignaling.m`, ODE)
 
@@ -48,8 +48,8 @@ The following table provides an overview of which of the PESTO functions are dem
 
 In addition to the principal routines, the examples also highlight how analysis results may look like in certain situations (especially in the case of modelling related problems), or how the results from the PESTO routines can be manipulated (the following list is of course non-exhaustive):
 * *multi-modal posterior distributions* (transfection and Gaussian mixture)
-* *structurally non-identifiable problems* (Hperring and transfection)
-* *practically non-identifiable problems* (enzymatic catalysis)
+* *structurally non-identifiable parameters* (Hyperring and transfection)
+* *practically non-identifiable parameters* (enzymatic catalysis)
 * *analysis of sampling results and Markov chain properties* (enzymatic catalysis, Gaussian mixture, and Hyperring)
 * *cutting off burn-in phase of Markov chain after sampling* (transfection)
 * *advanced usage of PESTO plotting routines* (Gaussian mixture)
