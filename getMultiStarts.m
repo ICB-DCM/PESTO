@@ -198,11 +198,7 @@ end
 
 %% Multi-start local optimization -- SEQUENTIAL
 if strcmp(options.comp_type, 'sequential')
-    
-    % initialise tracing of parameter and objective function values
-    ftrace = options.trace;
-    ftempsave  = options.tempsave;
-        
+            
     % initialize the waitbar
     if(strcmp(options.mode,'visual'))
         waitBar = waitbar(0, '1', 'name', 'Parameter estimation in process, please wait...', 'CreateCancelBtn', 'setappdata(gcbf, ''canceling'', 1)');
@@ -510,12 +506,12 @@ options.localOptimizerOptions.OutputFcn = [];
             case 'interrupt'
                 % do nothing
             case 'iter'
-                if(ftrace)
+                if(options.trace)
                     parameters.MS.par_trace(:,optimValues.iteration+1,i) = x;
                     parameters.MS.fval_trace(optimValues.iteration+1,i) = optimValues.fval;
                     parameters.MS.time_trace(optimValues.iteration+1,i) = cputime - startTimeLocalOptimization;
                 end
-                if(ftempsave)
+                if(options.tempsave)
                     if optimValues.iteration>0
                         if(mod(optimValues.iteration,10) == 0)
                             saveResults(parameters,options,i);
