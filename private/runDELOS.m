@@ -90,11 +90,13 @@ function [thetaOpt, jOptim, flag, DelosResults, gradientOpt] ...
     
     status = true;
     skipped = 0;
+    borders = [Parameters.min, Parameters.max];
     
     % Prepare the output array and set default values
     DelosResults = struct(...
         'objectiveTrace',  nan(options.MaxIter + 1, 1), ...
         'parameterTrace',  nan(options.MaxIter + 1, Parameters.number), ...
+        'parameterChangeTrace', nan(options.MaxIter + 1, 1), ...
         'normGradTrace', nan(options.MaxIter + 1, 1));
     
     % Check if a 2nd order momentum method is used
@@ -104,12 +106,18 @@ function [thetaOpt, jOptim, flag, DelosResults, gradientOpt] ...
     else
         Momentum2nd = false;
     end
+    
+    % Print output if wanted
+    if (strcmp(options.display, 'iter'))
+        fprintf('\n| Iter. | Objective Funtion  | Gradient Norm      | Norm of Par.Change |\n');
+        fprintf('|======================================================================|\n');
+    end
 
     for iOptim = 1 : options.MaxIter
     % --- Loop over Optimization steps ------------------------------------    
 
         [OldState.j, OldState.g, State.j, State.g] ...
-            = part1(iOptim, options, Momentum2nd, State, miniBatches, objectiveFunction, 1.0);
+            = EvalObjective(iOptim, options, borders, Momentum2nd, State, miniBatches, objectiveFunction, 1.0);
         
         % Check, if there was a problem with the solver
         if (isinf(State.j) || isnan(State.j))
@@ -128,11 +136,11 @@ function [thetaOpt, jOptim, flag, DelosResults, gradientOpt] ...
                 % objective function evaluation, just new update)
                 [OldState.theta, OldState.v, OldState.r, ...
                     State.theta, State.v, State.r] = ...
-                    part2(iOptim, options, OldState, Parameters, rescale);
+                    UpdateParameters(iOptim, options, OldState, borders, rescale);
                 
                 [OldState.j, OldState.g, State.j, State.g] = ...
-                    part1(iOptim, options, Momentum2nd, State, ...
-                    miniBatches, objectiveFunction, rescale);
+                    EvalObjective(iOptim, options, borders, Momentum2nd, ...
+                    State, miniBatches, objectiveFunction, rescale);
                 
                 if ~(isinf(State.j) || isnan(State.j))
                     status = true;
@@ -149,12 +157,29 @@ function [thetaOpt, jOptim, flag, DelosResults, gradientOpt] ...
         
         [OldState.theta, OldState.v, OldState.r, ...
             State.theta, State.v, State.r] = ...
-            part2(iOptim, options, State, Parameters, 1.0);
+            UpdateParameters(iOptim, options, State, borders, 1.0);
 
+        % Set the parameters to bounds, if this is wanted and if 
+        % restrictions were violated
+        if options.restriction
+            [State.theta, State.g] = restriction(State.theta, State.g, borders);
+        end
+        
         % Assignment
         DelosResults.objectiveTrace(iOptim+1) = State.j;
         DelosResults.normGradTrace(iOptim+1) = sqrt(sum((State.g).^2));
         DelosResults.parameterTrace(iOptim+1,:) = State.theta';
+        DelosResults.parameterChangeTrace(iOptim+1,:) = sqrt(sum((State.theta - OldState.theta).^2));
+        
+        % Print output if wanted
+        if (strcmp(options.display, 'iter'))
+            if (mod(iOptim - 1, options.reportInterval) == 0)
+                fprintf('| %5i | %18.7f | %18.7f | %18.7f |\n', iOptim, ...
+                    DelosResults.objectiveTrace(iOptim+1), ...
+                    DelosResults.normGradTrace(iOptim+1), ...
+                    DelosResults.parameterChangeTrace(iOptim+1));
+            end
+        end
         
     % --- End of loop over Optimization steps -----------------------------
     end
@@ -175,7 +200,7 @@ end
 
 
 
-function [oldJ, oldG, newJ, newG] = part1(iOptim, options, Momentum2nd, State, subsets, objectiveFunction, rescale)
+function [oldJ, oldG, newJ, newG] = EvalObjective(iOptim, options, borders, Momentum2nd, State, miniBatches, objectiveFunction, rescale)
 
     % Apply interim update, if 2nd order momentum method is used
     if (Momentum2nd)
@@ -188,16 +213,22 @@ function [oldJ, oldG, newJ, newG] = part1(iOptim, options, Momentum2nd, State, s
     oldG = State.g;
 
     % Calculate objective function and gradient, check if minibatch
-    if (~isempty(subsets))
-        [newJ, newG] = objectiveFunction(State.theta, subsets(:, iOptim));
+    if (~isempty(miniBatches))
+        [newJ, newG] = objectiveFunction(State.theta, miniBatches(:, iOptim));
     else
         [newJ, newG] = objectiveFunction(State.theta);
     end
+    
+    % Apply barrier function for box constraints
+    if (~strcmp(options.barrier, 'none'))
+        barrierFunction(newJ, newG, State.theta, borders, iOptim, options.MaxIter, options.barrier);
+    end
+    
 end
 
 
 
-function [oldTheta, oldV, oldR, newTheta, newV, newR] = part2(iOptim, options, State, Parameters, rescale)
+function [oldTheta, oldV, oldR, newTheta, newV, newR] = UpdateParameters(iOptim, options, State, borders, rescale)
     % Save old State settings
     oldTheta = State.theta;
     oldV = State.v;
@@ -208,7 +239,17 @@ function [oldTheta, oldV, oldR, newTheta, newV, newR] = part2(iOptim, options, S
         State, options.method, options.hyperparams, [], rescale);
 
     % Correct, if the bounds were violated
-    newTheta = max(newTheta, Parameters.min);
-    newTheta = min(newTheta, Parameters.max);
+    newTheta = min(max(newTheta, borders(:,1)), borders(:,2));
 
+end
+
+
+
+function [newTheta, newG] = restriction(theta, gradient, borders)
+
+    % Correct parameters, if the bounds were violated
+    newTheta = min(max(theta, borders(:,1) + 1e-8), borders(:,2) - 1e-8);
+    
+    % Gradient projection, if necessary
+    newG = gradient;
 end

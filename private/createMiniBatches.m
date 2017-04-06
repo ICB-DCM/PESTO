@@ -4,7 +4,8 @@ function miniBatches = createMiniBatches(options)
     nBatch = options.miniBatchSize;
     nData  = options.dataSetSize;
     nSteps = options.MaxIter + 1;
-
+    skip_safe = 4;
+    
     % How many minibatches are needed? How many epoches?
     % Create some more minibatches if some must be skipped
     subsets = nan(1, skip_safe * nSteps * nBatch);

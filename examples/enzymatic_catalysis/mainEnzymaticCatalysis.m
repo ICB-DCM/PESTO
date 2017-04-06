@@ -136,7 +136,13 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 % optionsMeigo.n_starts = 1;
 optionsPesto.localOptimizer = 'delos';
 optionsPesto.localOptimizerOptions.stochastic = false;
-optionsPesto.localOptimizerOptions.MaxIter = 500;
+optionsPesto.localOptimizerOptions.minBatchSize = 4;
+optionsPesto.localOptimizerOptions.dataSetSize = 8;
+optionsPesto.localOptimizerOptions.barrier = 'log-barrier';
+optionsPesto.localOptimizerOptions.display = 'iter';
+optionsPesto.localOptimizerOptions.restriction = true;
+optionsPesto.localOptimizerOptions.reportInterval = 50;
+optionsPesto.localOptimizerOptions.MaxIter = 900;
 optionsPesto.localOptimizerOptions.method = 'adam';
 optionsPesto.localOptimizerOptions.hyperparams = struct(...
     'rho1', 0.999, ...
@@ -144,7 +150,7 @@ optionsPesto.localOptimizerOptions.hyperparams = struct(...
     'delta', 1e-8, ...
     'eps0', 0.1, ...
     'epsTau', 1e-5, ...
-    'tau', 300);
+    'tau', 600);
 
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
