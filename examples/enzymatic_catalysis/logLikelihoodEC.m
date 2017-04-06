@@ -1,4 +1,4 @@
-function varargout = logLikelihoodEC(theta, yMeasured, sigma2, con0, nTimepoints, nMeasure)
+function varargout = logLikelihoodEC(theta, yMeasured, sigma2, con0, nTimepoints, miniBatch)
 % Objective function for examples/enzymatic_catalysis
 %
 % logLikelihood.m provides the log-likelihood, its gradient and an 
@@ -119,8 +119,12 @@ dhdx = @(x,theta) [1, 0, 0, 0; 0, 0, 0, 1];
 % Initialization of observable sensitivities
 dydtheta = zeros(length(t), nParams * nObserv);
 
+if size(miniBatch, 1) > size(miniBatch, 2)
+    miniBatch = transpose(miniBatch);
+end
+
 % Loop over the experiments and simulation for each experiment
-for iMeasure = 1 : nMeasure
+for iMeasure = miniBatch
     % Simulation
     odeOptions = odeset('RelTol', 1e-5, 'AbsTol', 1e-8);
     [~,X] = ode15s(@(t,x) f(exp(theta),x), t, [con0(:,iMeasure); fillX], odeOptions);
@@ -145,10 +149,10 @@ for iMeasure = 1 : nMeasure
 end
 
 % Normalization by the number of experiments
-varargout{1} = J / nMeasure;
+varargout{1} = J / length(miniBatch);
 if (nargout > 1)
-    varargout{2} = gradJ / nMeasure;
-    varargout{3} = FIM / nMeasure;
+    varargout{2} = gradJ / length(miniBatch);
+    varargout{3} = FIM / length(miniBatch);
 end
 
 end

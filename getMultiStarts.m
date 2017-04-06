@@ -161,7 +161,7 @@ if or(options.save,options.tempsave)
 end
 
 %% Initialization
-if strcmp(options.localOptimizer, 'fmincon')
+if strcmp(options.localOptimizer, 'fmincon') || strcmp(options.localOptimizer, 'delos')
     maxOptimSteps = options.localOptimizerOptions.MaxIter;
 elseif strcmp(options.localOptimizer, 'meigo-ess') || strcmp(options.localOptimizer, 'meigo-vns')
     maxOptimSteps = options.localOptimizerOptions.maxeval;
@@ -266,7 +266,7 @@ if strcmp(options.comp_type, 'sequential')
                     parameters = performOptimizationDhc(parameters, objective_function, i, J_0, options);
                     
                 case 'delos'
-                    % Optimization using deep learning and stochastic oriented schemes
+                    % Optimization using DEep Learning inspired Optimization Schemes
                     parameters = performOptimizationDelos(parameters, objective_function, i, J_0, miniBatches, options);
 
                 case {'meigo-ess', 'meigo-vns'}

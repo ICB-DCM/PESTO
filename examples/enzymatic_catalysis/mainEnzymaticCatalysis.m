@@ -48,7 +48,7 @@ set(0,TextSizes);
 %% Create Artificial Data for Parameter Estimation
 % The necessery variables are set (Parameter bounds, variance, ...)
 nTimepoints = 50;      % Time points of Measurement
-nMeasure    = 1;        % Number of experiments
+nMeasure    = 5;        % Number of experiments
 sigma2      = 0.05^2;   % Variance of Measurement noise
 lowerBound  = -10;      % Lower bound for parameters
 upperBound  = 5;        % Upper bound for parameters
@@ -75,8 +75,11 @@ parameters.min    = lowerBound * ones(1, 4);
 parameters.max    = upperBound * ones(1, 4);
 parameters.number = length(parameters.name);
 
-% objective function
-objectiveFunction = @(theta) logLikelihoodEC(theta, yMeasured, sigma2, con0, nTimepoints, nMeasure);
+% % objective function for deterministic mode
+% objectiveFunction = @(theta) logLikelihoodEC(theta, yMeasured, sigma2, con0, nTimepoints, 1:nMeasure);
+
+% objective function for stochastic mode
+objectiveFunction = @(theta, miniBatch) logLikelihoodEC(theta, yMeasured, sigma2, con0, nTimepoints, miniBatch);
 
 % PestoOptions
 optionsPesto           = PestoOptions();
@@ -84,7 +87,7 @@ optionsPesto.obj_type  = 'log-posterior';
 optionsPesto.comp_type = 'sequential'; 
 optionsPesto.mode      = 'visual';
 optionsPesto.plot_options.add_points.par = theta;
-optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
+optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta, 1:nMeasure);
 
 %% Parameter Sampling
 % An adapted Metropolis-Hastings-Algorithm is used to explore the parameter
@@ -134,14 +137,16 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 % optionsMeigo.localOptimizer = 'meigo-ess';
 % optionsMeigo.localOptimizerOptions = MeigoOptions;
 % optionsMeigo.n_starts = 1;
+optionsPesto.n_starts = 5;
+optionsPesto.trace = true;
 optionsPesto.localOptimizer = 'delos';
-optionsPesto.localOptimizerOptions.stochastic = false;
-optionsPesto.localOptimizerOptions.minBatchSize = 4;
-optionsPesto.localOptimizerOptions.dataSetSize = 8;
+optionsPesto.localOptimizerOptions.stochastic = true;
+optionsPesto.localOptimizerOptions.miniBatchSize = 1;
+optionsPesto.localOptimizerOptions.dataSetSize = nMeasure;
 optionsPesto.localOptimizerOptions.barrier = 'log-barrier';
 optionsPesto.localOptimizerOptions.display = 'iter';
 optionsPesto.localOptimizerOptions.restriction = true;
-optionsPesto.localOptimizerOptions.reportInterval = 50;
+optionsPesto.localOptimizerOptions.reportInterval = 20;
 optionsPesto.localOptimizerOptions.MaxIter = 900;
 optionsPesto.localOptimizerOptions.method = 'adam';
 optionsPesto.localOptimizerOptions.hyperparams = struct(...
@@ -153,6 +158,9 @@ optionsPesto.localOptimizerOptions.hyperparams = struct(...
     'tau', 600);
 
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+
+plotMultiStartHistory(parameters);
+
 
 % Options for an alternative multi-start local optimization
 % 

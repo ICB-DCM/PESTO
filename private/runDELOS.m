@@ -62,18 +62,23 @@ function [thetaOpt, jOptim, flag, DelosResults, gradientOpt] ...
     switch length(varargin)
         case {0, 1, 2, 3}
             error('Call to SGD optimization giving not enough inputs.');
+            
         case 4
+            % Deterministic mode
             Parameters = varargin{1};
             options = varargin{2};
             objectiveFunction = varargin{3};
             miniBatches = [];
             par0 = varargin{4};
+            
         case 5
+            % Stochastic mode
             Parameters = varargin{1};
             options = varargin{2};
-            miniBatches = varargin{3}; 
-            objectiveFunction = varargin{4};
-            par0 = varargin{5};
+            objectiveFunction = varargin{3};
+            par0 = varargin{4};
+            miniBatches = varargin{5}; 
+            
         otherwise
             error('Call to SGD optimization giving too many inputs.');
     end
