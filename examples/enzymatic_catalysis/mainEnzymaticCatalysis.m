@@ -48,7 +48,7 @@ set(0,TextSizes);
 %% Create Artificial Data for Parameter Estimation
 % The necessery variables are set (Parameter bounds, variance, ...)
 nTimepoints = 50;      % Time points of Measurement
-nMeasure    = 5;        % Number of experiments
+nMeasure    = 1000;        % Number of experiments
 sigma2      = 0.05^2;   % Variance of Measurement noise
 lowerBound  = -10;      % Lower bound for parameters
 upperBound  = 5;        % Upper bound for parameters
@@ -137,25 +137,26 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta, 1:nMeasu
 % optionsMeigo.localOptimizer = 'meigo-ess';
 % optionsMeigo.localOptimizerOptions = MeigoOptions;
 % optionsMeigo.n_starts = 1;
-optionsPesto.n_starts = 5;
+optionsPesto.n_starts = 6;
 optionsPesto.trace = true;
 optionsPesto.localOptimizer = 'delos';
 optionsPesto.localOptimizerOptions.stochastic = true;
-optionsPesto.localOptimizerOptions.miniBatchSize = 1;
+optionsPesto.localOptimizerOptions.miniBatchSize = 20;
 optionsPesto.localOptimizerOptions.dataSetSize = nMeasure;
 optionsPesto.localOptimizerOptions.barrier = 'log-barrier';
 optionsPesto.localOptimizerOptions.display = 'iter';
 optionsPesto.localOptimizerOptions.restriction = true;
-optionsPesto.localOptimizerOptions.reportInterval = 20;
-optionsPesto.localOptimizerOptions.MaxIter = 900;
+optionsPesto.localOptimizerOptions.reportInterval = 1;
+optionsPesto.localOptimizerOptions.MaxIter = 300;
 optionsPesto.localOptimizerOptions.method = 'adam';
 optionsPesto.localOptimizerOptions.hyperparams = struct(...
-    'rho1', 0.999, ...
+    'rho1', 0.5, ...
     'rho2', 0.9, ...
     'delta', 1e-8, ...
     'eps0', 0.1, ...
+    'tau0', 100, ...
     'epsTau', 1e-5, ...
-    'tau', 600);
+    'tau', 250);
 
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 

@@ -307,17 +307,43 @@ function [newTheta, newV, newR] = optimUpdateAdam(iOptim, oldTheta, oldV, oldR, 
 %   * delta = 1e-8
 
     % Adam hyperparameters
-    rho1  = hyperparams.rho2;
+    rho1  = hyperparams.rho1;
     rho2  = hyperparams.rho2;
     delta = hyperparams.delta * ones(length(oldR), 1);
     
-    % Adapted learning rate
+%     % Adapted learning rate - linear
+%     tau      = hyperparams.tau;        % Learning time
+%     epsTau   = hyperparams.epsTau;     % Maximum steplength after learning time
+%     eps0     = hyperparams.eps0;        % Initial step size
+%     factorAlpha = min(1, iOptim/tau);
+%     epsil = ((1 - factorAlpha) * eps0 + factorAlpha * epsTau);
+    
+    % Adapted learning rate - cosinus
     tau      = hyperparams.tau;        % Learning time
     epsTau   = hyperparams.epsTau;     % Maximum steplength after learning time
     eps0     = hyperparams.eps0;        % Initial step size
-    factorAlpha = min(1, iOptim/tau);
-    epsil = ((1 - factorAlpha) * eps0 + factorAlpha * epsTau);
-
+    height = eps0 - epsTau;
+    if iOptim <= tau
+        scaledStep = iOptim/tau;
+        epsil = height * 0.5 * (cos(scaledStep*pi) + 1) + epsTau;
+    else
+        epsil = epsTau;
+    end
+    
+%     % Adapted learning rate - bilinear
+%     tau      = hyperparams.tau;        % Learning time
+%     epsTau   = hyperparams.epsTau;     % Maximum steplength after learning time
+%     eps0     = hyperparams.eps0;        % Initial step size
+%     tau0     = hyperparams.tau0;        % Learning time
+%     if iOptim <= tau0
+%         epsil = eps0;
+%     elseif iOptim <= tau
+%         scaledStep = 1 - (iOptim - tau0) / (tau-tau0);
+%         epsil = epsTau + (eps0 - epsTau) * scaledStep;
+%     else
+%         epsil = epsTau;
+%     end
+    
     % Write new velocity and update parameters
     newV        = rho1 * oldV - (1 - rho1) * newG;
     newR        = rho2 * oldR + (1 - rho2) * newG.^2;
