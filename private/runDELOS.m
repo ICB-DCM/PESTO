@@ -144,7 +144,6 @@ function [thetaOpt, jOptim, flag, DelosResults, gradientOpt] ...
             thetaOpt = nan(Parameters.number, 1);
             gradientOpt = nan(Parameters.number, 1);
             jOptim = nan;
-            flag = -1;
             return;
         end
         
