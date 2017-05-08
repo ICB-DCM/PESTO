@@ -345,12 +345,12 @@ function [newTheta, newV, newR] = optimUpdateAdam(iOptim, oldTheta, oldV, oldR, 
 %     end
     
     % Write new velocity and update parameters
-    newV        = rho1 * oldV - (1 - rho1) * newG;
+    newV        = rho1 * oldV + (1 - rho1) * newG;
     newR        = rho2 * oldR + (1 - rho2) * newG.^2;
     intV        = newV / (1 - rho1^iOptim);
     intR        = newR / (1 - rho2^iOptim);
     
-    delTheta    = epsil * intV ./ (sqrt(intR) + delta);
+    delTheta    = -epsil * intV ./ (sqrt(intR) + delta);
     newTheta    = oldTheta + delTheta * rescale;
 end
 
@@ -382,15 +382,20 @@ function [newTheta, newV, newR] = optimUpdateAdaDelta(iOptim, oldTheta, oldV, ol
     tau      = hyperparams.tau;
     eps0     = hyperparams.eps0;
     
-    % Compute delta
-    factorDelta = min(1, iOptim/tau);
-    delta       = 10^(((1 - factorDelta) * delta0 + factorDelta * deltaTau));
+    height = delta0 - deltaTau;
+    
+    if iOptim <= tau
+        scaledStep = iOptim/tau;
+        delta = height * 0.5 * (cos(scaledStep*pi) + 1) + deltaTau;
+    else
+        delta = deltaTau;
+    end
     
     % Write new velocity and update parameters
     newR        = rho * oldR + (1 - rho) * newG.^2;
     rmsR        = sqrt(newR + delta * ones(length(oldR), 1));
     
-    delTheta    = rescale * (-sqrt(oldV + delta * ones(1, length(oldR))) .* newG) ./ rmsR;
+    delTheta    = rescale * (-sqrt(oldV + delta * ones(length(oldR), 1)) .* newG) ./ rmsR;
     if (iOptim == 1)
         delTheta = eps0;
     end

@@ -8,7 +8,7 @@
 
 function [thetaOpt, jOptim, flag, DelosResults, gradientOpt] ...
           = runDELOS(varargin)
-%% Documentation of performSGD
+%% Documentation of runDELOS
 %
 % This function is a choosable optimization routine for the PESTO toolbox.
 % It can use different gradient descent methods and do full batch or
@@ -137,7 +137,7 @@ function [thetaOpt, jOptim, flag, DelosResults, gradientOpt] ...
         
         % Check, if there was a problem with the solver
         if (isinf(State.j) || isnan(State.j))
-            [State, OldState, flag] = catchUpOptimization(State, OldState, ...
+            [State, OldState, flag] = catchUpOptimization(State, OldState, recentHistory, ...
                 iOptim, Momentum2nd, objectiveFunction, miniBatches, borders, options);
         end
         if (flag == -1)
@@ -164,7 +164,7 @@ function [thetaOpt, jOptim, flag, DelosResults, gradientOpt] ...
         DelosResults.parameterTrace(iOptim+1,:) = State.theta';
         DelosResults.parameterChangeTrace(iOptim+1,:) = sqrt(sum((State.theta - OldState.theta).^2));
         
-        % Print output if this iswanted
+        % Print output if this is wanted
         if (~strcmp(options.display, 'off'))
             if (mod(iOptim - 1, options.reportInterval) == 0)
                 fprintf(outputID, '| %5i | %18.7f | %18.7f | %18.7f |\n', iOptim, ...
@@ -270,7 +270,7 @@ function [oldTheta, oldV, oldR, newTheta, newV, newR, recentHistory, flag] = ...
     end
     
     % Check, if maximum of iterations is reached
-    if (iOptim >= options.maxIter)
+    if (iOptim >= options.MaxIter)
         flag = 1;
     end
     
@@ -298,31 +298,31 @@ end
 
 
 function [State, OldState, flag] = catchUpOptimization(State, OldState, ...
-    iOptim, Momentum2nd, objectiveFunction, miniBatches, borders, options)
+    recentHistory, iOptim, Momentum2nd, objectiveFunction, miniBatches, borders, options)
 
     % Set the flag, which tells if optimization could be saved
     flag = -1;
-    
-    % Set the counter, how often recapturing of the optimization was tried
-    skipped = 0;
     
     msg_warn = 'Objective function could not be evaluated at ';
     warning([msg_warn, num2str(State.theta'), ', trying to catch up.']);
 
     % Catch up
     iCatchUp = 0;
-    while (iCatchUp < 10 && ~status)
+    OldOldState = OldState;
+    
+    while ((iCatchUp < 16) && (flag < 0))
         iCatchUp = iCatchUp + 1;
         rescale = 2^(-iCatchUp);
-        skipped = skipped + 1;
 
         % Compute theta again with resclaed step size (No new
         % objective function evaluation, just new update)
         [OldState.theta, OldState.v, OldState.r, ...
             State.theta, State.v, State.r] = ...
-            UpdateParameters(iOptim, options, OldState, borders, rescale);
+            UpdateParameters(iOptim, recentHistory, options, OldState, rescale);
 
-        [OldState.j, OldState.g, State.j, State.g] = ...
+        OldState = OldOldState;
+        
+        [~, ~, State.j, State.g] = ...
             EvalObjective(iOptim, options, borders, Momentum2nd, ...
             State, miniBatches, objectiveFunction, rescale);
 
@@ -330,10 +330,18 @@ function [State, OldState, flag] = catchUpOptimization(State, OldState, ...
             flag = 1;
         end
     end
-
+    
     if (flag < 0)
-        warning('Point could not be recaptured, optimization is aborted.');
-        return;
+        if (all(State.v == 0)) && (all(State.r == 0))
+            warning('Point could not be recaptured, optimization is aborted.');
+        else
+            warning('Step size adaptation did not yield an evaluable point. Resetting solver...');
+            OldState = OldOldState;
+            State = OldState;
+            State.v = (0 * State.v);
+            State.r = (0 * State.r);
+            flag = 0;
+        end
     end
 end
 
