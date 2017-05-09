@@ -15,7 +15,7 @@
 % Easy Version
 rng(3);
 angle = 2*pi/8;
-dimi = 1;
+dimi = 18; % additional dimensions whose parameters are independently normally distributed
 scale = blkdiag(1e0*[50,0;0,1],diag(ones(1,dimi)));
 
 % Setting the dimension

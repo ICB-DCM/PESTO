@@ -51,7 +51,7 @@ options.nIterations         = 1e5;
 
 % Using PT
 options.samplingAlgorithm   = 'PT';
-options.PT.nTemps           = 3;
+options.PT.nTemps           = 10;
 options.PT.exponentT        = 4;    
 options.PT.alpha            = 0.51;
 options.PT.temperatureAlpha = 0.51;
