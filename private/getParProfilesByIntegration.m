@@ -649,6 +649,7 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
     % set parameters
     npar = length(y);
     flag = 0;
+    solveFullSystem = 0;
     
     global ObjFuncCounter;
     ObjFuncCounter = ObjFuncCounter + 1;
@@ -656,9 +657,17 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
     switch options.solver.hessian
         case 'user-supplied'
             [~, GL, HL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
+            solveFullSystem = 1;
         case {'bfgs', 'sr1'}
             [~, GL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
             HL = approximateHessian(y, -GL, [], options.solver.hessian, []);
+            solveFullSystem = 1;
+        case {'tn', 'acghes'}
+            if ~strmp(options.solver.hessianPrecond, 'none')
+                [~, GL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
+                HL = approximateHessian(y, -GL, [], options.solver.hessian, []);
+                solveFullSystem = 1;
+            end
         otherwise
             error('Unknown type of Hessian computation.');
     end
@@ -675,25 +684,39 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
     [~, GG, ~] = parameterFunction(y, ind);
 
     % right handside of ODE
-    try    
-        % Reduce linear system by implicit funtion theorem
-        A1 = [HL(1 : ind-1, :); HL(ind+1 : npar, :); s*GG'];
-        b1 = [-GL(1 : ind-1) * options.solver.gamma; ...
-             -GL(ind+1 : npar) * options.solver.gamma; ...
-             1];
-        A2 = [A1(1:end-1, 1:ind-1), A1(1:end-1, ind+1:end)];
-        b2 = b1(1:end-1) - s * A1(1:end-1, ind);
-        
-        % Check for invertibility of the RHS
-        if (rcond(A2) < options.solver.minCond) || isnan(rcond(A2))
-            dth1 = pinv(A2, options.solver.eps) * b2;
-        else
-            dth1 = A2 \ b2;
+    if (solveFullSystem == 1)
+        try    
+            % Reduce linear system by implicit funtion theorem
+            A1 = [HL(1 : ind-1, :); HL(ind+1 : npar, :); s*GG'];
+            b1 = [-GL(1 : ind-1) * options.solver.gamma; ...
+                 -GL(ind+1 : npar) * options.solver.gamma; ...
+                 1];
+            A2 = [A1(1:end-1, 1:ind-1), A1(1:end-1, ind+1:end)];
+            b2 = b1(1:end-1) - s * A1(1:end-1, ind);
+
+            % Check for invertibility of the RHS
+            if (rcond(A2) < options.solver.minCond) || isnan(rcond(A2))
+                dth1 = pinv(A2, options.solver.eps) * b2;
+            else
+                dth1 = A2 \ b2;
+            end
+            dth = [dth1(1:ind-1); s; dth1(ind:end)];
+        catch
+            dth = zeros(npar + 1, 1);
+            dth(ind) = s;
         end
-        dth = [dth1(1:ind-1); s; dth1(ind:end)];
-    catch
-        dth = zeros(npar + 1, 1);
-        dth(ind) = s;
+    else
+        if ~strmp(options.solver.hessianPrecond, 'none')
+            init_guess = dth;
+        else
+            init_guess = ;
+        end
+        
+        if strcmp(options.solver.hessian, 'acghes')
+            
+        elseif strcmp(options.solver.hessian, 'tn')
+            
+        end
     end
     
     % Check, if parameter bounds are violated
