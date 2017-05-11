@@ -49,18 +49,18 @@ options.mode                = 'text';
 
 % Using RBPT
 options.samplingAlgorithm     = 'RBPT';
-options.RBPT.nTemps           = 10;
+options.RBPT.nTemps           = 5;
 options.RBPT.exponentT        = 4;    
 options.RBPT.alpha            = 0.51;
 options.RBPT.temperatureAlpha = 0.51;
 options.RBPT.memoryLength     = 1;
 options.RBPT.regFactor        = 1e-4;
-optio
-options.RBPT.temperatureAdaptionScheme =  'none';% 'Vousden16';% 'Lacki15'; %  %
+options.RBPT.swapsPerIter     = 5;
+options.RBPT.temperatureAdaptionScheme =  'none';% 'Lacki15';  % 'Vousden16';
 
-options.theta0              = repmat([0,20,repmat(25,1,dimi)]',1,options.RBPT.nTemps); 
-options.theta0(:,1:2:end)   = repmat([40,5,repmat(25,1,dimi)]',1,ceil(options.RBPT.nTemps/2));
-options.sigma0              = 1e4*blkdiag([1,0;0,1],diag(ones(1,dimi)));
+options.theta0              = repmat([mu(1,:),repmat(25,1,dimi)]',1,options.RBPT.nTemps); 
+options.theta0(:,1:2:end)   = repmat([mu(2,:),repmat(25,1,dimi)]',1,ceil(options.RBPT.nTemps/2));
+options.sigma0              = 1e2*diag(ones(1,dimi+2));
 
 % Perform the parameter estimation via sampling
 par = getParameterSamples(par, logP, options);

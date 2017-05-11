@@ -26,7 +26,7 @@ function [ llh ] = simulateGaussLLH( par, mu, sigma )
     llh = 0;
     for j = 1:n
         llh = llh + 1/(sqrt(2*pi)^2*sqrt(det(sigma(1:2,1:2,j)))) * ...
-                exp(-0.5 * (par(1:2)-mu(1:2,j))' / sigma(1:2,1:2,j) * (par(1:2)-mu(1:2,j)));
+                exp(-0.5 * (par(1:2)-mu(j,1:2)')' / sigma(1:2,1:2,j) * (par(1:2)'-mu(j,1:2))');
     end
     llh = log(llh);
     

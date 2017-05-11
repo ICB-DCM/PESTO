@@ -35,6 +35,9 @@ classdef RBPTOptions < matlab.mixin.SetGet
       % Follows the temperature adaption scheme from 'Vousden16' or 'Lacki15'. Can be set to
       % 'none' for no temperature adaption.
       temperatureAdaptionScheme  = 'Vousden16';
+      
+      % The number of swaps between tempered chains per iterations.
+      swapsPerIter = 1;
 
    end
    
@@ -225,7 +228,15 @@ classdef RBPTOptions < matlab.mixin.SetGet
             error(['Please enter the temperature adaption scheme, e.g. '...
                'PestoSamplingOptions.PT.temperatureAdaptionScheme = ''Vousden16''']);
          end
-      end      
+      end  
+      
+      function set.swapsPerIter(this, value)
+         if(value == floor(value) && value > 0)
+            this.swapsPerIter = lower(value);
+         else
+            error(['Please enter a positive integer for the swaps per iteration.']);
+         end
+      end         
             
    end
 end

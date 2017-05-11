@@ -39,6 +39,8 @@ function res = performRBPT( logPostHandle, par, opt )
    %                               regularization.
    % opt.RBPT.temperatureAdaptionScheme: Defines the temperature adaption scheme.
    %                               Either 'Vousden16' or 'Lacki15'.
+   % opt.RBPT.swapsPerIter         : Number of swaps between temperatures
+   %                               per iteration.
    %
    %
    % It returns a struct 'res' covering:
@@ -73,6 +75,7 @@ function res = performRBPT( logPostHandle, par, opt )
    regFactor = opt.RBPT.regFactor;
    temperatureAdaptionScheme = opt.RBPT.temperatureAdaptionScheme;
    nPar = par.number;
+   swapsPerIter = opt.RBPT.swapsPerIter;
    
    res.par = nan(nPar, nIter, nTemps);
    res.logPost = nan(nIter, nTemps);
