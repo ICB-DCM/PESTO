@@ -88,7 +88,6 @@ function [parameters, fh] = getParProfilesByIntegration(parameters, objectiveFun
 
     % Assign the wrapped objective function
     negLogPost = @(theta) @(theta) objectiveWrap(theta,objectiveFunction,options.obj_type,options.objOutNumber);
-    logPost = @(theta) posLogPost(theta, negLogPost);
     
     % Profile calculation
     if strcmp(options.comp_type, 'sequential')
@@ -650,6 +649,8 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
     npar = length(y);
     flag = 0;
     solveFullSystem = 0;
+    indexSet = (1:length(y))';
+    indexSet(ind) = [];
     
     global ObjFuncCounter;
     ObjFuncCounter = ObjFuncCounter + 1;
@@ -709,13 +710,25 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
         if ~strmp(options.solver.hessianPrecond, 'none')
             init_guess = dth;
         else
-            init_guess = ;
+            init_guess = GL;
         end
         
         if strcmp(options.solver.hessian, 'acghes')
-            
+            dth = nan(size(GL));
         elseif strcmp(options.solver.hessian, 'tn')
-            
+            dth = nan(size(GL));
+        elseif strcmp(options.solver.hessian, 'cg')
+            hvpHandle = @(v) options.hvpFunction(theta, v);
+            b = -hvpHandle(GG);
+            dth = solveSystemCG(y, ...
+                b(indexSet), ...
+                init_guess(indexSet), ...
+                ind, ...
+                @(y) objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber, indexSet), ...
+                hvpHandle, ...
+                options.RelTol, ...
+                options.AbsTol, ...
+                options.maxstepsCG);
         end
     end
     
@@ -928,23 +941,5 @@ function Mt = getMassmatrixDAE(c ,s, y, ind, objectiveFunction, parameterFunctio
         display(['Jacobian Evaluation around theta = ' y']);
     else
         display(['Laufachse: ' num2str(s*c) '   Optimalit�t in theta: ', num2str(sqrt(GL1' * GL1)), '    Kondition: ', num2str(rcond(A1))]);
-    end
-end
-
-function varargout = posLogPost(theta, negLogPost)
-    switch nargout
-        case 1
-            J = negLogPost(theta);
-            varargout{1} = -J;
-        case 2
-            [J,G] = negLogPost(theta);
-            varargout{1} = -J;
-            varargout{2} = -G;
-            
-        case 3
-            [J,G,H] = negLogPost(theta);
-            varargout{1} = -J;
-            varargout{2} = -G;
-            varargout{3} = -H;
     end
 end
