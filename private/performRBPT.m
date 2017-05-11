@@ -237,33 +237,34 @@ function res = performRBPT( logPostHandle, par, opt )
       
       % Swaps between tempered chains using an equi-energy strategy
       if nTemps > 1
-         
-         % Propose swap indices based on tempered posterior values and get
-         % swapping probabilities. Note: For EE Swaps, the forward and
-         % backward probability is always equal and canceled out
-         [k2,k1] = meshgrid(1:nTemps,1:nTemps);
-         swapProbForward = PTEESwapProbability(logPost);
-         iSwap = find(cumsum(swapProbForward(:)) > rand(), 1, 'first');
-         k1 = k1(iSwap);
-         k2 = k2(iSwap);
-         %       logPostBackward = logPost;
-         %       logPostBackward([k1,k2]) = logPost([k2,k1]);
-         %       swapProbBackward = PTEESwapProbability(logPostBackward);
-         swapProbBackward = swapProbForward;
-         
-         % Swap acceptance probability
-         % (Note that for the swap strategy used here we obtain
-         % swapProbBackward(k1,k2)/swapProbForward(k1,k2) = 1. This is the reason
-         % for the commented lines above)
-         pAccSwap = swapProbBackward(k1,k2)/swapProbForward(k1,k2) ...
-            * exp((beta(k2)-beta(k1))*(logPost(k1)-logPost(k2)));
-         
-         % Update chain states and run statistics
-         propSwap(k1,k2) = propSwap(k1,k2) + 1;
-         if rand <= pAccSwap
-            accSwap(k1,k2)   = accSwap(k1,k2) + 1;
-            theta(:,[k1,k2]) = theta(:,[k2,k1]);
-            logPost([k1,k2]) = logPost([k2,k1]);
+         for s = 1:swapsPerIter
+            % Propose swap indices based on tempered posterior values and get
+            % swapping probabilities. Note: For EE Swaps, the forward and
+            % backward probability is always equal and canceled out
+            [k2,k1] = meshgrid(1:nTemps,1:nTemps);
+            swapProbForward = PTEESwapProbability(logPost);
+            iSwap = find(cumsum(swapProbForward(:)) > rand(), 1, 'first');
+            k1 = k1(iSwap);
+            k2 = k2(iSwap);
+            %       logPostBackward = logPost;
+            %       logPostBackward([k1,k2]) = logPost([k2,k1]);
+            %       swapProbBackward = PTEESwapProbability(logPostBackward);
+            swapProbBackward = swapProbForward;
+
+            % Swap acceptance probability
+            % (Note that for the swap strategy used here we obtain
+            % swapProbBackward(k1,k2)/swapProbForward(k1,k2) = 1. This is the reason
+            % for the commented lines above)
+            pAccSwap = swapProbBackward(k1,k2)/swapProbForward(k1,k2) ...
+               * exp((beta(k2)-beta(k1))*(logPost(k1)-logPost(k2)));
+
+            % Update chain states and run statistics
+            propSwap(k1,k2) = propSwap(k1,k2) + 1;
+            if rand <= pAccSwap
+               accSwap(k1,k2)   = accSwap(k1,k2) + 1;
+               theta(:,[k1,k2]) = theta(:,[k2,k1]);
+               logPost([k1,k2]) = logPost([k2,k1]);
+            end
          end
       end
       

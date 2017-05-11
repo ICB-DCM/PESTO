@@ -33,8 +33,8 @@ gaussDimension = 2 + dimi;
 
 % Set required sampling options for Parallel Tempering
 par.number = gaussDimension;
-par.min    = -3*ones(dimi+2,1);
-par.max    = 50*ones(dimi+2,1);
+par.min    = -100*ones(dimi+2,1);
+par.max    = 100*ones(dimi+2,1);
 par.name   = {};
 for i = 1 : dimi + 2
    par.name{end+1} = ['\theta_' num2str(i)];
@@ -49,18 +49,18 @@ options.mode                = 'text';
 
 % Using RBPT
 options.samplingAlgorithm     = 'RBPT';
-options.RBPT.nTemps           = 5;
+options.RBPT.nTemps           = 20;
 options.RBPT.exponentT        = 4;    
 options.RBPT.alpha            = 0.51;
 options.RBPT.temperatureAlpha = 0.51;
 options.RBPT.memoryLength     = 1;
 options.RBPT.regFactor        = 1e-4;
-options.RBPT.swapsPerIter     = 5;
-options.RBPT.temperatureAdaptionScheme =  'none';% 'Lacki15';  % 'Vousden16';
+options.RBPT.swapsPerIter     = 1;
+options.RBPT.temperatureAdaptionScheme = 'Vousden16'; %  'Lacki15'; 'none';%
 
 options.theta0              = repmat([mu(1,:),repmat(25,1,dimi)]',1,options.RBPT.nTemps); 
 options.theta0(:,1:2:end)   = repmat([mu(2,:),repmat(25,1,dimi)]',1,ceil(options.RBPT.nTemps/2));
-options.sigma0              = 1e2*diag(ones(1,dimi+2));
+options.sigma0              = 1e3*diag(ones(1,dimi+2));
 
 % Perform the parameter estimation via sampling
 par = getParameterSamples(par, logP, options);

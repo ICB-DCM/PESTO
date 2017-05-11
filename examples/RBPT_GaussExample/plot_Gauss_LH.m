@@ -13,8 +13,8 @@
 
 %% Likelihood
 % Seeting up a grid for plotting
-x = linspace(-3,50,400);
-y = linspace(-3,50,400);
+x = linspace(-100,100,800);
+y = linspace(-100,100,800);
 [X,Y] = meshgrid(x,y);
 
 % Log-Likelihood function
