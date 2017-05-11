@@ -1,5 +1,5 @@
 function res = performRBPT( logPostHandle, par, opt )
-   % performPT.m uses an Region Based adaptive Parallel Tempering algorithm to sample 
+   % performPT.m uses an Region Based adaptive Parallel Tempering algorithm to sample
    % from an objective function
    % 'logPostHandle'. The tempered chains are getting swapped using an equi
    % energy scheme. The temperatures are getting adapted as well as the
@@ -90,8 +90,8 @@ function res = performRBPT( logPostHandle, par, opt )
    end
    T = ones(1,nTemps);
    acc = zeros(1,nTemps);
-   accSwap = zeros(nTemps);
-   propSwap = zeros(nTemps);
+   accSwap = zeros(1,nTemps-1);
+   propSwap = zeros(1,nTemps-1);
    sigmaScale = ones(1,nTemps);
    switch size(theta0,2)
       case 1
@@ -155,7 +155,7 @@ function res = performRBPT( logPostHandle, par, opt )
             end
          case 'silent'
       end
-
+      
       
       % Do MCMC step for each temperature
       for l = 1:nTemps
@@ -235,93 +235,46 @@ function res = performRBPT( logPostHandle, par, opt )
          
       end
       
-      % Swaps between tempered chains using an equi-energy strategy
+      % Swaps between all adjacent chains as in Vousden16
       if nTemps > 1
-         for s = 1:swapsPerIter
-            % Propose swap indices based on tempered posterior values and get
-            % swapping probabilities. Note: For EE Swaps, the forward and
-            % backward probability is always equal and canceled out
-            [k2,k1] = meshgrid(1:nTemps,1:nTemps);
-            swapProbForward = PTEESwapProbability(logPost);
-            iSwap = find(cumsum(swapProbForward(:)) > rand(), 1, 'first');
-            k1 = k1(iSwap);
-            k2 = k2(iSwap);
-            %       logPostBackward = logPost;
-            %       logPostBackward([k1,k2]) = logPost([k2,k1]);
-            %       swapProbBackward = PTEESwapProbability(logPostBackward);
-            swapProbBackward = swapProbForward;
-
-            % Swap acceptance probability
-            % (Note that for the swap strategy used here we obtain
-            % swapProbBackward(k1,k2)/swapProbForward(k1,k2) = 1. This is the reason
-            % for the commented lines above)
-            pAccSwap = swapProbBackward(k1,k2)/swapProbForward(k1,k2) ...
-               * exp((beta(k2)-beta(k1))*(logPost(k1)-logPost(k2)));
-
-            % Update chain states and run statistics
-            propSwap(k1,k2) = propSwap(k1,k2) + 1;
-            if rand <= pAccSwap
-               accSwap(k1,k2)   = accSwap(k1,k2) + 1;
-               theta(:,[k1,k2]) = theta(:,[k2,k1]);
-               logPost([k1,k2]) = logPost([k2,k1]);
+         dBeta = beta(1:end-1) - beta(2:end);
+         for l = nTemps:-1:2
+            pAccSwap(l) = dBeta(l-1) .* (logPost(l)-logPost(l-1))';
+            A(l-1) = log(rand) < pAccSwap(l);
+            propSwap(l-1) = propSwap(l-1) + 1;
+            accSwap(l-1) = accSwap(l-1) + A(l-1);
+            if A(l-1)
+               theta(:,[l,l-1]) = theta(:,[l-1,l]);
+               logPost([l,l-1]) = logPost([l-1,l]);
             end
          end
       end
       
-      if strcmp(temperatureAdaptionScheme,'Lacki15')
-         % Adaptation of the temperature values (Lacki 2015)
-         if (nTemps > 1)
-            oldT = 1./beta;
-            newT = 1./beta;
-            newT(1) = 1;
-            xi = zeros(1,nTemps-1);
-            for k = 1:(nTemps-1)
-               xi(k) = min(1, exp((beta(k+1)-beta(k))*(logPost(k)-logPost(k+1))));
-               newT(k+1) = newT(k) + (oldT(k+1)-oldT(k)) * ...
-                  exp((xi(k)-0.234)/(max(j,memoryLength)+1)^temperatureAlpha);
-            end
-            beta = 1./newT;
-         end
-      elseif strcmp(temperatureAdaptionScheme,'Vousden16')
-         % Adaptation of the temperature values (Vousden 2016)
-         if (nTemps > 1)
-            T(1) = 1;
-            T(end) = inf;
-            for k = 2:(nTemps-1)
-               if temperatureAlpha > 0
-                  kappa = (max(j,memoryLength)+1)^temperatureAlpha;
-               else
-                  kappa = 1;
-               end
-               swapAccRatios = (accSwap(:,:)+accSwap(:,:)')./(propSwap(:,:)+propSwap(:,:)'+1);
-               newS(k-1) = oldS(k-1) + (swapAccRatios(k-1,k)-swapAccRatios(k,k+1)) / kappa;
-               oldS(k-1) = newS(k-1);
-            end
-            for k = 2:(nTemps-1)
-               T(k) = T(k-1) + exp(newS(k-1));
-            end
-            beta = 1./T;
-         end
-      elseif strcmp(temperatureAdaptionScheme,'none')
-         % No temperature adaptation
-      else
-         error('Please specify correct T-adaption-scheme.')
+      % Adaptation of the temperature values (Vousden 2016)
+      if (nTemps > 1)
+         
+         kappa = (max(j,memoryLength)+1)^temperatureAlpha;
+         dS = (A(1:end-1)-A(2:end))/kappa;
+         dT = 1./beta;
+         dT(2:end-1) = dT(2:end-1) .* exp(dS);
+         beta(2:end-1) = 1./cumsum(dT(2:end-1));
+         
       end
       
       % Store iteration
       res.par(:,i,:) = theta;
       res.logPost(i,:) = logPost;
       res.acc(i,:) = 100*acc/j;
-      res.accSwap(i,:,:) = 100*(accSwap(:,:)+accSwap(:,:)')./(propSwap(:,:)+propSwap(:,:)');
       res.propSwap = propSwap;
+      res.accSwap  = accSwap;
       res.sigmaScale(i,:) = sigmaScale;
       res.sigmaHist = sigmaHist;
       res.temperatures(i,:) = 1./beta;
    end
    
-    switch opt.mode
-        case {'visual','text'}
-               fprintf(1, repmat('\b',1,numel(msg)-2)) ;
-        case 'silent'
-    end
+   switch opt.mode
+      case {'visual','text'}
+         fprintf(1, repmat('\b',1,numel(msg)-2)) ;
+      case 'silent'
+   end
 end

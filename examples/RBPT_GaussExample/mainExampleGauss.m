@@ -44,7 +44,7 @@ end
 rng(5)
 options                     = PestoSamplingOptions();
 options.objOutNumber        = 1;
-options.nIterations         = 1e5;
+options.nIterations         = 1e4;
 options.mode                = 'text';
 
 % Using RBPT
@@ -72,14 +72,13 @@ figure('Name', 'Chain analysis and theoretical vs true sampling distribution');
 subplot(2,1,1);
 plot(squeeze(par.S.par(:,:,1))');
 
-% Visualize the samples...
-subplot(2,1,2); 
-plot(squeeze(par.S.par(1,:,1))',squeeze(par.S.par(2,:,1))','.'); 
-
 % ...and their theoretical distribution
+subplot(2,1,2); 
+% plot_Gauss_LH();
 hold on;
-plot_Gauss_LH();
+plot(squeeze(par.S.par(1,:,1))',squeeze(par.S.par(2,:,1))','.'); 
 hold off;
+
 
 % All tempered chains
 figure
