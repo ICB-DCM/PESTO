@@ -201,7 +201,7 @@ classdef RBPTOptions < matlab.mixin.SetGet
       end  
       
       function set.temperatureAlpha(this, value)
-         if(isnumeric(value) && value > 0.5 && value < 1)
+         if(isnumeric(value) && value > 0.0 && value < 1)
             this.temperatureAlpha = lower(value);
          else
             error(['Please an temperature adaption decay constant between 0.5 and 1.0, '...
@@ -219,7 +219,7 @@ classdef RBPTOptions < matlab.mixin.SetGet
       end   
       
       function set.temperatureAdaptionScheme(this, value)
-         if (strcmp(value, 'Vousden16') || strcmp(value, 'Lacki15'))
+         if (strcmp(value, 'Vousden16') || strcmp(value, 'Lacki15') || strcmp(value, 'none'))
             this.temperatureAdaptionScheme = value;
          else
             error(['Please enter the temperature adaption scheme, e.g. '...

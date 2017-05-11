@@ -72,7 +72,10 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       
       % Delayed Rejection Adaptive Metropolis options, an instance of
       % DRAMOptions
-      DRAM;      
+      DRAM;     
+      
+      % Region Based Parallel Tempering Options, an instance of RBPTOptions
+      RBPT;      
    end
       
    methods
@@ -233,7 +236,8 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
          if ~isstr(value) || isempty(value)
             error('Please specify the algorithm which should be used, e.g. opt.samplingAlgorithm = ''PT''');
          end
-         if (strcmp(value, 'MALA') || strcmp(value, 'DRAM') || strcmp(value, 'PT') || strcmp(value, 'PHS'))
+         if (strcmp(value, 'MALA') || strcmp(value, 'DRAM') || strcmp(value, 'PT') || strcmp(value, 'PHS') ...
+               || strcmp(value, 'RBPT'))
             this.samplingAlgorithm = value;
             switch value
                case 'MALA'
@@ -241,21 +245,31 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                   this.DRAM = struct;
                   this.PT   = struct;
                   this.PHS  = struct;
+                  this.RBPT  = struct;
                case 'DRAM'
                   this.MALA = struct;
                   this.DRAM = DRAMOptions();
                   this.PT   = struct;
                   this.PHS  = struct;
+                  this.RBPT  = struct;                  
                case 'PT'
                   this.MALA = struct;
                   this.DRAM = struct;
                   this.PT   = PTOptions();
                   this.PHS  = struct;
+                  this.RBPT  = struct;                  
                case 'PHS'
                   this.MALA = struct;
                   this.DRAM = struct;
                   this.PT   = struct;
                   this.PHS  = PHSOptions();
+                  this.RBPT  = struct;
+               case 'RBPT'
+                  this.MALA = struct;
+                  this.DRAM = struct;
+                  this.PT   = struct;
+                  this.PHS  = struct;
+                  this.RBPT  = RBPTOptions();                  
             end
          else
             error('You have entered an sampling algorithm which does not exist.')
@@ -300,6 +314,11 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                         (size(this.theta0,2) ~= this.PHS.nChains && size(this.theta0,2) ~= 1)
                      error('Please make sure opt.theta0, the par.number and opt.PHS.nChains are consistent.')
                   end
+               case 'RBPT'
+                  if size(this.theta0,1) ~= par.number || ...
+                        (size(this.theta0,2) ~= this.RBPT.nTemps && size(this.theta0,2) ~= 1)
+                     error('Please make sure opt.theta0, the par.number and opt.RBPT.nTemps are consistent.')
+                  end                  
             end
             
          else
@@ -314,6 +333,9 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                case 'PHS'
                   this.theta0 = bsxfun(@plus, par.min', ...
                      bsxfun(@times, par.max' - par.min', rand(par.number,this.PHS.nChains)))';
+               case 'RBPT'
+                  this.theta0 = bsxfun(@plus, par.min', ...
+                     bsxfun(@times, par.max' - par.min', rand(par.number,this.RBPT.nChains)))';                  
             end
          end
          if ~isempty(this.sigma0)
@@ -335,16 +357,24 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                         (size(this.sigma0,3) ~= this.PHS.nChains && size(this.sigma0,3) ~= 1)
                      error('Please make sure opt.sigma0, the par.number and opt.PHS.nChains are consistent.')
                   end
+               case 'RBPT'
+                  if size(this.sigma0,1) ~= par.number || ...
+                        size(this.sigma0,2) ~= par.number || ...
+                        (size(this.sigma0,3) ~= this.RBPT.nTemps && size(this.sigma0,3) ~= 1)
+                     error('Please make sure opt.sigma0, the par.number and opt.RBPT.nTemps are consistent.')
+                  end                  
             end
          else
             warning('No user-provided initial covariance sigma0 found. Setting to diagonal matrix with small entries.')
             switch this.samplingAlgorithm
                case {'DRAM','MALA'}
-                  this.sigma0 = 1e4 * diag(ones(1,5));
+                  this.sigma0 = 1e4 * diag(ones(1,par.number));
                case 'PT'
-                  this.sigma0 = 1e4 * diag(ones(1,5));
+                  this.sigma0 = 1e4 * diag(ones(1,par.number));
                case 'PHS'
-                  this.sigma0 = 1e4 * diag(ones(1,5));
+                  this.sigma0 = 1e4 * diag(ones(1,par.number));
+               case 'RBPT'
+                  this.sigma0 = 1e4 * diag(ones(1,par.number));                  
             end
          end
       end

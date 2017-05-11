@@ -4,7 +4,7 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
    %
    %   Note, the DRAM library routine tooparameters.minox is
    %   used internally. This function is capable of sampling with MH, AM,
-   %   DRAM, MALA, PT and PHS. The sampling plotting routines should no longer
+   %   DRAM, MALA, PT, PHS and RBPT. The sampling plotting routines should no longer
    %   be contained in here but as standalone scripts capable of using the
    %   resulting par.S.
    %
@@ -52,17 +52,21 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
       case 'DRAM'
          parameters.S = performDRAM( wrappedObjFkt, parameters, opt );
          
-         % MALA
+      % MALA
       case 'MALA'
          parameters.S = performMALA( wrappedObjFkt, parameters, opt );
          
-         % MH, AM and PT
+      % MH, AM and PT
       case 'PT'
          parameters.S = performPT( wrappedObjFkt, parameters, opt );
          
-         % PHS
+      % PHS
       case 'PHS'
          parameters.S = performPHS( wrappedObjFkt, parameters, opt );
+         
+      % RBPT
+      case 'RBPT'
+         parameters.S = performRBPT( wrappedObjFkt, parameters, opt );
    end
    
    %% Output

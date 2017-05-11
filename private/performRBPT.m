@@ -1,8 +1,13 @@
 function res = performRBPT( logPostHandle, par, opt )
-   % performPT.m uses an adaptive Parallel Tempering algorithm to sample from an objective function
+   % performPT.m uses an Region Based adaptive Parallel Tempering algorithm to sample 
+   % from an objective function
    % 'logPostHandle'. The tempered chains are getting swapped using an equi
    % energy scheme. The temperatures are getting adapted as well as the
-   % proposal density covariance matrix. The options 'opt' cover:
+   % proposal density covariance matrix. The proposal adaptation is done
+   % for each region separately to increase locale mixing.
+   %
+   %
+   % The options 'opt' cover:
    % opt.theta0                  : The initial parameter points for each of the
    %                               tempered chains
    % opt.sigma0                  : The initial proposal covariance matrix of
@@ -12,27 +17,27 @@ function res = performRBPT( logPostHandle, par, opt )
    %                               area are getting rejected
    % par.number                  : Number of parameters
    % opt.nIterations             : Number of desired sampling iterations
-   % opt.PT.nTemps               : Number of tempered chains
-   % opt.PT.exponentT            : The exponent of the power law for initial
+   % opt.RBPT.nTemps               : Number of tempered chains
+   % opt.RBPT.exponentT            : The exponent of the power law for initial
    %                               temperatures. Higher Values lead to more
    %                               separated initial temperatures.
-   % opt.PT.alpha                : Control parameter for adaption decay.
+   % opt.RBPT.alpha                : Control parameter for adaption decay.
    %                               Needs values between 0 and 1. Higher values
    %                               lead to faster decays, meaning that new
    %                               iterations influence the single-chain
    %                               proposal adaption only very weakly very
    %                               quickly.
-   % opt.PT.temperatureAlpha     : Control parameter for adaption decay of the
+   % opt.RBPT.temperatureAlpha     : Control parameter for adaption decay of the
    %                               temperature adaption. Sample properties as
-   %                               described for opt.PT.alpha.
-   % opt.PT.memoryLength         : Control parameter for adaption. Higher
+   %                               described for opt.RBPT.alpha.
+   % opt.RBPT.memoryLength         : Control parameter for adaption. Higher
    %                               values suppress strong early adaption.
-   % opt.PT.regFactor            : This factor is used for regularization in
+   % opt.RBPT.regFactor            : This factor is used for regularization in
    %                               cases where the single-chain proposal
    %                               covariance matrices are ill conditioned.
    %                               Larger values equal stronger
    %                               regularization.
-   % opt.PT.temperatureAdaptionScheme: Defines the temperature adaption scheme.
+   % opt.RBPT.temperatureAdaptionScheme: Defines the temperature adaption scheme.
    %                               Either 'Vousden16' or 'Lacki15'.
    %
    %
@@ -55,18 +60,18 @@ function res = performRBPT( logPostHandle, par, opt )
    
    
    % Initialization
-   nTemps = opt.PT.nTemps;
+   nTemps = opt.RBPT.nTemps;
    nIter = opt.nIterations;
    theta0 = opt.theta0;
    sigma0 = opt.sigma0;
    thetaMin = par.min;
    thetaMax = par.max;
-   exponentT = opt.PT.exponentT;
-   alpha = opt.PT.alpha;
-   temperatureAlpha = opt.PT.temperatureAlpha;
-   memoryLength = opt.PT.memoryLength;
-   regFactor = opt.PT.regFactor;
-   temperatureAdaptionScheme = opt.PT.temperatureAdaptionScheme;
+   exponentT = opt.RBPT.exponentT;
+   alpha = opt.RBPT.alpha;
+   temperatureAlpha = opt.RBPT.temperatureAlpha;
+   memoryLength = opt.RBPT.memoryLength;
+   regFactor = opt.RBPT.regFactor;
+   temperatureAdaptionScheme = opt.RBPT.temperatureAdaptionScheme;
    nPar = par.number;
    
    res.par = nan(nPar, nIter, nTemps);
@@ -293,6 +298,8 @@ function res = performRBPT( logPostHandle, par, opt )
             end
             beta = 1./T;
          end
+      elseif strcmp(temperatureAdaptionScheme,'none')
+         % No temperature adaptation
       else
          error('Please specify correct T-adaption-scheme.')
       end
