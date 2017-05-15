@@ -33,8 +33,8 @@ gaussDimension = 2 + dimi;
 
 % Set required sampling options for Parallel Tempering
 par.number = gaussDimension;
-par.min    = -100*ones(dimi+2,1);
-par.max    = 100*ones(dimi+2,1);
+par.min    = [-100;-100;-100*ones(dimi,1)];
+par.max    = [100;100;100*ones(dimi,1)];
 par.name   = {};
 for i = 1 : dimi + 2
    par.name{end+1} = ['\theta_' num2str(i)];
@@ -52,18 +52,21 @@ options.samplingAlgorithm     = 'RBPT';
 options.RBPT.nTemps           = 20;
 options.RBPT.exponentT        = 4;    
 options.RBPT.alpha            = 0.51;
-options.RBPT.temperatureAlpha = 0.51;
+options.RBPT.temperatureNu    = 1e4;
 options.RBPT.memoryLength     = 1;
-options.RBPT.regFactor        = 1e-4;
-options.RBPT.swapsPerIter     = 1;
+options.RBPT.regFactor        = 1e-8;
+% options.RBPT.swapsPerIter     = 1;
+options.RBPT.temperatureEta   = 100;
 options.RBPT.temperatureAdaptionScheme = 'Vousden16'; %  'Lacki15'; 'none';%
 
 options.theta0              = repmat([mu(1,:),repmat(25,1,dimi)]',1,options.RBPT.nTemps); 
 options.theta0(:,1:2:end)   = repmat([mu(2,:),repmat(25,1,dimi)]',1,ceil(options.RBPT.nTemps/2));
-options.sigma0              = 1e3*diag(ones(1,dimi+2));
+options.sigma0              = 1e6*diag(ones(1,dimi+2));
 
 % Perform the parameter estimation via sampling
 par = getParameterSamples(par, logP, options);
+
+%%
 
 % Additional visualization
 figure('Name', 'Chain analysis and theoretical vs true sampling distribution');
@@ -85,12 +88,18 @@ figure
 for j = 1:length(squeeze(par.S.par(1,1,:)))
    subplot(ceil(sqrt(length(squeeze(par.S.par(1,1,:))))),ceil(sqrt(length(squeeze(par.S.par(1,1,:))))),j)
    plot(par.S.par(1:2,:,j)');
+   title(num2str(par.S.temperatures(end,j)))
 end
 
+% Swap Ratios
+figure
+title('Swapping Ratios')
+bar(par.S.accSwap./par.S.propSwap)
 
-
-
-
+% Temepratures
+figure
+title('Temperatures')
+plot(log10(par.S.temperatures))
 
 
 

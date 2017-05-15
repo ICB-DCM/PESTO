@@ -22,13 +22,14 @@ function [ llh ] = simulateGaussLLH( par, mu, sigma )
         par = par';
     end
 
-    % Computing the log-likelihood
-    llh = 0;
-    for j = 1:n
-        llh = llh + 1/(sqrt(2*pi)^2*sqrt(det(sigma(1:2,1:2,j)))) * ...
-                exp(-0.5 * (par(1:2)-mu(j,1:2)')' / sigma(1:2,1:2,j) * (par(1:2)'-mu(j,1:2))');
-    end
-    llh = log(llh);
+    % Computing the log-likelihood of a sum of gaussian using a numerical
+    % trick
+    logSumExp = @(u,v) (max(u, v) + log(exp(u - max(u, v)) + exp(v - max(u, v))));
+    logA = -0.5 * log(2*pi*det(sigma(1:2,1:2,1))) ...
+        -0.5 * (par(1:2)-mu(1,1:2)')' / sigma(1:2,1:2,1) * (par(1:2)'-mu(1,1:2))';
+    logB = -0.5 * log(2*pi*det(sigma(1:2,1:2,2))) ...
+        -0.5 * (par(1:2)-mu(2,1:2)')' / sigma(1:2,1:2,2) * (par(1:2)'-mu(2,1:2))';  
+    llh = max(logA,logB) + log( exp(logA-max(logA,logB)) + exp(logB-max(logA,logB)) );
     
     % Additional dimensions whose parameters are independently normally
     % distributed

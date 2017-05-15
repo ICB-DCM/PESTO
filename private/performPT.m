@@ -183,6 +183,7 @@ function res = performPT( logPostHandle, par, opt )
          end
          
          % Transition and Acceptance Probabilities
+         if 
          if (inbounds == 1) && (logPostProp(l) > -inf)
             logTransFor(l) = 1;
             logTransBack(l) = 1;

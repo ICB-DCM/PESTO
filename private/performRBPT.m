@@ -27,7 +27,7 @@ function res = performRBPT( logPostHandle, par, opt )
    %                               iterations influence the single-chain
    %                               proposal adaption only very weakly very
    %                               quickly.
-   % opt.RBPT.temperatureAlpha     : Control parameter for adaption decay of the
+   % opt.RBPT.temperatureNu     : Control parameter for adaption decay of the
    %                               temperature adaption. Sample properties as
    %                               described for opt.RBPT.alpha.
    % opt.RBPT.memoryLength         : Control parameter for adaption. Higher
@@ -70,12 +70,13 @@ function res = performRBPT( logPostHandle, par, opt )
    thetaMax = par.max;
    exponentT = opt.RBPT.exponentT;
    alpha = opt.RBPT.alpha;
-   temperatureAlpha = opt.RBPT.temperatureAlpha;
+   temperatureNu = opt.RBPT.temperatureNu;
    memoryLength = opt.RBPT.memoryLength;
    regFactor = opt.RBPT.regFactor;
    temperatureAdaptionScheme = opt.RBPT.temperatureAdaptionScheme;
    nPar = par.number;
-   swapsPerIter = opt.RBPT.swapsPerIter;
+%    swapsPerIter = opt.RBPT.swapsPerIter;
+   temperatureEta = opt.RBPT.temperatureEta;
    
    res.par = nan(nPar, nIter, nTemps);
    res.logPost = nan(nIter, nTemps);
@@ -88,7 +89,7 @@ function res = performRBPT( logPostHandle, par, opt )
    if strcmp(temperatureAdaptionScheme,'Vousden16') && nTemps > 1
       beta(end) = 0;
    end
-   T = ones(1,nTemps);
+%    T = ones(1,nTemps);
    acc = zeros(1,nTemps);
    accSwap = zeros(1,nTemps-1);
    propSwap = zeros(1,nTemps-1);
@@ -102,6 +103,8 @@ function res = performRBPT( logPostHandle, par, opt )
          error('Dimension of options.theta0 is incorrect.');
    end
    muHist = theta;
+   
+%    S = zeros(1,nTemps-2);
    
    % Regularization sigma0
    for l = 1:size(sigma0,3)
@@ -125,8 +128,8 @@ function res = performRBPT( logPostHandle, par, opt )
       otherwise
          error('Dimension of options.Sigma0 is incorrect.');
    end
-   oldS = log(1./beta(2:end)-1./beta(1:end-1));
-   newS = log(1./beta(2:end)-1./beta(1:end-1));
+%    oldS = log(1./beta(2:end)-1./beta(1:end-1));
+%    newS = log(1./beta(2:end)-1./beta(1:end-1));
    sigmaProp = nan(nPar,nPar,nTemps);
    logPost = nan(nTemps,1);
    logPostProp = nan(nTemps,1);
@@ -161,7 +164,27 @@ function res = performRBPT( logPostHandle, par, opt )
       for l = 1:nTemps
          
          % Propose
+         try
          thetaProp(:,l) = mvnrnd(theta(:,l),sigma(:,:,l))';
+         catch
+            a=1;
+         end
+         
+%          if l == nTemps
+% %             pause(1)
+%             xlims = [thetaMin(1),thetaMax(1)];
+%             ylims = [thetaMin(1),thetaMax(1)];
+%             if j > 1
+%                delete(h)
+%                set(gca,'xlim',xlims);
+%                set(gca,'ylim',ylims);
+%             else
+%                xlims = xlim;
+%                ylims = ylim;
+%             end
+%             h=plot_gaussian_ellipsoid(theta(1:2,20), squeeze(sigma(1:2,1:2,20)));
+%             drawnow;
+%          end
          
          % Check for Bounds
          if (sum(thetaProp(:,l) < thetaMin) + sum(thetaProp(:,l) > thetaMax)) == 0
@@ -191,10 +214,12 @@ function res = performRBPT( logPostHandle, par, opt )
          end
          
          % Transition and Acceptance Probabilities
-         if (inbounds == 1) && (logPostProp(l) > -inf)
+         if (inbounds == 1) && (l == nTemps)
+            pAcc(l) = 0;         
+         elseif (inbounds == 1) && (logPostProp(l) > -inf)
             logTransFor(l) = 1;
             logTransBack(l) = 1;
-            pAcc(l) = min(0, beta(l)*(logPostProp(l)-logPost(l)) + logTransBack(l) - logTransFor(l));
+            pAcc(l) = beta(l)*(logPostProp(l)-logPost(l)) + logTransBack(l) - logTransFor(l);
          else
             pAcc(l) = -inf;
          end
@@ -239,25 +264,51 @@ function res = performRBPT( logPostHandle, par, opt )
       if nTemps > 1
          dBeta = beta(1:end-1) - beta(2:end);
          for l = nTemps:-1:2
-            pAccSwap(l) = dBeta(l-1) .* (logPost(l)-logPost(l-1))';
-            A(l-1) = log(rand) < pAccSwap(l);
+            pAccSwap(l-1) = dBeta(l-1) .* (logPost(l)-logPost(l-1))';
+            A(l-1) = log(rand) < pAccSwap(l-1);
             propSwap(l-1) = propSwap(l-1) + 1;
             accSwap(l-1) = accSwap(l-1) + A(l-1);
+            % As usually implemented when using PT
             if A(l-1)
                theta(:,[l,l-1]) = theta(:,[l-1,l]);
                logPost([l,l-1]) = logPost([l-1,l]);
             end
+            % Regular swaps can lead to insufficcient explorations of the
+            % hot chains. Performing "swaps" only in the direction from hot
+            % to cold, leaves the hotter chain non-influenced by the colder
+            % one. This can lead to better exploration.
+%             if A(l-1)
+%                theta(:,l-1) = theta(:,l);
+%                logPost(l-1) = logPost(l);
+%             end
          end
       end
       
       % Adaptation of the temperature values (Vousden 2016)
-      if (nTemps > 1)
+      if nTemps > 1
          
-         kappa = (max(j,memoryLength)+1)^temperatureAlpha;
-         dS = (A(1:end-1)-A(2:end))/kappa;
-         dT = 1./beta;
-         dT(2:end-1) = dT(2:end-1) .* exp(dS);
-         beta(2:end-1) = 1./cumsum(dT(2:end-1));
+         % Vousden python Code
+%          %kappa = 1/(max(j,memoryLength)+1)^temperatureNu;
+%          kappa = temperatureNu / ( j + 1 + temperatureNu ) / memoryLength;
+%          dS = kappa*(A(1:end-1)-A(2:end)); 
+% %          dS = kappa*(exp(pAccSwap(1:end-1))-exp(pAccSwap(2:end)));
+%          dT = diff(1./beta(1:end-1));
+%          dT = dT .* exp(dS);
+%          beta(2:end-1) = 1./cumsum(dT + 1);
+         
+         % Vousden Paper
+%          kappa = temperatureNu / ( j + 1 + temperatureNu ) / memoryLength;
+%          dS = kappa*(A(1:end-1)-A(2:end)); 
+%          S = S + dS;
+%          T = 1./beta(2:end-1) + exp(S);
+%          beta(2:end-1) = 1./T;
+         
+         % My interpretation
+         kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
+         dS = kappa*(A(1:end-1)-A(2:end));
+         T = 1./beta(2:end-1) .* exp(dS);
+         beta(2:end-1) = 1./T;
+         
          
       end
       
@@ -267,6 +318,7 @@ function res = performRBPT( logPostHandle, par, opt )
       res.acc(i,:) = 100*acc/j;
       res.propSwap = propSwap;
       res.accSwap  = accSwap;
+      res.ratioSwap = accSwap ./ propSwap;
       res.sigmaScale(i,:) = sigmaScale;
       res.sigmaHist = sigmaHist;
       res.temperatures(i,:) = 1./beta;
