@@ -78,6 +78,8 @@ function res = performRBPT( logPostHandle, par, opt )
 %    swapsPerIter = opt.RBPT.swapsPerIter;
    temperatureEta = opt.RBPT.temperatureEta;
    
+   S = zeros(1,nTemps-2);
+   
    res.par = nan(nPar, nIter, nTemps);
    res.logPost = nan(nIter, nTemps);
    res.acc = nan(nIter, nTemps);
@@ -86,9 +88,7 @@ function res = performRBPT( logPostHandle, par, opt )
    res.temperatures = nan(nIter, nTemps);
    
    beta = linspace(1,1/nTemps,nTemps).^exponentT;
-   if strcmp(temperatureAdaptionScheme,'Vousden16') && nTemps > 1
-      beta(end) = 0;
-   end
+   beta(end) = 1/opt.RBPT.maxT;
 %    T = ones(1,nTemps);
    acc = zeros(1,nTemps);
    accSwap = zeros(1,nTemps-1);
@@ -164,11 +164,7 @@ function res = performRBPT( logPostHandle, par, opt )
       for l = 1:nTemps
          
          % Propose
-         try
          thetaProp(:,l) = mvnrnd(theta(:,l),sigma(:,:,l))';
-         catch
-            a=1;
-         end
          
 %          if l == nTemps
 % %             pause(1)
@@ -214,9 +210,9 @@ function res = performRBPT( logPostHandle, par, opt )
          end
          
          % Transition and Acceptance Probabilities
-         if (inbounds == 1) && (l == nTemps)
-            pAcc(l) = 0;         
-         elseif (inbounds == 1) && (logPostProp(l) > -inf)
+%          if (inbounds == 1) && (l == nTemps)
+%             pAcc(l) = 0;         
+         if (inbounds == 1) && (logPostProp(l) > -inf)
             logTransFor(l) = 1;
             logTransBack(l) = 1;
             pAcc(l) = beta(l)*(logPostProp(l)-logPost(l)) + logTransBack(l) - logTransFor(l);
@@ -289,7 +285,7 @@ function res = performRBPT( logPostHandle, par, opt )
          
          % Vousden python Code
 %          %kappa = 1/(max(j,memoryLength)+1)^temperatureNu;
-%          kappa = temperatureNu / ( j + 1 + temperatureNu ) / memoryLength;
+%          kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
 %          dS = kappa*(A(1:end-1)-A(2:end)); 
 % %          dS = kappa*(exp(pAccSwap(1:end-1))-exp(pAccSwap(2:end)));
 %          dT = diff(1./beta(1:end-1));
@@ -297,7 +293,7 @@ function res = performRBPT( logPostHandle, par, opt )
 %          beta(2:end-1) = 1./cumsum(dT + 1);
          
          % Vousden Paper
-%          kappa = temperatureNu / ( j + 1 + temperatureNu ) / memoryLength;
+%          kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
 %          dS = kappa*(A(1:end-1)-A(2:end)); 
 %          S = S + dS;
 %          T = 1./beta(2:end-1) + exp(S);

@@ -19,8 +19,8 @@ classdef RBPTOptions < matlab.mixin.SetGet
       alpha = 0.51;
 
       % Parameter which controlls the adaption degeneration velocity of
-      % the temperature adaption. Value between 0 and 1. No effect for value = 0.
-      temperatureNu = 0.51;
+      % the temperature adaption.
+      temperatureNu = 1e3;
       
       % The higher the value the more it lowers the impact of early adaption steps.
       memoryLength = 1;
@@ -41,6 +41,9 @@ classdef RBPTOptions < matlab.mixin.SetGet
       
       % Scaling factor for temperature adaptation
       temperatureEta = 100;
+      
+      % Maximum T - may be infinity
+      maxT = inf;
 
    end
    
@@ -246,7 +249,15 @@ classdef RBPTOptions < matlab.mixin.SetGet
          else
             error(['Please enter a positive integer for the scaling factor temperatureEta.']);
          end
-      end       
+      end  
+      
+      function set.maxT(this, value)
+         if(value > 0)
+            this.maxT = lower(value);
+         else
+            error(['Please enter the maximum temperature. May be inf.']);
+         end
+      end        
             
    end
 end

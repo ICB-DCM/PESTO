@@ -50,9 +50,10 @@ options.mode                = 'text';
 % Using RBPT
 options.samplingAlgorithm     = 'RBPT';
 options.RBPT.nTemps           = 20;
-options.RBPT.exponentT        = 4;    
+options.RBPT.exponentT        = 4;   
+options.RBPT.maxT             = 1e4;
 options.RBPT.alpha            = 0.51;
-options.RBPT.temperatureNu    = 1e4;
+options.RBPT.temperatureNu    = 1e3;
 options.RBPT.memoryLength     = 1;
 options.RBPT.regFactor        = 1e-8;
 % options.RBPT.swapsPerIter     = 1;
