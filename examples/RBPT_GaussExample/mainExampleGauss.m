@@ -50,14 +50,14 @@ options.mode                = 'text';
 % Using RBPT
 options.samplingAlgorithm     = 'RBPT';
 options.RBPT.nTemps           = 20;
-options.RBPT.exponentT        = 4;   
-options.RBPT.maxT             = 1e4;
+options.RBPT.exponentT        = 10;   
+options.RBPT.maxT             = 1500;
 options.RBPT.alpha            = 0.51;
-options.RBPT.temperatureNu    = 1e3;
+options.RBPT.temperatureNu    = 1e4;
 options.RBPT.memoryLength     = 1;
 options.RBPT.regFactor        = 1e-8;
 % options.RBPT.swapsPerIter     = 1;
-options.RBPT.temperatureEta   = 100;
+options.RBPT.temperatureEta   = 10;
 options.RBPT.temperatureAdaptionScheme = 'Vousden16'; %  'Lacki15'; 'none';%
 
 options.theta0              = repmat([mu(1,:),repmat(25,1,dimi)]',1,options.RBPT.nTemps); 

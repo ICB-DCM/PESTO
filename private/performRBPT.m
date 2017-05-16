@@ -87,9 +87,12 @@ function res = performRBPT( logPostHandle, par, opt )
    res.sigmaScale = nan(nIter, nTemps);
    res.temperatures = nan(nIter, nTemps);
    
-   beta = linspace(1,1/nTemps,nTemps).^exponentT;
-   beta(end) = 1/opt.RBPT.maxT;
-%    T = ones(1,nTemps);
+   maxT = opt.RBPT.maxT;
+   T = linspace(1,maxT^(1/exponentT),nTemps).^exponentT;
+   beta = 1./T;
+%    beta = linspace(1,1/nTemps,nTemps).^exponentT;
+%    beta(end) = min(1/opt.RBPT.maxT,beta(end));
+   
    acc = zeros(1,nTemps);
    accSwap = zeros(1,nTemps-1);
    propSwap = zeros(1,nTemps-1);
@@ -216,6 +219,9 @@ function res = performRBPT( logPostHandle, par, opt )
             logTransFor(l) = 1;
             logTransBack(l) = 1;
             pAcc(l) = beta(l)*(logPostProp(l)-logPost(l)) + logTransBack(l) - logTransFor(l);
+            if pAcc(l) > 0       % Do not use min, due to NaN behavior in Matlab
+               pAcc(l) = 0;
+            end
          else
             pAcc(l) = -inf;
          end
@@ -303,6 +309,8 @@ function res = performRBPT( logPostHandle, par, opt )
          kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
          dS = kappa*(A(1:end-1)-A(2:end));
          T = 1./beta(2:end-1) .* exp(dS);
+         T(2:end) = max(T(2:end),T(1:end-1)); % Ensure monotone temperature latter         
+         T = min(maxT,T);
          beta(2:end-1) = 1./T;
          
          
