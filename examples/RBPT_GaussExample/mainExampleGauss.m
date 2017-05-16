@@ -44,24 +44,24 @@ end
 rng(5)
 options                     = PestoSamplingOptions();
 options.objOutNumber        = 1;
-options.nIterations         = 1e4;
+options.nIterations         = 1e5;
 options.mode                = 'text';
 
 % Using RBPT
-options.samplingAlgorithm     = 'RBPT';
-options.RBPT.nTemps           = 20;
-options.RBPT.exponentT        = 10;   
-options.RBPT.maxT             = 1500;
-options.RBPT.alpha            = 0.51;
-options.RBPT.temperatureNu    = 1e4;
-options.RBPT.memoryLength     = 1;
-options.RBPT.regFactor        = 1e-8;
-% options.RBPT.swapsPerIter     = 1;
-options.RBPT.temperatureEta   = 10;
-options.RBPT.temperatureAdaptionScheme = 'Vousden16'; %  'Lacki15'; 'none';%
+options.samplingAlgorithm     = 'PT';
+options.PT.nTemps           = 40;
+options.PT.exponentT        = 10;   
+options.PT.maxT             = 1500;
+options.PT.alpha            = 0.51;
+options.PT.temperatureNu    = 1e4;
+options.PT.memoryLength     = 1;
+options.PT.regFactor        = 1e-8;
+% options.PT.swapsPerIter     = 1;
+options.PT.temperatureEta   = 10;
+options.PT.temperatureAdaptionScheme = 'Vousden16'; %  'Lacki15'; 'none';%
 
-options.theta0              = repmat([mu(1,:),repmat(25,1,dimi)]',1,options.RBPT.nTemps); 
-options.theta0(:,1:2:end)   = repmat([mu(2,:),repmat(25,1,dimi)]',1,ceil(options.RBPT.nTemps/2));
+options.theta0              = repmat([mu(1,:),repmat(25,1,dimi)]',1,options.PT.nTemps); 
+options.theta0(:,1:2:end)   = repmat([mu(2,:),repmat(25,1,dimi)]',1,ceil(options.PT.nTemps/2));
 options.sigma0              = 1e6*diag(ones(1,dimi+2));
 
 % Perform the parameter estimation via sampling

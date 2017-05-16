@@ -1,5 +1,5 @@
 classdef PTOptions < matlab.mixin.SetGet
-   % PTOptions provides an option container to specify parallel tempering (PT) options 
+   % RBPTOptions provides an option container to specify region based parallel tempering (RBPT) options 
    % in PestoSamplingOptions.PT.
    %
    % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
@@ -19,8 +19,8 @@ classdef PTOptions < matlab.mixin.SetGet
       alpha = 0.51;
 
       % Parameter which controlls the adaption degeneration velocity of
-      % the temperature adaption. Value between 0 and 1. No effect for value = 0.
-      temperatureAlpha = 0.51;
+      % the temperature adaption.
+      temperatureNu = 1e3;
       
       % The higher the value the more it lowers the impact of early adaption steps.
       memoryLength = 1;
@@ -35,6 +35,15 @@ classdef PTOptions < matlab.mixin.SetGet
       % Follows the temperature adaption scheme from 'Vousden16' or 'Lacki15'. Can be set to
       % 'none' for no temperature adaption.
       temperatureAdaptionScheme  = 'Vousden16';
+      
+      % The number of swaps between tempered chains per iterations.
+      swapsPerIter = 1;
+      
+      % Scaling factor for temperature adaptation
+      temperatureEta = 100;
+      
+      % Maximum T - may be infinity
+      maxT = inf;
 
    end
    
@@ -200,12 +209,11 @@ classdef PTOptions < matlab.mixin.SetGet
          end
       end  
       
-      function set.temperatureAlpha(this, value)
-         if(isnumeric(value) && value > 0.5 && value < 1)
-            this.temperatureAlpha = lower(value);
+      function set.temperatureNu(this, value)
+         if(isnumeric(value) && value > 0.0)
+            this.temperatureNu = lower(value);
          else
-            error(['Please an temperature adaption decay constant between 0.5 and 1.0, '...
-               'e.g. PestoSamplingOptions.PT.temperatureAlpha = 0.51']);
+            error(['Please an temperature adaption decay constant greater 0']);
          end
       end   
       
@@ -219,13 +227,37 @@ classdef PTOptions < matlab.mixin.SetGet
       end   
       
       function set.temperatureAdaptionScheme(this, value)
-         if (strcmp(value, 'Vousden16') || strcmp(value, 'Lacki15'))
+         if (strcmp(value, 'Vousden16') || strcmp(value, 'Lacki15') || strcmp(value, 'none'))
             this.temperatureAdaptionScheme = value;
          else
             error(['Please enter the temperature adaption scheme, e.g. '...
                'PestoSamplingOptions.PT.temperatureAdaptionScheme = ''Vousden16''']);
          end
-      end      
+      end  
+      
+      function set.swapsPerIter(this, value)
+         if(value == floor(value) && value > 0)
+            this.swapsPerIter = lower(value);
+         else
+            error(['Please enter a positive integer for the swaps per iteration.']);
+         end
+      end 
+      
+      function set.temperatureEta(this, value)
+         if(value == floor(value) && value > 0)
+            this.temperatureEta = lower(value);
+         else
+            error(['Please enter a positive integer for the scaling factor temperatureEta.']);
+         end
+      end  
+      
+      function set.maxT(this, value)
+         if(value > 0)
+            this.maxT = lower(value);
+         else
+            error(['Please enter the maximum temperature. May be inf.']);
+         end
+      end        
             
    end
 end

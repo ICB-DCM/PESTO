@@ -48,22 +48,22 @@ classdef RBPTOptions < matlab.mixin.SetGet
    end
    
    methods
-      function obj = PTOptions(varargin)
-         % PTOptions Construct a new PTOptions object
+      function obj = RBPTOptions(varargin)
+         % RBPTOptions Construct a new RBPTOptions object
          %
-         %   OPTS = PTOptions() creates a set of options with
+         %   OPTS = RBPTOptions() creates a set of options with
          %   each option set to itsdefault value.
          %
-         %   OPTS = PTOptions(PARAM, VAL, ...) creates a set
+         %   OPTS = RBPTOptions(PARAM, VAL, ...) creates a set
          %   of options with the named parameters altered with the
          %   specified values.
          %
-         %   OPTS = PTOptions(OLDOPTS, PARAM, VAL, ...)
+         %   OPTS = RBPTOptions(OLDOPTS, PARAM, VAL, ...)
          %   creates a copy of OLDOPTS with the named parameters altered
          %   with the specified value
          %
          %   Note to see the parameters, check the
-         %   documentation page for PTOptions
+         %   documentation page for RBPTOptions
          %
          % Parameters:
          %  varargin:
@@ -164,7 +164,7 @@ classdef RBPTOptions < matlab.mixin.SetGet
       end
       
       function new = copy(this)
-          % Creates a copy of the passed PTOptions instance
+          % Creates a copy of the passed RBPTOptions instance
          new = feval(class(this));
          
          p = properties(this);
