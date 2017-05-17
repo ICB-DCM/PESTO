@@ -286,32 +286,46 @@ function res = performPT( logPostHandle, par, opt )
          end
       end
       
+      if nTemps > 1
+         dBeta = beta(1:end-1) - beta(2:end);
+         for l = nTemps:-1:2
+            pAccSwap(l-1) = dBeta(l-1) .* (logPost(l)-logPost(l-1))';
+            A(l-1) = log(rand) < pAccSwap(l-1);
+            propSwap(l-1) = propSwap(l-1) + 1;
+            accSwap(l-1) = accSwap(l-1) + A(l-1);
+            % As usually implemented when using PT
+            if A(l-1)
+               theta(:,[l,l-1]) = theta(:,[l-1,l]);
+               logPost([l,l-1]) = logPost([l-1,l]);
+            end
+            % Regular swaps can lead to insufficcient explorations of the
+            % hot chains. Performing "swaps" only in the direction from hot
+            % to cold, leaves the hotter chain non-influenced by the colder
+            % one. This can lead to better exploration.
+%             if A(l-1)
+%                theta(:,l-1) = theta(:,l);
+%                logPost(l-1) = logPost(l);
+%             end
+         end
+      end
+      
       % Adaptation of the temperature values (Vousden 2016)
       if nTemps > 1
          
-         % Vousden python Code
-%          %kappa = 1/(max(j,memoryLength)+1)^temperatureNu;
-%          kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
-%          dS = kappa*(A(1:end-1)-A(2:end)); 
-% %          dS = kappa*(exp(pAccSwap(1:end-1))-exp(pAccSwap(2:end)));
-%          dT = diff(1./beta(1:end-1));
-%          dT = dT .* exp(dS);
-%          beta(2:end-1) = 1./cumsum(dT + 1);
-         
-         % Vousden Paper
-%          kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
-%          dS = kappa*(A(1:end-1)-A(2:end)); 
-%          S = S + dS;
-%          T = 1./beta(2:end-1) + exp(S);
-%          beta(2:end-1) = 1./T;
+         % Vousden python Code & Paper
+         kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
+         dS = kappa*(A(1:end-1)-A(2:end)); 
+         dT = diff(1./beta(1:end-1));
+         dT = dT .* exp(dS);
+         beta(1:end-1) = 1./cumsum([1,dT]);
          
          % My interpretation
-         kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
-         dS = kappa*(A(1:end-1)-A(2:end));
-         T = 1./beta(2:end-1) .* exp(dS);
-         T(2:end) = max(T(2:end),T(1:end-1)); % Ensure monotone temperature latter         
-         T = min(maxT,T);
-         beta(2:end-1) = 1./T;
+%          kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
+%          dS = kappa*(A(1:end-1)-A(2:end));
+%          T = 1./beta(2:end-1) .* exp(dS);
+%          T(2:end) = max(T(2:end),T(1:end-1)); % Ensure monotone temperature latter         
+%          T = min(maxT,T);
+%          beta(2:end-1) = 1./T;
          
          
       end

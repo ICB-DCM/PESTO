@@ -289,29 +289,20 @@ function res = performRBPT( logPostHandle, par, opt )
       % Adaptation of the temperature values (Vousden 2016)
       if nTemps > 1
          
-         % Vousden python Code
-%          %kappa = 1/(max(j,memoryLength)+1)^temperatureNu;
-%          kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
-%          dS = kappa*(A(1:end-1)-A(2:end)); 
-% %          dS = kappa*(exp(pAccSwap(1:end-1))-exp(pAccSwap(2:end)));
-%          dT = diff(1./beta(1:end-1));
-%          dT = dT .* exp(dS);
-%          beta(2:end-1) = 1./cumsum(dT + 1);
-         
-         % Vousden Paper
-%          kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
-%          dS = kappa*(A(1:end-1)-A(2:end)); 
-%          S = S + dS;
-%          T = 1./beta(2:end-1) + exp(S);
-%          beta(2:end-1) = 1./T;
+         % Vousden python Code & Paper
+         kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
+         dS = kappa*(A(1:end-1)-A(2:end)); 
+         dT = diff(1./beta(1:end-1));
+         dT = dT .* exp(dS);
+         beta(1:end-1) = 1./cumsum([1,dT]);
          
          % My interpretation
-         kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
-         dS = kappa*(A(1:end-1)-A(2:end));
-         T = 1./beta(2:end-1) .* exp(dS);
-         T(2:end) = max(T(2:end),T(1:end-1)); % Ensure monotone temperature latter         
-         T = min(maxT,T);
-         beta(2:end-1) = 1./T;
+%          kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
+%          dS = kappa*(A(1:end-1)-A(2:end));
+%          T = 1./beta(2:end-1) .* exp(dS);
+%          T(2:end) = max(T(2:end),T(1:end-1)); % Ensure monotone temperature latter         
+%          T = min(maxT,T);
+%          beta(2:end-1) = 1./T;
          
          
       end
