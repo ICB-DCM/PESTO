@@ -27,7 +27,7 @@ function res = performRBPT( logPostHandle, par, opt )
    %                               iterations influence the single-chain
    %                               proposal adaption only very weakly very
    %                               quickly.
-   % opt.RBPT.temperatureNu     : Control parameter for adaption decay of the
+   % opt.RBPT.temperatureNu        : Control parameter for adaption decay of the
    %                               temperature adaption. Sample properties as
    %                               described for opt.RBPT.alpha.
    % opt.RBPT.memoryLength         : Control parameter for adaption. Higher
@@ -37,10 +37,6 @@ function res = performRBPT( logPostHandle, par, opt )
    %                               covariance matrices are ill conditioned.
    %                               Larger values equal stronger
    %                               regularization.
-   % opt.RBPT.temperatureAdaptionScheme: Defines the temperature adaption scheme.
-   %                               Either 'Vousden16' or 'Lacki15'.
-   % opt.RBPT.swapsPerIter         : Number of swaps between temperatures
-   %                               per iteration.
    %
    %
    % It returns a struct 'res' covering:
@@ -73,12 +69,8 @@ function res = performRBPT( logPostHandle, par, opt )
    temperatureNu = opt.RBPT.temperatureNu;
    memoryLength = opt.RBPT.memoryLength;
    regFactor = opt.RBPT.regFactor;
-   temperatureAdaptionScheme = opt.RBPT.temperatureAdaptionScheme;
    nPar = par.number;
-%    swapsPerIter = opt.RBPT.swapsPerIter;
    temperatureEta = opt.RBPT.temperatureEta;
-   
-   S = zeros(1,nTemps-2);
    
    res.par = nan(nPar, nIter, nTemps);
    res.logPost = nan(nIter, nTemps);
@@ -90,8 +82,6 @@ function res = performRBPT( logPostHandle, par, opt )
    maxT = opt.RBPT.maxT;
    T = linspace(1,maxT^(1/exponentT),nTemps).^exponentT;
    beta = 1./T;
-%    beta = linspace(1,1/nTemps,nTemps).^exponentT;
-%    beta(end) = min(1/opt.RBPT.maxT,beta(end));
    
    acc = zeros(1,nTemps);
    accSwap = zeros(1,nTemps-1);
@@ -106,9 +96,7 @@ function res = performRBPT( logPostHandle, par, opt )
          error('Dimension of options.theta0 is incorrect.');
    end
    muHist = theta;
-   
-%    S = zeros(1,nTemps-2);
-   
+      
    % Regularization sigma0
    for l = 1:size(sigma0,3)
       [~,p] = cholcov(sigma0(:,:,l),0);
@@ -131,8 +119,6 @@ function res = performRBPT( logPostHandle, par, opt )
       otherwise
          error('Dimension of options.Sigma0 is incorrect.');
    end
-%    oldS = log(1./beta(2:end)-1./beta(1:end-1));
-%    newS = log(1./beta(2:end)-1./beta(1:end-1));
    sigmaProp = nan(nPar,nPar,nTemps);
    logPost = nan(nTemps,1);
    logPostProp = nan(nTemps,1);
@@ -169,22 +155,6 @@ function res = performRBPT( logPostHandle, par, opt )
          % Propose
          thetaProp(:,l) = mvnrnd(theta(:,l),sigma(:,:,l))';
          
-%          if l == nTemps
-% %             pause(1)
-%             xlims = [thetaMin(1),thetaMax(1)];
-%             ylims = [thetaMin(1),thetaMax(1)];
-%             if j > 1
-%                delete(h)
-%                set(gca,'xlim',xlims);
-%                set(gca,'ylim',ylims);
-%             else
-%                xlims = xlim;
-%                ylims = ylim;
-%             end
-%             h=plot_gaussian_ellipsoid(theta(1:2,20), squeeze(sigma(1:2,1:2,20)));
-%             drawnow;
-%          end
-         
          % Check for Bounds
          if (sum(thetaProp(:,l) < thetaMin) + sum(thetaProp(:,l) > thetaMax)) == 0
             
@@ -212,9 +182,7 @@ function res = performRBPT( logPostHandle, par, opt )
             inbounds = 0;
          end
          
-         % Transition and Acceptance Probabilities
-%          if (inbounds == 1) && (l == nTemps)
-%             pAcc(l) = 0;         
+         % Transition and Acceptance Probabilities      
          if (inbounds == 1) && (logPostProp(l) > -inf)
             logTransFor(l) = 1;
             logTransBack(l) = 1;
@@ -275,14 +243,6 @@ function res = performRBPT( logPostHandle, par, opt )
                theta(:,[l,l-1]) = theta(:,[l-1,l]);
                logPost([l,l-1]) = logPost([l-1,l]);
             end
-            % Regular swaps can lead to insufficcient explorations of the
-            % hot chains. Performing "swaps" only in the direction from hot
-            % to cold, leaves the hotter chain non-influenced by the colder
-            % one. This can lead to better exploration.
-%             if A(l-1)
-%                theta(:,l-1) = theta(:,l);
-%                logPost(l-1) = logPost(l);
-%             end
          end
       end
       

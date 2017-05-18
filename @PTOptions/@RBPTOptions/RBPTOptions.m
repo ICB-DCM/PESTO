@@ -1,26 +1,26 @@
 classdef RBPTOptions < matlab.mixin.SetGet
-   % RBPTOptions provides an option container to specify region based parallel tempering (RBPT) options
+   % RBPTOptions provides an option container to specify region based parallel tempering (RBPT) options 
    % in PestoSamplingOptions.RBPT.
    %
    % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
    
-   properties
+   properties      
       % Add required subclasses
-      RPOpt = RegionPredictionOptions;
+      regionPredictionOpt = RegionPredictionOptions;
       
       % Initial number of temperatures
       nTemps = 10;
       
       % The initial temperatures are set by a power law to ^opt.exponentT.
-      exponentT = 1000;
+      exponentT = 4;
       
       % Parameter which controlls the adaption degeneration
       % velocity of the single-chain proposals.
       % Value between 0 and 1.
       % No adaption (classical Metropolis-Hastings) for 0.
-      
+
       alpha = 0.51;
-      
+
       % Parameter which controlls the adaption degeneration velocity of
       % the temperature adaption.
       temperatureNu = 1e3;
@@ -30,17 +30,24 @@ classdef RBPTOptions < matlab.mixin.SetGet
       
       % Regularization factor for ill conditioned covariance matrices of
       % the adapted proposal density. Regularization might happen if the
-      % eigenvalues of the covariance matrix strongly differ in order of
+      % eigenvalues of the covariance matrix strongly differ in order of 
       % magnitude. In this case, the algorithm adds a small diag-matrix to
       % the covariance matrix with elements regFactor.
       regFactor = 1e-6;
       
+      % Follows the temperature adaption scheme from 'Vousden16' or 'Lacki15'. Can be set to
+      % 'none' for no temperature adaption.
+      temperatureAdaptionScheme  = 'Vousden16';
+      
+      % The number of swaps between tempered chains per iterations.
+      swapsPerIter = 1;
+      
       % Scaling factor for temperature adaptation
-      temperatureEta = 10;
+      temperatureEta = 100;
       
       % Maximum T - may be infinity
       maxT = inf;
-      
+
    end
    
    methods
@@ -70,7 +77,7 @@ classdef RBPTOptions < matlab.mixin.SetGet
             
             % Deal with the case where the first input to the
             % constructor is a amioptions/struct object.
-            if isa(varargin{1},'RBPTOptions')
+            if isa(varargin{1},'PTOptions')
                if strcmp(class(varargin{1}),class(obj))
                   obj = varargin{1};
                else
@@ -160,7 +167,7 @@ classdef RBPTOptions < matlab.mixin.SetGet
       end
       
       function new = copy(this)
-         % Creates a copy of the passed RBPTOptions instance
+          % Creates a copy of the passed RBPTOptions instance
          new = feval(class(this));
          
          p = properties(this);
@@ -169,14 +176,14 @@ classdef RBPTOptions < matlab.mixin.SetGet
          end
       end
       
-      %% Part for checking the correct setting of options
+      %% Part for checking the correct setting of options      
       function set.regFactor(this, value)
          if(isnumeric(value) && value > 0)
             this.regFactor = lower(value);
          else
             error(['Please specify a positive regularization factor for ill conditioned covariance'...
-               ' matrices of the adapted proposal density, e.g. ' ...
-               'PestoSamplingOptions.PT.regFactor = 1e-5']);
+                ' matrices of the adapted proposal density, e.g. ' ...
+                'PestoSamplingOptions.PT.regFactor = 1e-5']);
          end
       end
       
@@ -186,7 +193,7 @@ classdef RBPTOptions < matlab.mixin.SetGet
          else
             error(['Please enter a positive integer for the number of temperatures, e.g. PestoSamplingOptions.nTemps = 10.']);
          end
-      end
+      end    
       
       function set.exponentT(this, value)
          if(isnumeric(value) && value > 0)
@@ -195,15 +202,15 @@ classdef RBPTOptions < matlab.mixin.SetGet
             error(['Please enter a positive double for the exponent of inital temperature heuristic' ...
                ', e.g. PestoSamplingOptions.PT.exponentT = 4.']);
          end
-      end
-      
+      end          
+
       function set.alpha(this, value)
          if(isnumeric(value) && value > 0.5 && value < 1)
             this.alpha = lower(value);
          else
             error(['Please an adaption decay constant between 0.5 and 1.0, e.g. PestoSamplingOptions.PT.alpha = 0.51']);
          end
-      end
+      end  
       
       function set.temperatureNu(this, value)
          if(isnumeric(value) && value > 0.0)
@@ -211,7 +218,7 @@ classdef RBPTOptions < matlab.mixin.SetGet
          else
             error(['Please an temperature adaption decay constant greater 0']);
          end
-      end
+      end   
       
       function set.memoryLength(this, value)
          if(value == floor(value) && value > 0)
@@ -220,7 +227,24 @@ classdef RBPTOptions < matlab.mixin.SetGet
             error(['Please enter a positive interger memoryLength constant, '...
                'e.g. PestoSamplingOptions.PT.memoryLength = 1']);
          end
-      end
+      end   
+      
+      function set.temperatureAdaptionScheme(this, value)
+         if (strcmp(value, 'Vousden16') || strcmp(value, 'Lacki15') || strcmp(value, 'none'))
+            this.temperatureAdaptionScheme = value;
+         else
+            error(['Please enter the temperature adaption scheme, e.g. '...
+               'PestoSamplingOptions.PT.temperatureAdaptionScheme = ''Vousden16''']);
+         end
+      end  
+      
+      function set.swapsPerIter(this, value)
+         if(value == floor(value) && value > 0)
+            this.swapsPerIter = lower(value);
+         else
+            error(['Please enter a positive integer for the swaps per iteration.']);
+         end
+      end 
       
       function set.temperatureEta(this, value)
          if(value == floor(value) && value > 0)
@@ -228,7 +252,7 @@ classdef RBPTOptions < matlab.mixin.SetGet
          else
             error(['Please enter a positive integer for the scaling factor temperatureEta.']);
          end
-      end
+      end  
       
       function set.maxT(this, value)
          if(value > 0)
@@ -236,8 +260,8 @@ classdef RBPTOptions < matlab.mixin.SetGet
          else
             error(['Please enter the maximum temperature. May be inf.']);
          end
-      end
-      
+      end        
+            
    end
 end
 

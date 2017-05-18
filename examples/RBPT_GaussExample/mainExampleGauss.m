@@ -63,8 +63,8 @@ options.mode                = 'text';
 % options.sigma0              = 1e6*diag(ones(1,dimi+2));
 
 % Using RBPT
-options.samplingAlgorithm   = 'RBPT';
-options.RBPT.nTemps           = 40;
+options.samplingAlgorithm     = 'RBPT';
+options.RBPT.nTemps           = 20;
 options.RBPT.exponentT        = 1000;   
 options.RBPT.maxT             = 2000;
 options.RBPT.alpha            = 0.51;
@@ -72,7 +72,22 @@ options.RBPT.temperatureNu    = 1e3;
 options.RBPT.memoryLength     = 1;
 options.RBPT.regFactor        = 1e-8;
 options.RBPT.temperatureEta   = 10;
-options.RBPT.temperatureAdaptionScheme = 'Vousden16'; 
+
+options.RBPT.RPOpt.rng                  = 7;
+options.RBPT.RPOpt.nSample              = 1e5;
+options.RBPT.RPOpt.crossValFraction     = 0.2;
+options.RBPT.RPOpt.modeNumberCandidates = [1,2,3,4,5,6,7,8];
+options.RBPT.RPOpt.displayModes         = 'visual';
+options.RBPT.RPOpt.maxEMiterations      = 100;
+options.RBPT.RPOpt.nDim                 = 20;
+options.RBPT.RPOpt.nSubsetSize          = 1000;
+options.RBPT.RPOpt.lowerBound           = -3;
+options.RBPT.RPOpt.upperBound           = 50;
+options.RBPT.RPOpt.tolMu                = 1e-4 * (options.RBPT.RPOpt.upperBound-options.RBPT.RPOpt.lowerBound);
+options.RBPT.RPOpt.tolSigma             = 1e-2 * (options.RBPT.RPOpt.upperBound-options.RBPT.RPOpt.lowerBound);
+options.RBPT.RPOpt.dimensionsToPlot     = [1,2];
+options.RBPT.RPOpt.isInformative        = [1,1,zeros(1,options.RBPT.RPOpt.nDim-1)];
+
 options.theta0              = repmat([mu(1,:),repmat(25,1,dimi)]',1,options.RBPT.nTemps); 
 options.theta0(:,1:2:end)   = repmat([mu(2,:),repmat(25,1,dimi)]',1,ceil(options.RBPT.nTemps/2));
 options.sigma0              = 1e6*diag(ones(1,dimi+2));

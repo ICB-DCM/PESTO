@@ -1,65 +1,82 @@
-classdef RBPTOptions < matlab.mixin.SetGet
-   % RBPTOptions provides an option container to specify region based parallel tempering (RBPT) options
-   % in PestoSamplingOptions.RBPT.
+classdef RegionPredictionOptions < matlab.mixin.SetGet
+   % RegionPredictionOptions provides an option container to specify the
+   % options of training of a region predictor trainEMGMM.m and its predicton routine
+   % predictFromGMM.m. This is required by the region based samplers as
+   % RBPT.
    %
    % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
    
    properties
-      % Add required subclasses
-      RPOpt = RegionPredictionOptions;
+      % Sets the random seed for the GMM training
+      rng                    = 7;
       
-      % Initial number of temperatures
-      nTemps = 10;
+      % The number of samples to train the GMM from
+      nSample                = NaN;
       
-      % The initial temperatures are set by a power law to ^opt.exponentT.
-      exponentT = 1000;
+      % The fraction of the sample used to test the likelihood for each
+      % modeNumberCandidate
+      crossValFraction       = 0.2;
       
-      % Parameter which controlls the adaption degeneration
-      % velocity of the single-chain proposals.
-      % Value between 0 and 1.
-      % No adaption (classical Metropolis-Hastings) for 0.
+      % The function will train multiple GMMs with modeNumberCandidates
+      % modes. Afterwards with will compare the GMMs using a likelihood
+      % approach on a test set.
+      modeNumberCandidates   = [1,2,3,4,5,6,7,8];
       
-      alpha = 0.51;
+      % Display mode either 'silent', 'text' or 'visual'
+      displayModes           = 'visual';
       
-      % Parameter which controlls the adaption degeneration velocity of
-      % the temperature adaption.
-      temperatureNu = 1e3;
+      % The maximum iterations for the EM algorithm. Should not be reached
+      % with proper tolerances.
+      maxEMiterations        = 100;
       
-      % The higher the value the more it lowers the impact of early adaption steps.
-      memoryLength = 1;
+      % The dimension of the problem
+      nDim                   = NaN;
       
-      % Regularization factor for ill conditioned covariance matrices of
-      % the adapted proposal density. Regularization might happen if the
-      % eigenvalues of the covariance matrix strongly differ in order of
-      % magnitude. In this case, the algorithm adds a small diag-matrix to
-      % the covariance matrix with elements regFactor.
-      regFactor = 1e-6;
+      % The EM algorithm uses only a randomly selected subset of the
+      % sample in each iteration. This is its size.
+      nSubsetSize            = 1000;
       
-      % Scaling factor for temperature adaptation
-      temperatureEta = 10;
+      % Lower parameter bound
+      lowerBound             = NaN;
       
-      % Maximum T - may be infinity
-      maxT = inf;
+      % Upper parameter bound
+      upperBound             = NaN;
+      
+      % Tolerances for the EM algorithm. If the differences between old and
+      % new values of the GMM fall below those tolerances, the EM
+      % terminates. Should usually be chosen relative to the parameter bounds.
+      tolMu                  = NaN;
+      tolSigma               = NaN;
+      
+      % If selected displayMode = 'visual', this option defines 2
+      % dimensions to be plotted against each other
+      dimensionsToPlot       = [1,2];
+      
+      % This is only used for prediction. In high dimensions modes are
+      % often only seperable in a subset of dimensions. Any non informative
+      % dimensions increase the 'noise' of the prediction can may be
+      % excluded for better robustness.
+      isInformative          = NaN;
       
    end
    
    methods
-      function obj = RBPTOptions(varargin)
-         % RBPTOptions Construct a new RBPTOptions object
+      function obj = RegionPredictionOptions(varargin)
+         % RegionPredictionOptions Construct a new RegionPredictionOptions object
          %
-         %   OPTS = RBPTOptions() creates a set of options with
+         %   OPTS = RegionPredictionOptions() creates a set of options with
          %   each option set to itsdefault value.
          %
-         %   OPTS = RBPTOptions(PARAM, VAL, ...) creates a set
+         %   OPTS = RegionPredictionOptions(PARAM, VAL, ...) creates a set
          %   of options with the named parameters altered with the
          %   specified values.
          %
-         %   OPTS = RBPTOptions(OLDOPTS, PARAM, VAL, ...)
+         %   OPTS = RegionPredictionOptions(OLDOPTS, PARAM, VAL, ...)
          %   creates a copy of OLDOPTS with the named parameters altered
          %   with the specified value
          %
          %   Note to see the parameters, check the
-         %   documentation page for RBPTOptions
+         %   documentation page for RegionPredictionOptions
          %
          % Parameters:
          %  varargin:
@@ -70,7 +87,7 @@ classdef RBPTOptions < matlab.mixin.SetGet
             
             % Deal with the case where the first input to the
             % constructor is a amioptions/struct object.
-            if isa(varargin{1},'RBPTOptions')
+            if isa(varargin{1},'RegionPredictionOptions')
                if strcmp(class(varargin{1}),class(obj))
                   obj = varargin{1};
                else
@@ -160,7 +177,7 @@ classdef RBPTOptions < matlab.mixin.SetGet
       end
       
       function new = copy(this)
-         % Creates a copy of the passed RBPTOptions instance
+         % Creates a copy of the passed RegionPredictionOptions instance
          new = feval(class(this));
          
          p = properties(this);
@@ -170,74 +187,13 @@ classdef RBPTOptions < matlab.mixin.SetGet
       end
       
       %% Part for checking the correct setting of options
-      function set.regFactor(this, value)
-         if(isnumeric(value) && value > 0)
-            this.regFactor = lower(value);
-         else
-            error(['Please specify a positive regularization factor for ill conditioned covariance'...
-               ' matrices of the adapted proposal density, e.g. ' ...
-               'PestoSamplingOptions.PT.regFactor = 1e-5']);
-         end
-      end
       
-      function set.nTemps(this, value)
-         if(value == floor(value) && value > 0)
-            this.nTemps = lower(value);
-         else
-            error(['Please enter a positive integer for the number of temperatures, e.g. PestoSamplingOptions.nTemps = 10.']);
-         end
-      end
+      % TODO: Add checks
       
-      function set.exponentT(this, value)
-         if(isnumeric(value) && value > 0)
-            this.exponentT = lower(value);
-         else
-            error(['Please enter a positive double for the exponent of inital temperature heuristic' ...
-               ', e.g. PestoSamplingOptions.PT.exponentT = 4.']);
-         end
+      function this = checkDependentDefaults(this, par)
+         % TODO: Add checks for dependent properties (related to parent
+         % classes).
       end
-      
-      function set.alpha(this, value)
-         if(isnumeric(value) && value > 0.5 && value < 1)
-            this.alpha = lower(value);
-         else
-            error(['Please an adaption decay constant between 0.5 and 1.0, e.g. PestoSamplingOptions.PT.alpha = 0.51']);
-         end
-      end
-      
-      function set.temperatureNu(this, value)
-         if(isnumeric(value) && value > 0.0)
-            this.temperatureNu = lower(value);
-         else
-            error(['Please an temperature adaption decay constant greater 0']);
-         end
-      end
-      
-      function set.memoryLength(this, value)
-         if(value == floor(value) && value > 0)
-            this.memoryLength = lower(value);
-         else
-            error(['Please enter a positive interger memoryLength constant, '...
-               'e.g. PestoSamplingOptions.PT.memoryLength = 1']);
-         end
-      end
-      
-      function set.temperatureEta(this, value)
-         if(value == floor(value) && value > 0)
-            this.temperatureEta = lower(value);
-         else
-            error(['Please enter a positive integer for the scaling factor temperatureEta.']);
-         end
-      end
-      
-      function set.maxT(this, value)
-         if(value > 0)
-            this.maxT = lower(value);
-         else
-            error(['Please enter the maximum temperature. May be inf.']);
-         end
-      end
-      
    end
 end
 
