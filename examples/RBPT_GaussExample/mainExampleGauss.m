@@ -44,7 +44,7 @@ end
 rng(5)
 options                     = PestoSamplingOptions();
 options.objOutNumber        = 1;
-options.nIterations         = 1e5;
+options.nIterations         = 1e4;
 options.mode                = 'text';
 
 % % Using PT
@@ -73,18 +73,20 @@ options.RBPT.memoryLength     = 1;
 options.RBPT.regFactor        = 1e-8;
 options.RBPT.temperatureEta   = 10;
 
+options.RBPT.trainPhaseFrac   = 0.2;
+
 options.RBPT.RPOpt.rng                  = 7;
-options.RBPT.RPOpt.nSample              = 1e5;
+options.RBPT.RPOpt.nSample              = floor(options.nIterations * options.RBPT.trainPhaseFrac);
 options.RBPT.RPOpt.crossValFraction     = 0.2;
 options.RBPT.RPOpt.modeNumberCandidates = [1,2,3,4,5,6,7,8];
 options.RBPT.RPOpt.displayModes         = 'visual';
 options.RBPT.RPOpt.maxEMiterations      = 100;
-options.RBPT.RPOpt.nDim                 = 20;
+options.RBPT.RPOpt.nDim                 = par.number;
 options.RBPT.RPOpt.nSubsetSize          = 1000;
-options.RBPT.RPOpt.lowerBound           = -3;
-options.RBPT.RPOpt.upperBound           = 50;
-options.RBPT.RPOpt.tolMu                = 1e-4 * (options.RBPT.RPOpt.upperBound-options.RBPT.RPOpt.lowerBound);
-options.RBPT.RPOpt.tolSigma             = 1e-2 * (options.RBPT.RPOpt.upperBound-options.RBPT.RPOpt.lowerBound);
+options.RBPT.RPOpt.lowerBound           = par.min;
+options.RBPT.RPOpt.upperBound           = par.max;
+options.RBPT.RPOpt.tolMu                = 1e-4 * (par.max-par.min);
+options.RBPT.RPOpt.tolSigma             = 1e-2 * (par.max-par.min);
 options.RBPT.RPOpt.dimensionsToPlot     = [1,2];
 options.RBPT.RPOpt.isInformative        = [1,1,zeros(1,options.RBPT.RPOpt.nDim-1)];
 

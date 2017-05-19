@@ -41,6 +41,9 @@ classdef RBPTOptions < matlab.mixin.SetGet
       % Maximum T - may be infinity
       maxT = inf;
       
+      % Fraction of iterations which are used to train a region predictor
+      trainPhaseFrac = 0.2;
+      
    end
    
    methods
@@ -201,9 +204,17 @@ classdef RBPTOptions < matlab.mixin.SetGet
          if(isnumeric(value) && value > 0.5 && value < 1)
             this.alpha = lower(value);
          else
-            error(['Please an adaption decay constant between 0.5 and 1.0, e.g. PestoSamplingOptions.PT.alpha = 0.51']);
+            error(['Please use an adaption decay constant between 0.5 and 1.0, e.g. PestoSamplingOptions.RBPT.alpha = 0.51']);
          end
       end
+      
+      function set.trainPhaseFrac(this, value)
+         if(isnumeric(value) && value >= 0.0 && value <= 1)
+            this.trainPhaseFrac = lower(value);
+         else
+            error(['The PestoSamplingOptions.RBPT.trainPhaseFrac should be a value between 0 and 1.']);
+         end
+      end      
       
       function set.temperatureNu(this, value)
          if(isnumeric(value) && value > 0.0)

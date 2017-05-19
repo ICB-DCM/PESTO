@@ -58,51 +58,62 @@ function res = performRBPT( logPostHandle, par, opt )
    
    
    % Initialization
-   nTemps = opt.RBPT.nTemps;
-   nIter = opt.nIterations;
-   theta0 = opt.theta0;
-   sigma0 = opt.sigma0;
-   thetaMin = par.min;
-   thetaMax = par.max;
-   exponentT = opt.RBPT.exponentT;
-   alpha = opt.RBPT.alpha;
-   temperatureNu = opt.RBPT.temperatureNu;
-   memoryLength = opt.RBPT.memoryLength;
-   regFactor = opt.RBPT.regFactor;
-   nPar = par.number;
-   temperatureEta = opt.RBPT.temperatureEta;
+   nTemps            = opt.RBPT.nTemps;
+   nIter             = opt.nIterations;
+   theta0            = opt.theta0;
+   sigma0            = opt.sigma0;
+   thetaMin          = par.min;
+   thetaMax          = par.max;
+   exponentT         = opt.RBPT.exponentT;
+   alpha             = opt.RBPT.alpha;
+   temperatureNu     = opt.RBPT.temperatureNu;
+   memoryLength      = opt.RBPT.memoryLength;
+   regFactor         = opt.RBPT.regFactor;
+   nPar              = par.number;
+   temperatureEta    = opt.RBPT.temperatureEta;
    
-   res.par = nan(nPar, nIter, nTemps);
-   res.logPost = nan(nIter, nTemps);
-   res.acc = nan(nIter, nTemps);
-   res.accSwap = nan(nIter, nTemps, nTemps);
-   res.sigmaScale = nan(nIter, nTemps);
-   res.temperatures = nan(nIter, nTemps);
+   trainPhaseFrac    = opt.RBPT.trainPhaseFrac;
+   nPhaseI           = floor(trainPhaseFrac * nIter);
+   nPhaseII          = nIter - nPhaseI;
    
-   maxT = opt.RBPT.maxT;
-   T = linspace(1,maxT^(1/exponentT),nTemps).^exponentT;
-   beta = 1./T;
+   nMaxRegions       = max(opt.RBPT.RPOpt.modeNumberCandidates);
+   regionPredictionOpt = opt.RBPT.RPOpt;
    
-   acc = zeros(1,nTemps);
-   accSwap = zeros(1,nTemps-1);
-   propSwap = zeros(1,nTemps-1);
-   sigmaScale = ones(1,nTemps);
+   res.par           = nan(nPar, nIter, nTemps);
+   res.logPost       = nan(nIter, nTemps);
+   res.acc           = nan(nIter, nTemps, nMaxRegions);
+   res.accSwap       = nan(nIter, nTemps, nTemps);
+   res.sigmaScale    = nan(nIter, nTemps, nMaxRegions);
+   res.temperatures  = nan(nIter, nTemps);
+   res.newLabel      = nan(nIter, nTemps);
+   res.oldLabel      = nan(nIter, nTemps);
+   
+   maxT              = opt.RBPT.maxT;
+   T                 = linspace(1,maxT^(1/exponentT),nTemps).^exponentT;
+   beta              = 1./T;
+   
+   oL                = nan(1,nTemps);
+   nL                = nan(1,nTemps);
+   acc               = zeros(nTemps,nMaxRegions);
+   accSwap           = zeros(1,nTemps-1);
+   propSwap          = zeros(1,nTemps-1);
+   sigmaScale        = ones(nTemps,nMaxRegions);
    switch size(theta0,2)
       case 1
-         theta = repmat(theta0,[1,nTemps]);
+         theta       = repmat(theta0,[1,nTemps]);
       case nTemps
-         theta = theta0;
+         theta       = theta0;
       otherwise
          error('Dimension of options.theta0 is incorrect.');
    end
-   muHist = theta;
+   muHist            = repmat(theta, [1, 1, nMaxRegions]);
       
    % Regularization sigma0
    for l = 1:size(sigma0,3)
       [~,p] = cholcov(sigma0(:,:,l),0);
       if p ~= 0
          sigma0(:,:,l) = sigma0(:,:,l) + regFactor*eye(nPar);
-         sigma0(:,:,l) = (sigma0(:,:,l)+sigma0(:,:,l)')/2;
+         sigma0(:,:,l) = (sigma0(:,:,l)+sigma0(:,:,l,k)')/2;
          [~,p] = cholcov(sigma0(:,:,l),0);
          if p ~= 0
             sigma0(:,:,l) = sigma0(:,:,l) + max(max(sigma0(:,:,l)))/1000*eye(nPar);
@@ -113,22 +124,24 @@ function res = performRBPT( logPostHandle, par, opt )
    
    switch size(sigma0,3)
       case 1
-         sigmaHist = repmat(sigma0,[1,1,nTemps]);
+         sigmaHist   = repmat(sigma0,[1,1,nTemps]);
       case nTemps
-         sigmaHist = sigma0;
+         sigmaHist   = sigma0;
       otherwise
          error('Dimension of options.Sigma0 is incorrect.');
    end
-   sigmaProp = nan(nPar,nPar,nTemps);
-   logPost = nan(nTemps,1);
-   logPostProp = nan(nTemps,1);
-   for l = 1:nTemps
-      logPost(l) = logPostHandle(theta(:,l));
-   end
-   sigma = sigmaHist;
+   sigmaHist = repmat( sigmaHist, [1, 1, 1, nMaxRegions] );
    
-   msg = '';
-   tic; dspTime = toc;
+   sigmaProp         = nan(nPar,nPar);
+   logPost           = nan(nTemps,1);
+   logPostProp       = nan(nTemps,1);
+   for l = 1:nTemps
+      logPost(l)     = logPostHandle(theta(:,l));
+   end
+   sigma             = sigmaHist;
+   
+   msg               = '';
+   tic; dspTime      = toc;
    
    % Perform MCMC
    j = 0;
@@ -152,29 +165,35 @@ function res = performRBPT( logPostHandle, par, opt )
       % Do MCMC step for each temperature
       for l = 1:nTemps
          
+         % TODO: Get region label of current point
+         oL(l) = 1;
+         
          % Propose
-         thetaProp(:,l) = mvnrnd(theta(:,l),sigma(:,:,l))';
+         thetaProp = mvnrnd(theta(:,l),sigma(:,:,l,oL(l)))';
+         
+         % TODO: Get region label of proposed point
+         nL(l) = 1;
          
          % Check for Bounds
-         if (sum(thetaProp(:,l) < thetaMin) + sum(thetaProp(:,l) > thetaMax)) == 0
+         if (sum(thetaProp < thetaMin) + sum(thetaProp > thetaMax)) == 0
             
             inbounds = 1;
             
             % Proposed posterior value
-            logPostProp(l) = logPostHandle(thetaProp(:,l));
+            logPostProp(l) = logPostHandle(thetaProp);
             
             % New sigma
-            sigmaProp(:,:,l) = sigmaScale(l)^2 * sigmaHist(:,:,l);
+            sigmaProp = sigmaScale(l,nL(l))^2 * sigmaHist(:,:,l,nL(l));
             
             % Regularization of proposed sigma
-            [~,p] = cholcov(sigmaProp(:,:,l),0);
+            [~,p] = cholcov(sigmaProp(:,:),0);
             if p ~= 0
-               sigmaProp(:,:,l) = sigmaProp(:,:,l) + regFactor*eye(nPar);
-               sigmaProp(:,:,l) = (sigmaProp(:,:,l)+sigmaProp(:,:,l)')/2;
-               [~,p] = cholcov(sigmaProp(:,:,l),0);
+               sigmaProp = sigmaProp + regFactor*eye(nPar);
+               sigmaProp = (sigmaProp+sigmaProp')/2;
+               [~,p] = cholcov(sigmaProp,0);
                if p ~= 0
-                  sigmaProp(:,:,l) = sigmaProp(:,:,l) + max(max(sigmaProp(:,:,l)))/1000*eye(nPar);
-                  sigmaProp(:,:,l) = (sigmaProp(:,:,l)+sigmaProp(:,:,l)')/2;
+                  sigmaProp = sigmaProp + max(max(sigmaProp))/1000*eye(nPar);
+                  sigmaProp = (sigmaProp+sigmaProp(:,:)')/2;
                end
             end
             
@@ -184,10 +203,20 @@ function res = performRBPT( logPostHandle, par, opt )
          
          % Transition and Acceptance Probabilities      
          if (inbounds == 1) && (logPostProp(l) > -inf)
-            logTransFor(l) = 1;
-            logTransBack(l) = 1;
+            
+            % Transitions probabilities may differer if the proposed point
+            % lays within a different region
+            if nL(l) ~= oL(l)
+               logTransFor(l)  = logmvnpdf(thetaProp, theta(:,l), sigma(:,:,l,oL(l)));     
+               logTransBack(l) = logmvnpdf(theta(:,l), thetaProp, sigmaProp);        
+            else
+               logTransFor(l)  = 1;     
+               logTransBack(l) = 1;                  
+            end
             pAcc(l) = beta(l)*(logPostProp(l)-logPost(l)) + logTransBack(l) - logTransFor(l);
-            if pAcc(l) > 0       % Do not use min, due to NaN behavior in Matlab
+            
+            % Do not use min, due to NaN behavior in Matlab
+            if pAcc(l) > 0       
                pAcc(l) = 0;
             end
          else
@@ -196,8 +225,8 @@ function res = performRBPT( logPostHandle, par, opt )
          
          % Accept or reject
          if log(rand) <= pAcc(l)
-            acc(l)             = acc(l) + 1;
-            theta(:,l)         = thetaProp(:,l);
+            acc(l,oL(l))       = acc(l,oL(l)) + 1;
+            theta(:,l)         = thetaProp;
             logPost(l)         = logPostProp(l);
          end
          
@@ -206,25 +235,25 @@ function res = performRBPT( logPostHandle, par, opt )
       % Update Proposal
       for l = 1:nTemps
          % Updating of mean and covariance
-         [muHist(:,l),sigmaHist(:,:,l)] = ...
-            updateStatistics(muHist(:,l), sigmaHist(:,:,l), ...
+         [muHist(:,l,oL(l)),sigmaHist(:,:,l,oL(l))] = ...
+            updateStatistics(muHist(:,l,oL(l)), sigmaHist(:,:,l,oL(l)), ...
             theta(:,l), ...
             max(j+1,memoryLength), alpha);
-         sigmaScale(l) = sigmaScale(l)*exp((exp(pAcc(l))-0.234)/(j+1)^alpha);
+         sigmaScale(l,oL(l)) = sigmaScale(l,oL(l))*exp((exp(pAcc(l))-0.234)/(j+1)^alpha);
          
          % Set sigma for the next iteration (recently added like this)
-         sigma(:,:,l) = sigmaScale(l)*sigmaHist(:, :, l);
-         sigma(:,:,l) = sigmaScale(l)*sigma(:,:,l);
+         sigma(:,:,l,oL(l)) = sigmaScale(l,oL(l))*sigmaHist(:,:,l,oL(l));
+         sigma(:,:,l,oL(l)) = sigmaScale(l,oL(l))*sigma(:,:,l,oL(l));
          
          % Regularization of Sigma
-         [~,p] = cholcov(sigma(:,:,l),0);
+         [~,p] = cholcov(sigma(:,:,l,oL(l)),0);
          if p ~= 0
-            sigma(:,:,l) = sigma(:,:,l) + regFactor*eye(nPar);
-            sigma(:,:,l) = (sigma(:,:,l)+sigma(:,:,l)')/2;
-            [~,p] = cholcov(sigma(:,:,l),0);
+            sigma(:,:,l,oL(l)) = sigma(:,:,l,oL(l)) + regFactor*eye(nPar);
+            sigma(:,:,l,oL(l)) = (sigma(:,:,l,oL(l))+sigma(:,:,l,oL(l))')/2;
+            [~,p] = cholcov(sigma(:,:,l,oL(l)),0);
             if p ~= 0
-               sigma(:,:,l) = sigma(:,:,l) + max(max(sigma(:,:,l)))*eye(nPar);
-               sigma(:,:,l) = (sigma(:,:,l)+sigma(:,:,l)')/2;
+               sigma(:,:,l,oL(l)) = sigma(:,:,l,oL(l)) + max(max(sigma(:,:,l,oL(l))))*eye(nPar);
+               sigma(:,:,l,oL(l)) = (sigma(:,:,l,oL(l))+sigma(:,:,l,oL(l))')/2;
             end
          end
          
@@ -270,13 +299,15 @@ function res = performRBPT( logPostHandle, par, opt )
       % Store iteration
       res.par(:,i,:) = theta;
       res.logPost(i,:) = logPost;
-      res.acc(i,:) = 100*acc/j;
+      res.acc(i,:,:) = 100*acc/j;
       res.propSwap = propSwap;
       res.accSwap  = accSwap;
       res.ratioSwap = accSwap ./ propSwap;
-      res.sigmaScale(i,:) = sigmaScale;
+      res.sigmaScale(i,:,:) = sigmaScale;
       res.sigmaHist = sigmaHist;
       res.temperatures(i,:) = 1./beta;
+      res.newLabel(i,:) = nL(:);
+      res.oldLabel(i,:) = oL(:);
    end
    
    switch opt.mode
