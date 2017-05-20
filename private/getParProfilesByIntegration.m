@@ -375,16 +375,22 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
     status = 0;
     persistent lastT;
     persistent CounterMinStep;
+    persistent yLast;
     global llhHistory;
     global yCorrection;
+    global dthLast;
     
     % Initialize persistent variables in the beginning
     if strcmp(flag, 'init')
         lastT = t(1);
+        yLast = y;
+        dthLast = zeros(size(y));
         CounterMinStep = 0;
         
     elseif strcmp(flag, 'done')
         lastT = [];
+        yLast = zeros(size(y));
+        dthLast = zeros(size(y));
         clear CounterMinStep;
         
     else
@@ -418,6 +424,12 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
                 status = 1;
             end
 
+            dthLast = y - yLast;
+            if (isnan(sum(yCorrection)) || isinf(sum(yCorrection)))
+                yLast = y;
+            else
+                yLast = yCorrection;
+            end
             R = exp(-L - logPostMax);
             
             if (strcmp(options.mode, 'text'))
@@ -652,6 +664,7 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
     indexSet = (1:length(y))';
     indexSet(ind) = [];
     
+    global dthLast;
     global ObjFuncCounter;
     ObjFuncCounter = ObjFuncCounter + 1;
     
@@ -663,11 +676,18 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
             [~, GL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
             HL = approximateHessian(y, -GL, [], options.solver.hessian, []);
             solveFullSystem = 1;
-        case {'tn', 'acghes'}
-            if ~strmp(options.solver.hessianPrecond, 'none')
+        case {'tn', 'acghes', 'cg'}
+            if ~strcmp(options.solver.hessianPrecond, 'none')
                 [~, GL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
-                HL = approximateHessian(y, -GL, [], options.solver.hessian, []);
+                HL = approximateHessian(y, -GL, [], options.solver.hessianPrecond, []);
                 solveFullSystem = 1;
+            else
+                if isempty(dthLast)
+                    [~, GL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
+                    dthLast = -GL;
+                end
+                GL = 0;
+                HL = 0;
             end
         otherwise
             error('Unknown type of Hessian computation.');
@@ -706,11 +726,16 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
             dth = zeros(npar + 1, 1);
             dth(ind) = s;
         end
-    else
-        if ~strmp(options.solver.hessianPrecond, 'none')
+    end
+    
+    if (strcmp(options.solver.hessian, 'acghes') ...
+        || strcmp(options.solver.hessian, 'tn') ...
+        || strcmp(options.solver.hessian, 'cg'))
+        
+        if ~strcmp(options.solver.hessianPrecond, 'none')
             init_guess = dth;
         else
-            init_guess = GL;
+            init_guess = dthLast;
         end
         
         if strcmp(options.solver.hessian, 'acghes')
@@ -718,7 +743,7 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
         elseif strcmp(options.solver.hessian, 'tn')
             dth = nan(size(GL));
         elseif strcmp(options.solver.hessian, 'cg')
-            hvpHandle = @(v) options.hvpFunction(theta, v);
+            hvpHandle = @(v) options.solver.hvpFunction(y, v);
             b = -hvpHandle(GG);
             dth = solveSystemCG(y, ...
                 b(indexSet), ...
@@ -726,10 +751,11 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
                 ind, ...
                 @(y) objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber, indexSet), ...
                 hvpHandle, ...
-                options.RelTol, ...
-                options.AbsTol, ...
-                options.maxstepsCG);
+                options.solver.RelTol, ...
+                options.solver.AbsTol, ...
+                options.solver.maxstepsCG);
         end
+        dth = [dth(1:ind-1); s; dth(ind:end)];
     end
     
     % Check, if parameter bounds are violated

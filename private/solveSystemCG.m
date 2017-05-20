@@ -6,16 +6,19 @@ function x = solveSystemCG(theta, b, x0, ind, fHandle, hvpHandle, rtol, atol, ma
     %% Here comes the CG algorithm
     
     % Initialize
-    [~, initGrad] = fHandle(x0);
-    initHVP = hvpHandle(x0);
+    [~, initGrad] = fHandle(fullTheta(theta, x0, ind));
+    hvp = @(x) hvpHandle(fullTheta(theta, x, ind));
+    initHVP = hvp(initGrad);
     initHVP(ind) = [];
-    x = -initGrad * (initGrad' * initGrad) / (initGrad' * initHVP);
-    hvpGrad = hvpHandle(initGrad);
-    hvpGrad(ind) = [];
-    rOld = - b - hvpGrad;
-    d = rOld;
+    b = -b;
     
-    if ((rOld < atol) && rOld/b < rtol)
+    x = -initGrad * norm(initGrad)^2 / (initGrad' * initHVP);
+    mult = hvp(x);
+    mult(ind) = [];
+    rOld = -b - mult;
+    d = rOld;
+
+    if ((norm(rOld) < atol) && norm(rOld./b) < rtol)
         goOn = 0;
     else
         goOn = 1;
@@ -23,8 +26,7 @@ function x = solveSystemCG(theta, b, x0, ind, fHandle, hvpHandle, rtol, atol, ma
     j = 1;
     
     while (j < maxsteps) && (goOn)
-        % Do the CG algorithm
-        z = hvpHandle(d);
+        z = hvp(d);
         z(ind) = [];
         alpha = (rOld' * rOld) / (d' * z);
         x = x + alpha * d;
@@ -34,11 +36,20 @@ function x = solveSystemCG(theta, b, x0, ind, fHandle, hvpHandle, rtol, atol, ma
         rOld = rNew;
         
         % Check for success
-        if ((rOld < atol) && rOld/b < rtol)
+        if ((norm(rNew) < atol) && norm(rNew./b) < rtol)
             goOn = 0;
         else
             goOn = 1;
         end
+        
+        % Increment
+        j = j + 1;
     end
 
+end
+
+function v = fullTheta(y, x, ind)
+    v = y;
+    v(1:ind-1) = x(1:ind-1);
+    v(ind+1:end) = x(ind:end);
 end
