@@ -88,6 +88,10 @@ else
         pIndexSet = allOptions.parameter_index;
     end
 end
+
+% Check, if pStruct has all necessary fieds
+pStruct = checkSanityOfStructs(pStruct, ['p' type(2:end)]);
+
 numP = length(pIndexSet);
 iMAP = allOptions.MAP_index;
 if isempty(iMAP)
