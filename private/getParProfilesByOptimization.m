@@ -92,7 +92,7 @@ elseif strcmp(options.comp_type,'parallel')
     end
     
     % Output
-    if str(options.profile_method, 'optimization')
+    if strcmp(options.profile_method, 'optimization')
         switch options.mode
             case 'visual', fh = plotParameterProfiles(parameters,'1D',fh,options.parameter_index,options.plot_options);
             case 'text' % no output

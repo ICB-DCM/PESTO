@@ -104,7 +104,7 @@ function [parameters, fh] = getParProfilesByIntegration(parameters, objectiveFun
         end
         
         % Output
-        if str(options.profile_method, 'integration')
+        if strcmp(options.profile_method, 'integration')
             switch options.mode
                 case 'visual', fh = plotParameterProfiles(parameters,'1D',fh,options.parameter_index,options.plot_options);
                 case 'text' % no output

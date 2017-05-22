@@ -58,6 +58,9 @@ if length(varargin) >= 1 && ~isempty(varargin{1})
     end
 end
 
+% Check, if parameters has all necessary fieds
+parameters = checkSanityOfStructs(parameters, 'parameters');
+
 % Open figure
 if length(varargin) >= 2 && ~isempty(varargin{2})
     fh = figure(varargin{2});

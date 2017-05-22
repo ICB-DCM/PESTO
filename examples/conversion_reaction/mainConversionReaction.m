@@ -206,7 +206,7 @@ parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultista
 % Building a struct covering all sampling options:
 optionsSampling = PestoSamplingOptions();
 optionsSampling.nIterations = 1e4;
-optionsSampling.mode = 'visual';
+optionsSampling.mode = optionsMultistart.mode;
 
 % PT specific options:
 optionsSampling.samplingAlgorithm   = 'PT';

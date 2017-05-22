@@ -36,6 +36,9 @@ if length(varargin) >= 1 && ~isempty(varargin{1})
     end
 end
 
+% Check, if properties has all necessary fieds
+properties = checkSanityOfStructs(properties, 'properties');
+
 % Open figure
 if length(varargin) >= 2 && ~isempty(varargin{2})
     fh = figure(varargin{2});

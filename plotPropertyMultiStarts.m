@@ -28,6 +28,9 @@ else
     fh = figure('Name','plotPropertyMultiStarts');
 end
 
+% Check, if properties has all necessary fieds
+properties = checkSanityOfStructs(properties, 'properties');
+
 % Options
 if length(varargin) >= 2
     options = handlePlottingOptionArgument(varargin{2});

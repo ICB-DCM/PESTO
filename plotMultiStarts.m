@@ -28,6 +28,10 @@ function fh = plotMultiStarts(parameters, varargin)
 % * 2016/10/07 Daniel Weindl
 
 %% CHECK AND ASSIGN INPUTS
+
+% Check, if parameters has all necessary fieds
+parameters = checkSanityOfStructs(parameters, 'parameters');
+
 % Open figure
 if length(varargin) >= 1 && ~isempty(varargin{1}) && isvalid(varargin{1})
     fh = figure(varargin{1});
