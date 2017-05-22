@@ -162,7 +162,7 @@ if or(options.save,options.tempsave)
 end
 
 %% Initialization
-if strcmp(options.localOptimizer, 'fmincon')
+if strcmp(options.localOptimizer, 'fmincon') || strcmp(options.localOptimizer, 'pswarm')
     maxOptimSteps = options.localOptimizerOptions.MaxIter;
 elseif strcmp(options.localOptimizer, 'meigo-ess') || strcmp(options.localOptimizer, 'meigo-vns')
     maxOptimSteps = options.localOptimizerOptions.maxeval;

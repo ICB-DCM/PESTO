@@ -26,7 +26,7 @@
 % Clean up
 
 clear all;
-close all;
+% close all;
 clc;
 
 TextSizes.DefaultAxesFontSize = 14;
@@ -44,12 +44,12 @@ rng(0);
 % al.
 
 [exdir,~,~]=fileparts(which('mainJakstatSignaling.m'));
-try
-    amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 0);
-catch ME
-    warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
-    rethrow(ME);
-end
+% try
+%     amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 1);
+% catch ME
+%     warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
+%     rethrow(ME);
+% end
 
 %% Data
 % Experimental data is read out from an .xls-file and written to an AMICI
@@ -88,23 +88,15 @@ parameters.guess = par0(:,1:100);
 objectiveFunction = @(theta) logLikelihoodJakstat(theta, amiData);
 
 % PestoOptions
-optionsMultistart          = PestoOptions();
-optionsMultistart.n_starts = 10;
-optionsMultistart.trace    = true;
-optionsMultistart.proposal = 'user-supplied';
-optionsMultistart.obj_type = 'log-posterior';
-optionsMultistart.mode     = 'visual';
-optionsMultistart.localOptimizer = 'fmincon';
-optionsMultistart.localOptimizerOptions = optimset(...
-    'Algorithm','interior-point',...
-    'GradObj', 'on',...
-    'Display', 'iter', ...
-    'MaxIter', 800,...
-    'TolFun', 1e-10,...
-    'MaxFunEvals', 1000*parameters.number);
+optionsPesto          = PestoOptions();
+optionsPesto.trace    = true;
+optionsPesto.proposal = 'user-supplied';
+optionsPesto.obj_type = 'log-posterior';
+optionsPesto.mode     = 'visual';
 
-%% Perform Multistart optimization
-% A multi-start local optimization is performed within the bound defined in
+
+%% Perform optimization
+% A parameters optimization is performed within the bound defined in
 % parameters.min and .max in order to infer the unknown parameters from 
 % measurement data.
 
@@ -114,5 +106,47 @@ optionsMultistart.localOptimizerOptions = optimset(...
 % evaluated, leading to warnings of the ODE simulator AMICI. This is normal
 % and not a bug. It just shows how paramter estimation can look like in
 % complicated situations.
+
+% Different parameter optimization methods are compared with each other.
+% The uncommented version is a simple multi-start local optimization.
+% A version with a hybrid optimization technique (MEIGO-ESS) is also
+% implemented and commented, as well as a purely global optimization scheme
+% (PSwarm). The two alternative (and global) optimization methods are run
+% three times, to ensure that the found optimum is indeed the global one.
+
+
+% Multi-start local optimization part
+optionsPesto.n_starts = 10;
+optionsPesto.localOptimizer = 'fmincon';
+optionsPesto.localOptimizerOptions = optimset(...
+    'Algorithm','interior-point',...
+    'GradObj', 'on',...
+    'Display', 'iter', ...
+    'Hessian', 'on', ...
+    'MaxIter', 800,...
+    'TolFun', 1e-10,...
+    'MaxFunEvals', 1000*parameters.number);
+
+% % Hybrid-type optimization part (requires the MEIGO toolbox)
+% % (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
+% % uncomment):
+% optionsPesto.n_starts = 3;
+% optionsPesto.localOptimizer = 'meigo-ess';
+% MeigoOptions = struct(...
+%     'maxeval', 8000, ...
+%     'local', struct('solver', 'fmincon', ...
+%     'finish', 'fmincon', ...
+%     'iterprint', 1) ...
+%     );
+% optionsPesto.localOptimizerOptions = MeigoOptions;
+
+% % Global optimization part (requires the PSwarm toolbox)
+% % (Install from http://www.norg.uminho.pt/aivaz/pswarm/ and uncomment)
+% optionsPesto.localOptimizer = 'pswarm';
+% optionsPesto.n_starts = 3;
+% optionsPesto.localOptimizerOptions.MaxObj  = 10000;
+
+
+% Run getMultiStarts
 fprintf('\n Perform optimization...');
-parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
+parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
