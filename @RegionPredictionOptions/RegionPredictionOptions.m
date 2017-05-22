@@ -23,7 +23,7 @@ classdef RegionPredictionOptions < matlab.mixin.SetGet
       modeNumberCandidates   = [1,2,3,4,5,6,7,8];
       
       % Display mode either 'silent', 'text' or 'visual'
-      displayModes           = 'visual';
+      displayMode            = 'visual';
       
       % The maximum iterations for the EM algorithm. Should not be reached
       % with proper tolerances.

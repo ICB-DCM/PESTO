@@ -41,17 +41,17 @@ for i = 1 : dimi + 2
 end
 
 % Sampling Options
-rng(5)
+rng('shuffle')
 options                     = PestoSamplingOptions();
 options.objOutNumber        = 1;
-options.nIterations         = 1e4;
+options.nIterations         = 1e5;
 options.mode                = 'text';
 
 % % Using PT
 % options.samplingAlgorithm   = 'PT';
 % options.PT.nTemps           = 40;
-% options.PT.exponentT        = 10;   
-% options.PT.maxT             = 1500;
+% options.PT.exponentT        = 1000;   
+% options.PT.maxT             = 2000;
 % options.PT.alpha            = 0.51;
 % options.PT.temperatureNu    = 1e4;
 % options.PT.memoryLength     = 1;
@@ -64,7 +64,7 @@ options.mode                = 'text';
 
 % Using RBPT
 options.samplingAlgorithm     = 'RBPT';
-options.RBPT.nTemps           = 20;
+options.RBPT.nTemps           = 40;
 options.RBPT.exponentT        = 1000;   
 options.RBPT.maxT             = 2000;
 options.RBPT.alpha            = 0.51;
@@ -73,20 +73,20 @@ options.RBPT.memoryLength     = 1;
 options.RBPT.regFactor        = 1e-8;
 options.RBPT.temperatureEta   = 10;
 
-options.RBPT.trainPhaseFrac   = 0.2;
+options.RBPT.trainPhaseFrac   = 0.1;
 
 options.RBPT.RPOpt.rng                  = 7;
-options.RBPT.RPOpt.nSample              = floor(options.nIterations * options.RBPT.trainPhaseFrac);
+options.RBPT.RPOpt.nSample              = floor(options.nIterations*options.RBPT.trainPhaseFrac)-1;
 options.RBPT.RPOpt.crossValFraction     = 0.2;
 options.RBPT.RPOpt.modeNumberCandidates = [1,2,3,4,5,6,7,8];
-options.RBPT.RPOpt.displayModes         = 'visual';
+options.RBPT.RPOpt.displayMode          = 'visual';
 options.RBPT.RPOpt.maxEMiterations      = 100;
 options.RBPT.RPOpt.nDim                 = par.number;
 options.RBPT.RPOpt.nSubsetSize          = 1000;
 options.RBPT.RPOpt.lowerBound           = par.min;
 options.RBPT.RPOpt.upperBound           = par.max;
-options.RBPT.RPOpt.tolMu                = 1e-4 * (par.max-par.min);
-options.RBPT.RPOpt.tolSigma             = 1e-2 * (par.max-par.min);
+options.RBPT.RPOpt.tolMu                = 1e-4 * (par.max(1)-par.min(1));
+options.RBPT.RPOpt.tolSigma             = 1e-2 * (par.max(1)-par.min(1));
 options.RBPT.RPOpt.dimensionsToPlot     = [1,2];
 options.RBPT.RPOpt.isInformative        = [1,1,zeros(1,options.RBPT.RPOpt.nDim-1)];
 
@@ -111,6 +111,10 @@ subplot(2,1,2);
 % plot_Gauss_LH();
 hold on;
 plot(squeeze(par.S.par(1,:,1))',squeeze(par.S.par(2,:,1))','.'); 
+plot_gaussian_ellipsoid([par.S.par(1,end,1),par.S.par(2,end,1)], ...
+   par.S.sigmaScale(end,1,1)*par.S.sigmaHist(1:2,1:2,1,1))
+plot_gaussian_ellipsoid([par.S.par(1,end,1),par.S.par(2,end,1)], ...
+   par.S.sigmaScale(end,1,2)*par.S.sigmaHist(1:2,1:2,1,2))
 hold off;
 
 
@@ -133,7 +137,10 @@ title('Temperatures')
 plot(log10(par.S.temperatures))
 
 
-
+%% ACT
+addpath('C:\Users\GEYAW\Home\Matlab_Home\2016_12_20_GIT_PESTO_Paper_Code\AnalysisPipelineTools')
+acf = iact(squeeze(par.S.par(:,:,1))')
+max(acf)
 
 
 

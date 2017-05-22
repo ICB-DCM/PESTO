@@ -6,15 +6,15 @@ function [label] = predictFromGMM(p,gmm,opt)
    % Written by Benjamin Ballnus (2017)
    
    % Initialize
-   isInformative = opt.isInformative;
-   nPoints       = length(p);
+   isInformative = logical(opt.isInformative);
+   nPoints       = size(p,2);
    nDim          = opt.nDim;
    
    label         = zeros(1,nPoints);
    llh           = zeros(1,gmm.nModes);   
    
    % Check the likelihood of each mode in log-space
-   logPdf = @(x,w,mu,Sigma) log(w) -0.5*log((2*pi)^length(x)*det(Sigma)) -0.5*(x-mu)'/Sigma*(x-mu);
+   logPdf = @(x,w,mu,Sigma) log(w) -0.5*length(x)*log(2*pi) -0.5*log(det(Sigma)) -0.5*(x-mu)'/Sigma*(x-mu);
    for i = 1:nPoints
       for j = 1:gmm.nModes
          llh(j) = logPdf(  p(isInformative,i), gmm.w(j), gmm.mu(j,isInformative)', ...

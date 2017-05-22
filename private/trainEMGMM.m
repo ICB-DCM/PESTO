@@ -1,4 +1,4 @@
-function [likelihood, res] = trainEMGMM(sample, opt)
+function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
    % This function provides the interface for an EstimationMaximation (EM)
    % algorithm. A gaussian mixture displayModel (GMM) is trained to suit a given data
    % set. The E-step labels all data points related to one of the GMM displayModes.
@@ -22,7 +22,7 @@ function [likelihood, res] = trainEMGMM(sample, opt)
    nSample              = opt.nSample;
    crossValFraction     = opt.crossValFraction;
    modeNumberCandidates = opt.modeNumberCandidates;
-   displayMode          = opt.displayModes;
+   displayMode          = opt.displayMode;
    maxEMiterations      = opt.maxEMiterations;
    nDim                 = opt.nDim;
    nSubsetSize          = opt.nSubsetSize;
@@ -36,7 +36,7 @@ function [likelihood, res] = trainEMGMM(sample, opt)
    %% Partition data into training and test set & initialization
    testSet = sample(1:length(sample)*crossValFraction,:);
    sample = sample(length(sample)*crossValFraction+1:end,:);
-   likelihood = zeros(1,length(modeNumberCandidates));
+   likelihoodOfTestSet = zeros(1,length(modeNumberCandidates));
    
    %% EM for multiple number of displayModes
    for nModes = modeNumberCandidates
@@ -61,11 +61,12 @@ function [likelihood, res] = trainEMGMM(sample, opt)
          nModes = nModes-1;
       end
       
-      mu             = lowerB*ones(nModes,nDim) + (upperB-lowerB)* rand(nModes,nDim);
+      mu             = repmat(lowerB,1,nModes)'.*ones(nModes,nDim) + ...
+                        repmat((upperB-lowerB),1,nModes)'.*rand(nModes,nDim);
       
       
       initClassifier = kmeans(sample,nModes);
-      r              = zeros((1-crossValFraction)*nSample,nModes);
+      r              = zeros(floor((1-crossValFraction)*nSample),nModes);
       for j = 1:nModes; r(:,j) = r(:,j) + (initClassifier == j); end
       
       
@@ -127,7 +128,7 @@ function [likelihood, res] = trainEMGMM(sample, opt)
          end
          
          %% E-step for a random subset of samples
-         selectedIdxs = randi((1-crossValFraction)*nSample,1,nSubsetSize);
+         selectedIdxs = randi(floor((1-crossValFraction)*nSample),1,nSubsetSize);
          for k = selectedIdxs
             denom = 0;
             for j = 1:nModes
@@ -151,8 +152,8 @@ function [likelihood, res] = trainEMGMM(sample, opt)
          end
          
          %% Break if terminiation condition was reached before i == nAlg
-         if max(max(abs(muOld-mu))) < tolMu && ...
-               max(max(max(abs((sigmaOld-sigma))))) < tolSigma
+         if logical(max(max(abs(muOld-mu))) < tolMu) && ...
+               logical(max(max(max(abs((sigmaOld-sigma))))) < tolSigma)
             disp('Terminated because movement tolerances were reached.')
             break
          end
@@ -171,17 +172,21 @@ function [likelihood, res] = trainEMGMM(sample, opt)
       
       %% Tag likelihood of GMM with nModes
       % TODO: Cross Validation
-      idx = find(nModes == modeNumberCandidates);
-      displayModePdf = @(x,w,mu,Sigma) w/sqrt((2*pi)^length(x)*det(Sigma))*exp(-0.5*(x-mu)'/Sigma*(x-mu));
+      idx = find(nModes == modeNumberCandidates);      
+      logNormPdf = @(x,w,mu,Sigma) log(w) - 0.5*length(x)*log(2*pi) -0.5*log(det(Sigma)) - 0.5*(x-mu)'/Sigma*(x-mu);
       for k = 1:size(testSet,1)
-         contribution = 0;
+         logVals = nan(1,nModes);
          for j = 1:nModes
-            contribution = contribution + displayModePdf( testSet(k,1:nDim)', ...
+            logVals(j) = logNormPdf( testSet(k,1:nDim)', ...
                w(j), ...
                squeeze(mu(j,1:nDim))', ...
-               squeeze(sigma(j,1:nDim,1:nDim)) );
+               squeeze(sigma(j,1:nDim,1:nDim)));
          end
-         likelihood(idx) = likelihood(idx) + log(contribution);
+         maxVal = max(logVals);
+         expDiffVals = exp(logVals - maxVal);
+         logContributionOfPoint = maxVal + log(sum(expDiffVals));
+
+         likelihoodOfTestSet(idx) = likelihoodOfTestSet(idx) + logContributionOfPoint;
       end
       
       %% Save results
@@ -189,7 +194,7 @@ function [likelihood, res] = trainEMGMM(sample, opt)
       res(idx).mu       = mu;
       res(idx).sigma    = sigma;
       res(idx).w        = w;
-      res(idx).testLLH  = likelihood(idx);
+      res(idx).testLLH  = likelihoodOfTestSet(idx);
       
    end
    rng(oldSeed);

@@ -77,7 +77,8 @@ function res = performRBPT( logPostHandle, par, opt )
    nPhaseII          = nIter - nPhaseI;
    
    nMaxRegions       = max(opt.RBPT.RPOpt.modeNumberCandidates);
-   regionPredictionOpt = opt.RBPT.RPOpt;
+   regionPredOpt     = opt.RBPT.RPOpt;
+%    regionPredOpt.nSample = nPhaseI;
    
    res.par           = nan(nPar, nIter, nTemps);
    res.logPost       = nan(nIter, nTemps);
@@ -94,6 +95,7 @@ function res = performRBPT( logPostHandle, par, opt )
    
    oL                = nan(1,nTemps);
    nL                = nan(1,nTemps);
+   cntOldLabel       = zeros(nTemps,nMaxRegions);
    acc               = zeros(nTemps,nMaxRegions);
    accSwap           = zeros(1,nTemps-1);
    propSwap          = zeros(1,nTemps-1);
@@ -165,14 +167,42 @@ function res = performRBPT( logPostHandle, par, opt )
       % Do MCMC step for each temperature
       for l = 1:nTemps
          
-         % TODO: Get region label of current point
-         oL(l) = 1;
+         % Get region label of current point or learn the regions for
+         % i==nPhaseI
+         if (i == nPhaseI) && (l == 1)
+            [lh, trainedGMMModels] = trainEMGMM(squeeze(res.par(:,1:nPhaseI-1,l))',regionPredOpt);
+            [~,bestModeNumber] = max(lh);
+            if strcmp(regionPredOpt.displayMode,'text') || strcmp(regionPredOpt.displayMode,'visual') 
+               disp(['The algorithm found nModes=' num2str(bestModeNumber) ' to suit the give data best.']);
+            end
+         elseif (i > nPhaseI) % && (l == 1)
+            oL(l) = predictFromGMM(theta(:,l),trainedGMMModels(bestModeNumber),regionPredOpt);
+%             if theta(1,l) + theta(2,l) > 0
+%                oL(l) = 1;
+%             else
+%                oL(l) = 2;
+%             end
+         else
+            oL(l) = 1;
+         end
+         
+         % Count region accesses (needed for adaptation cooldown)
+         cntOldLabel(l,oL(l)) = cntOldLabel(l,oL(l)) + 1;
          
          % Propose
          thetaProp = mvnrnd(theta(:,l),sigma(:,:,l,oL(l)))';
          
-         % TODO: Get region label of proposed point
-         nL(l) = 1;
+         % Get region label of proposed point 
+         if i > nPhaseI
+            nL(l) = predictFromGMM(thetaProp,trainedGMMModels(bestModeNumber),regionPredOpt);
+%             if thetaProp(1) + thetaProp(2) > 0
+%                nL(l) = 1;
+%             else
+%                nL(l) = 2;
+%             end
+         else
+            nL(l) = 1;
+         end
          
          % Check for Bounds
          if (sum(thetaProp < thetaMin) + sum(thetaProp > thetaMax)) == 0
@@ -239,7 +269,8 @@ function res = performRBPT( logPostHandle, par, opt )
             updateStatistics(muHist(:,l,oL(l)), sigmaHist(:,:,l,oL(l)), ...
             theta(:,l), ...
             max(j+1,memoryLength), alpha);
-         sigmaScale(l,oL(l)) = sigmaScale(l,oL(l))*exp((exp(pAcc(l))-0.234)/(j+1)^alpha);
+         sigmaScale(l,oL(l)) = sigmaScale(l,oL(l))*...
+            exp((exp(pAcc(l))-0.234)/(cntOldLabel(l,oL(l))+1)^alpha);
          
          % Set sigma for the next iteration (recently added like this)
          sigma(:,:,l,oL(l)) = sigmaScale(l,oL(l))*sigmaHist(:,:,l,oL(l));
@@ -299,7 +330,8 @@ function res = performRBPT( logPostHandle, par, opt )
       % Store iteration
       res.par(:,i,:) = theta;
       res.logPost(i,:) = logPost;
-      res.acc(i,:,:) = 100*acc/j;
+      res.cntOldLabel = cntOldLabel;
+      res.acc(i,:,:) = 100*acc./cntOldLabel;
       res.propSwap = propSwap;
       res.accSwap  = accSwap;
       res.ratioSwap = accSwap ./ propSwap;
