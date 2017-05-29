@@ -187,7 +187,19 @@ end
 negLogPost = @(theta) @(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
 negLogPostWErrorCount = @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber);
         
+% Check, if Hessian should be used and if a Hessian function was set, 
+% otherwise use the third output of the objective function instead
+if (strcmp(options.localOptimizer, 'fmincon') && ...
+    strcmp(options.localOptimizerOptions.Hessian, 'on'))
 
+    if (~isfield(options.localOptimizerOptions, 'HessFcn') ...
+        || isempty(options.localOptimizerOptions.HessFcn))
+        
+        % this only works for box-constraints at the moment
+        options.localOptimizerOptions.HessFcn = @(varargin) HessianWrap(negLogPostWErrorCount, varargin);
+    end    
+end
+        
 waitbarFields1 = {'logPost', 'logPost0', 'n_objfun', 'n_iter', 't_cpu', 'exitflag'};
 waitbarFields2 = {'par', 'par0', 'gradient', 'fval_trace', 'time_trace'};
 waitbarFields3 = {'hessian', 'par_trace'};
@@ -603,4 +615,18 @@ function saveResults(parameters,options,i)
         dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__time_trace.csv']),parameters.MS.time_trace(:,i),'delimiter',',','precision',12);
     end
 
+end
+
+
+%% Hessian function for optimization
+function Hessian = HessianWrap(negLogPostWErrorCount, varargin)
+% This function is a dummy for the Hessian function from fmincon
+    
+    if (nargin == 0)
+        error('No parameter vector provided the Hessian function!');
+    else
+        theta = varargin{1}{1};
+    end
+    
+    [~, ~, Hessian] = negLogPostWErrorCount(theta);
 end
