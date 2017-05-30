@@ -234,6 +234,8 @@ if strcmp(options.comp_type, 'sequential')
         error_count = 0;
         
         % Test evaluation of objective function at starting point
+        % Only for multi-start local, since other optimizers use a 
+        % different initialization
         if (strcmp(options.localOptimizer, 'fmincon'))
             if (strcmp(options.localOptimizerOptions.Hessian, 'on'))
                 [J_0,~,~] = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
@@ -242,8 +244,6 @@ if strcmp(options.comp_type, 'sequential')
             else
                 J_0 = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
             end
-        else
-            J_0 = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
         end
         parameters.MS.logPost0(i) = -J_0;
         
