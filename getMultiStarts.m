@@ -244,12 +244,14 @@ if strcmp(options.comp_type, 'sequential')
             else
                 J_0 = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
             end
+            parameters.MS.logPost0(i) = -J_0;
+        else
+            J_0 = [];
         end
-        parameters.MS.logPost0(i) = -J_0;
         
         % Optimization
         startTimeLocalOptimization = cputime;
-        if J_0 < -options.init_threshold
+        if (isempty(J_0) || (J_0 < -options.init_threshold))
             
             if strcmp(options.localOptimizer, 'fmincon')    
                 %% fmincon as local optimizer
@@ -307,7 +309,7 @@ if strcmp(options.comp_type, 'sequential')
                 % parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
                 % parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
                 
-                parameters.MS.J(1, i) = -J_0;
+                parameters.MS.J(1, i) = nan;
                 parameters.MS.logPost(i) = -Results.fbest;
                 parameters.MS.par(:,i) = Results.xbest;
                 parameters.MS.n_objfun(i) = Results.numeval;
