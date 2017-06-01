@@ -12,11 +12,13 @@ function parameters = performOptimizationLsqnonlin(parameters, objective_functio
     parameters.MS.J(1, i) = -J_0;
     parameters.MS.logPost(i) = -resnorm_opt;
     parameters.MS.par(:,i) = theta;
-    parameters.MS.gradient(:,i) = sum(full(jacobian_opt),1);
-    hessian_sqrt = full(jacobian_opt);
-    hessian_opt = hessian_sqrt' * hessian_sqrt;
+    if ~isempty(jacobian_opt)
+        parameters.MS.gradient(:,i) = sum(full(jacobian_opt),1);
+        hessian_sqrt = full(jacobian_opt);
+        hessian_opt = hessian_sqrt' * hessian_sqrt;
+        parameters.MS.hessian(:,:,i) = full(hessian_opt);
+    end
     parameters.MS.n_objfun(i) = results_lsqnonlin.funcCount;
     parameters.MS.n_iter(i) = results_lsqnonlin.iterations;
-    parameters.MS.hessian(:,:,i) = full(hessian_opt);
 
 end

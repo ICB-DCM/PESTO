@@ -76,9 +76,13 @@ function varargout = objectiveWrapWErrorCount(varargin)
                     error('Hessian contains NaNs')
                 end
         end
-
+        
         % Reset error count
-        error_count = error_count - 1;
+        if any(isinf(J)) || any(isnan(J))
+            error_count = error_count + 1;
+        else
+            error_count = error_count - 1;
+        end
         
     catch error_msg
         % Display a warning with error message

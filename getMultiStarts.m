@@ -161,7 +161,7 @@ if or(options.save,options.tempsave)
 end
 
 %% Initialization
-if strcmp(options.localOptimizer, 'fmincon') || strcmp(options.localOptimizer, 'delos')
+if (strcmp(options.localOptimizer, 'fmincon') || strcmp(options.localOptimizer, 'delos') || strcmp(options.localOptimizer, 'lsqnonlin'))
     maxOptimSteps = options.localOptimizerOptions.MaxIter;
 elseif strcmp(options.localOptimizer, 'meigo-ess') || strcmp(options.localOptimizer, 'meigo-vns')
     maxOptimSteps = options.localOptimizerOptions.maxeval;
@@ -239,8 +239,13 @@ if strcmp(options.comp_type, 'sequential')
                 [J_0,~] = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
             end
         elseif (strcmp(options.localOptimizer, 'lsqnonlin'))
-            res = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
-            J_0 = sum(sum(res.^2));
+            if (strcmp(options.localOptimizerOptions.Jacobian, 'on'))
+                [res, ~] = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+                J_0 = sum(sum(res.^2));
+            else
+                res = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+                J_0 = sum(sum(res.^2));
+            end
         else
             J_0 = objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
         end
