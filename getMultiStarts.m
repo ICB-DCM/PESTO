@@ -238,7 +238,16 @@ if strcmp(options.comp_type, 'sequential')
         % different initialization
         if (strcmp(options.localOptimizer, 'fmincon'))
             if (strcmp(options.localOptimizerOptions.Hessian, 'on'))
-                [J_0,~,~] = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+                % We have to check Hessian AND gradient computation, since
+                % simulation can give different results if we're close to
+                % numerical failure
+                [J_0,~,~] = negLogPostWErrorCount(parameters.MS.par0(:,i));
+                [J_1,~] = negLogPostWErrorCount(parameters.MS.par0(:,i));
+                if any(isnan([J_0, J_1]))
+                    J_0 = nan;
+                else
+                    J_0 = max(J_0, J_1);
+                end
             elseif (strcmp(options.localOptimizerOptions.GradObj, 'on'))
                 [J_0,~] = negLogPostWErrorCount(parameters.MS.par0(:,i)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
             else
