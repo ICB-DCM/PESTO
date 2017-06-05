@@ -184,7 +184,7 @@ end
 
 % Define the negative log-posterior funtion
 % (fmincon needs the neagtive log posterior for optimization)
-negLogPost = @(theta) @(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
+negLogPost = @(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
 negLogPostWErrorCount = @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber);
         
 % Check, if Hessian should be used and if a Hessian function was set, 
