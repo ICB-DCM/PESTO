@@ -8,7 +8,7 @@ function [label] = predictFromGMM(p,gmm,opt)
    % Initialize
    isInformative = logical(opt.isInformative);
    nPoints       = size(p,2);
-   nDim          = opt.nDim;
+   nDim          = size(p,1);
    
    label         = zeros(1,nPoints);
    llh           = zeros(1,gmm.nModes);   

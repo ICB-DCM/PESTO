@@ -149,7 +149,8 @@ function res = performRBPT( logPostHandle, par, opt )
    j = 0;
    for i = 1:(nIter)
       
-      j = j + 1; % Relative Index for each Phase
+      % Relative Index for local adaptation
+      j = j + 1; 
       
       % Reporting Progress
       switch opt.mode
@@ -167,14 +168,21 @@ function res = performRBPT( logPostHandle, par, opt )
       % Do MCMC step for each temperature
       for l = 1:nTemps
          
-         % Get region label of current point or learn the regions for
-         % i==nPhaseI
+         % Get region label of current point
          if (i == nPhaseI) && (l == 1)
+            
+            % Train GMM to get label predictions for future points
             [lh, trainedGMMModels] = trainEMGMM(squeeze(res.par(:,1:nPhaseI-1,l))',regionPredOpt);
             [~,bestModeNumber] = max(lh);
             if strcmp(regionPredOpt.displayMode,'text') || strcmp(regionPredOpt.displayMode,'visual') 
                disp(['The algorithm found nModes=' num2str(bestModeNumber) ' to suit the give data best.']);
             end
+            res.regions.lh = lh;
+            res.regions.trainedGMModels = trainedGMMModels;
+            
+            % Reset local adaptation
+            j = 1;
+            
          elseif (i > nPhaseI) % && (l == 1)
             oL(l) = predictFromGMM(theta(:,l),trainedGMMModels(bestModeNumber),regionPredOpt);
 %             if theta(1,l) + theta(2,l) > 0
