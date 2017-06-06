@@ -175,7 +175,10 @@ function res = performRBPT( logPostHandle, par, opt )
             [lh, trainedGMMModels] = trainEMGMM(squeeze(res.par(:,1:nPhaseI-1,l))',regionPredOpt);
             [~,bestModeNumber] = max(lh);
             if strcmp(regionPredOpt.displayMode,'text') || strcmp(regionPredOpt.displayMode,'visual') 
-               disp(['The algorithm found nModes=' num2str(bestModeNumber) ' to suit the give data best.']);
+               disp(['The algorithm found nModes=' ...
+                  num2str(regionPredOpt.modeNumberCandidates(bestModeNumber))...
+                  ' to suit the give data best.']);
+               disp('   ');
             end
             res.regions.lh = lh;
             res.regions.trainedGMModels = trainedGMMModels;

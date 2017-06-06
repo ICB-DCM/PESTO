@@ -31,11 +31,15 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
    tolMu                = opt.tolMu;
    tolSigma             = opt.tolSigma;
    dimensionsToPlot     = opt.dimensionsToPlot;
+   isInformative        = opt.isInformative;
    
    
    %% Partition data into training and test set & initialization
-   testSet = sample(1:length(sample)*crossValFraction,:);
-   sample = sample(length(sample)*crossValFraction+1:end,:);
+   testSetIndices   = randperm(length(sample),floor(length(sample)*crossValFraction));
+   testSetPositions = zeros(1,length(sample)); 
+   testSetPositions(testSetIndices) = ones(1,length(testSetIndices));
+   testSet = sample(logical(testSetPositions),:);
+   sample = sample(~logical(testSetPositions),:);
    likelihoodOfTestSet = zeros(1,length(modeNumberCandidates));
    
    %% EM for multiple number of displayModes
@@ -66,7 +70,7 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
       
       
       initClassifier = kmeans(sample,nModes);
-      r              = zeros(floor((1-crossValFraction)*nSample),nModes);
+      r              = zeros(ceil((1-crossValFraction)*nSample),nModes);
       for j = 1:nModes; r(:,j) = r(:,j) + (initClassifier == j); end
       
       
@@ -128,7 +132,7 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
          end
          
          %% E-step for a random subset of samples
-         selectedIdxs = randi(floor((1-crossValFraction)*nSample),1,nSubsetSize);
+         selectedIdxs = randi(ceil((1-crossValFraction)*nSample),1,nSubsetSize);
          for k = selectedIdxs
             denom = 0;
             for j = 1:nModes
@@ -163,24 +167,20 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
       % Dimensions with larger overlap of all displayModes are likely
       % to be mono-modal and thus bad for classification.
       % TODO: Find a robust way to do this
-%       totalVar = zeros(1,nDim);
-%       for l = 1:nModes
-%          for k = 1:nDim
-%             totalVar(k) = totalVar(k) + sum(squeeze(sigma(l,k,k))/w(l));
-%          end
-%       end
+      isInformative = logical(isInformative);
       
       %% Tag likelihood of GMM with nModes
-      % TODO: Cross Validation
+      % TODO: Cross Validation for the entire algorithm to increase
+      % robustness
       idx = find(nModes == modeNumberCandidates);      
       logNormPdf = @(x,w,mu,Sigma) log(w) - 0.5*length(x)*log(2*pi) -0.5*log(det(Sigma)) - 0.5*(x-mu)'/Sigma*(x-mu);
       for k = 1:size(testSet,1)
          logVals = nan(1,nModes);
          for j = 1:nModes
-            logVals(j) = logNormPdf( testSet(k,1:nDim)', ...
+            logVals(j) = logNormPdf( testSet(k,isInformative)', ...
                w(j), ...
-               squeeze(mu(j,1:nDim))', ...
-               squeeze(sigma(j,1:nDim,1:nDim)));
+               squeeze(mu(j,isInformative))', ...
+               squeeze(sigma(j,isInformative,isInformative)));
          end
          maxVal = max(logVals);
          expDiffVals = exp(logVals - maxVal);
