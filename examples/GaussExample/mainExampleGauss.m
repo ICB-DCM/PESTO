@@ -129,3 +129,16 @@ samplingPlottingOpt.S.col = [0.4,0.4,0.4; 0.6,0.6,0.6; 0.8,0.8,0.8];
 % Plotting
 samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
 plotParameterUncertainty(parameters,'1D',[],[],samplingPlottingOpt);
+
+% Density estimate in 2D again
+samplingPlottingOpt.S.plot_type = 2; 
+
+% Ind set to 1 for only one temperature this time
+samplingPlottingOpt.S.ind = 1;
+
+% Set colors for different chains
+samplingPlottingOpt.S.col = [0.4,0.4,0.4];
+
+% Plotting
+samplingPlottingOpt.S.sp_col = samplingPlottingOpt.S.col;
+plotParameterUncertainty(parameters,'2D',[],[],samplingPlottingOpt);
