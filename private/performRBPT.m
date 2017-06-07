@@ -185,8 +185,8 @@ function res = performRBPT( logPostHandle, par, opt )
                end
             end
             [~,bestModeNumber] = max(lh(:));
-            res.regions.lh = lh(bestModeNumber);
-            res.regions.trainedGMModels = trainedGMMModels{ceil(bestModeNumber/nTrainReplicates)};
+            res.regions.lh = lh;
+            res.regions.trainedGMModels = trainedGMMModels{ceil(bestModeNumber/nMaxRegions)};
             disp(['After Cross Validation ' num2str(mod(bestModeNumber-1,nMaxRegions)+1) ...
                ' modes were found optimal.']);
             disp(' '); msg = '';
@@ -197,7 +197,7 @@ function res = performRBPT( logPostHandle, par, opt )
             
          elseif (i > nPhase) % && (l == 1)
             oL(l) = predictFromGMM(theta(:,l),...
-               trainedGMMModels{ceil(bestModeNumber/nTrainReplicates)}(mod(bestModeNumber-1,nMaxRegions)+1),...
+               trainedGMMModels{ceil(bestModeNumber/nMaxRegions)}(mod(bestModeNumber-1,nMaxRegions)+1),...
                regionPredOpt);
 %             if theta(1,l) + theta(2,l) > 0
 %                oL(l) = 1;
@@ -221,7 +221,7 @@ function res = performRBPT( logPostHandle, par, opt )
          % Get region label of proposed point 
          if i > nPhase
             nL(l) = predictFromGMM(thetaProp,...
-               trainedGMMModels{ceil(bestModeNumber/nTrainReplicates)}(mod(bestModeNumber-1,nMaxRegions)+1),...
+               trainedGMMModels{ceil(bestModeNumber/nMaxRegions)}(mod(bestModeNumber-1,nMaxRegions)+1),...
                regionPredOpt);
 %             if thetaProp(1) + thetaProp(2) > 0
 %                nL(l) = 1;

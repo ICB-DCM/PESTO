@@ -70,10 +70,12 @@ options.RBPT.temperatureEta   = 10;
 
 options.RBPT.trainPhaseFrac   = 0.1;
 
+options.RBPT.nTrainReplicates = 5;
+
 options.RBPT.RPOpt.rng                  = 'shuffle';
 options.RBPT.RPOpt.nSample              = floor(options.nIterations*options.RBPT.trainPhaseFrac)-1;
 options.RBPT.RPOpt.crossValFraction     = 0.2;
-options.RBPT.RPOpt.modeNumberCandidates = [1:5];
+options.RBPT.RPOpt.modeNumberCandidates = [1:15];
 options.RBPT.RPOpt.displayMode          = 'visual';
 options.RBPT.RPOpt.maxEMiterations      = 100;
 options.RBPT.RPOpt.nDim                 = par.number;
