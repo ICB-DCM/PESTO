@@ -6,16 +6,16 @@ clc
 %% Problem initialization
 
 % Settings for this example
-radius = 100;
-sigma = 2;
+radius = 50;
+sigma = 5;
 dimi = 18; % extraDimensions
 logP = @(theta) simulateRingLLH(theta, radius, sigma, dimi);
 ringDimension = 2;
 
 % Set required sampling options for Parallel Tempering
 par.number = ringDimension + dimi;
-par.min    = [-200;-200;-200*ones(dimi,1)];
-par.max    = [200;200;200*ones(dimi,1)];
+par.min    = [-200;-200;-20*ones(dimi,1)];
+par.max    = [200;200;20*ones(dimi,1)];
 par.name   = {};
 for i = 1 : dimi + 2
    par.name{end+1} = ['\theta_' num2str(i)];
@@ -25,7 +25,7 @@ end
 rng('shuffle')
 options                     = PestoSamplingOptions();
 options.objOutNumber        = 1;
-options.nIterations         = 1e6;
+options.nIterations         = 1e5;
 options.mode                = 'text';
 
 % % Using PT
@@ -59,7 +59,7 @@ options.RBPT.trainPhaseFrac   = 0.1;
 options.RBPT.RPOpt.rng                  = 7;
 options.RBPT.RPOpt.nSample              = floor(options.nIterations*options.RBPT.trainPhaseFrac)-1;
 options.RBPT.RPOpt.crossValFraction     = 0.2;
-options.RBPT.RPOpt.modeNumberCandidates = [1,2,3,4,5];
+options.RBPT.RPOpt.modeNumberCandidates = [5,10,15,20,25,30];
 options.RBPT.RPOpt.displayMode          = 'visual';
 options.RBPT.RPOpt.maxEMiterations      = 100;
 options.RBPT.RPOpt.nDim                 = par.number;

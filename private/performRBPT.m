@@ -178,12 +178,13 @@ function res = performRBPT( logPostHandle, par, opt )
                disp(['The algorithm found nModes=' ...
                   num2str(regionPredOpt.modeNumberCandidates(bestModeNumber))...
                   ' to suit the give data best.']);
-               disp('   ');
+               msg = '';
             end
             res.regions.lh = lh;
             res.regions.trainedGMModels = trainedGMMModels;
             
             % Reset local adaptation
+            % TODO: Separate j for each region
             j = 1;
             
          elseif (i > nPhaseI) % && (l == 1)

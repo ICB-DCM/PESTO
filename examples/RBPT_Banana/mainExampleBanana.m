@@ -30,11 +30,11 @@ clc
 logP = @(theta) bananaLLH(theta);
 
 % Set required sampling options for Parallel Tempering
-par.number = 3;
-par.min    = [0;0;1e-3];
-par.max    = [5;5;1e2];
+par.number = 2;
+par.min    = [0;0];
+par.max    = [5;5];
 par.name   = {};
-for i = 1 : 3
+for i = 1 : 2
    par.name{end+1} = ['\theta_' num2str(i)];
 end
 
@@ -47,22 +47,19 @@ options.mode                = 'text';
 
 % % Using PT
 % options.samplingAlgorithm   = 'PT';
-% options.PT.nTemps           = 40;
+% options.PT.nTemps           = 20;
 % options.PT.exponentT        = 1000;   
 % options.PT.maxT             = 2000;
 % options.PT.alpha            = 0.51;
-% options.PT.temperatureNu    = 1e4;
+% options.PT.temperatureNu    = 1e3;
 % options.PT.memoryLength     = 1;
 % options.PT.regFactor        = 1e-8;
 % options.PT.temperatureEta   = 10;
 % options.PT.temperatureAdaptionScheme = 'Vousden16'; 
-% options.theta0              = repmat([mu(1,:),repmat(25,1,dimi)]',1,options.PT.nTemps); 
-% options.theta0(:,1:2:end)   = repmat([mu(2,:),repmat(25,1,dimi)]',1,ceil(options.PT.nTemps/2));
-% options.sigma0              = 1e6*diag(ones(1,dimi+2));
 
 % Using RBPT
 options.samplingAlgorithm     = 'RBPT';
-options.RBPT.nTemps           = 10;
+options.RBPT.nTemps           = 20;
 options.RBPT.exponentT        = 1000;   
 options.RBPT.maxT             = 2000;
 options.RBPT.alpha            = 0.51;
@@ -76,20 +73,21 @@ options.RBPT.trainPhaseFrac   = 0.1;
 options.RBPT.RPOpt.rng                  = 7;
 options.RBPT.RPOpt.nSample              = floor(options.nIterations*options.RBPT.trainPhaseFrac)-1;
 options.RBPT.RPOpt.crossValFraction     = 0.2;
-options.RBPT.RPOpt.modeNumberCandidates = [1,2,3,4,5,6,7,8];
+options.RBPT.RPOpt.modeNumberCandidates = [1:20];
 options.RBPT.RPOpt.displayMode          = 'visual';
 options.RBPT.RPOpt.maxEMiterations      = 100;
 options.RBPT.RPOpt.nDim                 = par.number;
 options.RBPT.RPOpt.nSubsetSize          = 1000;
 options.RBPT.RPOpt.lowerBound           = par.min;
 options.RBPT.RPOpt.upperBound           = par.max;
-options.RBPT.RPOpt.tolMu                = 1e-4 * (par.max(1)-par.min(1));
+options.RBPT.RPOpt.tolMu                = 1e-2 * (par.max(1)-par.min(1));
 options.RBPT.RPOpt.tolSigma             = 1e-2 * (par.max(1)-par.min(1));
 options.RBPT.RPOpt.dimensionsToPlot     = [1,2];
-options.RBPT.RPOpt.isInformative        = [1,1,1];
+options.RBPT.RPOpt.isInformative        = [1,1];
 
-options.theta0              = par.min + (par.max-par.min).*rand(3,options.RBPT.nTemps);
-options.sigma0              = 1e6*diag(ones(1,3));
+% options.theta0              = par.min + (par.max-par.min).*rand(3,options.RBPT.nTemps);
+options.theta0              = [1;0.2];
+options.sigma0              = 1e6*diag(ones(1,2));
 
 % Perform the parameter estimation via sampling
 par = getParameterSamples(par, logP, options);
@@ -132,6 +130,13 @@ bar(par.S.accSwap./par.S.propSwap)
 figure
 title('Temperatures')
 plot(log10(par.S.temperatures))
+
+% Regions
+figure
+for j = 1:length(squeeze(par.S.par(1,1,:)))
+   subplot(ceil(sqrt(length(squeeze(par.S.par(1,1,:))))),ceil(sqrt(length(squeeze(par.S.par(1,1,:))))),j)
+   histogram(par.S.newLabel(1:end,j))
+end
 
 
 %% ACT
