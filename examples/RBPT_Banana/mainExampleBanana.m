@@ -42,7 +42,7 @@ end
 rng('shuffle')
 options                     = PestoSamplingOptions();
 options.objOutNumber        = 1;
-options.nIterations         = 1e6;
+options.nIterations         = 1e5;
 options.mode                = 'text';
 
 % % Using PT

@@ -95,7 +95,7 @@ function res = performRBPT( logPostHandle, par, opt )
    
    oL                = nan(1,nTemps);
    nL                = nan(1,nTemps);
-   cntOldLabel       = zeros(nTemps,nMaxRegions);
+   j       = zeros(nTemps,nMaxRegions);
    acc               = zeros(nTemps,nMaxRegions);
    accSwap           = zeros(1,nTemps-1);
    propSwap          = zeros(1,nTemps-1);
@@ -146,11 +146,8 @@ function res = performRBPT( logPostHandle, par, opt )
    tic; dspTime      = toc;
    
    % Perform MCMC
-   j = 0;
+   j = zeros(nTemps,nMaxRegions);
    for i = 1:(nIter)
-      
-      % Relative Index for local adaptation
-      j = j + 1; 
       
       % Reporting Progress
       switch opt.mode
@@ -185,7 +182,7 @@ function res = performRBPT( logPostHandle, par, opt )
             
             % Reset local adaptation
             % TODO: Separate j for each region
-            j = 1;
+            j = zeros(nTemps,nMaxRegions);
             
          elseif (i > nPhaseI) % && (l == 1)
             oL(l) = predictFromGMM(theta(:,l),trainedGMMModels(bestModeNumber),regionPredOpt);
@@ -197,9 +194,13 @@ function res = performRBPT( logPostHandle, par, opt )
          else
             oL(l) = 1;
          end
+
+         % Relative Index for local adaptation for each temperature and
+         % each region
+         j(l,oL(l)) = j(l,oL(l)) + 1;          
          
          % Count region accesses (needed for adaptation cooldown)
-         cntOldLabel(l,oL(l)) = cntOldLabel(l,oL(l)) + 1;
+         j(l,oL(l)) = j(l,oL(l)) + 1;
          
          % Propose
          thetaProp = mvnrnd(theta(:,l),sigma(:,:,l,oL(l)))';
@@ -280,9 +281,9 @@ function res = performRBPT( logPostHandle, par, opt )
          [muHist(:,l,oL(l)),sigmaHist(:,:,l,oL(l))] = ...
             updateStatistics(muHist(:,l,oL(l)), sigmaHist(:,:,l,oL(l)), ...
             theta(:,l), ...
-            max(j+1,memoryLength), alpha);
+            max(j(l,oL(l))+1,memoryLength), alpha);
          sigmaScale(l,oL(l)) = sigmaScale(l,oL(l))*...
-            exp((exp(pAcc(l))-0.234)/(cntOldLabel(l,oL(l))+1)^alpha);
+            exp((exp(pAcc(l))-0.234)/(j(l,oL(l))+1)^alpha);
          
          % Set sigma for the next iteration (recently added like this)
          sigma(:,:,l,oL(l)) = sigmaScale(l,oL(l))*sigmaHist(:,:,l,oL(l));
@@ -322,14 +323,14 @@ function res = performRBPT( logPostHandle, par, opt )
       if nTemps > 1
          
          % Vousden python Code & Paper
-         kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
+         kappa = temperatureNu / ( j(l,oL(l)) + 1 + temperatureNu ) / temperatureEta;
          dS = kappa*(A(1:end-1)-A(2:end)); 
          dT = diff(1./beta(1:end-1));
          dT = dT .* exp(dS);
          beta(1:end-1) = 1./cumsum([1,dT]);
          
          % My interpretation
-%          kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
+%          kappa = temperatureNu / ( j(l,oL(l)) + 1 + temperatureNu ) / temperatureEta;
 %          dS = kappa*(A(1:end-1)-A(2:end));
 %          T = 1./beta(2:end-1) .* exp(dS);
 %          T(2:end) = max(T(2:end),T(1:end-1)); % Ensure monotone temperature latter         
@@ -342,8 +343,8 @@ function res = performRBPT( logPostHandle, par, opt )
       % Store iteration
       res.par(:,i,:) = theta;
       res.logPost(i,:) = logPost;
-      res.cntOldLabel = cntOldLabel;
-      res.acc(i,:,:) = 100*acc./cntOldLabel;
+      res.j = j;
+      res.acc(i,:,:) = 100*acc./j;
       res.propSwap = propSwap;
       res.accSwap  = accSwap;
       res.ratioSwap = accSwap ./ propSwap;
