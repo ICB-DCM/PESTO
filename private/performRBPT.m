@@ -72,9 +72,10 @@ function res = performRBPT( logPostHandle, par, opt )
    nPar              = par.number;
    temperatureEta    = opt.RBPT.temperatureEta;
    
+   nTrainReplicates  = opt.RBPT.nTrainReplicates;
+   
    trainPhaseFrac    = opt.RBPT.trainPhaseFrac;
-   nPhaseI           = floor(trainPhaseFrac * nIter);
-   nPhaseII          = nIter - nPhaseI;
+   nPhase           = floor(trainPhaseFrac * nIter);
    
    nMaxRegions       = max(opt.RBPT.RPOpt.modeNumberCandidates);
    regionPredOpt     = opt.RBPT.RPOpt;
@@ -166,26 +167,38 @@ function res = performRBPT( logPostHandle, par, opt )
       for l = 1:nTemps
          
          % Get region label of current point
-         if (i == nPhaseI) && (l == 1)
+         if (i == nPhase) && (l == 1)
             
             % Train GMM to get label predictions for future points
-            [lh, trainedGMMModels] = trainEMGMM(squeeze(res.par(:,1:nPhaseI-1,l))',regionPredOpt);
-            [~,bestModeNumber] = max(lh);
-            if strcmp(regionPredOpt.displayMode,'text') || strcmp(regionPredOpt.displayMode,'visual') 
-               disp(['The algorithm found nModes=' ...
-                  num2str(regionPredOpt.modeNumberCandidates(bestModeNumber))...
-                  ' to suit the give data best.']);
-               msg = '';
+            lh = nan(nTrainReplicates,nMaxRegions);
+            trainedGMMModels = {};
+            for rep = 1:nTrainReplicates
+               if strcmp(regionPredOpt.displayMode,'visual') 
+                  close all;
+               end
+               [lh(rep,:), trainedGMMModels{rep}] = trainEMGMM(squeeze(res.par(:,1:nPhase-1,l))',regionPredOpt);
+               [~,bestModeNumber] = max(lh(rep,:));
+               if strcmp(regionPredOpt.displayMode,'text') || strcmp(regionPredOpt.displayMode,'visual') 
+                  disp(['The algorithm found nModes=' ...
+                     num2str(regionPredOpt.modeNumberCandidates(bestModeNumber))...
+                     ' to suit the give data best.']);
+               end
             end
-            res.regions.lh = lh;
-            res.regions.trainedGMModels = trainedGMMModels;
+            [~,bestModeNumber] = max(lh(:));
+            res.regions.lh = lh(bestModeNumber);
+            res.regions.trainedGMModels = trainedGMMModels{ceil(bestModeNumber/nTrainReplicates)};
+            disp(['After Cross Validation ' num2str(mod(bestModeNumber-1,nMaxRegions)+1) ...
+               ' modes were found optimal.']);
+            disp(' '); msg = '';
             
             % Reset local adaptation
             % TODO: Separate j for each region
             j = zeros(nTemps,nMaxRegions);
             
-         elseif (i > nPhaseI) % && (l == 1)
-            oL(l) = predictFromGMM(theta(:,l),trainedGMMModels(bestModeNumber),regionPredOpt);
+         elseif (i > nPhase) % && (l == 1)
+            oL(l) = predictFromGMM(theta(:,l),...
+               trainedGMMModels{ceil(bestModeNumber/nTrainReplicates)}(mod(bestModeNumber-1,nMaxRegions)+1),...
+               regionPredOpt);
 %             if theta(1,l) + theta(2,l) > 0
 %                oL(l) = 1;
 %             else
@@ -206,8 +219,10 @@ function res = performRBPT( logPostHandle, par, opt )
          thetaProp = mvnrnd(theta(:,l),sigma(:,:,l,oL(l)))';
          
          % Get region label of proposed point 
-         if i > nPhaseI
-            nL(l) = predictFromGMM(thetaProp,trainedGMMModels(bestModeNumber),regionPredOpt);
+         if i > nPhase
+            nL(l) = predictFromGMM(thetaProp,...
+               trainedGMMModels{ceil(bestModeNumber/nTrainReplicates)}(mod(bestModeNumber-1,nMaxRegions)+1),...
+               regionPredOpt);
 %             if thetaProp(1) + thetaProp(2) > 0
 %                nL(l) = 1;
 %             else

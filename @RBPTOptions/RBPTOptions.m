@@ -44,6 +44,10 @@ classdef RBPTOptions < matlab.mixin.SetGet
       % Fraction of iterations which are used to train a region predictor
       trainPhaseFrac = 0.2;
       
+      % Number of replicates in the cross validation used in the mode
+      % selection
+      nTrainReplicates = 5;
+      
    end
    
    methods
@@ -190,6 +194,16 @@ classdef RBPTOptions < matlab.mixin.SetGet
             error(['Please enter a positive integer for the number of temperatures, e.g. PestoSamplingOptions.nTemps = 10.']);
          end
       end
+
+      
+      function set.nTrainReplicates(this, value)
+         if(value == floor(value) && value > 0)
+            this.nTrainReplicates = lower(value);
+         else
+            error(['Please enter a positive integer for the number of replicates for mode selection, e.g. PestoSamplingOptions.nTrainReplicates = 10.']);
+         end
+      end      
+      
       
       function set.exponentT(this, value)
          if(isnumeric(value) && value > 0)

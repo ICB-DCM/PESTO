@@ -70,10 +70,10 @@ options.RBPT.temperatureEta   = 10;
 
 options.RBPT.trainPhaseFrac   = 0.1;
 
-options.RBPT.RPOpt.rng                  = 7;
+options.RBPT.RPOpt.rng                  = 'shuffle';
 options.RBPT.RPOpt.nSample              = floor(options.nIterations*options.RBPT.trainPhaseFrac)-1;
 options.RBPT.RPOpt.crossValFraction     = 0.2;
-options.RBPT.RPOpt.modeNumberCandidates = [1:20];
+options.RBPT.RPOpt.modeNumberCandidates = [1:5];
 options.RBPT.RPOpt.displayMode          = 'visual';
 options.RBPT.RPOpt.maxEMiterations      = 100;
 options.RBPT.RPOpt.nDim                 = par.number;
@@ -106,10 +106,10 @@ subplot(2,1,2);
 % plot_Gauss_LH();
 hold on;
 plot(squeeze(par.S.par(1,:,1))',squeeze(par.S.par(2,:,1))','.'); 
-plot_gaussian_ellipsoid([par.S.par(1,end,1),par.S.par(2,end,1)], ...
-   par.S.sigmaScale(end,1,1)*par.S.sigmaHist(1:2,1:2,1,1))
-plot_gaussian_ellipsoid([par.S.par(1,end,1),par.S.par(2,end,1)], ...
-   par.S.sigmaScale(end,1,2)*par.S.sigmaHist(1:2,1:2,1,2))
+for k = unique(par.S.newLabel)'
+   plot_gaussian_ellipsoid([par.S.par(1,end,1),par.S.par(2,end,1)], ...
+      par.S.sigmaScale(end,1,k)*par.S.sigmaHist(1:2,1:2,1,k))
+end
 hold off;
 
 
