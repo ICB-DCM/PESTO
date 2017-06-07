@@ -288,7 +288,7 @@ if strcmp(options.comp_type, 'sequential')
                 if strcmp(options.localOptimizer, 'meigo-vns')
                     meigoAlgo = 'VNS';
                 end
-                objFunHandle = @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber);
+                objFunHandle = @(theta) objectiveWrapWErrorCount(theta',objective_function,options.obj_type,options.objOutNumber);
                 Results = MEIGO(problem, options.localOptimizerOptions, meigoAlgo, objFunHandle);
                 
                 %TODO
