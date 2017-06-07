@@ -82,7 +82,7 @@ options.RBPT.RPOpt.nDim                 = par.number;
 options.RBPT.RPOpt.nSubsetSize          = 1000;
 options.RBPT.RPOpt.lowerBound           = par.min;
 options.RBPT.RPOpt.upperBound           = par.max;
-options.RBPT.RPOpt.tolMu                = 1e-2 * (par.max(1)-par.min(1));
+options.RBPT.RPOpt.tolMu                = 1e-4 * (par.max(1)-par.min(1));
 options.RBPT.RPOpt.tolSigma             = 1e-2 * (par.max(1)-par.min(1));
 options.RBPT.RPOpt.dimensionsToPlot     = [1,2];
 options.RBPT.RPOpt.isInformative        = [1,1];
@@ -139,6 +139,10 @@ for j = 1:length(squeeze(par.S.par(1,1,:)))
    subplot(ceil(sqrt(length(squeeze(par.S.par(1,1,:))))),ceil(sqrt(length(squeeze(par.S.par(1,1,:))))),j)
    histogram(par.S.newLabel(1:end,j))
 end
+
+% modeSelection
+figure;
+plot(par.S.regions.lh);hold all; plot(max(par.S.regions.lh'),'linewidth',2,'color',[0,0,0]);xlabel('nModes');ylabel('LLH of randomly selected test set')
 
 
 %% ACT

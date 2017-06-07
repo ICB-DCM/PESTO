@@ -176,14 +176,27 @@ function res = performRBPT( logPostHandle, par, opt )
                if strcmp(regionPredOpt.displayMode,'visual') 
                   close all;
                end
+               
+               % Train GMM replicate
                [lh(rep,:), trainedGMMModels{rep}] = trainEMGMM(squeeze(res.par(:,1:nPhase-1,l))',regionPredOpt);
                [~,bestModeNumber] = max(lh(rep,:));
+               
+               % Likelihood with BIC adaption using the likelihood, and
+               % number of estimated parameters: n               x w
+               %                                 n*d             x mu
+               %                                 n*(d*(d-1)/2+d) x Sigma
+               nGauss = regionPredOpt.modeNumberCandidates;
+               nDim   = sum(regionPredOpt.isInformative);
+               lh(rep,:) = lh(rep,:) - log(nPhase-1)*(nGauss +nGauss*nDim +nGauss*((nDim-1)*nDim/2+nDim));               
+               
+               % Display
                if strcmp(regionPredOpt.displayMode,'text') || strcmp(regionPredOpt.displayMode,'visual') 
                   disp(['The algorithm found nModes=' ...
                      num2str(regionPredOpt.modeNumberCandidates(bestModeNumber))...
                      ' to suit the give data best.']);
                end
             end
+            lh = lh';
             [~,bestModeNumber] = max(lh(:));
             res.regions.lh = lh;
             res.regions.trainedGMModels = trainedGMMModels{ceil(bestModeNumber/nMaxRegions)};
@@ -192,18 +205,12 @@ function res = performRBPT( logPostHandle, par, opt )
             disp(' '); msg = '';
             
             % Reset local adaptation
-            % TODO: Separate j for each region
             j = zeros(nTemps,nMaxRegions);
             
          elseif (i > nPhase) % && (l == 1)
             oL(l) = predictFromGMM(theta(:,l),...
                trainedGMMModels{ceil(bestModeNumber/nMaxRegions)}(mod(bestModeNumber-1,nMaxRegions)+1),...
                regionPredOpt);
-%             if theta(1,l) + theta(2,l) > 0
-%                oL(l) = 1;
-%             else
-%                oL(l) = 2;
-%             end
          else
             oL(l) = 1;
          end

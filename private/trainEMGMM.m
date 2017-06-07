@@ -80,6 +80,12 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
          drawnow;
       end
       
+      %% Determine informative dimensions.
+      % Dimensions with larger overlap of all displayModes are likely
+      % to be mono-modal and thus bad for classification.
+      % TODO: Find a robust way to do this automatically
+      isInformative = logical(isInformative);      
+      
       %% Do EM for nModes
       for i = 1:maxEMiterations
          
@@ -121,12 +127,12 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
          
          %% Regularize sigma
          for j = 1:nModes
-            [~,p] = cholcov(squeeze(sigma(j,:,:)),0);
+            [~,p] = cholcov(squeeze(sigma(j,isInformative,isInformative)),0);
             if p ~= 0
                while p ~= 0
-                  sigma(j,:,:) = squeeze(sigma(j,:,:)) + 1e-1*eye(nDim);
-                  sigma(j,:,:) = (squeeze(sigma(j,:,:))+squeeze(sigma(j,:,:))')/2;
-                  [~,p] = cholcov(squeeze(sigma(j,:,:)),0);
+                  sigma(j,isInformative,isInformative) = squeeze(sigma(j,isInformative,isInformative)) + 1e-1*eye(nDim);
+                  sigma(j,isInformative,isInformative) = (squeeze(sigma(j,isInformative,isInformative))+squeeze(sigma(j,isInformative,isInformative))')/2;
+                  [~,p] = cholcov(squeeze(sigma(j,isInformative,isInformative)),0);
                end
             end
          end
@@ -136,7 +142,7 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
          for k = selectedIdxs
             denom = 0;
             for j = 1:nModes
-               pDummy = mvnpdf( sample(k,:)', squeeze(mu(j,:))', squeeze(sigma(j,:,:)) );
+               pDummy = mvnpdf( sample(k,isInformative)', squeeze(mu(j,isInformative))', squeeze(sigma(j,isInformative,isInformative)) );
                r(k,j) = w(j) * pDummy;
                denom = denom + w(j) * pDummy;
             end
@@ -151,8 +157,8 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
          for j = 1:nModes
             sumDummy = sum(r(:,j));
             w(j) = sumDummy/nSample;
-            mu(j,:) = sum(r(:,j).*sample(:,:))/sumDummy;
-            sigma(j,:,:) = (r(:,j).*sample)'*sample / sumDummy - mu(j,:)'*mu(j,:);
+            mu(j,isInformative) = sum(r(:,j).*sample(:,isInformative))/sumDummy;
+            sigma(j,isInformative,isInformative) = (r(:,j).*sample)'*sample / sumDummy - mu(j,isInformative)'*mu(j,isInformative);
          end
          
          %% Break if terminiation condition was reached before i == nAlg
@@ -163,15 +169,7 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
          end
       end
       
-      %% Determine informative dimensions.
-      % Dimensions with larger overlap of all displayModes are likely
-      % to be mono-modal and thus bad for classification.
-      % TODO: Find a robust way to do this
-      isInformative = logical(isInformative);
-      
       %% Tag likelihood of GMM with nModes
-      % TODO: Cross Validation for the entire algorithm to increase
-      % robustness
       idx = find(nModes == modeNumberCandidates);      
       logNormPdf = @(x,w,mu,Sigma) log(w) - 0.5*length(x)*log(2*pi) -0.5*log(det(Sigma)) - 0.5*(x-mu)'/Sigma*(x-mu);
       for k = 1:size(testSet,1)
