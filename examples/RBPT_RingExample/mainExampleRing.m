@@ -25,7 +25,7 @@ end
 rng('shuffle')
 options                     = PestoSamplingOptions();
 options.objOutNumber        = 1;
-options.nIterations         = 1e5;
+options.nIterations         = 2e5;
 options.mode                = 'text';
 
 % % Using PT
@@ -56,10 +56,10 @@ options.RBPT.temperatureEta   = 10;
 
 options.RBPT.trainPhaseFrac   = 0.1;
 
-options.RBPT.RPOpt.rng                  = 7;
+options.RBPT.RPOpt.rng                  = 'shuffle';
 options.RBPT.RPOpt.nSample              = floor(options.nIterations*options.RBPT.trainPhaseFrac)-1;
 options.RBPT.RPOpt.crossValFraction     = 0.2;
-options.RBPT.RPOpt.modeNumberCandidates = [5,10,15,20,25,30];
+options.RBPT.RPOpt.modeNumberCandidates = [1,2:2:20];
 options.RBPT.RPOpt.displayMode          = 'visual';
 options.RBPT.RPOpt.maxEMiterations      = 100;
 options.RBPT.RPOpt.nDim                 = par.number;
@@ -69,7 +69,7 @@ options.RBPT.RPOpt.upperBound           = par.max;
 options.RBPT.RPOpt.tolMu                = 1e-4 * (par.max(1)-par.min(1));
 options.RBPT.RPOpt.tolSigma             = 1e-2 * (par.max(1)-par.min(1));
 options.RBPT.RPOpt.dimensionsToPlot     = [1,2];
-options.RBPT.RPOpt.isInformative        = [1,1,zeros(1,options.RBPT.RPOpt.nDim-1)];
+options.RBPT.RPOpt.isInformative        = [1,1,zeros(1,options.RBPT.RPOpt.nDim-2)];
 
 
 randoms                     = randn(2,options.RBPT.nTemps);

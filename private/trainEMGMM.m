@@ -31,7 +31,7 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
    tolMu                = opt.tolMu;
    tolSigma             = opt.tolSigma;
    dimensionsToPlot     = opt.dimensionsToPlot;
-   isInformative        = opt.isInformative;
+   isInformative        = logical(opt.isInformative);
    
    
    %% Partition data into training and test set & initialization
@@ -69,7 +69,7 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
                         repmat((upperB-lowerB),1,nModes)'.*rand(nModes,nDim);
       
       
-      initClassifier = kmeans(sample,nModes);
+      initClassifier = kmeans(sample(:,isInformative),nModes);
       r              = zeros(ceil((1-crossValFraction)*nSample),nModes);
       for j = 1:nModes; r(:,j) = r(:,j) + (initClassifier == j); end
       
@@ -101,7 +101,7 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
                   try
                      delete(hS);
                   end
-                  hS = plot(sample(1:end,dimensionsToPlot(1)),sample(1:end,dimensionsToPlot(2)),'b.');
+                  hS = plot(sample(:,dimensionsToPlot(1)),sample(:,dimensionsToPlot(2)),'b.');
                   for j = 1:nModes
                      try
                         delete(h(j))
@@ -130,7 +130,7 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
             [~,p] = cholcov(squeeze(sigma(j,isInformative,isInformative)),0);
             if p ~= 0
                while p ~= 0
-                  sigma(j,isInformative,isInformative) = squeeze(sigma(j,isInformative,isInformative)) + 1e-1*eye(nDim);
+                  sigma(j,isInformative,isInformative) = squeeze(sigma(j,isInformative,isInformative)) + 1e-1*eye(sum(isInformative));
                   sigma(j,isInformative,isInformative) = (squeeze(sigma(j,isInformative,isInformative))+squeeze(sigma(j,isInformative,isInformative))')/2;
                   [~,p] = cholcov(squeeze(sigma(j,isInformative,isInformative)),0);
                end
@@ -158,7 +158,7 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
             sumDummy = sum(r(:,j));
             w(j) = sumDummy/nSample;
             mu(j,isInformative) = sum(r(:,j).*sample(:,isInformative))/sumDummy;
-            sigma(j,isInformative,isInformative) = (r(:,j).*sample)'*sample / sumDummy - mu(j,isInformative)'*mu(j,isInformative);
+            sigma(j,isInformative,isInformative) = (r(:,j).*sample(:,isInformative))'*sample(:,isInformative) / sumDummy - mu(j,isInformative)'*mu(j,isInformative);
          end
          
          %% Break if terminiation condition was reached before i == nAlg

@@ -170,7 +170,7 @@ function res = performRBPT( logPostHandle, par, opt )
          if (i == nPhase) && (l == 1)
             
             % Train GMM to get label predictions for future points
-            lh = nan(nTrainReplicates,nMaxRegions);
+            lh = nan(nTrainReplicates,length(regionPredOpt.modeNumberCandidates));
             trainedGMMModels = {};
             for rep = 1:nTrainReplicates
                if strcmp(regionPredOpt.displayMode,'visual') 
@@ -179,7 +179,6 @@ function res = performRBPT( logPostHandle, par, opt )
                
                % Train GMM replicate
                [lh(rep,:), trainedGMMModels{rep}] = trainEMGMM(squeeze(res.par(:,1:nPhase-1,l))',regionPredOpt);
-               [~,bestModeNumber] = max(lh(rep,:));
                
                % Likelihood with BIC adaption using the likelihood, and
                % number of estimated parameters: n               x w
@@ -188,6 +187,7 @@ function res = performRBPT( logPostHandle, par, opt )
                nGauss = regionPredOpt.modeNumberCandidates;
                nDim   = sum(regionPredOpt.isInformative);
                lh(rep,:) = lh(rep,:) - log(nPhase-1)*(nGauss +nGauss*nDim +nGauss*((nDim-1)*nDim/2+nDim));               
+               [~,bestModeNumber] = max(lh(rep,:));               
                
                % Display
                if strcmp(regionPredOpt.displayMode,'text') || strcmp(regionPredOpt.displayMode,'visual') 
