@@ -2,10 +2,17 @@
 %
 % Demonstrates the use of:
 % * getMultiStarts()
+% * getParameterProfiles()
 %
 % Demostrates furhtermore
 % * how to implement a user-supplied guess for intial parameters
 % * that non-evaluable points in parameter space can occur
+% * how different optimization methods perform (multi-start local, hybrid,
+%   global) -> Not necessary to perform computations, data-sheet is in this
+%   folder and can be loaded (comparison_optimization_methods.mat)
+% * how providing Hessians can improve optimization
+% * how to use profile calculation in hybrid mode on a complex example
+% * how to use parallelization
 %
 % This example provides a model for the JakStat signaling pathway with an
 % time resolved input of the drug EPO. The model has been taken from the
@@ -25,8 +32,8 @@
 %% Preliminary
 % Clean up
 
-% clear all;
-% close all;
+clear all;
+close all;
 clc;
 
 TextSizes.DefaultAxesFontSize = 14;
@@ -92,7 +99,7 @@ optionsPesto          = PestoOptions();
 optionsPesto.trace    = true;
 optionsPesto.proposal = 'user-supplied';
 optionsPesto.obj_type = 'log-posterior';
-optionsPesto.mode     = 'visual';
+optionsPesto.mode     = 'silent';
 
 
 %% Perform optimization
@@ -122,7 +129,7 @@ optionsPesto.localOptimizerOptions = optimset(...
     'Algorithm', 'interior-point',...
     'GradObj', 'on',...
     'Display', 'iter', ... 'Hessian', 'on', ... uncomment this to use the Hessian for optimization 
-    'MaxIter', 800,...
+    'MaxIter', 1000,...
     'TolFun', 1e-10,...
     'MaxFunEvals', 1000*parameters.number);
 
@@ -130,21 +137,19 @@ optionsPesto.localOptimizerOptions = optimset(...
 % % (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
 % % uncomment):
 % optionsPestoHybrid = optionsPesto.copy;
-% optionsPestoHybrid.n_starts = 10;
 % optionsPestoHybrid.localOptimizer = 'meigo-ess';
 % MeigoOptions = struct(...
-%     'maxeval', 8000, ...
+%     'maxeval', 10000, ...
 %     'local', struct('solver', 'fmincon', ...
 %     'finish', 'fmincon', ...
 %     'iterprint', 1) ...
 %     );
 % optionsPestoHybrid.localOptimizerOptions = MeigoOptions;
-
+% 
 % % Global optimization part (requires the PSwarm toolbox)
 % % (Install from http://www.norg.uminho.pt/aivaz/pswarm/ and uncomment)
 % optionsPestoGlobal = optionsPesto.copy;
 % optionsPestoGlobal.localOptimizer = 'pswarm';
-% optionsPestoGlobal.n_starts = 10;
 % optionsPestoGlobal.localOptimizerOptions.MaxObj  = 10000;
 
 % The example can also be run in parallel mode: Uncomment this, if wanted
@@ -162,7 +167,9 @@ end
     
 % Run getMultiStarts
 fprintf('\n Perform optimization...');
-parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+parametersMultistart = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+% parametersHybrid = getMultiStarts(parameters, objectiveFunction, optionsPestoHybrid);
+% parametersGlobal = getMultiStarts(parameters, objectiveFunction, optionsPestoGlobal);
 
 
 %% Perform uncertainty analysis
