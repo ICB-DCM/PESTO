@@ -241,7 +241,7 @@ if strcmp(options.comp_type, 'sequential')
                 % Depending on the algorithm, the Hessian gets called
                 % seperately (IP) or with the objective function (TR), so
                 % different cases have to be checked.
-                if strcmp(options.localOptimizer.Algorithm, 'interior-point')
+                if strcmp(options.localOptimizerOptions.Algorithm, 'interior-point')
                     [J_0,~] = negLogPostWErrorCount(parameters.MS.par0(:,iMS));
                 else
                     [J_0,~,~] = negLogPostWErrorCount(parameters.MS.par0(:,iMS));
