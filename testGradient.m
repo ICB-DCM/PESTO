@@ -81,6 +81,7 @@ function [g, g_fd_f, g_fd_b, g_fd_c] = testGradient(varargin)
                str_1 = [str_1 '~'];
             end
             if i == max(ig,il);
+               disp('g ref')
                eval([str_1 '] = fun(theta);']);
                break;
             else
@@ -141,7 +142,7 @@ function [g, g_fd_f, g_fd_b, g_fd_c] = testGradient(varargin)
    end
    
    for i = 1:length(theta)
-      i
+      disp(['PARAMETER: ' num2str(i)]);
       % function evaluation
       if(~ischar(il))
          try

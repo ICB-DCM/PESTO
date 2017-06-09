@@ -129,10 +129,17 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
          for j = 1:nModes
             [~,p] = cholcov(squeeze(sigma(j,isInformative,isInformative)),0);
             if p ~= 0
-               while p ~= 0
+               cntDummy = 0;
+               while p ~= 0 && cntDummy < 1e4
+                  cntDummy = cntDummy + 1;
                   sigma(j,isInformative,isInformative) = squeeze(sigma(j,isInformative,isInformative)) + 1e-1*eye(sum(isInformative));
                   sigma(j,isInformative,isInformative) = (squeeze(sigma(j,isInformative,isInformative))+squeeze(sigma(j,isInformative,isInformative))')/2;
                   [~,p] = cholcov(squeeze(sigma(j,isInformative,isInformative)),0);
+               end
+               if cntDummy >= 1e4
+                  error(['The regularization of sigma failed while trying' ...
+                     ' to estimate a GMM using EM. This is often due to'
+                     ' too small test samples used for training.']);
                end
             end
          end

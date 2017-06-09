@@ -78,7 +78,7 @@ options.RBPT.trainPhaseFrac   = 0.1;
 options.RBPT.RPOpt.rng                  = 7;
 options.RBPT.RPOpt.nSample              = floor(options.nIterations*options.RBPT.trainPhaseFrac)-1;
 options.RBPT.RPOpt.crossValFraction     = 0.2;
-options.RBPT.RPOpt.modeNumberCandidates = [1,2,3,4,5,6,7,8];
+options.RBPT.RPOpt.modeNumberCandidates = 2;%[1,2,3,4,5,6,7,8];
 options.RBPT.RPOpt.displayMode          = 'visual';
 options.RBPT.RPOpt.maxEMiterations      = 100;
 options.RBPT.RPOpt.nDim                 = par.number;
@@ -111,10 +111,10 @@ subplot(2,1,2);
 % plot_Gauss_LH();
 hold on;
 plot(squeeze(par.S.par(1,:,1))',squeeze(par.S.par(2,:,1))','.'); 
-plot_gaussian_ellipsoid([par.S.par(1,end,1),par.S.par(2,end,1)], ...
-   par.S.sigmaScale(end,1,1)*par.S.sigmaHist(1:2,1:2,1,1))
-plot_gaussian_ellipsoid([par.S.par(1,end,1),par.S.par(2,end,1)], ...
-   par.S.sigmaScale(end,1,2)*par.S.sigmaHist(1:2,1:2,1,2))
+for k = unique(par.S.newLabel)'
+   plot_gaussian_ellipsoid([par.S.par(1,end,1),par.S.par(2,end,1)], ...
+      par.S.sigmaScale(end,1,k)*par.S.sigmaHist(1:2,1:2,1,k))
+end
 hold off;
 
 
@@ -135,6 +135,18 @@ bar(par.S.accSwap./par.S.propSwap)
 figure
 title('Temperatures')
 plot(log10(par.S.temperatures))
+
+% Regions
+figure
+for j = 1:length(squeeze(par.S.par(1,1,:)))
+   subplot(ceil(sqrt(length(squeeze(par.S.par(1,1,:))))),ceil(sqrt(length(squeeze(par.S.par(1,1,:))))),j)
+   histogram(par.S.newLabel(1:end,j))
+end
+
+% modeSelection
+figure;
+plot(par.S.regions.lh);hold all; plot(max(par.S.regions.lh'),'linewidth',2,'color',[0,0,0]);xlabel('nModes');ylabel('LLH of randomly selected test set')
+
 
 
 %% ACT
