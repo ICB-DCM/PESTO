@@ -453,8 +453,12 @@ options.localOptimizerOptions.OutputFcn = [];
             case 'iter'
                 if(ftrace)
                     parameters.MS.par_trace(:,optimValues.iteration+1,i) = x;
-                    parameters.MS.fval_trace(optimValues.iteration+1,i) = optimValues.fval;
                     parameters.MS.time_trace(optimValues.iteration+1,i) = cputime - startTimeLocalOptimization;
+                    if isfield(optimValues, 'fval')
+                        parameters.MS.fval_trace(optimValues.iteration+1,i) = optimValues.fval;
+                    else
+                        parameters.MS.fval_trace(optimValues.iteration+1,i) = optimValues.resnorm;
+                    end
                 end
                 if(ftempsave)
                     if optimValues.iteration>0
