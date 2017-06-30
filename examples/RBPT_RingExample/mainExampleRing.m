@@ -28,59 +28,59 @@ options.objOutNumber        = 1;
 options.nIterations         = 1e4;
 options.mode                = 'text';
 
-% Using PT
-options.samplingAlgorithm   = 'PT';
-options.PT.nTemps           = 40;
-options.PT.exponentT        = 1000;   
-options.PT.maxT             = 2000;
-options.PT.alpha            = 0.51;
-options.PT.temperatureNu    = 1e4;
-options.PT.memoryLength     = 1;
-options.PT.regFactor        = 1e-8;
-options.PT.temperatureEta   = 10;
-options.PT.temperatureAdaptionScheme = 'Vousden16'; 
-
-randoms                     = randn(2,options.PT.nTemps);
-squareSum                   = sqrt(sum(randoms.^2));
-randomPointsOnRing          = randoms ./ squareSum;
-% plot(randomPointsOnRing(1,:),randomPointsOnRing(2,:),'.')
-options.theta0              = [radius*randomPointsOnRing;zeros(dimi,options.PT.nTemps)];
-options.sigma0              = 1e6*diag(ones(1,dimi+2));
-
-% % Using RBPT
-% options.samplingAlgorithm     = 'RBPT';
-% options.RBPT.nTemps           = 30;
-% options.RBPT.exponentT        = 1000;   
-% options.RBPT.maxT             = 2000;
-% options.RBPT.alpha            = 0.51;
-% options.RBPT.temperatureNu    = 1e3;
-% options.RBPT.memoryLength     = 1;
-% options.RBPT.regFactor        = 1e-8;
-% options.RBPT.temperatureEta   = 10;
+% % Using PT
+% options.samplingAlgorithm   = 'PT';
+% options.PT.nTemps           = 40;
+% options.PT.exponentT        = 1000;   
+% options.PT.maxT             = 2000;
+% options.PT.alpha            = 0.51;
+% options.PT.temperatureNu    = 1e4;
+% options.PT.memoryLength     = 1;
+% options.PT.regFactor        = 1e-8;
+% options.PT.temperatureEta   = 10;
+% options.PT.temperatureAdaptionScheme = 'Vousden16'; 
 % 
-% options.RBPT.trainPhaseFrac   = 0.1;
-% 
-% options.RBPT.RPOpt.rng                  = 'shuffle';
-% options.RBPT.RPOpt.nSample              = floor(options.nIterations*options.RBPT.trainPhaseFrac)-1;
-% options.RBPT.RPOpt.crossValFraction     = 0.2;
-% options.RBPT.RPOpt.modeNumberCandidates = [1,2:2:20];
-% options.RBPT.RPOpt.displayMode          = 'visual';
-% options.RBPT.RPOpt.maxEMiterations      = 100;
-% options.RBPT.RPOpt.nDim                 = par.number;
-% options.RBPT.RPOpt.nSubsetSize          = 1000;
-% options.RBPT.RPOpt.lowerBound           = par.min;
-% options.RBPT.RPOpt.upperBound           = par.max;
-% options.RBPT.RPOpt.tolMu                = 1e-4 * (par.max(1)-par.min(1));
-% options.RBPT.RPOpt.tolSigma             = 1e-2 * (par.max(1)-par.min(1));
-% options.RBPT.RPOpt.dimensionsToPlot     = [1,2];
-% options.RBPT.RPOpt.isInformative        = [1,1,zeros(1,options.RBPT.RPOpt.nDim-2)];
-
-% randoms                     = randn(2,options.RBPT.nTemps);
+% randoms                     = randn(2,options.PT.nTemps);
 % squareSum                   = sqrt(sum(randoms.^2));
 % randomPointsOnRing          = randoms ./ squareSum;
 % % plot(randomPointsOnRing(1,:),randomPointsOnRing(2,:),'.')
-% options.theta0              = [radius*randomPointsOnRing;zeros(dimi,options.RBPT.nTemps)];
+% options.theta0              = [radius*randomPointsOnRing;zeros(dimi,options.PT.nTemps)];
 % options.sigma0              = 1e6*diag(ones(1,dimi+2));
+
+% Using RBPT
+options.samplingAlgorithm     = 'RBPT';
+options.RBPT.nTemps           = 30;
+options.RBPT.exponentT        = 1000;   
+options.RBPT.maxT             = 2000;
+options.RBPT.alpha            = 0.51;
+options.RBPT.temperatureNu    = 1e3;
+options.RBPT.memoryLength     = 1;
+options.RBPT.regFactor        = 1e-8;
+options.RBPT.temperatureEta   = 10;
+
+options.RBPT.trainPhaseFrac   = 0.1;
+
+options.RBPT.RPOpt.rng                  = 'shuffle';
+options.RBPT.RPOpt.nSample              = floor(options.nIterations*options.RBPT.trainPhaseFrac)-1;
+options.RBPT.RPOpt.crossValFraction     = 0.2;
+options.RBPT.RPOpt.modeNumberCandidates = [1,2:2:20];
+options.RBPT.RPOpt.displayMode          = 'visual';
+options.RBPT.RPOpt.maxEMiterations      = 100;
+options.RBPT.RPOpt.nDim                 = par.number;
+options.RBPT.RPOpt.nSubsetSize          = 1000;
+options.RBPT.RPOpt.lowerBound           = par.min;
+options.RBPT.RPOpt.upperBound           = par.max;
+options.RBPT.RPOpt.tolMu                = 1e-4 * (par.max(1)-par.min(1));
+options.RBPT.RPOpt.tolSigma             = 1e-2 * (par.max(1)-par.min(1));
+options.RBPT.RPOpt.dimensionsToPlot     = [1,2];
+options.RBPT.RPOpt.isInformative        = [1,1,zeros(1,options.RBPT.RPOpt.nDim-2)];
+
+randoms                     = randn(2,options.RBPT.nTemps);
+squareSum                   = sqrt(sum(randoms.^2));
+randomPointsOnRing          = randoms ./ squareSum;
+% plot(randomPointsOnRing(1,:),randomPointsOnRing(2,:),'.')
+options.theta0              = [radius*randomPointsOnRing;zeros(dimi,options.RBPT.nTemps)];
+options.sigma0              = 1e6*diag(ones(1,dimi+2));
 
 % Perform the parameter estimation via sampling
 par = getParameterSamples(par, logP, options);

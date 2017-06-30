@@ -138,7 +138,7 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
                end
                if cntDummy >= 1e4
                   error(['The regularization of sigma failed while trying' ...
-                     ' to estimate a GMM using EM. This is often due to'
+                     ' to estimate a GMM using EM. This is often due to' ...
                      ' too small test samples used for training.']);
                end
             end
@@ -164,8 +164,8 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
          for j = 1:nModes
             sumDummy = sum(r(:,j));
             w(j) = sumDummy/nSample;
-            mu(j,isInformative) = sum(r(:,j).*sample(:,isInformative))/sumDummy;
-            sigma(j,isInformative,isInformative) = (r(:,j).*sample(:,isInformative))'*sample(:,isInformative) / sumDummy - mu(j,isInformative)'*mu(j,isInformative);
+            mu(j,isInformative) = sum(bsxfun(@times,r(:,j),sample(:,isInformative)))/sumDummy;
+            sigma(j,isInformative,isInformative) = (bsxfun(@times,r(:,j),sample(:,isInformative)))'*sample(:,isInformative) / sumDummy - mu(j,isInformative)'*mu(j,isInformative);
          end
          
          %% Break if terminiation condition was reached before i == nAlg

@@ -92,6 +92,10 @@ function res = performPT( logPostHandle, par, opt )
    beta = 1./T;
 %    beta = linspace(1,1/nTemps,nTemps).^exponentT;
 %    beta(end) = min(1/opt.PT.maxT,beta(end));
+   if nTemps == 1
+      T = 0;
+      beta = 1;
+   end
    
    acc = zeros(1,nTemps);
    accSwap = zeros(1,nTemps-1);
