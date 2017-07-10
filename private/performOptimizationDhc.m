@@ -1,38 +1,23 @@
-function parameters = performOptimizationDhc(parameters, objective_function, i, J_0, options)
+function parameters = performOptimizationDhc(parameters, objective_function, iStart, J_0, options)
 
-    % Scale initial parameters for DHC implementation
-    par0 = (parameters.MS.par0(:,i) - parameters.min) ./ (parameters.max - parameters.min);
-    initsize = 0.1; % 0.1 times whole parameter range
+    tolerances.stepSize = options.localOptimizerOptions.TolX;
+    tolerances.objectiveChange = options.localOptimizerOptions.TolFun;
+    tolerances.maxIter = options.localOptimizerOptions.MaxFunEvals;
+    tolerances.barrier = options.localOptimizerOptions.barrier;
     
-    if strcmp(options.localOptimizerOptions.Display, 'iter')
-        iterprint = true;
-    else
-        iterprint = false;
-    end
+    [x, y, t_cpu, n_iter, flag] = hillClimbThisThing(@(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber), parameters.min, parameters.max, parameters.MS.par0(:,iStart), tolerances);
     
-    [J_opt, theta, iterations] = dhc(...
-        @(theta) objectiveWrapWErrorCount(theta, objective_function, options.obj_type, options.objOutNumber),...
-        par0,...
-        initsize,...
-        options.localOptimizerOptions.TolX,...
-        options.localOptimizerOptions.MaxFunEvals,...
-        parameters.min,...
-        parameters.max,...
-        0,... % Weight for penalty function: do that yourself at some point
-        [],...
-        [],...
-        iterprint,...
-        []);
-    
-    [~, G_opt, H_opt] = objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber);
+    [~, G_opt, H_opt] = objectiveWrapDelosWErrorCount(x,objective_function,options.obj_type,options.objOutNumber,[],1);
 
     % Assignment of results
-    parameters.MS.J(1, i) = -J_0;
-    parameters.MS.logPost(i) = -J_opt;
-    parameters.MS.par(:,i) = theta;
-    parameters.MS.gradient(:,i) = -G_opt;
-    parameters.MS.hessian(:,:,i) = -H_opt;
-    parameters.MS.n_objfun(i) = iterations;
-    parameters.MS.n_iter(i) = iterations;
+    parameters.MS.J(1, iStart) = -J_0;
+    parameters.MS.logPost(iStart) = -y;
+    parameters.MS.par(:,iStart) = x;
+    parameters.MS.exitflag(iStart) = flag;
+    parameters.MS.gradient(:,iStart) = G_opt;
+    parameters.MS.hessian(:,:,iStart) = H_opt;
+    parameters.MS.n_objfun(iStart) = n_iter;
+    parameters.MS.n_iter(iStart) = n_iter;
+    parameters.MS.n_iter(iStart) = t_cpu;
 
 end

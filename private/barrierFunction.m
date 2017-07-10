@@ -2,7 +2,7 @@
 %
 % Last change: Paul Stapor, 06/04/17
 
-function [objective, gradient] = barrierFunction(objective, gradient, theta, borders, iteration, maxIter, method)
+function varargout = barrierFunction(objective, gradient, theta, borders, iteration, maxIter, method)
 %% Documentation of barrierFunction
 %
 % This function applies barrier or penalty funcions to an objective
@@ -11,6 +11,10 @@ function [objective, gradient] = barrierFunction(objective, gradient, theta, bor
 
 
 %% Main Routine
+    
+    if isempty(gradient)
+        gradient = zeros(size(theta));
+    end
     
     % The input is passed to the different algorithms
     switch(method)
@@ -25,6 +29,15 @@ function [objective, gradient] = barrierFunction(objective, gradient, theta, bor
  
         otherwise
             error('Call to a non-existing update method');
+    end
+    
+    switch nargout
+        case 1
+            varargout = {objective};
+        case 2
+            varargout = {objective, gradient};
+        case 3
+            varargout = {objective, gradient, []};
     end
 end
 
@@ -81,7 +94,7 @@ function [objective, gradient] = logBarrier(objective, gradient, theta, borders,
     parabola = parabola ./ (0.5*(borders(:,2) - borders(:,1)).^2);
     
     % Setting the values
-    barrObjective = - 1/scale * log(parabola);
+    barrObjective = - sum(1/scale * log(parabola));
     barrGradient = - 1/scale * (2*theta - theta.*(borders(:,1)+borders(:,2))) ./ ((theta - borders(:,1)) .* (theta - borders(:,2)));
     
     objective = objective + barrObjective;
