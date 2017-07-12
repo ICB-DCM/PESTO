@@ -2,6 +2,17 @@
 %
 % Demonstrates the use of:
 % * getMultiStarts()
+% * getParameterProfiles()
+%
+% Demostrates furhtermore
+% * how to implement a user-supplied guess for intial parameters
+% * that non-evaluable points in parameter space can occur
+% * how different optimization methods perform (multi-start local, hybrid,
+%   global) -> Not necessary to perform computations, data-sheet is in this
+%   folder and can be loaded (comparison_optimization_methods.mat)
+% * how providing Hessians can improve optimization
+% * how to use profile calculation in hybrid mode on a complex example
+% * how to use parallelization
 %
 % This example provides a model for the JakStat signaling pathway with an
 % time resolved input of the drug EPO. The model has been taken from the
@@ -29,6 +40,9 @@ TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
+% Seed random number generator
+rng(0);
+
 %% Model Definition
 % The ODE model is set up using the AMICI toolbox. To access the AMICI
 % model setup, see jakstat_pesto_syms.m
@@ -37,12 +51,12 @@ set(0,TextSizes);
 % al.
 
 [exdir,~,~]=fileparts(which('mainJakstatSignaling.m'));
-try
-    amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 0);
-catch ME
-    warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
-    rethrow(ME);
-end
+% try
+%     amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 1);
+% catch ME
+%     warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
+%     rethrow(ME);
+% end
 
 %% Data
 % Experimental data is read out from an .xls-file and written to an AMICI
@@ -81,27 +95,97 @@ parameters.guess = par0(:,1:100);
 objectiveFunction = @(theta) logLikelihoodJakstat(theta, amiData);
 
 % PestoOptions
-optionsMultistart           = PestoOptions();
-optionsMultistart.n_starts  = 10;
-optionsMultistart.trace     = true;
-optionsMultistart.mode      = 'visual';
-optionsMultistart.fmincon   = optimset(...
-    'Algorithm','interior-point',...
-    'GradObj', 'on',...
-    'Display', 'iter-detailed', ...
-    'MaxIter', 800,...
-    'TolCon', 0,...
-    'TolFun', 1e-10,...
-    'TolX', 1e-12,...
-    'MaxProjCGIter', 100,...
-    'TolPCG', 0.001,...
-    'PrecondBandWidth', Inf,...
-    'MaxFunEvals', 1000*parameters.number);
+optionsPesto          = PestoOptions();
+optionsPesto.trace    = true;
+optionsPesto.proposal = 'user-supplied';
+optionsPesto.obj_type = 'log-posterior';
+optionsPesto.mode     = 'silent';
 
-%% Perform Multistart optimization
-% A multi-start local optimization is performed within the bound defined in
+
+%% Perform optimization
+% A parameters optimization is performed within the bound defined in
 % parameters.min and .max in order to infer the unknown parameters from 
 % measurement data.
 
+% REMARK: The optimization in this case is rather challenging and the
+% box constraints in the parameter space are set generously. So
+% optimization will encounter many points in which the ODE can not be
+% evaluated, leading to warnings of the ODE simulator AMICI. This is normal
+% and not a bug. It just shows how paramter estimation can look like in
+% complicated situations.
+
+% Different parameter optimization methods are compared with each other.
+% The uncommented version is a simple multi-start local optimization.
+% A version with a hybrid optimization technique (MEIGO-ESS) is also
+% implemented and commented, as well as a purely global optimization scheme
+% (PSwarm). The two alternative (and global) optimization methods are run
+% three times, to ensure that the found optimum is indeed the global one.
+
+
+% Multi-start local optimization part
+optionsPesto.n_starts = 25;
+optionsPesto.localOptimizer = 'fmincon';
+optionsPesto.localOptimizerOptions = optimset(...
+    'Algorithm', 'interior-point',...
+    'GradObj', 'on',...
+    'Display', 'iter', ... 'Hessian', 'on', ... uncomment this to use the Hessian for optimization 
+    'MaxIter', 1000,...
+    'TolFun', 1e-10,...
+    'MaxFunEvals', 1000*parameters.number);
+
+% % Hybrid-type optimization part (requires the MEIGO toolbox)
+% % (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
+% % uncomment):
+% optionsPestoHybrid = optionsPesto.copy;
+% optionsPestoHybrid.localOptimizer = 'meigo-ess';
+% MeigoOptions = struct(...
+%     'maxeval', 10000, ...
+%     'local', struct('solver', 'fmincon', ...
+%     'finish', 'fmincon', ...
+%     'iterprint', 1) ...
+%     );
+% optionsPestoHybrid.localOptimizerOptions = MeigoOptions;
+% 
+% % Global optimization part (requires the PSwarm toolbox)
+% % (Install from http://www.norg.uminho.pt/aivaz/pswarm/ and uncomment)
+% optionsPestoGlobal = optionsPesto.copy;
+% optionsPestoGlobal.localOptimizer = 'pswarm';
+% optionsPestoGlobal.localOptimizerOptions.MaxObj  = 10000;
+
+% The example can also be run in parallel mode: Uncomment this, if wanted
+% optionsPesto.comp_type = 'parallel'; 
+% optionsPesto.mode = 'text';
+% % optionsPesto.save = true; 
+% optionsPesto.foldername = 'results';
+% n_workers = 10;
+
+if strcmp(optionsPesto.comp_type, 'parallel') && (n_workers >= 2)
+    parpool(n_workers); 
+else
+    optionsPesto.comp_type = 'sequential';
+end
+    
+% Run getMultiStarts
 fprintf('\n Perform optimization...');
-parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
+parametersMultistart = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+% parametersHybrid = getMultiStarts(parameters, objectiveFunction, optionsPestoHybrid);
+% parametersGlobal = getMultiStarts(parameters, objectiveFunction, optionsPestoGlobal);
+
+
+%% Perform uncertainty analysis
+% The uncertainty of the estimated parameters is visualized by computing
+% and plotting profile likelihoods. Different mathod can be used.
+
+% Use the hybrid approach for profiles: uncomment this, if wanted
+% optionsPesto.profile_method = 'integration';
+
+% Profile likelihood calculation
+parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
+
+
+%% Cleaning up
+
+% Close parpool
+if strcmp(optionsPesto.comp_type, 'parallel') && (n_workers >= 2)
+    delete(gcp('nocreate'))
+end

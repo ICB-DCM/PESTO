@@ -40,6 +40,6 @@ switch length(varargin)
     case 4
         fh = plotPropertyUncertainty(properties, varargin{1}, varargin{2}, varargin{3}, varargin{4});
     otherwise
-        error('Too many arguments for plotPropertyProfiles().');
+        error('Too many arguments for plotPropertySamples().');
 end
 end

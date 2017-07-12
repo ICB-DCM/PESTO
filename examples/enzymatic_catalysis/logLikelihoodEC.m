@@ -126,7 +126,7 @@ end
 % Loop over the experiments and simulation for each experiment
 for iMeasure = miniBatch
     % Simulation
-    odeOptions = odeset('RelTol', 1e-5, 'AbsTol', 1e-8);
+    odeOptions = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
     [~,X] = ode15s(@(t,x) f(exp(theta),x), t, [con0(:,iMeasure); fillX], odeOptions);
     y = h(X(:,1:nStates), exp(theta));
     Y(:, :) = yMeasured(iMeasure, :, :);

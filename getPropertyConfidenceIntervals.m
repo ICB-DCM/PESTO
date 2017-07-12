@@ -16,6 +16,8 @@ function properties = getPropertyConfidenceIntervals(properties, alpha, varargin
 % Parameters:
 %   properties: property struct
 %   alpha: vector with desired confidence levels for the intervals
+%   varargin: 
+%    options: A PestoOptions instance
 %
 % Return values:
 %   properties: updated properties struct
@@ -36,12 +38,8 @@ function properties = getPropertyConfidenceIntervals(properties, alpha, varargin
 % * 2016/12/01 Paul Stapor
 
 %% Checking and assigning inputs
-% Options
-if (length(varargin) >= 1)
-    if (~isa(varargin{1}, 'PestoOptions'))
-        error('Argument 3 is not of type PestoOptions.')
-    end
-    options = varargin{1};
+if length(varargin) >= 1
+    options = handleOptionArgument(varargin{1});
 else
     options = PestoOptions();
 end
@@ -99,6 +97,14 @@ for k = 1:length(alpha)
     end
 end
 
-plotConfidenceIntervals(properties, alpha, [], options);
+%% Output
+switch options.mode
+    case 'visual'
+        plotConfidenceIntervals(properties, alpha, [], options);
+        disp('-> Calculation of confidence intervals for properties FINISHED.');
+    case 'text'
+        disp('-> Calculation of confidence intervals for properties FINISHED.');
+    case 'silent' % no output
+end
 
 end

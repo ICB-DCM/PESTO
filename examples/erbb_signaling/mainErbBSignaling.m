@@ -28,6 +28,9 @@ TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
+% Seed random number generator
+rng(0);
+
 %% Model Definition
 % The ODE model is set up using the AMICI toolbox. To access the AMICI
 % model setup, see erbb_signaling_pesto_syms.m
@@ -64,12 +67,10 @@ parameters.number = length(theta);
 
 % Set the PESTO-options
 optionsMultistart           = PestoOptions();
-optionsMultistart.n_starts  = 20;
+optionsMultistart.n_starts  = 5;
 optionsMultistart.comp_type = 'sequential';
 optionsMultistart.mode      = 'text';
-optionsMultistart.rng       = 0;
-optionsMultistart.fmincon   = optimset(optionsMultistart.fmincon,...
-    'Algorithm','interior-point',...
+optionsMultistart.localOptimizerOptions = optimset('Algorithm','interior-point',...
     'GradObj', 'on',...
     'Display', 'iter', ...
     'MaxIter', 1000,...
@@ -85,5 +86,9 @@ objectiveFunction = @(theta) logLikelihoodErbBSignaling(theta, D(1));
 % parameters.min and .max in order to infer the unknown parameters from 
 % measurement data.
 
+% REMARK: The problem is rather intermediate to large-scale, each 
+% evaluation of the objective function takes a while, parameter space is
+% high dimensional. Hence, optimization takes a while (up to some hours)
+% for this example.
 fprintf('\n Perform optimization...');
 parameters_adjoint = getMultiStarts(parameters, objectiveFunction, optionsMultistart);

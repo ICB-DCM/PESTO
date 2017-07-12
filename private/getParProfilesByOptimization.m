@@ -82,17 +82,17 @@ end
 
 %% Profile calculation
 if strcmp(options.comp_type,'sequential')
-    for i = options.parameter_index
+    for i = options.profile_optim_index
         parameters = optimizeProfileForParameterI(parameters, objective_function, i, options, fh);
     end
     
 elseif strcmp(options.comp_type,'parallel')
-    parfor i = options.parameter_index
+    parfor i = options.profile_optim_index
         optimizeProfileForParameterI(parameters, objective_function, i, options, fh);        
     end
     
     % Output
-    if str(options.profile_method, 'optimization')
+    if strcmp(options.profile_method, 'optimization')
         switch options.mode
             case 'visual', fh = plotParameterProfiles(parameters,'1D',fh,options.parameter_index,options.plot_options);
             case 'text' % no output
@@ -199,109 +199,119 @@ end
 
 end
 
-function [parameters] = optimizeProfileForParameterI(parameters, objective_function, i, options, fh)
+function [parameters] = optimizeProfileForParameterI(parameters, objective_function, j, options, fh)
 
-% Initialization
-logPost_max = parameters.MS.logPost(1);
-P_par = parameters.MS.par(:,options.MAP_index);
-P_logPost = parameters.MS.logPost(options.MAP_index);
-P_R = exp(parameters.MS.logPost(options.MAP_index)-parameters.MS.logPost(1));
+    % Initialization
+    logPost_max = parameters.MS.logPost(1);
+    P_par = parameters.MS.par(:,options.MAP_index);
+    P_logPost = parameters.MS.logPost(options.MAP_index);
+    P_R = exp(parameters.MS.logPost(options.MAP_index)-parameters.MS.logPost(1));
 
-% Construction of index set
-I1 = [1:i-1]';
-I2 = [i+1:parameters.number]';
-I  = [I1;I2];
+    % Construction of index set
+    I1 = [1:j-1]';
+    I2 = [j+1:parameters.number]';
+    I  = [I1;I2];
 
-% Compute profile for in- and decreasing theta_i
-for s = [-1,1]
-    % Starting point
-    theta  = parameters.MS.par(:,options.MAP_index);
-    logPost = parameters.MS.logPost(options.MAP_index);
-    
-    % Lower and upper bounds for profiles
-    theta_min = [parameters.min(I1);options.P.min(i);parameters.min(I2)];
-    theta_max = [parameters.max(I1);options.P.max(i);parameters.max(I2)];
-    
-    % Initialize direction
-    dtheta = zeros(parameters.number,1);
-    dtheta(i) = s*options.options_getNextPoint.guess;
-    
-    % Sequential update
-    while (options.P.min(i) < theta(i)) && (theta(i) < options.P.max(i)) && ...
-            (logPost >= (log(options.R_min) + parameters.MS.logPost(1)))
-        
-        % Proposal of next profile point
-        [theta_next,J_exp] = ...
-            getNextProfilePoint(theta,theta_min,theta_max,dtheta/abs(dtheta(i)),...
-            abs(dtheta(i)),options.options_getNextPoint.min,options.options_getNextPoint.max,options.options_getNextPoint.update,...
-            -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost),@(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber),...
-            parameters.constraints,options.options_getNextPoint.mode,i);
-        
-        % Construction of reduced linear constraints
-        [A,b,Aeq,beq] = getConstraints(theta,parameters,I);
-        
-        % Optimization
-        [theta_I_opt,J_opt] = ...
-            fmincon(@(theta_I) objectiveWrap([theta_I(I1);theta_next(i);theta_I(I2-1)],objective_function,options.obj_type,options.objOutNumber,I),... % negative log-posterior function
-            theta_next(I),...
-            A  ,b  ,... % linear inequality constraints
-            Aeq,beq,... % linear equality constraints
-            parameters.min(I),...   % lower bound
-            parameters.max(I),...   % upper bound
-            [],options.profileReoptimizationOptions);    % options
-        
-        % Restore full vector and determine update direction
-        logPost = -J_opt;
-        dtheta = [theta_I_opt(I1);theta_next(i);theta_I_opt(I2-1)] - theta;
-        theta = theta + dtheta;
-        
-        % Sorting
-        switch s
-            case -1
-                P_par = [theta,P_par];
-                P_logPost = [logPost,P_logPost];
-                P_R = [exp(logPost - parameters.MS.logPost(1)),P_R];
-            case +1
-                P_par = [P_par,theta];
-                P_logPost = [P_logPost,logPost];
-                P_R = [P_R,exp(logPost - parameters.MS.logPost(1))];
-        end
-        
-        % Assignment
-        parameters.P(i).par = P_par;
-        parameters.P(i).logPost = P_logPost;
-        parameters.P(i).R = P_R;
-        
-        % Save
-        if options.save
-            dlmwrite([options.foldername '/P' num2str(i,'%d') '__par.csv'],P_par,'delimiter',',','precision',12);
-            dlmwrite([options.foldername '/P' num2str(i,'%d') '__logPost.csv'],P_logPost,'delimiter',',','precision',12);
-            dlmwrite([options.foldername '/P' num2str(i,'%d') '__R.csv'],P_R,'delimiter',',','precision',12);
-        end
-        
-        % Output
-        if ~strcmp(options.comp_type,'parallel')
-            switch(i)
-                case 1
-                    ordstr = 'st';
-                case 2
-                    ordstr = 'nd';
-                case 3
-                    ordstr = 'rd';
-                otherwise
-                    ordstr = '-th';
+    % Compute profile for in- and decreasing theta_i
+    for s = [-1,1]
+        % Starting point
+        theta  = parameters.MS.par(:,options.MAP_index);
+        logPost = parameters.MS.logPost(options.MAP_index);
+
+        % Lower and upper bounds for profiles
+        theta_min = [parameters.min(I1);options.P.min(j);parameters.min(I2)];
+        theta_max = [parameters.max(I1);options.P.max(j);parameters.max(I2)];
+
+        % Initialize direction
+        dtheta = zeros(parameters.number,1);
+        dtheta(j) = s*options.options_getNextPoint.guess;
+
+        % Get the computation time
+        startTimeProfile = cputime;
+        stepCount = 0;
+
+        % Sequential update
+        while (options.P.min(j) < theta(j)) && (theta(j) < options.P.max(j)) && ...
+                (logPost >= (log(options.R_min) + parameters.MS.logPost(1)))
+
+            % Proposal of next profile point
+            [theta_next,J_exp] = ...
+                getNextProfilePoint(theta,theta_min,theta_max,dtheta/abs(dtheta(j)),...
+                abs(dtheta(j)),options.options_getNextPoint.min,options.options_getNextPoint.max,options.options_getNextPoint.update,...
+                -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost),@(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber),...
+                parameters.constraints,options.options_getNextPoint.mode,j);
+
+            % Construction of reduced linear constraints
+            [A,b,Aeq,beq] = getConstraints(theta,parameters,I);
+
+            % Optimization
+            [theta_I_opt,J_opt] = ...
+                fmincon(@(theta_I) objectiveWrap([theta_I(I1);theta_next(j);theta_I(I2-1)],objective_function,options.obj_type,options.objOutNumber,I),... % negative log-posterior function
+                theta_next(I),...
+                A  ,b  ,... % linear inequality constraints
+                Aeq,beq,... % linear equality constraints
+                parameters.min(I),...   % lower bound
+                parameters.max(I),...   % upper bound
+                [],options.profileReoptimizationOptions);    % options
+            stepCount = stepCount + 1;
+
+            % Restore full vector and determine update direction
+            logPost = -J_opt;
+            dtheta = [theta_I_opt(I1);theta_next(j);theta_I_opt(I2-1)] - theta;
+            theta = theta + dtheta;
+
+            % Sorting
+            switch s
+                case -1
+                    P_par = [theta,P_par];
+                    P_logPost = [logPost,P_logPost];
+                    P_R = [exp(logPost - parameters.MS.logPost(1)),P_R];
+                case +1
+                    P_par = [P_par,theta];
+                    P_logPost = [P_logPost,logPost];
+                    P_R = [P_R,exp(logPost - parameters.MS.logPost(1))];
             end
-            str = [num2str(i,'%d') ordstr ' P: point ' num2str(length(parameters.P(i).R)-1,'%d') ', R = ' ...
-                num2str(exp(- J_opt - parameters.MS.logPost(1)),'%.3e') ' (optimized) / '...
-                num2str(exp(- J_exp - parameters.MS.logPost(1)),'%.3e') ' (predicted)'];
-            switch options.mode
-                case 'visual', fh = plotParameterProfiles(parameters,'1D',fh,options.parameter_index,options.plot_options);
-                case 'text', disp(str);
-                case 'silent' % no output
+
+            % Assignment
+            parameters.P(j).par = P_par;
+            parameters.P(j).logPost = P_logPost;
+            parameters.P(j).R = P_R;
+
+            % Save
+            if options.save
+                dlmwrite([options.foldername '/P' num2str(j,'%d') '__par.csv'],P_par,'delimiter',',','precision',12);
+                dlmwrite([options.foldername '/P' num2str(j,'%d') '__logPost.csv'],P_logPost,'delimiter',',','precision',12);
+                dlmwrite([options.foldername '/P' num2str(j,'%d') '__R.csv'],P_R,'delimiter',',','precision',12);
+            end
+
+            % Output
+            if ~strcmp(options.comp_type,'parallel')
+                switch(j)
+                    case 1
+                        ordstr = 'st';
+                    case 2
+                        ordstr = 'nd';
+                    case 3
+                        ordstr = 'rd';
+                    otherwise
+                        ordstr = '-th';
+                end
+                str = [num2str(j,'%d') ordstr ' P: point ' num2str(length(parameters.P(j).R)-1,'%d') ', R = ' ...
+                    num2str(exp(- J_opt - parameters.MS.logPost(1)),'%.3e') ' (optimized) / '...
+                    num2str(exp(- J_exp - parameters.MS.logPost(1)),'%.3e') ' (predicted)'];
+                switch options.mode
+                    case 'visual', fh = plotParameterProfiles(parameters,'1D',fh,options.parameter_index,options.plot_options);
+                    case 'text', disp(str);
+                    case 'silent' % no output
+                end
             end
         end
+
+        parameters.P(j).t_cpu(round((s+3)/2)) = cputime - startTimeProfile;
+        parameters.P(j).optSteps(round((s+3)/2)) = stepCount;
+        parameters.P(j).intSteps(round((s+3)/2)) = 0;
+        parameters.P(j).reOptSteps(round((s+3)/2)) = 0;
     end
-end
 
 end
 

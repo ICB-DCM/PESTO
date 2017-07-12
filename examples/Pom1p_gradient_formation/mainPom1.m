@@ -15,6 +15,9 @@ TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
+% Seed random number generator
+rng(0);
+
 %% Model Definition
 % The models are provided as AMICI syms files in the folder Models
 addpath('Models');
@@ -79,7 +82,7 @@ end
 options.optionsMultistart = PestoOptions();
 options.optionsMultistart.obj_type = 'log-posterior';
 options.optionsMultistart.comp_type = 'sequential';
-options.optionsMultistart.fmincon = optimset(options.optionsMultistart.fmincon,...
+options.optionsMultistart.localOptimizerOptions = optimset(options.optionsMultistart.localOptimizerOptions,...
    'Algorithm','interior-point',...
    'Display','off',...
    'GradObj','on',...

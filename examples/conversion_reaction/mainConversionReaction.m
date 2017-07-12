@@ -4,9 +4,14 @@
 % * getMultiStarts()
 % * getParameterProfiles()
 % * getParameterSamples()
-% * plotParameterUncertainty()
+% * getParameterConfidenceIntervals()
+% * getPropertyMultiStarts()
 % * getPropertyProfiles()
+% * getPropertySamples()
 % * getPropertyConfidenceIntervals()
+%
+% Demonstrates furthermore:
+% * how to use the MEIGO and the PSwarm toolbox for optimization (commented code version)
 %
 % This example provides a model for the interconversion of two species 
 % (X_1 and X_2) following first-order mass action kinetics with the 
@@ -22,10 +27,11 @@
 % these measurements, demonstrating the use of getMultiStarts(). The model 
 % fit is then visualized.
 % 
-% Profile likelihood calculation is done using getParameterProfiles().
+% Profile likelihood calculation is done using getParameterProfiles() 
+% applying a classical optimization algorithm and plotted.
 %
-% Multi-chain Monte-Carlo sampling is performed by getParameterSamples() 
-% and plotted using plotParameterUncertainty().
+% Single-chain Monte-Carlo sampling is performed by getParameterSamples() 
+% and plotted in 1D and 2D.
 
 
 
@@ -38,27 +44,37 @@ TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
 set(0,TextSizes);
 
+% Seed the random number generator. Seeding the random number generator
+% ensures that everytime this example is run, the same sequence of random
+% numbers is generated, and thus, the same starting points for multi-start 
+% optimization will be used. This is helpful for debugging or comparing
+% results across different machines. 
+% Results might vary though if PestoOptions.comp_type is set to 'parallel'
+rng(0);
+
 %% Model Definition
 % See logLikelihoodCR.m for a detailed description
 
 %% Data
 % We fix an artificial data set. It consists of a vector of time points t
-% and a measurement vector Y. This data was created using the parameter 
-% values which are assigned to theta_true and by adding normaly distributed 
+% and a measurement vector y. This data was created using the parameter 
+% values which are assigned to theta_true and by adding normally distributed 
 % measurement noise with variance sigma2. 
 
 % True parameters
 theta_true = [-2.5;-2];
 
-t = (0:10)';        % time points
-sigma2 = 0.015^2;   % measurement noise
+% Time points, measurement noise and measurement data
+t = (0:10)';
+sigma2 = 0.015^2;
 y = [0.0244; 0.0842; 0.1208; 0.1724; 0.2315; 0.2634; ... 
-    0.2831; 0.3084; 0.3079; 0.3097; 0.3324]; % Measurement data
+    0.2831; 0.3084; 0.3079; 0.3097; 0.3324];
 
-%% Definition of the Paramter Estimation Problem
+
+%% Definition of the Parameter Estimation Problem
 % In order to run any PESTO routine, at least the parameters struct with 
 % the fields shown here and the objective function need to be defined, 
-% since they are manadatory for getMultiStarts, which is usually the first 
+% since they are mandatory for getMultiStarts, which is usually the first 
 % routine needed for any parameter estimation problem
 
 % parameters
@@ -70,7 +86,7 @@ parameters.number = length(parameters.name);
 % Log-likelihood function
 objectiveFunction = @(theta) logLikelihoodCR(theta, t, y, sigma2, 'log');
 
-% properties
+% properties (parameter function to be analyzed)
 properties.name = {'log_{10}(k_1)','log_{10}(k_2)',...
                    'log_{10}(k_1)-log_{10}(k_2)','log_{10}(k_1)^2',...
                    'x_2(t=3)','x_2(t=10)'};
@@ -83,6 +99,7 @@ properties.function = {@propertyFunction_theta1,...
 properties.min = [-2.6;-2.2;-5;-10; 0; 0];
 properties.max = [-2.4;-1.7; 5; 10; 1; 1];
 properties.number = length(properties.name);
+
 
 %% Multi-start local optimization
 % A multi-start local optimization is performed within the bounds defined in
@@ -118,25 +135,8 @@ else
 end
 
 % Optimization
-% parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
+parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
 
-%% Visualization of fit
-% The measured data is visualized in plot, together with fit for the best
-% parameter value found during getMutliStarts
-
-% if strcmp(optionsMultistart.mode,'visual')
-%     % Simulation
-%     tsim = linspace(t(1),t(end),100);
-%     ysim = simulateConversionReaction(exp(parameters.MS.par(:,1)),tsim);
-% 
-%     % Plot: Fit
-%     figure('Name','Conversion reaction: Visualization of fit');
-%     plot(t,y,'bo'); hold on;
-%     plot(tsim,ysim,'r-'); 
-%     xlabel('time t');
-%     ylabel('output y');
-%     legend('data','fit');
-% end
 
 %% Choosing different optimizers
 
@@ -167,22 +167,22 @@ end
 % needs residuals and its sensitivities for optimizaion and hence works
 % differently from fmincon.
 
-objectiveFunction = @(theta) logLikelihoodCR(theta, t, y, sigma2, 'log', 'lsqnonlin');
-
-optionsLsqnonlin = optionsMultistart.copy();
-optionsLsqnonlin.localOptimizer = 'lsqnonlin';
-optionsLsqnonlin.localOptimizerOptions = optimoptions('lsqnonlin', ...
-    'Algorithm', 'trust-region-reflective', ...
-    'Jacobian', 'on', ...
-    'Display', 'off');
-res_true = objectiveFunction(theta_true);
-optionsLsqnonlin.plot_options.add_points.logPost = -res_true' * res_true;
-optionsLsqnonlin.plot_options.add_points.prop = nan(properties.number,1);
-for j = 1 : properties.number
-    optionsLsqnonlin.plot_options.add_points.prop(j) = properties.function{j}(optionsMultistart.plot_options.add_points.par);
-end
-
-parametersLsqnonlin = getMultiStarts(parameters, objectiveFunction, optionsLsqnonlin);
+% objectiveFunction = @(theta) logLikelihoodCR(theta, t, y, sigma2, 'log', 'lsqnonlin');
+% 
+% optionsLsqnonlin = optionsMultistart.copy();
+% optionsLsqnonlin.localOptimizer = 'lsqnonlin';
+% optionsLsqnonlin.localOptimizerOptions = optimoptions('lsqnonlin', ...
+%     'Algorithm', 'trust-region-reflective', ...
+%     'Jacobian', 'on', ...
+%     'Display', 'off');
+% res_true = objectiveFunction(theta_true);
+% optionsLsqnonlin.plot_options.add_points.logPost = -res_true' * res_true;
+% optionsLsqnonlin.plot_options.add_points.prop = nan(properties.number,1);
+% for j = 1 : properties.number
+%     optionsLsqnonlin.plot_options.add_points.prop(j) = properties.function{j}(optionsMultistart.plot_options.add_points.par);
+% end
+% 
+% parametersLsqnonlin = getMultiStarts(parameters, objectiveFunction, optionsLsqnonlin);
 
 % The following uses a gradient free optimizer (dynamic hill climbing) 
 % which was adapted from the MEIGO toolbox for Pesto (Install MEIGO from 
@@ -215,37 +215,67 @@ parametersLsqnonlin = getMultiStarts(parameters, objectiveFunction, optionsLsqno
 % optionsMultistartMeigo.localOptimizer = 'meigo-ess';
 % optionsMultistartMeigo.localOptimizerOptions = MeigoOptions;
 % optionsMultistartMeigo.n_starts = 2;
-% parametersMeigo = getMultiStarts(parameters, objectiveFunction, optionsMultistartMeigo);
+% parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistartMeigo);
 
 % This section uses PSwarm, a particle swarm optimizer
 % (Install from http://www.norg.uminho.pt/aivaz/pswarm/ and uncomment)
-%
+
 % optionsMultistartPSwarm = optionsMultistart.copy();
 % optionsMultistartPSwarm.localOptimizer = 'pswarm';
 % optionsMultistartPSwarm.n_starts = 10;
-% parametersPSwarm = getMultiStarts(parameters, objectiveFunction, optionsMultistartPSwarm);
+% parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistartPSwarm);
+
+
+%% Visualization of fit
+% The measured data is visualized in plot, together with fit for the best
+% parameter value found during getMultiStarts
+
+if strcmp(optionsMultistart.mode,'visual')
+    % Simulation
+    tsim = linspace(t(1),t(end),100);
+    ysim = simulateConversionReaction(exp(parameters.MS.par(:,1)),tsim);
+
+    % Plot: Fit
+    figure('Name','Conversion reaction: Visualization of fit');
+    plot(t,y,'bo'); hold on;
+    plot(tsim,ysim,'r-'); 
+    xlabel('time t');
+    ylabel('output y');
+    legend('data','fit');
+end
+
 
 %% Profile likelihood calculation -- Parameters
 % The uncertainty of the estimated parameters is visualized by computing
 % and plotting profile likelihoods. In getParameterProfiles, this is done
-% by using repeated reoptimization
+% by using repeated reoptimization, if standard setings are used.
 parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultistart);
 
-%% Single-chain Monte-Carlo sampling -- Parameters
-% Values for the parameters are sampled by using an adapted Metropolis (AM)
+
+%% Markov Chain Monte Carlo sampling -- Parameters
+% Values for the parameters are sampled by using an Parallel Tempering (PT)
 % algorithm. This way, the underlying probability density of the parameter 
-% distribution can be captured. The proposal scheme of the Markov chain 
-% Monte Carlo algorithm is chosen to be 'Haario', but also other ones can
-% be used.
+% distribution can be captured. Since only one temperature is used, this is
+% effectively an adapted Metropolis algorithm single-chain algorithm.
 
-optionsMultistart.MCMC.sampling_scheme = 'single-chain';
-optionsMultistart.SC.proposal_scheme   = 'AM';
-optionsMultistart.MCMC.nsimu_warmup    = 2e2;
-optionsMultistart.MCMC.thinning        = 10;
-optionsMultistart.MCMC.nsimu_run       = 2e3;
-optionsMultistart.plot_options.S.bins  = 10;
+% Building a struct covering all sampling options:
+optionsSampling = PestoSamplingOptions();
+optionsSampling.nIterations = 1e4;
+optionsSampling.mode = optionsMultistart.mode;
 
-parameters = getParameterSamples(parameters, objectiveFunction, optionsMultistart);
+% PT specific options:
+optionsSampling.samplingAlgorithm   = 'PT';
+optionsSampling.PT.nTemps           = 1;
+optionsSampling.PT.temperatureAdaptionScheme = 'Lacki15'; %'Vousden16'; 
+
+% Initialize the chains by making use of the preceeding multi-start local
+% optimization, all of them starting from the same point
+optionsSampling.theta0 = parameters.MS.par(:,1); 
+optionsSampling.sigma0 = 0.5 * inv(squeeze(parameters.MS.hessian(:,:,1)));
+
+% Run the sampling
+parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
+
 
 %% Confidence interval evaluation -- Parameters
 % Confidence intervals to the confidence levels fixed in the array alpha
@@ -253,7 +283,8 @@ parameters = getParameterSamples(parameters, objectiveFunction, optionsMultistar
 % optimum, based on the profile likelihoods and on the parameter sampling.
 
 alpha = [0.9,0.95,0.99];
-parameters = getParameterConfidenceIntervals(parameters, alpha);
+parameters = getParameterConfidenceIntervals(parameters, alpha, optionsMultistart);
+
 
 %% Evaluation of properties for multi-start local optimization results -- Properties
 % The values of the properties are evaluated at the end points of the
@@ -263,25 +294,29 @@ optionsProperties = optionsMultistart.copy();
 optionsProperties.fh = [];
 properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
 
+
 %% Profile likelihood calculation -- Properties
 % Profile likelihoods are computed for the properties in the same fashion,
 % as they were computed for the parameters.
 
 properties = getPropertyProfiles(properties, parameters, objectiveFunction, optionsProperties);
 
+
 %% Evaluation of properties for sampling results -- Properties
-% From the smaples of the parameters, the properties are calculated and
-% hence a probabality distribution for the properties can be reconstructed
+% From the samples of the parameters, the properties are calculated and
+% hence a probability distribution for the properties can be reconstructed
 % from that.
 
 properties = getPropertySamples(properties, parameters, optionsProperties);
+
 
 %% Confidence interval evaluation -- Properties
 % As for the parameters, confidence intervals are computed for the
 % properties in different fashion, based on local approximations, profile
 % likelihoods and samples.
 
-properties = getPropertyConfidenceIntervals(properties, alpha);
+properties = getPropertyConfidenceIntervals(properties, alpha, optionsProperties);
+
 
 %% Comparison of calculated parameter profiles
 
@@ -301,6 +336,7 @@ if strcmp(optionsMultistart.mode, 'visual')
         end
     end
 end
+
 
 %% Close the pools of parallel working threads
 

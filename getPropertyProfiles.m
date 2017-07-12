@@ -85,10 +85,7 @@ function [properties,fh] = getPropertyProfiles(properties, parameters, objective
 
 %% Check and assign inputs
 if length(varargin) >= 1
-    options = varargin{1};
-    if ~isa(options, 'PestoOptions')
-        error('Third argument is not of type PestoOptions.')
-    end
+    options = handleOptionArgument(varargin{1});
 else
     options = PestoOptions();
 end
@@ -96,7 +93,6 @@ end
 % Check and assign options
 %TODO
 options.plot_options.mark_constraint = false;
-options.property_index = 1:properties.number;
 options.P.min = parameters.min;
 options.P.max = parameters.max;
 options.MAP_index = 1;
@@ -139,8 +135,7 @@ end
 
 options.profileReoptimizationOptions.algorithm = 'interior-point';
 options.profileReoptimizationOptions.MaxIter = 400;
-options.profileReoptimizationOptions.GradConstr = 'on';
-options.profileReoptimizationOptions.TolCon = 1e-6;
+options.profileReoptimizationOptions.TolCon = 1e-4;
 options.profileReoptimizationOptions.MaxFunEvals = 200*parameters.number;
 
 %% Initialization of property struct
@@ -405,7 +400,7 @@ end
 
 %% Output
 switch options.mode
-    case {'visual','text'}, disp('-> Profile calculation FINISHED.');
+    case {'visual','text'}, disp('-> Profile calculation for properties FINISHED.');
     case 'silent' % no output
 end
 
