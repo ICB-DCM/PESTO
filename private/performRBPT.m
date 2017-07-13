@@ -276,7 +276,9 @@ function res = performRBPT( logPostHandle, par, opt )
             pAcc(l) = beta(l)*(logPostProp(l)-logPost(l)) + logTransBack(l) - logTransFor(l);
             
             % Do not use min, due to NaN behavior in Matlab
-            if pAcc(l) > 0       
+            if isnan(pAcc(l))       % May happen if the objective function has numerical problems
+               pAcc(l) = -inf;            
+            elseif pAcc(l) > 0       
                pAcc(l) = 0;
             end
          else

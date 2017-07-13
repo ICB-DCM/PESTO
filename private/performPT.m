@@ -172,7 +172,6 @@ function res = performPT( logPostHandle, par, opt )
          
          % Propose
          thetaProp(:,l) = mvnrnd(theta(:,l),sigma(:,:,l))';
-         
 %          if l == nTemps
 % %             pause(1)
 %             xlims = [thetaMin(1),thetaMax(1)];
@@ -223,7 +222,9 @@ function res = performPT( logPostHandle, par, opt )
             logTransFor(l) = 1;
             logTransBack(l) = 1;
             pAcc(l) = beta(l)*(logPostProp(l)-logPost(l)) + logTransBack(l) - logTransFor(l);
-            if pAcc(l) > 0       % Do not use min, due to NaN behavior in Matlab
+            if isnan(pAcc(l))       % May happen if the objective function has numerical problems
+               pAcc(l) = -inf;
+            elseif pAcc(l) > 0       % Do not use min, due to NaN behavior in Matlab
                pAcc(l) = 0;
             end
          else
