@@ -1,9 +1,7 @@
 function [logL] = logLikelihoodT(varargin)
 % Objective function for examples/mRNA_transfection
 %
-% logLikelihoodT.m provides the log-likelihood, its gradient and an 
-% approximation of the Hessian matrix based on Fisher information matrix
-% (FIM) for the conversion reaction process.
+% logLikelihoodT.m provides the log-likelihood
 % 
 % Parameters:
 %   varargin:
@@ -34,8 +32,15 @@ sigma  = 10.^theta(5);
 % Simulation
 
 % State
-X = [exp(-delta*(t-t0)) .* (t>t0), ...
-     kTL_m0 * (exp(-beta*(t-t0)) - exp(-delta*(t-t0))) / (delta-beta) .* (t>t0)];
+X = zeros(length(t),2);
+if abs(delta-beta) > 1e-8
+   X(t>t0,:) = [exp(-delta*(t(t>t0)-t0)),...
+        kTL_m0 * (exp(-beta*(t(t>t0)-t0)) - exp(-delta*(t(t>t0)-t0))) / (delta-beta)];
+else
+   % L'Hospital arround beta = delta
+   X(t>t0,:) = [exp(-delta*(t(t>t0)-t0)),...
+        kTL_m0 * (t(t>t0)-t0).*exp(-delta*(t(t>t0)-t0))];
+end
        
 % Chain rule and Observables
 Y = X(:,2);

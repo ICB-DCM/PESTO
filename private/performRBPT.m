@@ -178,7 +178,7 @@ function res = performRBPT( logPostHandle, par, opt )
                end
                
                % Train GMM replicate
-               [lh(rep,:), trainedGMMModels{rep}] = trainEMGMM(squeeze(res.par(:,1:nPhase-1,l))',regionPredOpt);
+               [lh(rep,:), trainedGMMModels{rep}] = trainEMGMM(squeeze(res.par(:,ceil(nPhase/2):nPhase-1,l))',regionPredOpt);
                
                % Likelihood with BIC adaption using the likelihood, and
                % number of estimated parameters: n               x w

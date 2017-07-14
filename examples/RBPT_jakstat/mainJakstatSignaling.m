@@ -89,7 +89,7 @@ objectiveFunction = @(theta) logLikelihoodJakstat(theta, amiData);
 
 % PestoOptions
 optionsMultistart          = PestoOptions();
-optionsMultistart.n_starts = 10;
+optionsMultistart.n_starts = 100;
 optionsMultistart.trace    = true;
 optionsMultistart.proposal = 'user-supplied';
 optionsMultistart.obj_type = 'log-posterior';
