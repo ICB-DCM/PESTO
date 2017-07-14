@@ -19,7 +19,7 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
    %% Options
    oldSeed=rng; oldSeed = oldSeed.Seed;
    rng(opt.rng);
-   nSample              = opt.nSample;
+   nSample              = ceil(0.5 * opt.nSample);
    crossValFraction     = opt.crossValFraction;
    modeNumberCandidates = opt.modeNumberCandidates;
    displayMode          = opt.displayMode;
