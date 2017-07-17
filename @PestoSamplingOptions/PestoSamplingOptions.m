@@ -52,6 +52,10 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       % 'debug'. Default: visual
       mode = 'visual';
       
+      % Some of the methods decide if debug mode should be on. This option
+      % can be used in cases, where RAM is a critical resource
+      debug = true;
+      
       % Maximum number of outputs, the objective function can provide:
       % * 1 ... only objective value
       % * 2 ... objective value with gradient

@@ -32,20 +32,15 @@ rng(0);
 % The ODE model is set up using the AMICI toolbox. To access the AMICI
 % model setup, see rafMekErk_pesto_syms.m
 
-[exdir,~,~]=fileparts(which('rafMekErk_pesto_syms.m'));
-% try
-%     amiwrap('rafMekErk_pesto', 'rafMekErk_pesto_syms', exdir, 1);
-% catch ME
-%     warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
-%     rethrow(ME);
-% end
+amiwrap('rafMekErk_pesto', 'rafMekErk_pesto_syms',pwd,false);
+
 
 
 %% Data and options
 
 % Experimental data is read out from an .mat-file and written to an AMICI
 % data object which is used for the ODE integration
-load('./D0.mat');
+load('D0.mat');
 u = D.conditions;
 nU = size(u,1);
 
@@ -60,7 +55,7 @@ for j = 1 : nU
 end
 
 % Create amioptions-object to not always recreate it in objective function
-amiOptions.maxsteps = 1e5;
+amiOptions.maxsteps = 1e6;
 amiOptions.atol = 1e-15;
 amiOptions.rtol = 1e-12;
 amiOptions.sensi_meth = 'forward';
@@ -100,13 +95,15 @@ objectiveFunction = @(theta) logLikelihoodRafMekErk(theta, amiD, amiO);
 
 % Pesto options
 optionsPesto = PestoOptions();
-optionsPesto.n_starts = 50; 
-optionsPesto.mode     = 'visual';
+optionsPesto.n_starts = 100; 
+optionsPesto.mode     = 'text';
 optionsPesto.proposal = 'latin hypercube';
-optionsPesto.trace    = false;
+optionsPesto.trace    = true;
 optionsPesto.obj_type = 'log-posterior';
 optionsPesto.localOptimizer = 'fmincon';
-optionsPesto.localOptimizerOptions.Hessian = 'on';
+optionsPesto.localOptimizerOptions.Display = 'text';
+optionsPesto.localOptimizerOptions.GradObj = 'on';
+optionsPesto.localOptimizerOptions.Hessian = 'off';
 optionsPesto.localOptimizerOptions.MaxIter = 1200;
 optionsPesto.localOptimizerOptions.TolX    = 1e-10;
 optionsPesto.localOptimizerOptions.TolFun  = 1e-10;
@@ -131,4 +128,4 @@ parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 % optionsPesto.profile_method = 'integration';
 
 % Profile likelihood calculation
-parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
+% parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);

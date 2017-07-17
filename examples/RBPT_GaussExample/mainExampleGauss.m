@@ -46,6 +46,7 @@ options                     = PestoSamplingOptions();
 options.objOutNumber        = 1;
 options.nIterations         = 1e5;
 options.mode                = 'text';
+options.debug               = false;
 
 % % Using PT
 % options.samplingAlgorithm   = 'PT';

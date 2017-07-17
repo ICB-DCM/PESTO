@@ -58,6 +58,8 @@ function res = performRBPT( logPostHandle, par, opt )
    
    
    % Initialization
+   doDebug           = opt.debug;
+   
    nTemps            = opt.RBPT.nTemps;
    nIter             = opt.nIterations;
    theta0            = opt.theta0;
@@ -81,15 +83,20 @@ function res = performRBPT( logPostHandle, par, opt )
    nMaxRegions       = max(opt.RBPT.RPOpt.modeNumberCandidates);
    regionPredOpt     = opt.RBPT.RPOpt;
 %    regionPredOpt.nSample = nPhaseI;
-   
-   res.par           = nan(nPar, nIter, nTemps);
-   res.logPost       = nan(nIter, nTemps);
-   res.acc           = nan(nIter, nTemps, nMaxRegions);
-   res.accSwap       = nan(nIter, nTemps, nTemps);
-   res.sigmaScale    = nan(nIter, nTemps, nMaxRegions);
-   res.temperatures  = nan(nIter, nTemps);
-   res.newLabel      = nan(nIter, nTemps);
-   res.oldLabel      = nan(nIter, nTemps);
+  
+   if doDebug
+      res.par           = nan(nPar, nIter, nTemps);
+      res.logPost       = nan(nIter, nTemps);
+      res.acc           = nan(nIter, nTemps, nMaxRegions);
+      res.accSwap       = nan(nIter, nTemps, nTemps);
+      res.sigmaScale    = nan(nIter, nTemps, nMaxRegions);
+      res.temperatures  = nan(nIter, nTemps);
+      res.newLabel      = nan(nIter, nTemps);
+      res.oldLabel      = nan(nIter, nTemps);
+   else
+      res.par           = nan(nPar, nIter);
+      res.logPost       = nan(nIter, 1);      
+   end
    
    maxT              = opt.RBPT.maxT;
    T                 = linspace(1,maxT^(1/exponentT),nTemps).^exponentT;
@@ -178,7 +185,7 @@ function res = performRBPT( logPostHandle, par, opt )
                end
                
                % Train GMM replicate
-               [lh(rep,:), trainedGMMModels{rep}] = trainEMGMM(squeeze(res.par(:,ceil(nPhase/2):nPhase-1,l))',regionPredOpt);
+               [lh(rep,:), trainedGMMModels{rep}] = trainEMGMM(squeeze(res.par(:,ceil(nPhase/2):nPhase-1,1))',regionPredOpt);
                
                % Likelihood with BIC adaption using the likelihood, and
                % number of estimated parameters: n               x w
@@ -360,18 +367,23 @@ function res = performRBPT( logPostHandle, par, opt )
       end
       
       % Store iteration
-      res.par(:,i,:) = theta;
-      res.logPost(i,:) = logPost;
-      res.j = j;
-      res.acc(i,:,:) = 100*acc./j;
-      res.propSwap = propSwap;
-      res.accSwap  = accSwap;
-      res.ratioSwap = accSwap ./ propSwap;
-      res.sigmaScale(i,:,:) = sigmaScale;
-      res.sigmaHist = sigmaHist;
-      res.temperatures(i,:) = 1./beta;
-      res.newLabel(i,:) = nL(:);
-      res.oldLabel(i,:) = oL(:);
+      if doDebug
+         res.par(:,i,:)          = theta;
+         res.logPost(i,:)        = logPost;
+         res.j                   = j;
+         res.acc(i,:,:)          = 100*acc./j;
+         res.propSwap            = propSwap;
+         res.accSwap             = accSwap;
+         res.ratioSwap           = accSwap ./ propSwap;
+         res.sigmaScale(i,:,:)   = sigmaScale;
+         res.sigmaHist           = sigmaHist;
+         res.temperatures(i,:)   = 1./beta;
+         res.newLabel(i,:)       = nL(:);
+         res.oldLabel(i,:)       = oL(:);
+      else
+         res.par(:,i)            = theta(:,1);
+         res.logPost(i)          = logPost(1);
+      end
    end
    
    switch opt.mode
