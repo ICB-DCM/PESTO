@@ -95,7 +95,8 @@ function res = performRBPT( logPostHandle, par, opt )
       res.oldLabel      = nan(nIter, nTemps);
    else
       res.par           = nan(nPar, nIter);
-      res.logPost       = nan(nIter, 1);      
+      res.logPost       = nan(nIter, 1);  
+      res.newLabel      = nan(nIter, 1);      
    end
    
    maxT              = opt.RBPT.maxT;
@@ -383,6 +384,7 @@ function res = performRBPT( logPostHandle, par, opt )
       else
          res.par(:,i)            = theta(:,1);
          res.logPost(i)          = logPost(1);
+         res.newLabel(i,:)       = nL(1);
       end
    end
    

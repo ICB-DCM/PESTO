@@ -32,10 +32,6 @@ classdef PTOptions < matlab.mixin.SetGet
       % the covariance matrix with elements regFactor.
       regFactor = 1e-6;
       
-      % Follows the temperature adaption scheme from 'Vousden16' or 'Lacki15'. Can be set to
-      % 'none' for no temperature adaption.
-      temperatureAdaptionScheme  = 'Vousden16';
-      
       % The number of swaps between tempered chains per iterations.
       swapsPerIter = 1;
       
@@ -225,15 +221,6 @@ classdef PTOptions < matlab.mixin.SetGet
                'e.g. PestoSamplingOptions.PT.memoryLength = 1']);
          end
       end   
-      
-      function set.temperatureAdaptionScheme(this, value)
-         if (strcmp(value, 'Vousden16') || strcmp(value, 'Lacki15') || strcmp(value, 'none'))
-            this.temperatureAdaptionScheme = value;
-         else
-            error(['Please enter the temperature adaption scheme, e.g. '...
-               'PestoSamplingOptions.PT.temperatureAdaptionScheme = ''Vousden16''']);
-         end
-      end  
       
       function set.swapsPerIter(this, value)
          if(value == floor(value) && value > 0)

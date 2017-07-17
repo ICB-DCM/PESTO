@@ -62,30 +62,36 @@ function res = performPT( logPostHandle, par, opt )
    
    
    % Initialization
-   nTemps = opt.PT.nTemps;
-   nIter = opt.nIterations;
-   theta0 = opt.theta0;
-   sigma0 = opt.sigma0;
-   thetaMin = par.min;
-   thetaMax = par.max;
-   exponentT = opt.PT.exponentT;
-   alpha = opt.PT.alpha;
-   temperatureNu = opt.PT.temperatureNu;
-   memoryLength = opt.PT.memoryLength;
-   regFactor = opt.PT.regFactor;
-   temperatureAdaptionScheme = opt.PT.temperatureAdaptionScheme;
+   doDebug              = opt.debug;
+   
+   nTemps               = opt.PT.nTemps;
+   nIter                = opt.nIterations;
+   theta0               = opt.theta0;
+   sigma0               = opt.sigma0;
+   thetaMin             = par.min;
+   thetaMax             = par.max;
+   exponentT            = opt.PT.exponentT;
+   alpha                = opt.PT.alpha;
+   temperatureNu        = opt.PT.temperatureNu;
+   memoryLength         = opt.PT.memoryLength;
+   regFactor            = opt.PT.regFactor;
    nPar = par.number;
 %    swapsPerIter = opt.PT.swapsPerIter;
    temperatureEta = opt.PT.temperatureEta;
    
    S = zeros(1,nTemps-2);
    
-   res.par = nan(nPar, nIter, nTemps);
-   res.logPost = nan(nIter, nTemps);
-   res.acc = nan(nIter, nTemps);
-   res.accSwap = nan(nIter, nTemps, nTemps);
-   res.sigmaScale = nan(nIter, nTemps);
-   res.temperatures = nan(nIter, nTemps);
+   if doDebug     
+      res.par              = nan(nPar, nIter, nTemps);
+      res.logPost          = nan(nIter, nTemps);
+      res.acc              = nan(nIter, nTemps);
+      res.accSwap          = nan(nIter, nTemps, nTemps);
+      res.sigmaScale       = nan(nIter, nTemps);
+      res.temperatures     = nan(nIter, nTemps);
+   else
+      res.par              = nan(nPar, nIter);
+      res.logPost          = nan(nIter, 1);      
+   end
    
    maxT = opt.PT.maxT;
    T = linspace(1,maxT^(1/exponentT),nTemps).^exponentT;
@@ -336,15 +342,20 @@ function res = performPT( logPostHandle, par, opt )
       end
       
       % Store iteration
-      res.par(:,i,:) = theta;
-      res.logPost(i,:) = logPost;
-      res.acc(i,:) = 100*acc/j;
-      res.propSwap = propSwap;
-      res.accSwap  = accSwap;
-      res.ratioSwap = accSwap ./ propSwap;
-      res.sigmaScale(i,:) = sigmaScale;
-      res.sigmaHist = sigmaHist;
-      res.temperatures(i,:) = 1./beta;
+      if doDebug     
+         res.par(:,i,:)          = theta;
+         res.logPost(i,:)        = logPost;
+         res.acc(i,:)            = 100*acc/j;
+         res.propSwap            = propSwap;
+         res.accSwap             = accSwap;
+         res.ratioSwap           = accSwap ./ propSwap;
+         res.sigmaScale(i,:)     = sigmaScale;
+         res.sigmaHist           = sigmaHist;
+         res.temperatures(i,:)   = 1./beta;
+      else
+         res.par(:,i)            = theta(:,1);
+         res.logPost(i)          = logPost(1);         
+      end
    end
    
    switch opt.mode

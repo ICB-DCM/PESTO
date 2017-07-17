@@ -44,7 +44,7 @@ end
 rng('shuffle')
 options                     = PestoSamplingOptions();
 options.objOutNumber        = 1;
-options.nIterations         = 1e5;
+options.nIterations         = 1e4;
 options.mode                = 'text';
 options.debug               = false;
 
@@ -58,7 +58,6 @@ options.debug               = false;
 % options.PT.memoryLength     = 1;
 % options.PT.regFactor        = 1e-8;
 % options.PT.temperatureEta   = 10;
-% options.PT.temperatureAdaptionScheme = 'Vousden16'; 
 % options.theta0              = repmat([mu(1,:),repmat(25,1,dimi)]',1,options.PT.nTemps); 
 % options.theta0(:,1:2:end)   = repmat([mu(2,:),repmat(25,1,dimi)]',1,ceil(options.PT.nTemps/2));
 % options.sigma0              = 1e6*diag(ones(1,dimi+2));
