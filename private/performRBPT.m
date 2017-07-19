@@ -199,7 +199,7 @@ function res = performRBPT( logPostHandle, par, opt )
                
                % Display
                if strcmp(regionPredOpt.displayMode,'text') || strcmp(regionPredOpt.displayMode,'visual') 
-                  disp(['The algorithm found nModes=' ...
+                  disp(['The current replicate found nModes=' ...
                      num2str(regionPredOpt.modeNumberCandidates(bestModeNumber))...
                      ' to suit the give data best.']);
                end
@@ -208,7 +208,7 @@ function res = performRBPT( logPostHandle, par, opt )
             [~,bestModeNumber] = max(lh(:));
             res.regions.lh = lh;
             res.regions.trainedGMModels = trainedGMMModels{ceil(bestModeNumber/nRegionNumbers)};
-            disp(['After Cross Validation ' num2str(mod(bestModeNumber-1,nRegionNumbers)+1) ...
+            disp(['After bootstrapping ' num2str(mod(bestModeNumber-1,nRegionNumbers)+1) ...
                ' modes were found optimal.']);
             disp(' '); msg = '';
             

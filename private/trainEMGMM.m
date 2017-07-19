@@ -17,8 +17,8 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
    % Written by Benjamin Ballnus (2017)
    
    %% Options
-   oldSeed=rng; oldSeed = oldSeed.Seed;
-   rng(opt.rng);
+%    oldSeed=rng; oldSeed = oldSeed.Seed;
+%    rng(opt.rng);
    nSample              = ceil(0.5 * opt.nSample);
    crossValFraction     = opt.crossValFraction;
    modeNumberCandidates = opt.modeNumberCandidates;
@@ -202,7 +202,7 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
       res(idx).testLLH  = likelihoodOfTestSet(idx);
       
    end
-   rng(oldSeed);
+%    rng(oldSeed);
 end
 
 
