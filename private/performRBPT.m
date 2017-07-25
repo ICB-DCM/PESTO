@@ -152,7 +152,7 @@ function res = performRBPT( logPostHandle, par, opt )
    sigma             = sigmaHist;
    
    msg               = '';
-   tic; dspTime      = toc;
+   timer = tic; dspTime      = toc;
    
    % Perform MCMC
    j = zeros(nTemps,nMaxRegions);
@@ -161,11 +161,11 @@ function res = performRBPT( logPostHandle, par, opt )
       % Reporting Progress
       switch opt.mode
          case {'visual','text'}
-            if toc-dspTime > 0.5
+            if toc(timer)-dspTime > 0.5
                fprintf(1, repmat('\b',1,numel(msg)-2)) ;
                msg = ['Progress: ' num2str(i/(nIter)*100,'%2.2f') ' %%\n'];
                fprintf(1,msg);
-               dspTime = toc;
+               dspTime = toc(timer);
             end
          case 'silent'
       end
