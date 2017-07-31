@@ -429,7 +429,7 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
             [L, GL] = objectiveWrap(y(:,iT), objectiveFunction, options.obj_type, options.objOutNumber);
             GL(ind) = 0;
             
-            if (sqrt(sum(GL.^2)) > 1)
+            if (sqrt(sum(GL.^2)) > options.solver.GradTol)
                 display('Lost optimal path, doing a reoptimization!');
                 [newY, L, GL] = reoptimizePath(y(:,iT), ind, objectiveFunction, borders, options);
                 y(:,iT) = [newY(1:ind-1); y(ind,iT); newY(ind:end)];
