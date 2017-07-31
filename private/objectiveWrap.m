@@ -59,7 +59,7 @@ function varargout = objectiveWrap(varargin)
                     case 'log-posterior'          , varargout = {-J,-G(I)};
                     case 'negative log-posterior' , varargout = { J, G(I)};
                 end
-                if ~isfinite(G)
+                if any(any(~isfinite(G)))
                     error('Gradient contains NaNs or Infs')
                 end
                 
@@ -78,10 +78,10 @@ function varargout = objectiveWrap(varargin)
                     case 'log-posterior'          , varargout = {-J,-G(I),-H(I,I)};
                     case 'negative log-posterior' , varargout = { J, G(I), H(I,I)};
                 end
-                if ~isfinite(G)
+                if any(any(~isfinite(G)))
                     error('Gradient contains NaNs or Infs')
                 end
-                if ~isfinite(H)
+                if any(any(~isfinite(H)))
                     error('Hessian contains NaNs or Infs')
                 end
         end
