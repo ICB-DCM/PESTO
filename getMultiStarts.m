@@ -183,6 +183,12 @@ if(options.trace)
     parameters.MS.time_trace = nan(maxOptimSteps+1,length(options.start_index));
 end
 
+% Check, if only a subset of parameters should be optimized
+if ~isempty(options.fixParameters)
+    freeParameters = 1:parameters.number;
+    freeParameters(options.fixParameters) = [];
+end
+
 % Define the negative log-posterior funtion
 % (fmincon needs the neagtive log posterior for optimization)
 negLogPost = @(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);

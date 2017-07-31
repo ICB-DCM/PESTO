@@ -89,7 +89,7 @@ function varargout = objectiveWrapWErrorCount(varargin)
         if any(isinf(J)) || any(isnan(J))
             error_count = error_count + 1;
         else
-            error_count = error_count - 1;
+            error_count = max(error_count - 1,0);
         end
         
     catch error_msg
