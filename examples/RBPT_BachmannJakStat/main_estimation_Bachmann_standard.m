@@ -1,11 +1,12 @@
 path(pathdef);
-addpath(genpath('C:\Users\GEYAW\Home\Matlab_Home\2017_02_27_GIT_ClonePESTO'))
+addpath(genpath('C:\Users\GEYAW\Home\Matlab_Home\2017_02_27_GIT_ClonePESTO\examples\RBPT_BachmannJakStat'))
+addpath('C:\Users\GEYAW\Home\Matlab_Home\2017_02_27_GIT_ClonePESTO')
 addpath(genpath('C:\Users\GEYAW\GEYAW_Tools\AMICI'))
 addpath(genpath(pwd))
 
 %%
-%rmdir('/Users/carolinloos/PhD/Software/AMICIGit/models/Bachmann_JAKSTAT_red','s')
-% amiwrap('Bachmann_JAKSTAT_red','Bachmann_JAKSTAT_red_syms',pwd)%
+% rmdir('C:\Users\GEYAW\GEYAW_Tools\AMICI\models\Bachmann_JAKSTAT_red3','s')
+amiwrap('Bachmann_JAKSTAT_red','Bachmann_JAKSTAT_red_syms',pwd)%
 
 %%
 opt.llh.approach = 'standard';

@@ -43,7 +43,7 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
    opt = opt.checkDependentDefaults(parameters);
    
    %% Wrap objective function
-   wrappedObjFkt = @(theta) objectiveWrap( theta, @(x)-objFkt(x), opt.obj_type, opt.objOutNumber );
+   wrappedObjFkt = @(theta) objectiveWrap( theta, @(x)deal(-objFkt(x)), opt.obj_type, opt.objOutNumber );
    
    %% Selection of sampling procedure
    switch opt.samplingAlgorithm

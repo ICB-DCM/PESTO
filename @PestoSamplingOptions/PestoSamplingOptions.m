@@ -339,7 +339,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                      bsxfun(@times, par.max' - par.min', rand(par.number,this.PHS.nChains)))';
                case 'RBPT'
                   this.theta0 = bsxfun(@plus, par.min', ...
-                     bsxfun(@times, par.max' - par.min', rand(par.number,this.RBPT.nChains)))';                  
+                     bsxfun(@times, par.max' - par.min', rand(par.number,this.RBPT.nTemps)))';                  
             end
          end
          if ~isempty(this.sigma0)

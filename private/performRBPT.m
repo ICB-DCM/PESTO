@@ -270,7 +270,7 @@ function res = performRBPT( logPostHandle, par, opt )
          end
          
          % Transition and Acceptance Probabilities      
-         if (inbounds == 1) && (logPostProp(l) > -inf)
+         if (inbounds == 1) && (logPostProp(l) > -inf) && (logPostProp(l) < inf)
             
             % Transitions probabilities may differer if the proposed point
             % lays within a different region

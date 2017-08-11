@@ -224,7 +224,7 @@ function res = performPT( logPostHandle, par, opt )
          % Transition and Acceptance Probabilities
 %          if (inbounds == 1) && (l == nTemps)
 %             pAcc(l) = 0;         
-         if (inbounds == 1) && (logPostProp(l) > -inf)
+         if (inbounds == 1) && (logPostProp(l) > -inf) && (logPostProp(l) < inf)
             logTransFor(l) = 1;
             logTransBack(l) = 1;
             pAcc(l) = beta(l)*(logPostProp(l)-logPost(l)) + logTransBack(l) - logTransFor(l);
