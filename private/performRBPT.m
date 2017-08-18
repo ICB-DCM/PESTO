@@ -82,6 +82,10 @@ function res = performRBPT( logPostHandle, par, opt )
    nRegionNumbers    = length(opt.RBPT.RPOpt.modeNumberCandidates);
    nMaxRegions       = max(opt.RBPT.RPOpt.modeNumberCandidates);
    regionPredOpt     = opt.RBPT.RPOpt;
+   
+   GMMllh = @(x,w,mu,Sigma,detSigma) log(w) -0.5*length(x)*log(2*pi) -0.5*log(detSigma) -0.5*(x-mu)'/Sigma*(x-mu);
+
+   
 %    regionPredOpt.nSample = nPhaseI;
   
    if doDebug
@@ -236,7 +240,7 @@ function res = performRBPT( logPostHandle, par, opt )
          if i > nPhase
             nL(l) = predictFromGMM(thetaProp,...
                trainedGMMModels{ceil(bestModeNumber/nRegionNumbers)}(mod(bestModeNumber-1,nRegionNumbers)+1),...
-               regionPredOpt);
+               GMMllh, regionPredOpt);
          else
             nL(l) = 1;
          end
