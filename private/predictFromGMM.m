@@ -14,11 +14,12 @@ function [label] = predictFromGMM(p,gmm,opt)
    llh           = zeros(1,gmm.nModes);   
    
    % Check the likelihood of each mode in log-space
-   logPdf = @(x,w,mu,Sigma) log(w) -0.5*length(x)*log(2*pi) -0.5*log(det(Sigma)) -0.5*(x-mu)'/Sigma*(x-mu);
+   logPdf = @(x,w,mu,Sigma,detSigma) log(w) -0.5*length(x)*log(2*pi) -0.5*log(detSigma) -0.5*(x-mu)'/Sigma*(x-mu);
    for i = 1:nPoints
       for j = 1:gmm.nModes
          llh(j) = logPdf(  p(isInformative,i), gmm.w(j), gmm.mu(j,isInformative)', ...
-                           squeeze(gmm.sigma(j,isInformative,isInformative))  );
+                           squeeze(gmm.sigma(j,isInformative,isInformative)),...
+                           gmm.detSigma(j));
       end
       [~,label(i)] = max(llh);
    end

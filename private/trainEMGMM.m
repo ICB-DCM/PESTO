@@ -200,6 +200,9 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
       res(idx).sigma    = sigma;
       res(idx).w        = w;
       res(idx).testLLH  = likelihoodOfTestSet(idx);
+      for i = 1:nModes
+         res(idx).detSigma(i) = det(squeeze(sigma(i,:,:)));
+      end
       
    end
 %    rng(oldSeed);
