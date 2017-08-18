@@ -143,7 +143,6 @@ function res = performRBPT( logPostHandle, par, opt )
    end
    sigmaHist = repmat( sigmaHist, [1, 1, 1, nMaxRegions] );
    
-   sigmaProp         = nan(nPar,nPar);
    logPost           = nan(nTemps,1);
    logPostProp       = nan(nTemps,1);
    for l = 1:nTemps
@@ -249,22 +248,7 @@ function res = performRBPT( logPostHandle, par, opt )
             
             % Proposed posterior value
             logPostProp(l) = logPostHandle(thetaProp);
-            
-            % New sigma
-            sigmaProp = sigmaScale(l,nL(l))^2 * sigmaHist(:,:,l,nL(l));
-            
-            % Regularization of proposed sigma
-            [~,p] = cholcov(sigmaProp(:,:),0);
-            if p ~= 0
-               sigmaProp = sigmaProp + regFactor*eye(nPar);
-               sigmaProp = (sigmaProp+sigmaProp')/2;
-               [~,p] = cholcov(sigmaProp,0);
-               if p ~= 0
-                  sigmaProp = sigmaProp + max(max(sigmaProp))/1000*eye(nPar);
-                  sigmaProp = (sigmaProp+sigmaProp(:,:)')/2;
-               end
-            end
-            
+              
          else
             inbounds = 0;
          end
@@ -276,25 +260,25 @@ function res = performRBPT( logPostHandle, par, opt )
             % lays within a different region
             if nL(l) ~= oL(l)
                logTransFor(l)  = logmvnpdf(thetaProp, theta(:,l), sigma(:,:,l,oL(l)));     
-               logTransBack(l) = logmvnpdf(theta(:,l), thetaProp, sigmaProp);        
+               logTransBack(l) = logmvnpdf(theta(:,l), thetaProp, sigma(:,:,l,nL(l)));        
             else
                logTransFor(l)  = 1;     
                logTransBack(l) = 1;                  
             end
-            pAcc(l) = beta(l)*(logPostProp(l)-logPost(l)) + logTransBack(l) - logTransFor(l);
+            log_pAcc(l) = beta(l)*(logPostProp(l)-logPost(l)) + logTransBack(l) - logTransFor(l);
             
             % Do not use min, due to NaN behavior in Matlab
-            if isnan(pAcc(l))       % May happen if the objective function has numerical problems
-               pAcc(l) = -inf;            
-            elseif pAcc(l) > 0       
-               pAcc(l) = 0;
+            if isnan(log_pAcc(l))       % May happen if the objective function has numerical problems
+               log_pAcc(l) = -inf;            
+            elseif log_pAcc(l) > 0       
+               log_pAcc(l) = 0;
             end
          else
-            pAcc(l) = -inf;
+            log_pAcc(l) = -inf;
          end
          
          % Accept or reject
-         if log(rand) <= pAcc(l)
+         if log(rand) <= log_pAcc(l)
             acc(l,oL(l))       = acc(l,oL(l)) + 1;
             theta(:,l)         = thetaProp;
             logPost(l)         = logPostProp(l);
@@ -310,7 +294,7 @@ function res = performRBPT( logPostHandle, par, opt )
             theta(:,l), ...
             max(j(l,oL(l))+1,memoryLength), alpha);
          sigmaScale(l,oL(l)) = sigmaScale(l,oL(l))*...
-            exp((exp(pAcc(l))-0.234)/(j(l,oL(l))+1)^alpha);
+            exp((exp(log_pAcc(l))-0.234)/(j(l,oL(l))+1)^alpha);
          
          % Set sigma for the next iteration (recently added like this)
          sigma(:,:,l,oL(l)) = sigmaScale(l,oL(l))*sigmaHist(:,:,l,oL(l));
@@ -334,8 +318,8 @@ function res = performRBPT( logPostHandle, par, opt )
       if nTemps > 1
          dBeta = beta(1:end-1) - beta(2:end);
          for l = nTemps:-1:2
-            pAccSwap(l-1) = dBeta(l-1) .* (logPost(l)-logPost(l-1))';
-            A(l-1) = log(rand) < pAccSwap(l-1);
+            log_pAccSwap(l-1) = dBeta(l-1) .* (logPost(l)-logPost(l-1))';
+            A(l-1) = log(rand) < log_pAccSwap(l-1);
             propSwap(l-1) = propSwap(l-1) + 1;
             accSwap(l-1) = accSwap(l-1) + A(l-1);
             % As usually implemented when using PT
