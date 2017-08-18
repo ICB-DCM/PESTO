@@ -221,7 +221,7 @@ function res = performRBPT( logPostHandle, par, opt )
          elseif (i > nPhase) % && (l == 1)
             oL(l) = predictFromGMM(theta(:,l),...
                trainedGMMModels{ceil(bestModeNumber/nRegionNumbers)}(mod(bestModeNumber-1,nRegionNumbers)+1),...
-               regionPredOpt);
+               GMMllh, regionPredOpt);
          else
             oL(l) = 1;
          end
