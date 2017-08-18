@@ -9,7 +9,6 @@ function [label] = predictFromGMM(p,gmm,logPdf,opt)
    isInformative = logical(opt.isInformative);
    nPoints       = size(p,2);
    nDim          = size(p,1);
-   logPdf        = opt.model;
    
    label         = zeros(1,nPoints);
    llh           = zeros(1,gmm.nModes);   
