@@ -217,11 +217,21 @@ function res = performRBPT( logPostHandle, par, opt )
             
             % Reset local adaptation
             j = zeros(nTemps,nMaxRegions);
-            
-         elseif (i > nPhase) % && (l == 1)
+         
+            % Predict old label
             oL(l) = predictFromGMM(theta(:,l),...
                trainedGMMModels{ceil(bestModeNumber/nRegionNumbers)}(mod(bestModeNumber-1,nRegionNumbers)+1),...
-               GMMllh, regionPredOpt);
+               GMMllh, regionPredOpt); 
+            
+         elseif (i == nPhase)
+            
+            % Predict old label
+            oL(l) = predictFromGMM(theta(:,l),...
+               trainedGMMModels{ceil(bestModeNumber/nRegionNumbers)}(mod(bestModeNumber-1,nRegionNumbers)+1),...
+               GMMllh, regionPredOpt);    
+            
+         elseif (i > nPhase)
+            oL(l) = nL(l);
          else
             oL(l) = 1;
          end
@@ -229,9 +239,6 @@ function res = performRBPT( logPostHandle, par, opt )
          % Relative Index for local adaptation for each temperature and
          % each region
          j(l,oL(l)) = j(l,oL(l)) + 1;          
-         
-         % Count region accesses (needed for adaptation cooldown)
-         j(l,oL(l)) = j(l,oL(l)) + 1;
          
          % Propose
          thetaProp = mvnrnd(theta(:,l),sigma(:,:,l,oL(l)))';
@@ -286,6 +293,10 @@ function res = performRBPT( logPostHandle, par, opt )
             acc(l,oL(l))       = acc(l,oL(l)) + 1;
             theta(:,l)         = thetaProp;
             logPost(l)         = logPostProp(l);
+         else
+            % The new label of the next iteration will be needed as old
+            % label
+            nL(l)              = oL(l);            
          end
          
       end
@@ -301,8 +312,7 @@ function res = performRBPT( logPostHandle, par, opt )
             exp((exp(log_pAcc(l))-0.234)/(j(l,oL(l))+1)^alpha);
          
          % Set sigma for the next iteration (recently added like this)
-         sigma(:,:,l,oL(l)) = sigmaScale(l,oL(l))*sigmaHist(:,:,l,oL(l));
-         sigma(:,:,l,oL(l)) = sigmaScale(l,oL(l))*sigma(:,:,l,oL(l));
+         sigma(:,:,l,oL(l)) = sigmaScale(l,oL(l))^2 * sigmaHist(:,:,l,oL(l));
          
          % Regularization of Sigma
          [~,p] = cholcov(sigma(:,:,l,oL(l)),0);
@@ -330,6 +340,7 @@ function res = performRBPT( logPostHandle, par, opt )
             if A(l-1)
                theta(:,[l,l-1]) = theta(:,[l-1,l]);
                logPost([l,l-1]) = logPost([l-1,l]);
+               nL([l,l-1])      = nL([l-1,l]);
             end
          end
       end
@@ -343,16 +354,7 @@ function res = performRBPT( logPostHandle, par, opt )
          dT = diff(1./beta(1:end-1));
          dT = dT .* exp(dS);
          beta(1:end-1) = 1./cumsum([1,dT]);
-         
-         % My interpretation
-%          kappa = temperatureNu / ( j(l,oL(l)) + 1 + temperatureNu ) / temperatureEta;
-%          dS = kappa*(A(1:end-1)-A(2:end));
-%          T = 1./beta(2:end-1) .* exp(dS);
-%          T(2:end) = max(T(2:end),T(1:end-1)); % Ensure monotone temperature latter         
-%          T = min(maxT,T);
-%          beta(2:end-1) = 1./T;
-         
-         
+    
       end
       
       % Store iteration
