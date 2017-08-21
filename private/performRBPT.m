@@ -207,28 +207,41 @@ function res = performRBPT( logPostHandle, par, opt )
                      ' to suit the give data best.']);
                end
             end
+            
+            % Select the best performing GMM fit
             lh = lh';
-            [~,bestModeNumber] = max(lh(:));
-            res.regions.lh = lh;
+            [~,bestModeNumber]          = max(lh(:));
+            res.regions.lh              = lh;
             res.regions.trainedGMModels = trainedGMMModels{ceil(bestModeNumber/nRegionNumbers)};
-            disp(['After bootstrapping ' num2str(mod(bestModeNumber-1,nRegionNumbers)+1) ...
-               ' modes were found optimal.']);
-            disp(' '); msg = '';
+            bestGMM                     = ...
+               trainedGMMModels{ceil(bestModeNumber/nRegionNumbers)}(mod(bestModeNumber-1,nRegionNumbers)+1);
+            
+            % Build GMM prediction function for future predictions (using
+            % MATLABs build-in implementation
+            regionPredOpt.isInformative = logical(regionPredOpt.isInformative);
+            gmmObj = gmdistribution(bestGMM.mu(:,regionPredOpt.isInformative),...
+                                    shiftdim(bestGMM.sigma(:,regionPredOpt.isInformative,...
+                                                           regionPredOpt.isInformative),1),...
+                                    bestGMM.w);
+            
+            % Display the successfully trained GMM progress
+            if strcmp(regionPredOpt.displayMode,'text') || strcmp(regionPredOpt.displayMode,'visual') 
+               disp(['After bootstrapping ' num2str(mod(bestModeNumber-1,nRegionNumbers)+1) ...
+                  ' modes were found optimal.']);
+               disp(' '); msg = '';
+            end
             
             % Reset local adaptation
             j = zeros(nTemps,nMaxRegions);
          
             % Predict old label
-            oL(l) = predictFromGMM(theta(:,l),...
-               trainedGMMModels{ceil(bestModeNumber/nRegionNumbers)}(mod(bestModeNumber-1,nRegionNumbers)+1),...
-               GMMllh, regionPredOpt); 
+            [~,oL(l)]=max(posterior(gmmObj,theta(regionPredOpt.isInformative,l)'));
             
          elseif (i == nPhase)
             
             % Predict old label
-            oL(l) = predictFromGMM(theta(:,l),...
-               trainedGMMModels{ceil(bestModeNumber/nRegionNumbers)}(mod(bestModeNumber-1,nRegionNumbers)+1),...
-               GMMllh, regionPredOpt);    
+            [~,oL(l)]=max(posterior(gmmObj,theta(regionPredOpt.isInformative,l)'));
+  
             
          elseif (i > nPhase)
             oL(l) = nL(l);
@@ -245,9 +258,7 @@ function res = performRBPT( logPostHandle, par, opt )
          
          % Get region label of proposed point 
          if i > nPhase
-            nL(l) = predictFromGMM(thetaProp,...
-               trainedGMMModels{ceil(bestModeNumber/nRegionNumbers)}(mod(bestModeNumber-1,nRegionNumbers)+1),...
-               GMMllh, regionPredOpt);
+            [~,nL(l)]=max(posterior(gmmObj,thetaProp(regionPredOpt.isInformative)'));
          else
             nL(l) = 1;
          end
