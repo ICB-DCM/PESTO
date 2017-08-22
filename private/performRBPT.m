@@ -217,12 +217,56 @@ function res = performRBPT( logPostHandle, par, opt )
                trainedGMMModels{ceil(bestModeNumber/nRegionNumbers)}(mod(bestModeNumber-1,nRegionNumbers)+1);
             
             % Build GMM prediction function for future predictions (using
-            % MATLABs build-in implementation
+            % MATLABs build-in implementation / currently needs some
+            % workarround for nModes == 1
             regionPredOpt.isInformative = logical(regionPredOpt.isInformative);
-            gmmObj = gmdistribution(bestGMM.mu(:,regionPredOpt.isInformative),...
-                                    shiftdim(bestGMM.sigma(:,regionPredOpt.isInformative,...
-                                                           regionPredOpt.isInformative),1),...
-                                    bestGMM.w);
+            if bestGMM.nModes ~= 1
+               % Prepare covariance for MATLAB build-in GMM
+               bestGMM.sigma = shiftdim(bestGMM.sigma(:,regionPredOpt.isInformative,...
+                                                              regionPredOpt.isInformative),1);
+               % Regularize covariances if necessary
+               for k = 1:size(bestGMM.sigma,3)
+                  [~,p] = cholcov(squeeze(bestGMM.sigma(:,:,k)),0);
+                  if p ~= 0
+                     bestGMM.sigma(:,:,k) = bestGMM.sigma(:,:,k) + ...
+                        regFactor*eye(size(bestGMM.sigma,1));
+                     bestGMM.sigma(:,:,k) = (bestGMM.sigma(:,:,k) + bestGMM.sigma(:,:,k)')/2;
+                     [~,p] = cholcov(bestGMM.sigma(:,:,k),0);
+                     if p ~= 0
+                        bestGMM.sigma(:,:,k) = bestGMM.sigma(:,:,k) + ...
+                           max(max(bestGMM.sigma(:,:,k)))*regFactor*eye(size(bestGMM.sigma,1));
+                        bestGMM.sigma(:,:,k) = (bestGMM.sigma(:,:,k)+bestGMM.sigma(:,:,k)')/2;
+                     end
+                  end    
+               end
+               
+               % Construct MATLAB GMM object
+               gmmObj = gmdistribution(bestGMM.mu(:,regionPredOpt.isInformative),...
+                                       bestGMM.sigma,...
+                                       bestGMM.w);
+            else
+               % Prepare covariance for MATLAB build-in GMM
+               bestGMM.sigma = shiftdim(bestGMM.sigma(1,regionPredOpt.isInformative,...
+                                                              regionPredOpt.isInformative),1);
+               % Regularize covariances if necessary
+               [~,p] = cholcov(squeeze(bestGMM.sigma(:,:,1)),0);
+               if p ~= 0
+                  bestGMM.sigma(:,:,1) = bestGMM.sigma(:,:,1) + ...
+                     regFactor*eye(size(bestGMM.sigma,1));
+                  bestGMM.sigma(:,:,1) = (bestGMM.sigma(:,:,1) + bestGMM.sigma(:,:,1)')/2;
+                  [~,p] = cholcov(bestGMM.sigma(:,:,1),0);
+                  if p ~= 0
+                     bestGMM.sigma(:,:,1) = bestGMM.sigma(:,:,1) + ...
+                        max(max(bestGMM.sigma(:,:,1)))*regFactor*eye(size(bestGMM.sigma,1));
+                     bestGMM.sigma(:,:,1) = (bestGMM.sigma(:,:,1)+bestGMM.sigma(:,:,1)')/2;
+                  end
+               end
+               
+               % Construct MATLAB GMM object
+               gmmObj = gmdistribution(bestGMM.mu(1,regionPredOpt.isInformative),...
+                                       bestGMM.sigma,...
+                                       bestGMM.w(1));               
+            end
             
             % Display the successfully trained GMM progress
             if strcmp(regionPredOpt.displayMode,'text') || strcmp(regionPredOpt.displayMode,'visual') 
