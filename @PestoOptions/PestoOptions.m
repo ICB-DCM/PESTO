@@ -253,7 +253,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         % *         = 'bfgs' ... BFGS approximation to Hessian
         % *         = 'sr1' ... symmetric-rank 1 approximation to Hessian
         % *     .gradient ... is a gradient provided?        
-        % *     .MaxStep ... minimum step size of the solver
+        % *     .MinStep ... minimum step size of the solver
         % *     .MaxStep ... maximum step size of the solver
         % *     .MaxNumSteps ... maximum steps to be taken
         % *     .GradTol ... maximum remaining gradient to be tolerated
