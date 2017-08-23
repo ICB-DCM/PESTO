@@ -169,7 +169,7 @@ function parameters = integrateProfileForParameterI(parameters, objective_functi
     for s = [1, -1]
 
         % Set bound for considered parameter (ONLY integrate profiles)
-        borders = [parameters.min, parameters.max];
+        borders = [parameters.min(:), parameters.max(:)];
         switch s
             case 1
                 T = parameters.max(j);
