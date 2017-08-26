@@ -58,6 +58,9 @@ if length(varargin) >= 1 && ~isempty(varargin{1})
     end
 end
 
+% Check, if parameters has all necessary fieds
+parameters = checkSanityOfStructs(parameters, 'parameters');
+
 % Open figure
 if length(varargin) >= 2 && ~isempty(varargin{2})
     fh = figure(varargin{2});
@@ -571,6 +574,18 @@ for l2 = 1:length(I)
              for k = 1:options.S.ind
                  h = plot(parameters.S.par(i1,:,k),parameters.S.par(i2,:,k),options.S.sp_m,...
                      'color',options.S.sp_col(k,:),'markersize',options.S.sp_ms); hold on;
+             end
+        case 2
+            % kernel-density estimate
+             for k = options.S.ind:-1:1
+                 x1_line = linspace(min(parameters.S.par(i1,:,k)),max(parameters.S.par(i1,:,k)),100);
+                 x2_line = linspace(min(parameters.S.par(i2,:,k)),max(parameters.S.par(i2,:,k)),100);
+                 [x1_grid, x2_grid] = meshgrid(x1_line, x2_line);
+                 x_grid = transpose([x1_grid(:), x2_grid(:)]);
+                 [KDest] = getKernelDensityEstimate([squeeze(parameters.S.par(i1,:,k)); squeeze(parameters.S.par(i2,:,k))], x_grid);
+                 KDest = reshape(KDest, length(x1_line), length(x2_line));
+                 [~,h] = contour(x1_line, x2_line, KDest/max(max(KDest)),'-','color',options.S.sp_col(k,:),'linewidth',options.S.lw); 
+                 hold on;
              end
         otherwise
             error('Selected value for ''options.S.plot_type'' is not available.');

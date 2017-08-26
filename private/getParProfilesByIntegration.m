@@ -104,7 +104,7 @@ function [parameters, fh] = getParProfilesByIntegration(parameters, objectiveFun
         end
         
         % Output
-        if str(options.profile_method, 'integration')
+        if strcmp(options.profile_method, 'integration')
             switch options.mode
                 case 'visual', fh = plotParameterProfiles(parameters,'1D',fh,options.parameter_index,options.plot_options);
                 case 'text' % no output
@@ -123,6 +123,8 @@ function parameters = integrateProfileForParameterI(parameters, objective_functi
     global llhHistory;
     global yCorrection;
     global ObjFuncCounter;
+    global reOptSteps;
+    global intSteps;
     ObjFuncCounter = 0;
     lastCounter = 0;
 
@@ -193,7 +195,14 @@ function parameters = integrateProfileForParameterI(parameters, objective_functi
             fprintf('\n  | Running axis |  Optimality |  Ratio  |');
             fprintf('\n  |--------------|-------------|---------|');
         end
-
+        
+        % Get the computation time
+        startTimeProfile = cputime;
+        
+        intSteps = 0;
+        optSteps = 0;
+        reOptSteps = 0;
+        
         % Switch between different methods
         while (reachedEnd == 0)
 
@@ -209,11 +218,11 @@ function parameters = integrateProfileForParameterI(parameters, objective_functi
                     odeMatlabOptions.OutputFcn = OutputFunction;
                     odeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, j, borders, objective_function, options, parameters.MS.logPost(1));
                     if (strcmp(options.solver.type, 'ode15s'))
-                        [t,y] = ode15s(@(t,y) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions); 
+                        [~,y] = ode15s(@(t,y) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions); 
                     elseif (strcmp(options.solver.type, 'ode45'))
-                        [t,y] = ode45(@(t,y) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
+                        [~,y] = ode45(@(t,y) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
                     else
-                        [t,y] = ode113(@(t,y) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
+                        [~,y] = ode113(@(t,y) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
                     end
 
 
@@ -222,6 +231,7 @@ function parameters = integrateProfileForParameterI(parameters, objective_functi
                     if (yCorrection == inf)
                         addY = doOptimizationSteps(parameters, y, objective_function, borders, j, s, options);
                         y = [y; addY];
+                        optSteps = optSteps + 3;
                     else
                     % If reoptimization has to be done, correct the values in y by the optimized ones
                         for iLine = size(yCorrection, 2) : -1 : 1
@@ -341,6 +351,12 @@ function parameters = integrateProfileForParameterI(parameters, objective_functi
 
         end
 
+        % Get computation time
+        parameters.P(j).t_cpu(round((s+3)/2)) = cputime - startTimeProfile;
+        parameters.P(j).optSteps(round((s+3)/2)) = optSteps;
+        parameters.P(j).intSteps(round((s+3)/2)) = intSteps;
+        parameters.P(j).reOptSteps(round((s+3)/2)) = reOptSteps;
+        
         % Final output and storage
         if (strcmp(options.mode, 'text'))
             fprintf('\n  |======================================|\n');
@@ -378,6 +394,8 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
     persistent CounterMinStep;
     global llhHistory;
     global yCorrection;
+    global reOptSteps;
+    global intSteps;
     
     % Initialize persistent variables in the beginning
     if strcmp(flag, 'init')
@@ -411,15 +429,18 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
             [L, GL] = objectiveWrap(y(:,iT), objectiveFunction, options.obj_type, options.objOutNumber);
             GL(ind) = 0;
             
-            if (sqrt(sum(GL.^2)) > 1)
+            if (sqrt(sum(GL.^2)) > options.solver.GradTol)
                 display('Lost optimal path, doing a reoptimization!');
                 [newY, L, GL] = reoptimizePath(y(:,iT), ind, objectiveFunction, borders, options);
                 y(:,iT) = [newY(1:ind-1); y(ind,iT); newY(ind:end)];
                 yCorrection(:,iT) = y(:,iT);
+                reOptSteps = reOptSteps + 1;
                 status = 1;
             end
-
+            
+            % Write ratio and increase counter
             R = exp(-L - logPostMax);
+            intSteps = intSteps + 1;
             
             if (strcmp(options.mode, 'text'))
                 fprintf('\n  |  %11.8f | %11.7f | %7.5f |', ...

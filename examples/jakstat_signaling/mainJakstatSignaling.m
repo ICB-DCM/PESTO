@@ -2,10 +2,17 @@
 %
 % Demonstrates the use of:
 % * getMultiStarts()
+% * getParameterProfiles()
 %
 % Demostrates furhtermore
 % * how to implement a user-supplied guess for intial parameters
 % * that non-evaluable points in parameter space can occur
+% * how different optimization methods perform (multi-start local, hybrid,
+%   global) -> Not necessary to perform computations, data-sheet is in this
+%   folder and can be loaded (comparison_optimization_methods.mat)
+% * how providing Hessians can improve optimization
+% * how to use profile calculation in hybrid mode on a complex example
+% * how to use parallelization
 %
 % This example provides a model for the JakStat signaling pathway with an
 % time resolved input of the drug EPO. The model has been taken from the
@@ -92,9 +99,15 @@ optionsPesto          = PestoOptions();
 optionsPesto.trace    = true;
 optionsPesto.proposal = 'user-supplied';
 optionsPesto.obj_type = 'log-posterior';
+<<<<<<< HEAD
 optionsPesto.mode     = 'visual';
 
 
+=======
+optionsPesto.mode     = 'silent';
+
+
+>>>>>>> 8c125594dc246e3b83fde8e2100bf106c106e484
 %% Perform optimization
 % A parameters optimization is performed within the bound defined in
 % parameters.min and .max in order to infer the unknown parameters from 
@@ -116,72 +129,61 @@ optionsPesto.mode     = 'visual';
 
 
 % Multi-start local optimization part
-optionsPesto.n_starts = 50;
+optionsPesto.n_starts = 25;
 optionsPesto.localOptimizer = 'fmincon';
 optionsPesto.localOptimizerOptions = optimset(...
-    'Algorithm', 'interior-point',... 'trust-region-reflective'
+    'Algorithm', 'interior-point',...
     'GradObj', 'on',...
     'Display', 'iter', ... 'Hessian', 'on', ... uncomment this to use the Hessian for optimization 
-    'MaxIter', 800,...
+    'MaxIter', 1000,...
     'TolFun', 1e-10,...
     'MaxFunEvals', 1000*parameters.number);
 
 % % Hybrid-type optimization part (requires the MEIGO toolbox)
 % % (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
 % % uncomment):
-% optionsPesto2 = optionsPesto.copy;
-% optionsPesto2.n_starts = 10;
-% optionsPesto2.localOptimizer = 'meigo-ess';
-% MeigoOptions = struct(...
-%     'maxeval', 8000, ...
-%     'local', struct('solver', 'fmincon', ...
-%     'finish', 'fmincon', ...
-%     'iterprint', 1) ...
-%     );
-% optionsPesto2.localOptimizerOptions = MeigoOptions;
-
+% optionsPestoHybrid.localOptimizerOptions = MeigoOptions;
+% 
 % % Global optimization part (requires the PSwarm toolbox)
 % % (Install from http://www.norg.uminho.pt/aivaz/pswarm/ and uncomment)
-% optionsPesto3 = optionsPesto.copy;
-% optionsPesto3.localOptimizer = 'pswarm';
-% optionsPesto3.n_starts = 10;
-% optionsPesto3.localOptimizerOptions.MaxObj  = 10000;
+% optionsPestoGlobal = optionsPesto.copy;
+% optionsPestoGlobal.localOptimizer = 'pswarm';
+% optionsPestoGlobal.localOptimizerOptions.MaxObj  = 10000;
 
 % The example can also be run in parallel mode: Uncomment this, if wanted
-optionsPesto.comp_type = 'parallel'; 
-optionsPesto.mode = 'silent';
-% optionsPesto.save = true; 
-optionsPesto.foldername = 'results';
+% optionsPesto.comp_type = 'parallel'; 
+% optionsPesto.mode = 'text';
+% % optionsPesto.save = true; 
+% optionsPesto.foldername = 'results';
 % n_workers = 10;
 
-n_w = [1,2,3,4,5,10,15];
-for n_workers = n_w
-    % Open parpool
+if strcmp(optionsPesto.comp_type, 'parallel') && (n_workers >= 2)
     parpool(n_workers); 
+else
+    optionsPesto.comp_type = 'sequential';
+end
+    
+% Run getMultiStarts
+fprintf('\n Perform optimization...');
+parametersMultistart = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+% parametersHybrid = getMultiStarts(parameters, objectiveFunction, optionsPestoHybrid);
+% parametersGlobal = getMultiStarts(parameters, objectiveFunction, optionsPestoGlobal);
 
-    % % Run getMultiStarts
-    % fprintf('\n Perform optimization...');
-    tic;
-    paraPar = getMultiStarts(parameters, objectiveFunction, optionsPesto);
-    paraPar.time = toc;
-    save(['paraPar' num2str(n_workers) '.mat'], 'paraPar');
-    clear paraPar;
-    % parameters2 = getMultiStarts(parameters, objectiveFunction, optionsPesto2);
-    % parameters3 = getMultiStarts(parameters, objectiveFunction, optionsPesto3);
-    % 
-    % %% Perform uncertainty analysis
-    % % The uncertainty of the estimated parameters is visualized by computing
-    % % and plotting profile likelihoods. Different mathod can be used.
-    % 
-    % % Use the hybrid approach for profiles: uncomment this, if wanted
-    % optionsPestoP = optionsPesto.copy;
-    % optionsPestoP.profile_method = 'integration';
-    % 
-    % % Profile likelihood calculation
-    % parameters1 = getParameterProfiles(parameters1, objectiveFunction, optionsPesto);
-    % parametersP = getParameterProfiles(parameters1, objectiveFunction, optionsPestoP);
 
-    %%
-    % Close parpool
+%% Perform uncertainty analysis
+% The uncertainty of the estimated parameters is visualized by computing
+% and plotting profile likelihoods. Different mathod can be used.
+
+% Use the hybrid approach for profiles: uncomment this, if wanted
+% optionsPesto.profile_method = 'integration';
+
+% Profile likelihood calculation
+parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
+
+
+%% Cleaning up
+
+% Close parpool
+if strcmp(optionsPesto.comp_type, 'parallel') && (n_workers >= 2)
     delete(gcp('nocreate'))
 end

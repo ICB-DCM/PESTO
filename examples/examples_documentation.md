@@ -29,8 +29,8 @@ The following table provides an overview of which of the PESTO functions are dem
 | getMultiStarts()          |          X          |           X         |                  |     X     |      X       |   X   |    X    |  X   |
 | plotMultiStarts()         |          X          |           X         |                  |     X     |      X       |   X   |    X    |  X   |
 | plotMultiStartDiagnosis() |                     |           X         |                  |           |              |       |         |      |
-| getParameterProfiles()    |          X          |           X         |                  |     X     |      X       |       |         |      |
-| plotParameterProfiles()   |          X          |           X         |                  |     X     |      X       |       |         |      |
+| getParameterProfiles()    |          X          |           X         |                  |     X     |      X       |       |    X    |      |
+| plotParameterProfiles()   |          X          |           X         |                  |     X     |      X       |       |    X    |      |
 | getParameterSamples()     |          X          |           X         |          X       |     X     |      X       |       |         |      |
 | plotParameterSamples()    |          X          |           X         |          X       |     X     |      X       |       |         |      |
 | plotMCMCdiagnosis()       |                     |           X         |          X       |           |              |       |         |      |
@@ -48,10 +48,11 @@ The following table provides an overview of which of the PESTO functions are dem
 
 In addition to the principal routines, the examples also highlight how analysis results may look like in certain situations (especially in the case of modelling related problems), or how the results from the PESTO routines can be manipulated (the following list is of course non-exhaustive):
 * *multi-modal posterior distributions* (transfection and Gaussian mixture)
-* *structurally non-identifiable parameters* (Hyperring and transfection)
-* *practically non-identifiable parameters* (enzymatic catalysis)
+* *structurally non-identifiable parameters* (Hyperring, transfection, jakstat)
+* *practically non-identifiable parameters* (enzymatic catalysis, jakstat)
 * *analysis of sampling results and Markov chain properties* (enzymatic catalysis, Gaussian mixture, and Hyperring)
 * *cutting off burn-in phase of Markov chain after sampling* (transfection)
 * *advanced usage of PESTO plotting routines* (Gaussian mixture)
-* *integration of profile likelihoods* (enzymatic catalysis and transfection)
+* *integration of profile likelihoods* (enzymatic catalysis, transfection, jakstat)
 * *usage of non-default sampling algorithms* (transfection, Gaussian mixture, Hyperring)
+* *using parallelization* (enzymatic catalysis, transfection, jakstat)

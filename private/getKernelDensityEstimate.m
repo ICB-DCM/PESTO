@@ -49,7 +49,7 @@ if ~isempty(Sigma)
 end
 
 % Check options
-options.bw_selection = 'gen scott';
+options.bw_selection = 'scott';
 options.kernel = 'normal';
 if nargin == 4
     options = setdefault(varargin{4},options);
@@ -104,7 +104,7 @@ if isempty(Sigma)
             error('This option is not available.');
     end
 end
-invSigma = inv(Sigma);
+% invSigma = inv(Sigma);
 c = 1/((2*pi)^(D/2)*sqrt(det(Sigma))) * 1/N;
 % Initialize KDest
 KDest = zeros(1,Ngrid);
@@ -112,7 +112,7 @@ KDest = zeros(1,Ngrid);
 %% CALCULATION OF DENSITY
 for i = 1:N
     % Updata of complete density
-    KDest = KDest + c*exp(-0.5*sum(bsxfun(@minus,Xc,P(:,i)).*(invSigma*bsxfun(@minus,Xc,P(:,i))),1));
+    KDest = KDest + c*exp(-0.5*sum(bsxfun(@minus,Xc,P(:,i)).*(Sigma\bsxfun(@minus,Xc,P(:,i))),1));
 end
 
 
