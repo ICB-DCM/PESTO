@@ -9,11 +9,15 @@ function varargout = objectiveWrapWErrorCount(varargin)
     %   outNumber ... Maximum of outputs, the original objFun provides
 
     global error_count;
-    
+    % persistent 
     % Catch up possible overload
+            %case 2
+        %    theta = varargin{1};
+        %    flag  = varargin{2};
     switch nargin
         case {0, 1, 2, 3}
             error('Call to objective function giving not enough inputs.')
+
         case 4
             theta             = varargin{1};
             objectiveFunction = varargin{2};

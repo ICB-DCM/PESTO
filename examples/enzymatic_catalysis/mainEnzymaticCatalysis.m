@@ -60,7 +60,7 @@ rng(0);
 %% Create Artificial Data for Parameter Estimation
 % The necessery variables are set (Parameter bounds, variance, ...)
 nTimepoints = 50;       % Time points of Measurement
-nMeasure    = 100;     % Number of experiments
+nMeasure    = 1;     % Number of experiments
 sigma2      = 0.05^2;   % Variance of Measurement noise
 lowerBound  = -10;      % Lower bound for parameters
 upperBound  = 5;        % Upper bound for parameters
@@ -91,7 +91,7 @@ parameters.number = length(parameters.name);
 % objectiveFunction = @(theta) logLikelihoodEC(theta, yMeasured, sigma2, con0, nTimepoints, 1:nMeasure);
 
 % objective function for stochastic mode
-objectiveFunction = @(theta, miniBatch) logLikelihoodEC(theta, yMeasured, sigma2, con0, nTimepoints, miniBatch);
+objectiveFunction = @(theta) logLikelihoodEC(theta, yMeasured, sigma2, con0, nTimepoints, 1);
 
 % PestoOptions
 optionsPesto           = PestoOptions();
@@ -99,7 +99,7 @@ optionsPesto.obj_type  = 'log-posterior';
 optionsPesto.comp_type = 'sequential'; 
 optionsPesto.mode      = 'visual';
 optionsPesto.plot_options.add_points.par = theta;
-optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta, 1:nMeasure);
+optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 
 %% Parameter Sampling
 % Covering all sampling options in one struct
@@ -159,28 +159,29 @@ parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
 % optionsMeigo.n_starts = 1;
 optionsPesto.n_starts = 6;
 optionsPesto.trace = true;
-optionsPesto.localOptimizer = 'delos';
-optionsPesto.localOptimizerOptions.stochastic = true;
-optionsPesto.localOptimizerOptions.miniBatchSize = 20;
-optionsPesto.localOptimizerOptions.dataSetSize = nMeasure;
-optionsPesto.localOptimizerOptions.barrier = 'log-barrier';
-optionsPesto.localOptimizerOptions.display = 'iter';
-optionsPesto.localOptimizerOptions.restriction = true;
-optionsPesto.localOptimizerOptions.reportInterval = 1;
-optionsPesto.localOptimizerOptions.MaxIter = 300;
-optionsPesto.localOptimizerOptions.method = 'adam';
-optionsPesto.localOptimizerOptions.hyperparams = struct(...
-    'rho1', 0.5, ...
-    'rho2', 0.9, ...
-    'delta', 1e-8, ...
-    'eps0', 0.1, ...
-    'tau0', 100, ...
-    'epsTau', 1e-5, ...
-    'tau', 250);
+optionsPesto.localOptimizer = 'fmincon';
+% optionsPesto.localOptimizer = 'delos';
+% optionsPesto.localOptimizerOptions.stochastic = true;
+% optionsPesto.localOptimizerOptions.miniBatchSize = 20;
+% optionsPesto.localOptimizerOptions.dataSetSize = nMeasure;
+% optionsPesto.localOptimizerOptions.barrier = 'log-barrier';
+% optionsPesto.localOptimizerOptions.display = 'iter';
+% optionsPesto.localOptimizerOptions.restriction = true;
+% optionsPesto.localOptimizerOptions.reportInterval = 1;
+% optionsPesto.localOptimizerOptions.MaxIter = 300;
+% optionsPesto.localOptimizerOptions.method = 'adam';
+% optionsPesto.localOptimizerOptions.hyperparams = struct(...
+%     'rho1', 0.5, ...
+%     'rho2', 0.9, ...
+%     'delta', 1e-8, ...
+%     'eps0', 0.1, ...
+%     'tau0', 100, ...
+%     'epsTau', 1e-5, ...
+%     'tau', 250);
 
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
-plotMultiStartHistory(parameters);
+% plotMultiStartHistory(parameters);
 
 
 % Options for an alternative multi-start local optimization
@@ -191,12 +192,12 @@ plotMultiStartHistory(parameters);
 % parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
 % Options for an alternative multi-start local optimization
-display(' Optimizing parameters...');
-optionsPesto.n_starts = 5;
-parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+% display(' Optimizing parameters...');
+% optionsPesto.n_starts = 5;
+% parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
 % Use a diagnosis tool to see, how optimization worked
-plotMultiStartDiagnosis(parameters);
+% plotMultiStartDiagnosis(parameters);
 
 
 %% Calculate Confidence Intervals

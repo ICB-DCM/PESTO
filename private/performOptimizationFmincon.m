@@ -15,9 +15,7 @@ function parameters = performOptimizationFmincon(parameters, objective_function,
     parameters.MS.par(:,i) = theta;
     parameters.MS.gradient(:,i) = gradient_opt;
     if isempty(hessian_opt)
-        if strcmp(options.localOptimizerOptions.Hessian,'on')
-            [~,~,hessian_opt] = objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
-        end
+        hessian_opt = nan(parameters.number);
     elseif max(hessian_opt(:)) == 0
         if strcmp(options.localOptimizerOptions.Hessian,'on')
             [~,~,hessian_opt] = objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
