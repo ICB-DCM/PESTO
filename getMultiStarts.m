@@ -260,104 +260,29 @@ if strcmp(options.comp_type, 'sequential')
         startTimeLocalOptimization = cputime;
         if (isempty(J_0) || (J_0 < -options.init_threshold))
             
-            if strcmp(options.localOptimizer, 'fmincon')    
-                %% fmincon as local optimizer
-                % Optimization using fmincon
-                [theta,J_opt,parameters.MS.exitflag(iMS),results_fmincon,~,gradient_opt,hessian_opt] = ...
-                    fmincon(negLogPostWErrorCount,...  % negative log-likelihood function
-                    parameters.MS.par0(:,iMS),...    % initial parameter
-                    parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
-                    parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
-                    parameters.min,...     % lower bound
-                    parameters.max,...     % upper bound
-                    [],options.localOptimizerOptions);   % options
+            %% Optimization routines are chosen
+            
+            switch options.localOptimizer
+                case 'fmincon'
+                    % fmincon as local optimizer
+                    parameters = performOptimizationFmincon(parameters, objective_function, iMS, J_0, options);
                 
-                % Assignment of results
-                parameters.MS.logPost0(1, iMS) = -J_0;
-                parameters.MS.logPost(iMS) = -J_opt;
-                parameters.MS.par(:,iMS) = theta;
-                parameters.MS.gradient(:,iMS) = gradient_opt;
-                if isempty(hessian_opt)
-                    if strcmp(options.localOptimizerOptions.Hessian,'on')
-                        [~,~,hessian_opt] = negLogPost(theta); % objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
-                    end
-                elseif max(hessian_opt(:)) == 0
-                    if strcmp(options.localOptimizerOptions.Hessian,'on')
-                        [~,~,hessian_opt] = negLogPost(theta); % objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
-                    end
-                end
-                parameters.MS.n_objfun(iMS) = results_fmincon.funcCount;
-                parameters.MS.n_iter(iMS) = results_fmincon.iterations;
-                try
-                    parameters.MS.hessian(:,:,iMS) = full(hessian_opt);
-                catch err_msg
-                    warning(['Error in assigning final Hessian matrix. Original errror message: ' err_msg.message]);
-                end
-                
-            elseif strcmp(options.localOptimizer, 'meigo-ess') || strcmp(options.localOptimizer, 'meigo-vns')
-                %% Use MEIGO as local optimizer
-                if ~exist('MEIGO', 'file')
-                    error('MEIGO not found. This feature requires the "MEIGO" toolbox to be installed. See http://gingproc.iim.csic.es/meigo.html for download and installation instructions.');
-                end
-                
-                problem.f = 'meigoDummy';
-                problem.x_L = parameters.min;
-                problem.x_U = parameters.max;
-                problem.x_0 = parameters.MS.par0(:,iMS);
-                
-                meigoAlgo = 'ESS';
-                if strcmp(options.localOptimizer, 'meigo-vns')
-                    meigoAlgo = 'VNS';
-                end
-                objFunHandle = @(theta) objectiveWrapWErrorCount(theta',objective_function,options.obj_type,options.objOutNumber);
-                Results = MEIGO(problem, options.localOptimizerOptions, meigoAlgo, objFunHandle);
-                
-                %TODO
-                % parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
-                % parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
-                
-                parameters.MS.logPost0(1, iMS) = nan;
-                parameters.MS.logPost(iMS) = -Results.fbest;
-                parameters.MS.par(:,iMS) = Results.xbest;
-                parameters.MS.n_objfun(iMS) = Results.numeval;
-                parameters.MS.n_iter(iMS) = size(Results.neval, 2);
-                
-                [~, G_opt, H_opt] = objectiveWrapWErrorCount(parameters.MS.par(:,iMS),objective_function,options.obj_type,options.objOutNumber);
-                parameters.MS.hessian(:,:,iMS) = H_opt;
-                parameters.MS.gradient(:,iMS) = G_opt;
-                
-                %% Output
-                switch options.mode
-                    case {'visual','text'}, disp(['-> Optimization FINISHED (MEIGO exit code: ' num2str(Results.end_crit) ').']);
-                    case 'silent' % no output
-                end
-                
-            elseif strcmp(options.localOptimizer, 'pswarm')
-                %% Use PSwarm as local optimizer
-                if ~exist('PSwarm', 'file')
-                    error('PSwarm not found. This feature requires the "PSwarm" toolbox to be installed. See http://www.norg.uminho.pt/aivaz/pswarm/ for download and installation instructions.');
-                end
-
-                problem = struct();
-                problem.ObjFunction= 'meigoDummy';
-                problem.LB = parameters.min;
-                problem.UB = parameters.max;
-                problem.A = parameters.constraints.A;
-                problem.b = parameters.constraints.b;
-                
-                objFunHandle = @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber);
-                [theta,bestLogPost,RunData] = PSwarm(problem, struct('x', parameters.MS.par0(:,iMS)), options.localOptimizerOptions, objFunHandle);
-                
-                parameters.MS.logPost0(1, iMS) = nan;
-                parameters.MS.logPost(iMS) = -bestLogPost;
-                parameters.MS.par(:,iMS) = theta;
-                parameters.MS.n_objfun(iMS) = RunData.ObjFunCounter;
-                parameters.MS.n_iter(iMS) = RunData.IterCounter;
-                
-                [~, G_opt, H_opt] = objectiveWrapWErrorCount(parameters.MS.par(:,iMS),objective_function,options.obj_type,options.objOutNumber);
-                parameters.MS.hessian(:,:,iMS) = H_opt;
-                parameters.MS.gradient(:,iMS) = G_opt;
-
+                case {'meigo-ess', 'meigo-vns'}
+                    % Use the MEIGO toolbox as local / global optimizer
+                    parameters = performOptimizationMeigo(parameters, objective_function, iMS, J_0, options);
+                    
+                case 'pswarm'
+                    % Optimization using a swarm based global optimizer PSwarm
+                    parameters = performOptimizationPswarm(parameters, objective_function, iMS, J_0, options);  
+                case 'fminsearch'
+                    % fminsearch as local optimizer
+                    parameters = performOptimizationFminsearch(parameters, objective_function, iMS, options);
+                case 'dhc_old'
+                    %Optimization using dynamic hill climbin as local optimizer
+                    parameters = performOptimizationDhc_old(parameters, objective_function, iMS, options);
+                case 'dhc'
+                    %Optimization using dynamic hill climbin as local optimizer
+                    parameters = performOptimizationDhc(parameters, objective_function, iMS, options);
             end
             
         end

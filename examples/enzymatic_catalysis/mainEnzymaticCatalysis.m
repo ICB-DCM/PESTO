@@ -43,7 +43,7 @@
 
 
 %% Preliminary
-clear all;
+clear;
 close all;
 clc;
 
@@ -69,8 +69,8 @@ theta       = [1.1770; -2.3714; -0.4827; -5.5387]; % True parameter values
 % Creation of data
 % Once the two files getMeasuredData.m and getInitialConcentrations.m are
 % written, the two following lines can be commented
-display(' Write new measurement data...');
-performNewMeasurement(theta, nMeasure, nTimepoints, sigma2);
+% display(' Write new measurement data...');
+% performNewMeasurement(theta, nMeasure, nTimepoints, sigma2);
 
 % The measurement data is read out from the files where it is saved
 yMeasured = getMeasuredData();
