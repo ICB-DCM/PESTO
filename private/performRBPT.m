@@ -108,6 +108,7 @@ function res = performRBPT( logPostHandle, par, opt )
    accSwap           = zeros(1,nTemps-1);
    propSwap          = zeros(1,nTemps-1);
    sigmaScale        = ones(nTemps,nMaxRegions);
+   sigmaScaleGlobal  = ones(nTemps,1);
    switch size(theta0,2)
       case 1
          theta       = repmat(theta0,[1,nTemps]);
@@ -117,6 +118,7 @@ function res = performRBPT( logPostHandle, par, opt )
          error('Dimension of options.theta0 is incorrect.');
    end
    muHist            = repmat(theta, [1, 1, nMaxRegions]);
+   muHistGlobal      = theta;
       
    % Regularization sigma0
    for l = 1:size(sigma0,3)
@@ -140,6 +142,7 @@ function res = performRBPT( logPostHandle, par, opt )
       otherwise
          error('Dimension of options.Sigma0 is incorrect.');
    end
+   sigmaHistGlobal = sigmaHist;   
    sigmaHist = repmat( sigmaHist, [1, 1, 1, nMaxRegions] );
    
    logPost           = nan(nTemps,1);
@@ -148,6 +151,7 @@ function res = performRBPT( logPostHandle, par, opt )
       logPost(l)     = logPostHandle(theta(:,l));
    end
    sigma             = sigmaHist;
+   sigmaGlobal       = sigmaHistGlobal;
    
    msg               = '';
    timer = tic; dspTime      = toc;
@@ -175,9 +179,9 @@ function res = performRBPT( logPostHandle, par, opt )
          % Get region label of current point. Learn from posterior sample
          if (i == nPhase) && (l == 1)
             
-%             % ONLY TEMP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-%             test = load('forRingTesting');
-%             res.par = test.res.par(:,1:10:end);
+            % ONLY TEMP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            test = load('forRingTesting');
+            res.par = test.res.par(:,1:10:end);
             
             
             % Train GMM to get label predictions for future points
@@ -286,16 +290,24 @@ function res = performRBPT( logPostHandle, par, opt )
             end
             
             for m = 1:nTemps
+               % Use the so far trained sigma as global sigma
+               sigmaHistGlobal(:,:,m)  = squeeze(sigma(:,:,m,1));
+               sigmaGlobal(:,:,m)      = squeeze(sigma(:,:,m,1));
+               muHistGlobal(:,m)       = squeeze(muHist(:,m,1));
+               sigmaScaleGlobal(m)     = sigmaScale(m,1);
+               
+               % Initialize the locals sigmas with the GMM covariances
                for n = 1:bestGMM.nModes
-                  sigma(:,:,m,n) = oldSigmas(:,:,n);
+                  sigma(:,:,m,n)     = oldSigmas(:,:,n);
                   sigmaHist(:,:,m,n) = oldSigmas(:,:,n);
-                  sigmaScale(m,n) = 1;
-                  muHist(:,m,n) = bestGMM.mu(n,:);
-                  acc(m,n) = 0;
+                  sigmaScale(m,n)    = 1;
+                  muHist(:,m,n)      = bestGMM.mu(n,:);
+                  acc(m,n)           = 0;
                end
+               
             end
-%             theta = bestGMM.mu(randi(bestGMM.nModes,nTemps,1),:)';
-         
+
+            
             % Predict old label
             [~,oL(l)]=max(posterior(gmmObj,theta(regionPredOpt.isInformative,l)'));
             
@@ -315,8 +327,12 @@ function res = performRBPT( logPostHandle, par, opt )
          % each region
          j(l,oL(l)) = j(l,oL(l)) + 1;          
          
-         % Propose
-         thetaProp = mvnrnd(theta(:,l),sigma(:,:,l,oL(l)))';
+         % Propose (50% chance of local sigma and 50% chance of global sigma)
+         if rand < 0.5
+            thetaProp = mvnrnd(theta(:,l),sigma(:,:,l,oL(l)))';
+         else
+            thetaProp = mvnrnd(theta(:,l),sigmaGlobal(:,:,l))';
+         end
          
          % Get region label of proposed point 
          if i > nPhase
@@ -341,24 +357,16 @@ function res = performRBPT( logPostHandle, par, opt )
          if (inbounds == 1) && (logPostProp(l) > -inf) && (logPostProp(l) < inf)
             
             % Transitions probabilities may differer if the proposed point
-            % lays within a different region
+            % lays within a different region. The contribution of the
+            % global component is symmetric
             if nL(l) ~= oL(l)
                
-%                % If two regions were accessed a very different amount of
-%                % times, it may happen, that one is very badly initialized
-%                % leading to permanent rejections between those two -> ensure
-%                % initialization by mimic covariance matrices for low 
-%                % access numbers
-%                if (j(l,oL(l))-j(l,nL(l)) > nPhase / bestGMM.nModes) && ...
-%                      j(l,nL(l)) < nPhase / bestGMM.nModes
-%                   sigma(:,:,l,nL(l)) = sigma(:,:,l,oL(l));
-%                elseif (j(l,nL(l))-j(l,oL(l)) > nPhase / bestGMM.nModes) && ...
-%                      j(l,oL(l)) < nPhase / bestGMM.nModes
-%                   sigma(:,:,l,oL(l)) = sigma(:,:,l,nL(l));
-%                end
-                  
-               logTransFor(l)  = logmvnpdf(thetaProp, theta(:,l), sigma(:,:,l,oL(l)));     
-               logTransBack(l) = logmvnpdf(theta(:,l), thetaProp, sigma(:,:,l,nL(l)));        
+               globalContribution = logmvnpdf(thetaProp, theta(:,l), sigmaGlobal(:,:,l));
+               logTransFor(l)  = 0.5 * logmvnpdf(thetaProp, theta(:,l), sigma(:,:,l,oL(l))) + ...
+                  0.5 * globalContribution;     
+               logTransBack(l) = 0.5 * logmvnpdf(theta(:,l), thetaProp, sigma(:,:,l,nL(l))) + ...
+                  0.5 * globalContribution;      
+               
             else
                logTransFor(l)  = 0;     
                logTransBack(l) = 0;                  
@@ -398,8 +406,16 @@ function res = performRBPT( logPostHandle, par, opt )
          sigmaScale(l,oL(l)) = sigmaScale(l,oL(l))*...
             exp((exp(log_pAcc(l))-0.234)/(j(l,oL(l))+1)^alpha);
          
+         [muHistGlobal(:,l),sigmaHistGlobal(:,:,l)] = ...
+            updateStatistics(muHistGlobal(:,l), sigmaHistGlobal(:,:,l), ...
+            theta(:,l), ...
+            max(i,memoryLength), alpha);
+         sigmaScaleGlobal(l) = sigmaScaleGlobal(l)*...
+            exp((exp(log_pAcc(l))-0.234)/(i)^alpha);         
+         
          % Set sigma for the next iteration (recently added like this)
          sigma(:,:,l,oL(l)) = sigmaScale(l,oL(l))^2 * sigmaHist(:,:,l,oL(l));
+         sigmaGlobal(:,:,l) = sigmaScaleGlobal(l)^2 * sigmaHistGlobal(:,:,l);
          
          % Regularization of Sigma
          [~,p] = cholcov(sigma(:,:,l,oL(l)),0);
@@ -412,6 +428,16 @@ function res = performRBPT( logPostHandle, par, opt )
                sigma(:,:,l,oL(l)) = (sigma(:,:,l,oL(l))+sigma(:,:,l,oL(l))')/2;
             end
          end
+         [~,p] = cholcov(sigmaGlobal(:,:,l),0);
+         if p ~= 0
+            sigmaGlobal(:,:,l) = sigmaGlobal(:,:,l) + regFactor*eye(nPar);
+            sigmaGlobal(:,:,l) = (sigmaGlobal(:,:,l)+sigmaGlobal(:,:,l)')/2;
+            [~,p] = cholcov(sigmaGlobal(:,:,l),0);
+            if p ~= 0
+               sigmaGlobal(:,:,l) = sigmaGlobal(:,:,l) + max(max(sigmaGlobal(:,:,l)))*eye(nPar);
+               sigmaGlobal(:,:,l) = (sigmaGlobal(:,:,l)+sigmaGlobal(:,:,l)')/2;
+            end
+         end         
          
       end
       
@@ -455,6 +481,7 @@ function res = performRBPT( logPostHandle, par, opt )
          res.ratioSwap           = accSwap ./ propSwap;
          res.sigmaScale(i,:,:)   = sigmaScale;
          res.sigmaHist           = sigmaHist;
+         res.sigmaHistGlobal     = sigmaHistGlobal;
          res.temperatures(i,:)   = 1./beta;
          res.newLabel(i,:)       = nL(:);
          res.oldLabel(i,:)       = oL(:);
