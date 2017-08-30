@@ -82,12 +82,7 @@ function res = performRBPT( logPostHandle, par, opt )
    nRegionNumbers    = length(opt.RBPT.RPOpt.modeNumberCandidates);
    nMaxRegions       = max(opt.RBPT.RPOpt.modeNumberCandidates);
    regionPredOpt     = opt.RBPT.RPOpt;
-   
-   GMMllh = @(x,w,mu,Sigma,detSigma) log(w) -0.5*length(x)*log(2*pi) -0.5*log(detSigma) -0.5*(x-mu)'/Sigma*(x-mu);
-
-   
-%    regionPredOpt.nSample = nPhaseI;
-  
+     
    if doDebug
       res.par           = nan(nPar, nIter, nTemps);
       res.logPost       = nan(nIter, nTemps);
@@ -179,6 +174,11 @@ function res = performRBPT( logPostHandle, par, opt )
          
          % Get region label of current point. Learn from posterior sample
          if (i == nPhase) && (l == 1)
+            
+%             % ONLY TEMP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%             test = load('forRingTesting');
+%             res.par = test.res.par(:,1:10:end);
+            
             
             % Train GMM to get label predictions for future points
             lh = nan(nTrainReplicates,length(regionPredOpt.modeNumberCandidates));
@@ -275,8 +275,26 @@ function res = performRBPT( logPostHandle, par, opt )
                disp(' '); msg = '';
             end
             
-            % Reset local adaptation
-            j = zeros(nTemps,nMaxRegions);
+            % Reset local adaptation: Initialize all sigma to the recently adapted one, since this
+            % is usually a better guess than sigma0. Also initialize theta
+            % within the GMM centers. Needs predictions of the old points
+            j = ceil(nPhase / bestGMM.nModes) * ones(nTemps,nMaxRegions);
+            
+            [~,oldLabels]=max(posterior(gmmObj,res.par(regionPredOpt.isInformative,1:nPhase)')');
+            for n = 1:bestGMM.nModes
+               oldSigmas(:,:,n) = cov(res.par(:,find(oldLabels==n))');
+            end
+            
+            for m = 1:nTemps
+               for n = 1:bestGMM.nModes
+                  sigma(:,:,m,n) = oldSigmas(:,:,n);
+                  sigmaHist(:,:,m,n) = oldSigmas(:,:,n);
+                  sigmaScale(m,n) = 1;
+                  muHist(:,m,n) = bestGMM.mu(n,:);
+                  acc(m,n) = 0;
+               end
+            end
+%             theta = bestGMM.mu(randi(bestGMM.nModes,nTemps,1),:)';
          
             % Predict old label
             [~,oL(l)]=max(posterior(gmmObj,theta(regionPredOpt.isInformative,l)'));
@@ -325,11 +343,25 @@ function res = performRBPT( logPostHandle, par, opt )
             % Transitions probabilities may differer if the proposed point
             % lays within a different region
             if nL(l) ~= oL(l)
+               
+%                % If two regions were accessed a very different amount of
+%                % times, it may happen, that one is very badly initialized
+%                % leading to permanent rejections between those two -> ensure
+%                % initialization by mimic covariance matrices for low 
+%                % access numbers
+%                if (j(l,oL(l))-j(l,nL(l)) > nPhase / bestGMM.nModes) && ...
+%                      j(l,nL(l)) < nPhase / bestGMM.nModes
+%                   sigma(:,:,l,nL(l)) = sigma(:,:,l,oL(l));
+%                elseif (j(l,nL(l))-j(l,oL(l)) > nPhase / bestGMM.nModes) && ...
+%                      j(l,oL(l)) < nPhase / bestGMM.nModes
+%                   sigma(:,:,l,oL(l)) = sigma(:,:,l,nL(l));
+%                end
+                  
                logTransFor(l)  = logmvnpdf(thetaProp, theta(:,l), sigma(:,:,l,oL(l)));     
                logTransBack(l) = logmvnpdf(theta(:,l), thetaProp, sigma(:,:,l,nL(l)));        
             else
-               logTransFor(l)  = 1;     
-               logTransBack(l) = 1;                  
+               logTransFor(l)  = 0;     
+               logTransBack(l) = 0;                  
             end
             log_pAcc(l) = beta(l)*(logPostProp(l)-logPost(l)) + logTransBack(l) - logTransFor(l);
             
