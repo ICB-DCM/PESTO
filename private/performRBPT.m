@@ -284,7 +284,7 @@ function res = performRBPT( logPostHandle, par, opt )
             % within the GMM centers. Needs predictions of the old points
             j = ceil(nPhase / bestGMM.nModes) * ones(nTemps,nMaxRegions);
             
-            [~,oldLabels]=max(posterior(gmmObj,res.par(regionPredOpt.isInformative,1:nPhase)')');
+            [~,oldLabels]=max(posterior(gmmObj,res.par(regionPredOpt.isInformative,1:nPhase-1)')');
             for n = 1:bestGMM.nModes
                oldSigmas(:,:,n) = cov(res.par(:,find(oldLabels==n))');
             end
@@ -361,11 +361,18 @@ function res = performRBPT( logPostHandle, par, opt )
             % global component is symmetric
             if nL(l) ~= oL(l)
                
+               % For numerical stability
                globalContribution = logmvnpdf(thetaProp, theta(:,l), sigmaGlobal(:,:,l));
-               logTransFor(l)  = 0.5 * logmvnpdf(thetaProp, theta(:,l), sigma(:,:,l,oL(l))) + ...
-                  0.5 * globalContribution;     
-               logTransBack(l) = 0.5 * logmvnpdf(theta(:,l), thetaProp, sigma(:,:,l,nL(l))) + ...
-                  0.5 * globalContribution;      
+               localFor           = logmvnpdf(thetaProp, theta(:,l), sigma(:,:,l,oL(l)));
+               localBack          = logmvnpdf(theta(:,l), thetaProp, sigma(:,:,l,nL(l)));
+               
+               maxContFor         = max(globalContribution,localFor);
+               maxContBack        = max(globalContribution,localBack);
+               
+               logTransFor(l)  = maxContFor + log( exp( globalContribution - maxContFor) +...
+                                                  exp( localFor - maxContFor));
+               logTransBack(l) = maxContBack + log( exp( globalContribution - maxContBack) +...
+                                                  exp( localBack - maxContBack));                                   
                
             else
                logTransFor(l)  = 0;     
