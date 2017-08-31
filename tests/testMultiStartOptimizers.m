@@ -52,8 +52,8 @@ rosenbrock_parameters_fmincon = runMultiStarts(@TestFunctions.rosenbrock, 1, n, 
 printResultParameters(rosenbrock_parameters_fmincon);
 rosenbrock_parameters_fminsearch = runMultiStarts(@TestFunctions.rosenbrock, 1, n, 'fminsearch', 2, [-2;-1], [2;3]);
 printResultParameters(rosenbrock_parameters_fminsearch);
-rosenbrock_parameters_dhc_old = runMultiStarts(@TestFunctions.rosenbrock, 1, n, 'dhc_old', 2, [-2;-1], [2;3]);
-printResultParameters(rosenbrock_parameters_dhc_old);
+rosenbrock_parameters_hctt = runMultiStarts(@TestFunctions.rosenbrock, 1, n, 'hctt', 2, [-2;-1], [2;3]);
+printResultParameters(rosenbrock_parameters_hctt);
 rosenbrock_parameters_dhc = runMultiStarts(@TestFunctions.rosenbrock, 1, n, 'dhc', 2, [-2;-1], [2;3]);
 printResultParameters(rosenbrock_parameters_dhc);
 

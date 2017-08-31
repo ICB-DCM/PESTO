@@ -118,7 +118,7 @@ function stop = outputProgress(x,optimValues,state,objective_function,parMin,par
             
             % textual output
             if (with_text)
-                fprintf(strcat('%d\t|\t%f\t|\t',mat2str(x(:)'),'\n'), optimValues.iteration, optimValues.fval);
+                fprintf(strcat('%d\t|\t%.12f\t|\t',mat2str(x(:)'),'\n'), optimValues.iteration, optimValues.fval);
             end
             
             drawnow;

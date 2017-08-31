@@ -16,7 +16,7 @@ function printResult( x, fval, exitflag, output )
         disp(['function evaluations: ', num2str(output.funcCount)]);
     end
     if (isfield(output,'message'))
-        disp(['message:              ', output.message]);
+        %disp(['message:              ', output.message]);
     end
     if (isfield(output,'t_cpu'))
         disp(['t_cpu:                ', num2str(output.t_cpu)]);

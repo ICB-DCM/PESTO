@@ -1,5 +1,6 @@
 %% Preliminary
 clear;
+clear persistent;
 close all;
 
 % Seed random number generator
@@ -49,15 +50,19 @@ n_starts = 5;
 lb = lowerBound * ones(4,1);
 ub = upperBound * ones(4,1);
 
-parameters_fmincon = runMultiStarts(objectiveFunction, 3, n_starts, 'fmincon', 4, lb, ub);
+disp('Fmincon:');
+parameters_fmincon = runMultiStarts(objectiveFunction, 1, n_starts, 'fmincon', 4, lb, ub);
 printResultParameters(parameters_fmincon);
 
+disp('Fminsearch:');
 parameters_fminsearch = runMultiStarts(objectiveFunction, 1, n_starts, 'fminsearch', 4, lb, ub);
 printResultParameters(parameters_fminsearch);
 
-parameters_dhc_old = runMultiStarts(objectiveFunction, 1, n_starts, 'dhc_old', 4, lb, ub);
-printResultParameters(parameters_dhc_old);
+disp('Hctt:');
+parameters_hctt = runMultiStarts(objectiveFunction, 1, n_starts, 'hctt', 4, lb, ub);
+printResultParameters(parameters_hctt);
 
+disp('Dhc:');
 parameters_dhc = runMultiStarts(objectiveFunction, 1, n_starts, 'dhc', 4, lb, ub);
 printResultParameters(parameters_dhc);
 
@@ -72,12 +77,13 @@ function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, l
     options.comp_type = 'sequential';
     options.n_starts = nStarts;
     options.objOutNumber = objOutNumber;
-    options.mode = 'visual';
+    options.mode = 'silent';
     options.localOptimizer = localOptimizer;
+    options.localOptimizerOptions.GradObj="off";
     options.localOptimizerOptions.TolX          = 1e-4;
     options.localOptimizerOptions.TolFun        = 1e-4;
-    options.localOptimizerOptions.MaxFunEvals   = 1000;
-    options.localOptimizerOptions.MaxIter       = 1000;
+    options.localOptimizerOptions.MaxFunEvals   = 2000;
+    options.localOptimizerOptions.MaxIter       = 2000;
     
     parameters.number = nPar;
     parameters.min = parMin;

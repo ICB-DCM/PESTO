@@ -1,23 +1,29 @@
-function [x, y, t_cpu, iter, flag] = dynamicHillClimb_old(objFun, borders_min, borders_max, x0, tolerances)
+function [x, fval, exitflag, output] = hillClimbThisThing(fun, x0, lb, ub, options)
 
-    % set local variables which are not in a struct
-    tol_X = tolerances.stepSize;
-    tol_I = tolerances.maxIter;
-    tol_Y = tolerances.objectiveChange;
+    % extract options
+    tolX    = options.TolX;
+    tolFun  = options.TolFun;
+    maxIter = options.MaxIter;
+    if (isfield(options,'OutputFcn'))
+        outputFcn = options.OutputFcn;
+        visual = true;
+    else
+        visual = false;
+    end
     
     % Set options
-    logbar = false; % 'log-barrier';
+    logbar = 'log-barrier';
     
     % align vectors in 1st dimension
-    lb = borders_min(:);
-    ub = borders_max(:);
+    lb = lb(:);
+    ub = ub(:);
     middle = lb + 0.5*(ub-lb);
     x0 = x0(:);
     np = size(x0,1);
     
     % converged?
     converged = false;
-    flag = -1;
+    exitflag = -1;
     startTime = cputime;
     
     % initialize variables for optimization, wlak to the middle first
@@ -29,17 +35,22 @@ function [x, y, t_cpu, iter, flag] = dynamicHillClimb_old(objFun, borders_min, b
     current_i = ind;
     x = x0;
     iStep = 0;
+    funcCount = 0;
+    
+    obj_val = fun(x);
+    funcCount = funcCount + 1;
+    
+    if (visual)
+        f_output(x,obj_val,iStep,'init',outputFcn);
+    end
     
     while (~converged)
         % increase counter
         iStep = iStep + 1;
         
-        % Evaluate objective
-        obj_val = objFun(x);
-        
         % Use log-barrier, if necessary
         if logbar 
-            obj_val = barrierFunction(obj_val, [], x, [lb, ub], iStep, tol_I, 'log-barrier');
+            obj_val = barrierFunction(obj_val, [], x, [lb, ub], iStep, maxIter, 'log-barrier');
         end
         
         % Look into different directions
@@ -70,11 +81,12 @@ function [x, y, t_cpu, iter, flag] = dynamicHillClimb_old(objFun, borders_min, b
             step(current_i) = delta(current_i);
             
             % Test new objective value in delta direction
-            new_obj_val_p = objFun(x + delta);
+            new_obj_val_p = fun(x + delta);
+            funcCount = funcCount + 1;
             
             % Use log-barrier, if necessary
             if logbar 
-                new_obj_val_p = barrierFunction(new_obj_val_p, [], x + delta, [lb, ub], iStep, tol_I, 'log-barrier');
+                new_obj_val_p = barrierFunction(new_obj_val_p, [], x + delta, [lb, ub], iStep, maxIter, 'log-barrier');
             end
 
             % Success?
@@ -85,11 +97,12 @@ function [x, y, t_cpu, iter, flag] = dynamicHillClimb_old(objFun, borders_min, b
                 foundDescent = true;
             else
                 % No? Test in negative delta direction
-                new_obj_val_m = objFun(x - delta);
+                new_obj_val_m = fun(x - delta);
+                funcCount = funcCount + 1;
                 
                 % Use log-barrier, if necessary
                 if logbar 
-                    new_obj_val_m = barrierFunction(new_obj_val_m, [], x - delta, [lb, ub], iStep, tol_I, 'log-barrier');
+                    new_obj_val_m = barrierFunction(new_obj_val_m, [], x - delta, [lb, ub], iStep, maxIter, 'log-barrier');
                 end
                 
                 % Success now?
@@ -110,19 +123,19 @@ function [x, y, t_cpu, iter, flag] = dynamicHillClimb_old(objFun, borders_min, b
             end
             
             % Chekc for tolerance in step size
-            if all(abs(step) < tol_X)
+            if all(abs(step) < tolX)
                 converged = true;
                 foundDescent = true;
-                flag = 2;
+                exitflag = 2;
             end
         end
         
         % Check for tolernace in objective function
         if ~converged
             stepSize_y = obj_val - new_obj_val;
-            if stepSize_y < tol_Y
+            if stepSize_y < tolFun
                 converged = true;
-                flag = 1;
+                exitflag = 1;
             end
         end
         
@@ -130,16 +143,32 @@ function [x, y, t_cpu, iter, flag] = dynamicHillClimb_old(objFun, borders_min, b
         obj_val = new_obj_val;
         x = new_x;
         
+        if (visual)
+            f_output(x,obj_val,iStep,'iter',outputFcn);
+        end
+        
         % Check for maxIter
-        if (iStep >= tol_I)
+        if (iStep >= maxIter)
             converged = true;
-            flag = 0;
+            exitflag = 0;
         end
     end
     
     % Assign values
-    t_cpu = cputime - startTime;
-    iter = iStep;
-    y = obj_val;
-    display('stopped.');
+    fval = obj_val;
+    output.t_cpu = cputime - startTime;
+    output.iterations = iStep;
+    output.funcCount = funcCount;
+    output.algorithm = 'Hill Climb This Thing';
+    
+    if (visual)
+        f_output(x,obj_val,iStep,'done',outputFcn);
+    end
+end
+
+function f_output(x,fval,iter,state,outputFcn)
+% short for call to output function
+    optimValues.fval = fval;
+    optimValues.iteration = iter;
+    outputFcn(x,optimValues,state);
 end

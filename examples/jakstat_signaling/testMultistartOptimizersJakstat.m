@@ -54,7 +54,7 @@ rng(0);
 try
     amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 1);
 catch ME
-    warning('There was a problem with the AMICI toolbox (available at https://github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
+    warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
     rethrow(ME);
 end
 

@@ -45,7 +45,7 @@ end
 
 function [objective, gradient] = softBarrier(objective, gradient, theta, borders)
 % Very simple barrier function, applies a polynomial of third order to
-% those parameters, which are outside the borders. Since the input is only
+% those parameters which are outside the borders. Since the input is only
 % changed if parameter bounds are violated, it is actually a penalty
 % function.
 %
@@ -77,8 +77,8 @@ end
 
 
 function [objective, gradient] = logBarrier(objective, gradient, theta, borders, iteration, maxIter)
-% Simple log-barrier function, applies a inspired from the interior-point
-% algorithm. Applies a negative logarithm to the diffeernce of parameters
+% Simple log-barrier function, inspired from the interior-point algorithm. 
+% Applies a negative logarithm to the diffeernce of parameters
 % and the bounds. Since it is active also in the interior of the box, this
 % is a classical barrier function.
 %

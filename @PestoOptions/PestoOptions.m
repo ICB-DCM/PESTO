@@ -554,7 +554,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         function set.localOptimizer(this, value)
             switch(value)
-                case {'fmincon', 'meigo-ess', 'meigo-vns', 'pswarm', 'fminsearch', 'dhc_old', 'dhc'}
+                case {'fmincon', 'meigo-ess', 'meigo-vns', 'pswarm', 'fminsearch', 'hctt', 'dhc'}
                     this.localOptimizer = value;
                     if strcmp(value, 'pswarm')
                         this.localOptimizerOptions = PSwarm('defaults');

@@ -9,8 +9,8 @@ fun = @TestFunctions.rosenbrock;
 %fun = @TestFunctions.booth;
 %fun = @TestFunctions.ackley;
 
-lb=[-1.7;-1];
-ub=[1.7;3];
+lb=[-2;-1];
+ub=[2;3];
 
 %% Optimization without Derivatives
 
@@ -21,31 +21,36 @@ outputFunction = @(x,optimValues,state) outputProgress(x,optimValues,state,fun,l
 %outputFunction = @(x,optimValues,state) outputProgress(x,optimValues,state,fun,[-10;-10],[10;10],[1;3]);
 %outputFunction = @(x,optimValues,state) outputProgress(x,optimValues,state,fun,[-3;-3],[3;3],[0;0],100);
 
-options = optimset('OutputFcn',outputFunction,'Display','off');
+% options = optimset('OutputFcn',outputFunction,'Display','off');
 x0 = [-1.5,0.5];
-figure('Name','Rosenbrock solution via fminsearch');
-[x,fval,eflag,output] = fminsearch(fun,x0,options);
+% figure('Name','Rosenbrock solution via fminsearch');
+% [x,fval,eflag,output] = fminsearch(fun,x0,options);
 % alternatively:
 % options = optimset('OutputFcn',@bananaout,'Display','off');
 % x0 = [-1.9,2];
 % [x,fval,eflag,output] = fminsearch(fun,x0,options);
 
-printResult(x,fval,eflag,output);
+% printResult(x,fval,eflag,output);
 
 %% Optimization with DHC
 
 disp('Optimization with DHC:');
 
 clear options;
-options.TolX          = 1e-4;
-options.TolFun        = 1e-4;
-options.MaxFunEvals   = 1000;
-options.MaxIter       = 1000;
-options.OutputFcn     = outputFunction;
+options.TolX          = 1e-12;
+options.TolFun        = 1e-12;
+options.MaxFunEvals   = 20000;
+options.MaxIter       = 20000;
+%options.OutputFcn     = outputFunction;
 
 [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options);
-    
-printResult(x,fval,eflag,output);
+printResult(x,fval,exitflag,output);
+
+[x, fval, exitflag, output] = hillClimbThisThing(fun,x0,lb,ub,options);
+printResult(x,fval,exitflag,output);
+
+% [x, fval, eflag, output] = coordinateSearch(fun,x0,lb,ub,options);
+% printResult(x,fval,eflag,output);
 
 % %% Optimization with Estimated Derivatives
 % 
