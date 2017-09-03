@@ -1,9 +1,9 @@
 function [x, fval, exitflag, output] = hillClimbThisThing(fun, x0, lb, ub, options)
 
+    dim = length(x0);
+
     % extract options
-    tolX    = options.TolX;
-    tolFun  = options.TolFun;
-    maxIter = options.MaxIter;
+    [tolX,tolFun,maxIter,maxFunEvals,outputFcn] = f_extractOptions(options,dim);
     if (isfield(options,'OutputFcn'))
         outputFcn = options.OutputFcn;
         visual = true;
@@ -55,6 +55,7 @@ function [x, fval, exitflag, output] = hillClimbThisThing(fun, x0, lb, ub, optio
         
         % Look into different directions
         foundDescent = false;
+        new_obj_val = Inf;new_x=x;
         while ~foundDescent
             % Set new step
             delta = zeros(size(lb));
@@ -132,7 +133,7 @@ function [x, fval, exitflag, output] = hillClimbThisThing(fun, x0, lb, ub, optio
         
         % Check for tolernace in objective function
         if ~converged
-            stepSize_y = obj_val - new_obj_val;
+            stepSize_y = abs(obj_val - new_obj_val);
             if stepSize_y < tolFun
                 converged = true;
                 exitflag = 1;
@@ -148,7 +149,7 @@ function [x, fval, exitflag, output] = hillClimbThisThing(fun, x0, lb, ub, optio
         end
         
         % Check for maxIter
-        if (iStep >= maxIter)
+        if (iStep > maxIter || funcCount > maxFunEvals)
             converged = true;
             exitflag = 0;
         end
@@ -164,6 +165,41 @@ function [x, fval, exitflag, output] = hillClimbThisThing(fun, x0, lb, ub, optio
     if (visual)
         f_output(x,obj_val,iStep,'done',outputFcn);
     end
+end
+
+function [tolX,tolFun,maxIter,maxFunEvals,outputFcn] = f_extractOptions(options,dim)
+% interpret options
+
+    if (isfield(options,'TolX'))
+        tolX    = options.TolX;
+    else
+        tolX    = 1e-6;
+    end
+    
+    if (isfield(options,'TolFun'))
+        tolFun  = options.TolFun;
+    else
+        tolFun  = 1e-6;
+    end
+    
+    if (isfield(options,'MaxIter'))
+        maxIter = options.MaxIter;
+    else
+        maxIter = 200*dim;
+    end
+    
+    if (isfield(options,'MaxFunEvals'))
+        maxFunEvals = options.MaxFunEvals;
+    else
+        maxFunEvals = 400*dim;
+    end
+    
+    if (isfield(options,'OutputFcn'))
+        outputFcn = options.OutputFcn;
+    else
+        outputFcn = nan;
+    end
+    
 end
 
 function f_output(x,fval,iter,state,outputFcn)

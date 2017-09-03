@@ -1,7 +1,7 @@
 % simulate_jakstat_pesto.m is the matlab interface to the cvodes mex
 %   which simulates the ordinary differential equation and respective
 %   sensitivities according to user specifications.
-%   this routine was generated using AMICI commit 95a04c8b7f9d65628bbbba38634c191d62ce5638 in branch master in repo .
+%   this routine was generated using AMICI commit # in branch unknown branch in repo unknown repository.
 %
 % USAGE:
 % ======
@@ -62,7 +62,6 @@
 %    .sensi_meth   ... method for sensitivity analysis.
 %        'forward': forward sensitivity analysis (DEFAULT)
 %        'adjoint': adjoint sensitivity analysis 
-%        'ss': steady state sensitivity analysis 
 %    .adjoint   ... flag for adjoint sensitivity analysis.
 %        true: on 
 %        false: off (DEFAULT)
@@ -157,12 +156,6 @@ if(nargout>1)
     else
         options_ami.sensi = 0;
     end
-end
-if(options_ami.ss>0)
-    if(options_ami.sensi>1)
-        error('Computation of steady state sensitivity only possible for first order sensitivities');
-    end
-    options_ami.sensi = 0;
 end
 nplist = length(options_ami.sens_ind); % MUST NOT CHANGE THIS VALUE
 if(nplist == 0)
@@ -279,10 +272,6 @@ if(options_ami.sensi == 2)
     sol.z = sol.z(:,1:0);
     sol.rz = sol.rz(:,1:0);
     sol.sigmaz = sol.sigmaz(:,1:0);
-end
-if(options_ami.sensi_meth == 3)
-    sol.sx = -sol.J\sol.dxdotdp;
-    sol.sy = sol.dydx*sol.sx + sol.dydp;
 end
 if(nargout>1)
     varargout{1} = sol.status;

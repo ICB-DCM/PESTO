@@ -1,19 +1,19 @@
-function parameters = performOptimizationDhc(parameters, objective_function, iStart, options)
+function parameters = performOptimizationCs(parameters, objective_function, iStart, options)
 
-    options_dhc.TolX        = options.localOptimizerOptions.TolX;
-    options_dhc.TolFun      = options.localOptimizerOptions.TolFun;
-    options_dhc.MaxIter     = options.localOptimizerOptions.MaxIter;
+    options_cs.TolX        = options.localOptimizerOptions.TolX;
+    options_cs.TolFun      = options.localOptimizerOptions.TolFun;
+    options_cs.MaxIter     = options.localOptimizerOptions.MaxIter;
     
     x0 = parameters.MS.par0(:,iStart);
     lb = parameters.min;
     ub = parameters.max;
   
-    [x, fval, exitflag, output] = dynamicHillClimb(...
+    [x, fval, exitflag, output] = coordinateSearch(...
         @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber),...
         x0,...
         lb,...
         ub,...
-        options_dhc);
+        options_cs);
     
     %if (strcmp(options.obj_type, 'log-posterior'))
         fval = -fval;
