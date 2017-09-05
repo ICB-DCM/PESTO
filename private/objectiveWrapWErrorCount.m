@@ -86,11 +86,11 @@ function varargout = objectiveWrapWErrorCount(varargin)
         % Derive output
         switch nargout
             case {0,1}
-                varargout = {inf};
+                varargout = {nan};
             case 2
-                varargout = {inf,zeros(length(theta),1)};
+                varargout = {nan,zeros(length(theta),1)};
             case 3
-                varargout = {inf,zeros(length(theta),1),zeros(length(theta))};
+                varargout = {nan,zeros(length(theta),1),zeros(length(theta))};
         end
     end
 

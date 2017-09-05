@@ -73,6 +73,7 @@ function res = performRBPT( logPostHandle, par, opt )
    regFactor         = opt.RBPT.regFactor;
    nPar              = par.number;
    temperatureEta    = opt.RBPT.temperatureEta;
+   useSmallWorld     = true;
    
    nTrainReplicates  = opt.RBPT.nTrainReplicates;
    
@@ -82,6 +83,7 @@ function res = performRBPT( logPostHandle, par, opt )
    nRegionNumbers    = length(opt.RBPT.RPOpt.modeNumberCandidates);
    nMaxRegions       = max(opt.RBPT.RPOpt.modeNumberCandidates);
    regionPredOpt     = opt.RBPT.RPOpt;
+   
      
    if doDebug
       res.par           = nan(nPar, nIter, nTemps);
@@ -164,9 +166,10 @@ function res = performRBPT( logPostHandle, par, opt )
       switch opt.mode
          case {'visual','text'}
             if toc(timer)-dspTime > 0.5
-               fprintf(1, repmat('\b',1,numel(msg)-2)) ;
-               msg = ['Progress: ' num2str(i/(nIter)*100,'%2.2f') ' %%\n'];
-               fprintf(1,msg);
+               eraser = repmat('\b',1,numel(msg)-1);
+               msg = ['Progress: ' num2str(i/(nIter)*100,'%2.2f ') ...
+                  ' (Current Posterior: ' num2str(logPost(1)) ') \n'];
+               fprintf([eraser msg]);
                dspTime = toc(timer);
             end
          case 'silent'
@@ -179,9 +182,9 @@ function res = performRBPT( logPostHandle, par, opt )
          % Get region label of current point. Learn from posterior sample
          if (i == nPhase) && (l == 1)
             
-            % ONLY TEMP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            test = load('forRingTesting');
-            res.par = test.res.par(:,1:10:end);
+%             % ONLY TEMP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%             test = load('forRingTesting');
+%             res.par = test.res.par(:,1:10:end);
             
             
             % Train GMM to get label predictions for future points
@@ -328,7 +331,7 @@ function res = performRBPT( logPostHandle, par, opt )
          j(l,oL(l)) = j(l,oL(l)) + 1;          
          
          % Propose (50% chance of local sigma and 50% chance of global sigma)
-         if rand < 0.5
+         if rand < 0.5 || ~useSmallWorld
             thetaProp = mvnrnd(theta(:,l),sigma(:,:,l,oL(l)))';
          else
             thetaProp = mvnrnd(theta(:,l),sigmaGlobal(:,:,l))';
@@ -361,18 +364,23 @@ function res = performRBPT( logPostHandle, par, opt )
             % global component is symmetric
             if nL(l) ~= oL(l)
                
-               % For numerical stability
-               globalContribution = logmvnpdf(thetaProp, theta(:,l), sigmaGlobal(:,:,l));
-               localFor           = logmvnpdf(thetaProp, theta(:,l), sigma(:,:,l,oL(l)));
-               localBack          = logmvnpdf(theta(:,l), thetaProp, sigma(:,:,l,nL(l)));
-               
-               maxContFor         = max(globalContribution,localFor);
-               maxContBack        = max(globalContribution,localBack);
-               
-               logTransFor(l)  = maxContFor + log( exp( globalContribution - maxContFor) +...
-                                                  exp( localFor - maxContFor));
-               logTransBack(l) = maxContBack + log( exp( globalContribution - maxContBack) +...
-                                                  exp( localBack - maxContBack));                                   
+               if useSmallWorld
+                  % For numerical stability
+                  globalContribution = logmvnpdf(thetaProp, theta(:,l), sigmaGlobal(:,:,l));
+                  localFor           = logmvnpdf(thetaProp, theta(:,l), sigma(:,:,l,oL(l)));
+                  localBack          = logmvnpdf(theta(:,l), thetaProp, sigma(:,:,l,nL(l)));
+
+                  maxContFor         = max(globalContribution,localFor);
+                  maxContBack        = max(globalContribution,localBack);
+
+                  logTransFor(l)  = maxContFor + log( exp( globalContribution - maxContFor) +...
+                                                     exp( localFor - maxContFor));
+                  logTransBack(l) = maxContBack + log( exp( globalContribution - maxContBack) +...
+                                                     exp( localBack - maxContBack));  
+               else
+                  logTransFor(l)  = logmvnpdf(thetaProp, theta(:,l), sigma(:,:,l,oL(l)));
+                  logTransBack(l) = logmvnpdf(theta(:,l), thetaProp, sigma(:,:,l,nL(l)));
+               end
                
             else
                logTransFor(l)  = 0;     
@@ -413,16 +421,20 @@ function res = performRBPT( logPostHandle, par, opt )
          sigmaScale(l,oL(l)) = sigmaScale(l,oL(l))*...
             exp((exp(log_pAcc(l))-0.234)/(j(l,oL(l))+1)^alpha);
          
-         [muHistGlobal(:,l),sigmaHistGlobal(:,:,l)] = ...
-            updateStatistics(muHistGlobal(:,l), sigmaHistGlobal(:,:,l), ...
-            theta(:,l), ...
-            max(i,memoryLength), alpha);
-         sigmaScaleGlobal(l) = sigmaScaleGlobal(l)*...
-            exp((exp(log_pAcc(l))-0.234)/(i)^alpha);         
+         if useSmallWorld
+            [muHistGlobal(:,l),sigmaHistGlobal(:,:,l)] = ...
+               updateStatistics(muHistGlobal(:,l), sigmaHistGlobal(:,:,l), ...
+               theta(:,l), ...
+               max(i,memoryLength), alpha);
+            sigmaScaleGlobal(l) = sigmaScaleGlobal(l)*...
+               exp((exp(log_pAcc(l))-0.234)/(i)^alpha); 
+         end
          
          % Set sigma for the next iteration (recently added like this)
          sigma(:,:,l,oL(l)) = sigmaScale(l,oL(l))^2 * sigmaHist(:,:,l,oL(l));
-         sigmaGlobal(:,:,l) = sigmaScaleGlobal(l)^2 * sigmaHistGlobal(:,:,l);
+         if useSmallWorld
+            sigmaGlobal(:,:,l) = sigmaScaleGlobal(l)^2 * sigmaHistGlobal(:,:,l);
+         end
          
          % Regularization of Sigma
          [~,p] = cholcov(sigma(:,:,l,oL(l)),0);
@@ -435,16 +447,18 @@ function res = performRBPT( logPostHandle, par, opt )
                sigma(:,:,l,oL(l)) = (sigma(:,:,l,oL(l))+sigma(:,:,l,oL(l))')/2;
             end
          end
-         [~,p] = cholcov(sigmaGlobal(:,:,l),0);
-         if p ~= 0
-            sigmaGlobal(:,:,l) = sigmaGlobal(:,:,l) + regFactor*eye(nPar);
-            sigmaGlobal(:,:,l) = (sigmaGlobal(:,:,l)+sigmaGlobal(:,:,l)')/2;
+         if useSmallWorld
             [~,p] = cholcov(sigmaGlobal(:,:,l),0);
             if p ~= 0
-               sigmaGlobal(:,:,l) = sigmaGlobal(:,:,l) + max(max(sigmaGlobal(:,:,l)))*eye(nPar);
+               sigmaGlobal(:,:,l) = sigmaGlobal(:,:,l) + regFactor*eye(nPar);
                sigmaGlobal(:,:,l) = (sigmaGlobal(:,:,l)+sigmaGlobal(:,:,l)')/2;
-            end
-         end         
+               [~,p] = cholcov(sigmaGlobal(:,:,l),0);
+               if p ~= 0
+                  sigmaGlobal(:,:,l) = sigmaGlobal(:,:,l) + max(max(sigmaGlobal(:,:,l)))*eye(nPar);
+                  sigmaGlobal(:,:,l) = (sigmaGlobal(:,:,l)+sigmaGlobal(:,:,l)')/2;
+               end
+            end   
+         end
          
       end
       
