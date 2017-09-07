@@ -169,10 +169,22 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
          end
          
          %% Break if terminiation condition was reached before i == nAlg
-         if logical(max(max(abs(muOld-mu))) < tolMu) && ...
+         if logical(max(max(abs(muOld-mu))) < tolMu) & ...
                logical(max(max(max(abs((sigmaOld-sigma))))) < tolSigma)
             disp('Terminated because movement tolerances were reached.')
             break
+         end
+      end
+      
+      %% Regularize Sigma in cases where its no longer invertable
+      for j = 1:nModes
+         if abs(det(squeeze(sigma(j,isInformative,isInformative)))) < 1e-10
+            factor = 1e-10;
+            while abs(det(squeeze(sigma(j,isInformative,isInformative)))) < 1e-10
+               sigma(j,isInformative,isInformative) = ...
+                  squeeze(sigma(j,isInformative,isInformative)) + factor*eye(sum(isInformative));
+               factor = factor * 2;
+            end
          end
       end
       
