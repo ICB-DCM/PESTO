@@ -1,11 +1,35 @@
 function [ x, fval, exitflag, output ] = coordinateSearch( fun, x0, lb, ub, options )
 % performs a simple coordinate search with random update of search
 % directions after a failure in improving the current value.
-
-    % adjustment parameters
-    delta          = 0.05; % mesh size
-    expandFactor   = 2;
-    contractFactor = 0.5;
+%
+% Input:
+% fun     : objective function to be minimized
+% x0      : initial guess for parameters
+% lb, ub  : bounds for parameters
+% options : struct with options for the algorithm:
+%   TolX              : tolerance of parameter
+%   TolFun            : tolerance of objective function, currently not used
+%   MaxFunEvals       : maximum number of evaluations of fun
+%   MaxIter           : maximum number of iterations
+%   OutputFcn         : for visual output after each iteration
+%   Delta             : initial step size (rel. to 1)
+%   ExpandFactor      : (default 3.5)
+%   ContractFactor    : (default 0.35)
+%   Barrier           : use barrier on bounds (default none)
+%
+% Output:
+% x   : best guess for parameters
+% fval: objective function at the solution, generally fval=fun(x)
+% exitflag: 
+%   1 : The function converged to a solution x
+%   0 : Number of iterations exceeded options.MaxIter or number of function 
+%       evaluations exceeded options.MaxFunEvals.
+%   -1: The algorithm was terminated inappropriately
+% output : struct with meta information:
+%   iterations  : number of iterations
+%   funcCount   : number of function evaluations
+%   algorithm   : name of the algorithm
+%   t_cpu       : cpu time
 
     dim = length(x0);
     
@@ -13,7 +37,7 @@ function [ x, fval, exitflag, output ] = coordinateSearch( fun, x0, lb, ub, opti
     jIter = 0;
     funcCount = 0;
     
-    [tolX,tolFun,maxIter,maxFunEvals,outputFcn] = f_extractOptions(options,dim);
+    [tolX,tolFun,maxIter,maxFunEvals,outputFcn,delta,expandFactor,contractFactor,barrier] = f_extractOptions(options,dim);
     if (isa(outputFcn,'function_handle'))
         visual = true;
     else
@@ -27,14 +51,16 @@ function [ x, fval, exitflag, output ] = coordinateSearch( fun, x0, lb, ub, opti
     denormalize = @(y) f_denormalize(y,lb,ub); 
     y0      = normalize(x0);
     tolY    = tolX / norm(ub-lb);
-    fun = @(y) f_wrap_fun(denormalize(y),fun,lb,ub);
+    
+    % wrap function to consider boundaries
+    fun = @(y,jIter) f_wrap_fun(denormalize(y),fun,lb,ub,barrier,jIter,maxIter);
     
     % measure time
-    startTime = cputime;
+    starttime = cputime;
     
     % iteratively improved variables
     ybst = y0;
-    fbst = fun(y0);
+    fbst = fun(y0,jIter);
     funcCount = funcCount + 1;
     
     % search directions
@@ -47,7 +73,7 @@ function [ x, fval, exitflag, output ] = coordinateSearch( fun, x0, lb, ub, opti
     
     % update search directions if last iter was not successful
     iterSuccessful = true;
-    % iterate cyclically over search directions
+    % iterate cyclically over search directions to improve performance
     jSpinner = 1;
     jPrev    = 0;
     
@@ -61,9 +87,10 @@ function [ x, fval, exitflag, output ] = coordinateSearch( fun, x0, lb, ub, opti
         iterSuccessful = false;
         for j=1:2*dim
             ycur = ybst + delta*step(:,jSpinner);
-            fcur = fun(ycur);
+            fcur = fun(ycur,jIter);
             funcCount = funcCount + 1;
-            surroundingValues = zeros(2*dim,1);
+            % simulate finite differences
+%            surroundingValues = zeros(2*dim,1);
             if (fcur < fbst)
                 ybst = ycur;
                 fbst = fcur;
@@ -76,7 +103,7 @@ function [ x, fval, exitflag, output ] = coordinateSearch( fun, x0, lb, ub, opti
                 break;
             end
             
-            surroundingValues(jSpinner,1) = fcur;
+%            surroundingValues(jSpinner,1) = fcur;
             
             % update coordinate index
             if jSpinner == 2*dim
@@ -86,23 +113,24 @@ function [ x, fval, exitflag, output ] = coordinateSearch( fun, x0, lb, ub, opti
             end
         end
         
-        if (~iterSuccessful)
-            finiteDifferences = zeros(dim,1);
-            for j=1:dim
-                finiteDifferences(j) = (surroundingValues(j)-surroundingValues(dim+j))/(2*delta);
-            end
-            U = step(:,1:dim);
-            finiteDifferences = transpose(transpose(finiteDifferences)/U);
-            ycur = ybst - delta*finiteDifferences;
-            fcur = fun(ycur);
-            funcCount = funcCount + 1;
-            if (fcur < fbst)
-                ybst = ycur;
-                fbst = fcur;
-                
-                iterSuccessful = true;
-            end
-        end
+        % apparently bad effects
+%         if (~iterSuccessful)
+%             finiteDifferences = zeros(dim,1);
+%             for j=1:dim
+%                 finiteDifferences(j) = (surroundingValues(j)-surroundingValues(dim+j))/(2*delta);
+%             end
+%             U = step(:,1:dim);
+%             finiteDifferences = transpose(transpose(finiteDifferences)/U);
+%             ycur = ybst - delta*finiteDifferences/norm(finiteDifferences);
+%             fcur = fun(ycur);
+%             funcCount = funcCount + 1;
+%             if (fcur < fbst)
+%                 ybst = ycur;
+%                 fbst = fcur;
+%                 
+%                 %iterSuccessful = true;
+%             end
+%         end
         
         if (~iterSuccessful)
             delta = contractFactor * delta;
@@ -120,17 +148,17 @@ function [ x, fval, exitflag, output ] = coordinateSearch( fun, x0, lb, ub, opti
     x    = denormalize(ybst);
     fval = fbst;
     
-    if ( delta <= tolX )
+    if ( delta <= tolY )
         exitflag = 1;
     else
         % needed too long
         exitflag = 0;
     end
     
-    output.funcCount    = funcCount; % TODO
+    output.funcCount    = funcCount;
     output.iterations   = jIter;
     output.algorithm    = 'Coordinate Search';
-    output.t_cpu        = cputime - startTime;
+    output.t_cpu        = cputime - starttime;
     
     % finalize output
     if (visual)
@@ -147,7 +175,7 @@ function x = f_denormalize(y,lb,ub)
     x = y.*(ub-lb) + lb;
 end
 
-function [tolX,tolFun,maxIter,maxFunEvals,outputFcn] = f_extractOptions(options,dim)
+function [tolX,tolFun,maxIter,maxFunEvals,outputFcn,delta,expandFactor,contractFactor,barrier] = f_extractOptions(options,dim)
 % interpret options
 
     if (isfield(options,'TolX'))
@@ -180,14 +208,43 @@ function [tolX,tolFun,maxIter,maxFunEvals,outputFcn] = f_extractOptions(options,
         outputFcn = nan;
     end
     
+    if (isfield(options,'Delta'))
+        delta          = options.Delta; % mesh size
+    else
+        delta          = 0.05;
+    end
+    
+    if (isfield(options,'ExpandFactor'))
+        expandFactor   = options.ExpandFactor;
+    else
+        expandFactor   = 3.5;
+    end
+    
+    if (isfield(options,'ContractFactor'))
+        contractFactor = options.ContractFactor;
+    else
+        contractFactor = 0.35;
+    end
+    
+    if (isfield(options,'Barrier'))
+        barrier        = options.Barrier;
+    else
+        barrier        = '';
+    end
+    
 end
 
-function fval = f_wrap_fun(x,fun,lb,ub)
+function fval = f_wrap_fun(x,fun,lb,ub,barrier,jIter,maxIter)
 % set fun to inf whenever conditions not fulfilled
-    if (any(x>ub) || any(x<lb))
-        fval = inf;
-    else
+    if (~isequal(barrier,''))
         fval = fun(x);
+        fval = barrierFunction(fval, [], x, [lb, ub], jIter, maxIter, barrier);
+    else
+        if (any(x>ub) || any(x<lb))
+            fval = inf;
+        else
+            fval = fun(x);
+        end        
     end
 end
 
