@@ -115,10 +115,10 @@ function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, l
     options.mode = 'visual';
     options.localOptimizer = localOptimizer;
     options.localOptimizerOptions.GradObj="off";
-    options.localOptimizerOptions.TolX          = 1e-6;
-    options.localOptimizerOptions.TolFun        = 1e-6;
-    options.localOptimizerOptions.MaxFunEvals   = 2000;
-    options.localOptimizerOptions.MaxIter       = 2000;
+    options.localOptimizerOptions.TolX          = 1e-8;
+    options.localOptimizerOptions.TolFun        = 1e-8;
+    options.localOptimizerOptions.MaxFunEvals   = 2500;
+    options.localOptimizerOptions.MaxIter       = 2500;
     
     parameters.number = nPar;
     parameters.min = parMin;

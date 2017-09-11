@@ -9,64 +9,72 @@ classdef TF
     
     properties (Constant)
         % labels
-        name = 'name';
-        fun  = 'fun';
-        lb   = 'lb';
-        ub   = 'ub';
-        xbst = 'xbst';
-        fbst = 'fbst';
-        dim  = 'dim';
-        
+        name     = 'name';
+        fun      = 'fun';
+        lb       = 'lb';
+        ub       = 'ub';
+        xbst     = 'xbst';
+        fbst     = 'fbst';
+        dim      = 'dim';
+        smooth   = 'smooth';
+        unimodal = 'unimodal';
+                
         % test simple_problems
-        ackley         = struct(TF.name, 'ackley', TF.fun, @TF.f_ackley, TF.lb, -33, TF.ub, 33, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
-		bukin2     	   = struct(TF.name, 'bukin2', TF.fun, @TF.f_bukin2, TF.lb, [-15;-5], TF.ub, [-3;3], TF.xbst, [-10;0], TF.fbst, 0, TF.dim, 2);
-		bukin4    	   = struct(TF.name, 'bukin4', TF.fun, @TF.f_bukin2, TF.lb, [-15;-5], TF.ub, [-3;3], TF.xbst, [-10;0], TF.fbst, 0, TF.dim, 2);
-        bukin6         = struct(TF.name, 'bukin6', TF.fun, @TF.f_bukin6, TF.lb, [-15;-5], TF.ub, [-3;3], TF.xbst, [-10;1], TF.fbst, 0, TF.dim, 2);
-        griewank       = struct(TF.name, 'griewank', TF.fun, @TF.f_griewank, TF.lb, -600, TF.ub, 600, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
-        levy           = struct(TF.name, 'levy', TF.fun, @TF.f_levy, TF.lb, -10, TF.ub, 10, TF.xbst, 1, TF.fbst, 0, TF.dim, Inf);
-        rastrigin      = struct(TF.name, 'rastrigin', TF.fun, @TF.f_rastrigin, TF.lb, -5.12, TF.ub, 5.12, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
-        schaffer2      = struct(TF.name, 'schaffer2', TF.fun, @TF.f_schaffer2, TF.lb, -100, TF.ub, 100, TF.xbst, 0, TF.fbst, 0, TF.dim, 2);
-        square         = struct(TF.name, 'square', TF.fun, @TF.f_square, TF.lb, -10, TF.ub, 10, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
-        hyperellipse   = struct(TF.name, 'hyperellipse', TF.fun, @TF.f_hyperellipse, TF.lb, -66, TF.ub, 66, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
-        norm1          = struct(TF.name, 'norm1', TF.fun, @TF.f_norm1, TF.lb, -10, TF.ub, 5, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
-        sumofpowers    = struct(TF.name, 'sumofpowers', TF.fun, @TF.f_sumofpowers, TF.lb, -3, TF.ub, 3, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
-        booth          = struct(TF.name, 'booth', TF.fun, @TF.f_booth, TF.lb, -10, TF.ub, 10, TF.xbst, [1;3], TF.fbst, 0, TF.dim, 2);
-        matyas         = struct(TF.name, 'matyas', TF.fun, @TF.f_matyas, TF.lb, -10, TF.ub, 10, TF.xbst, 0, TF.fbst, 0, TF.dim, 2);
-        zakharov       = struct(TF.name, 'zakharov', TF.fun, @TF.f_zakharov, TF.lb, -5, TF.ub, 10, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
-        cam3           = struct(TF.name, 'cam3', TF.fun, @TF.f_cam3, TF.lb, -5, TF.ub, 5, TF.xbst, 0, TF.fbst, 0, TF.dim, 2);
-        rosenbrock     = struct(TF.name, 'rosenbrock', TF.fun, @TF.f_rosenbrock, TF.lb, -2.5, TF.ub, 3, TF.xbst, 1, TF.fbst, 0, TF.dim, Inf);
-        easom          = struct(TF.name, 'easom', TF.fun, @TF.f_easom, TF.lb, -100, TF.ub, 100, TF.xbst, pi, TF.fbst, -1, TF.dim, 2);
-        beale          = struct(TF.name, 'beale', TF.fun, @TF.f_beale, TF.lb, -4.5, TF.ub, 4.5, TF.xbst, [3;0.5], TF.fbst, 0, TF.dim, 2);
-        colville       = struct(TF.name, 'colville', TF.fun, @TF.f_colville, TF.lb, -10, TF.ub, 10, TF.xbst, 1, TF.fbst, 0, TF.dim, 4);
-        step           = struct(TF.name, 'step', TF.fun, @TF.f_step, TF.lb, -1, TF.ub, 1, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
-        nesterov       = struct(TF.name, 'nesterov', TF.fun, @TF.f_nesterov, TF.lb, -10, TF.ub, 10, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
-        goldsteinprice = struct(TF.name, 'goldsteinprice', TF.fun, @TF.f_goldsteinprice, TF.lb, -2, TF.ub, 2, TF.xbst, [0;1], TF.fbst, 3, TF.dim, 2);
-        dixonprice     = struct(TF.name, 'dixonprice', TF.fun, @TF.f_dixonprice, TF.lb, -10, TF.ub, 10, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
-        trid           = struct(TF.name, 'trid', TF.fun, @TF.f_trid, TF.lb, -2, TF.ub, 2, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
-        bohachevsky1   = struct(TF.name, 'bohachevsky1', TF.fun, @TF.f_bohachevsky1, TF.lb, -100, TF.ub, 120, TF.xbst, 0, TF.fbst, 0, TF.dim, 2);
-        bohachevsky2   = struct(TF.name, 'bohachevsky2', TF.fun, @TF.f_bohachevsky2, TF.lb, -100, TF.ub, 120, TF.xbst, 0, TF.fbst, 0, TF.dim, 2);
-        bohachevsky3   = struct(TF.name, 'bohachevsky3', TF.fun, @TF.f_bohachevsky3, TF.lb, -100, TF.ub, 120, TF.xbst, 0, TF.fbst, 0, TF.dim, 2);
-		quartic 	   = struct(TF.name, 'quartic', TF.fun, @TF.f_quartic, TF.lb, -10, TF.ub, 9, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
-		schwefel1 	   = struct(TF.name, 'schwefel1', TF.fun, @TF.f_schwefel1, TF.lb, -100, TF.ub, 100, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
-		schwefel2 	   = struct(TF.name, 'schwefel2', TF.fun, @TF.f_schwefel2, TF.lb, -100, TF.ub, 100, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
-		schwefel4 	   = struct(TF.name, 'schwefel4', TF.fun, @TF.f_schwefel4, TF.lb, 0, TF.ub, 10, TF.xbst, 1, TF.fbst, 0, TF.dim, Inf);
-		max      	   = struct(TF.name, 'max', TF.fun, @TF.f_max, TF.lb, -100, TF.ub, 100, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);	
-		sumprod 	   = struct(TF.name, 'sumprod', TF.fun, @TF.f_sumprod, TF.lb, -1, TF.ub, 1, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf);
+        ackley         = struct(TF.name, 'ackley', TF.fun, @TF.f_ackley, TF.lb, -33, TF.ub, 33, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 0);
+		bukin2     	   = struct(TF.name, 'bukin2', TF.fun, @TF.f_bukin2, TF.lb, [-15;-5], TF.ub, [-3;3], TF.xbst, [-10;0], TF.fbst, 0, TF.dim, 2, TF.smooth, 1, TF.unimodal, 1);
+		bukin4    	   = struct(TF.name, 'bukin4', TF.fun, @TF.f_bukin2, TF.lb, [-15;-5], TF.ub, [-3;3], TF.xbst, [-10;0], TF.fbst, 0, TF.dim, 2, TF.smooth, 0, TF.unimodal, 1);
+        bukin6         = struct(TF.name, 'bukin6', TF.fun, @TF.f_bukin6, TF.lb, [-15;-5], TF.ub, [-3;3], TF.xbst, [-10;1], TF.fbst, 0, TF.dim, 2, TF.smooth, 0, TF.unimodal, 1);
+        griewank       = struct(TF.name, 'griewank', TF.fun, @TF.f_griewank, TF.lb, -600, TF.ub, 600, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 0);
+        levy           = struct(TF.name, 'levy', TF.fun, @TF.f_levy, TF.lb, -10, TF.ub, 10, TF.xbst, 1, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 0);
+        rastrigin      = struct(TF.name, 'rastrigin', TF.fun, @TF.f_rastrigin, TF.lb, -5.12, TF.ub, 5.12, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 0);
+        schaffer2      = struct(TF.name, 'schaffer2', TF.fun, @TF.f_schaffer2, TF.lb, -100, TF.ub, 100, TF.xbst, 0, TF.fbst, 0, TF.dim, 2, TF.smooth, 1, TF.unimodal, 0);
+        square         = struct(TF.name, 'square', TF.fun, @TF.f_square, TF.lb, -10, TF.ub, 10, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
+        hyperellipse   = struct(TF.name, 'hyperellipse', TF.fun, @TF.f_hyperellipse, TF.lb, -66, TF.ub, 66, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
+        norm1          = struct(TF.name, 'norm1', TF.fun, @TF.f_norm1, TF.lb, -10, TF.ub, 5, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 0, TF.unimodal, 1);
+        sumofpowers    = struct(TF.name, 'sumofpowers', TF.fun, @TF.f_sumofpowers, TF.lb, -3, TF.ub, 3, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 0, TF.unimodal, 1);
+        booth          = struct(TF.name, 'booth', TF.fun, @TF.f_booth, TF.lb, -10, TF.ub, 10, TF.xbst, [1;3], TF.fbst, 0, TF.dim, 2, TF.smooth, 1, TF.unimodal, 1);
+        matyas         = struct(TF.name, 'matyas', TF.fun, @TF.f_matyas, TF.lb, -10, TF.ub, 10, TF.xbst, 0, TF.fbst, 0, TF.dim, 2, TF.smooth, 1, TF.unimodal, 1);
+        zakharov       = struct(TF.name, 'zakharov', TF.fun, @TF.f_zakharov, TF.lb, -5, TF.ub, 10, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
+        cam3           = struct(TF.name, 'cam3', TF.fun, @TF.f_cam3, TF.lb, -5, TF.ub, 5, TF.xbst, 0, TF.fbst, 0, TF.dim, 2, TF.smooth, 1, TF.unimodal, 0);
+        rosenbrock     = struct(TF.name, 'rosenbrock', TF.fun, @TF.f_rosenbrock, TF.lb, -2.5, TF.ub, 3, TF.xbst, 1, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
+        easom          = struct(TF.name, 'easom', TF.fun, @TF.f_easom, TF.lb, -100, TF.ub, 100, TF.xbst, pi, TF.fbst, -1, TF.dim, 2, TF.smooth, 1, TF.unimodal, 0);
+        beale          = struct(TF.name, 'beale', TF.fun, @TF.f_beale, TF.lb, -4.5, TF.ub, 4.5, TF.xbst, [3;0.5], TF.fbst, 0, TF.dim, 2, TF.smooth, 1, TF.unimodal, 0);
+        colville       = struct(TF.name, 'colville', TF.fun, @TF.f_colville, TF.lb, -10, TF.ub, 10, TF.xbst, 1, TF.fbst, 0, TF.dim, 4, TF.smooth, 1, TF.unimodal, 0);
+        step           = struct(TF.name, 'step', TF.fun, @TF.f_step, TF.lb, -1, TF.ub, 1, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 0, TF.unimodal, 0);
+        nesterov       = struct(TF.name, 'nesterov', TF.fun, @TF.f_nesterov, TF.lb, -10, TF.ub, 10, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 0, TF.unimodal, 1);
+        goldsteinprice = struct(TF.name, 'goldsteinprice', TF.fun, @TF.f_goldsteinprice, TF.lb, -2, TF.ub, 2, TF.xbst, [0;1], TF.fbst, 3, TF.dim, 2, TF.smooth, 1, TF.unimodal, 1);
+        dixonprice     = struct(TF.name, 'dixonprice', TF.fun, @TF.f_dixonprice, TF.lb, -10, TF.ub, 10, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
+        trid           = struct(TF.name, 'trid', TF.fun, @TF.f_trid, TF.lb, -2, TF.ub, 2, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
+        bohachevsky1   = struct(TF.name, 'bohachevsky1', TF.fun, @TF.f_bohachevsky1, TF.lb, -100, TF.ub, 120, TF.xbst, 0, TF.fbst, 0, TF.dim, 2, TF.smooth, 1, TF.unimodal, 1);
+        bohachevsky2   = struct(TF.name, 'bohachevsky2', TF.fun, @TF.f_bohachevsky2, TF.lb, -100, TF.ub, 120, TF.xbst, 0, TF.fbst, 0, TF.dim, 2, TF.smooth, 1, TF.unimodal, 1);
+        bohachevsky3   = struct(TF.name, 'bohachevsky3', TF.fun, @TF.f_bohachevsky3, TF.lb, -100, TF.ub, 120, TF.xbst, 0, TF.fbst, 0, TF.dim, 2, TF.smooth, 1, TF.unimodal, 1);
+		quartic 	   = struct(TF.name, 'quartic', TF.fun, @TF.f_quartic, TF.lb, -10, TF.ub, 9, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
+		schwefel1 	   = struct(TF.name, 'schwefel1', TF.fun, @TF.f_schwefel1, TF.lb, -100, TF.ub, 100, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
+		schwefel2 	   = struct(TF.name, 'schwefel2', TF.fun, @TF.f_schwefel2, TF.lb, -100, TF.ub, 100, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
+		schwefel4 	   = struct(TF.name, 'schwefel4', TF.fun, @TF.f_schwefel4, TF.lb, 0, TF.ub, 10, TF.xbst, 1, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
+		max      	   = struct(TF.name, 'max', TF.fun, @TF.f_max, TF.lb, -100, TF.ub, 100, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 0, TF.unimodal, 1);	
+		sumprod 	   = struct(TF.name, 'sumprod', TF.fun, @TF.f_sumprod, TF.lb, -1, TF.ub, 1, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 0, TF.unimodal, 1)
 		
+        cell_list = {TF.ackley,TF.bukin2,TF.bukin4,TF.bukin6,TF.griewank,TF.levy,TF.rastrigin,...
+            TF.schaffer2,TF.square,TF.hyperellipse,TF.norm1,TF.sumofpowers,TF.booth,TF.matyas,...
+            TF.zakharov,TF.cam3,TF.rosenbrock,TF.easom,TF.beale,TF.colville,TF.step,TF.nesterov,...
+            TF.goldsteinprice,TF.dixonprice,TF.trid,TF.bohachevsky1,TF.bohachevsky2,...
+            TF.bohachevsky3,TF.quartic,TF.schwefel1,TF.schwefel2,TF.schwefel4,TF.max,TF.sumprod};
+        
         % lists
 		% (labeling as unimodal or multimodal not necessarily adequate)
-        list_arbitrary_dim        = {TF.ackley,TF.griewank,TF.levy,TF.rastrigin,TF.square,TF.hyperellipse,TF.norm1,TF.sumofpowers,TF.zakharov,TF.rosenbrock,TF.step,TF.nesterov,TF.dixonprice,TF.trid,TF.quartic,TF.schwefel1,TF.schwefel2,TF.schwefel4,TF.max,TF.sumprod};
-        list_multimodal_smooth    = {TF.ackley,TF.griewank,TF.levy,TF.rastrigin,TF.schaffer2,TF.cam3,TF.rosenbrock,TF.easom,TF.beale,TF.colville};
-        list_multimodal_nonsmooth = {};
-        list_unimodal_smooth      = {TF.bukin2,TF.square,TF.hyperellipse,TF.booth,TF.matyas,TF.zakharov,TF.goldsteinprice,TF.dixonprice,TF.trid,TF.bohachevsky1,TF.bohachevsky2,TF.bohachevsky3,TF.quartic,TF.schwefel1,TF.schwefel2,TF.schwefel4};
-        list_unimodal_nonsmooth   = {TF.bukin4,TF.bukin6,TF.norm1,TF.sumofpowers,TF.step,TF.nesterov,TF.max,TF.sumprod};
-        list_fixed_dim            = {TF.bukin2,TF.bukin4,TF.bukin6,TF.schaffer2,TF.booth,TF.matyas,TF.cam3,TF.easom,TF.beale,TF.colville,TF.goldsteinprice,TF.bohachevsky1,TF.bohachevsky2,TF.bohachevsky3};
-    end
+%         list_arbitrary_dim        = {TF.ackley,TF.griewank,TF.levy,TF.rastrigin,TF.square,TF.hyperellipse,TF.norm1,TF.sumofpowers,TF.zakharov,TF.rosenbrock,TF.step,TF.nesterov,TF.dixonprice,TF.trid,TF.quartic,TF.schwefel1,TF.schwefel2,TF.schwefel4,TF.max,TF.sumprod};
+%         list_multimodal_smooth    = {TF.ackley,TF.griewank,TF.levy,TF.rastrigin,TF.schaffer2,TF.cam3,TF.rosenbrock,TF.easom,TF.beale,TF.colville};
+%         list_multimodal_nonsmooth = {};
+%         list_unimodal_smooth      = {TF.bukin2,TF.square,TF.hyperellipse,TF.booth,TF.matyas,TF.zakharov,TF.goldsteinprice,TF.dixonprice,TF.trid,TF.bohachevsky1,TF.bohachevsky2,TF.bohachevsky3,TF.quartic,TF.schwefel1,TF.schwefel2,TF.schwefel4};
+%         list_unimodal_nonsmooth   = {TF.bukin4,TF.bukin6,TF.norm1,TF.sumofpowers,TF.step,TF.nesterov,TF.max,TF.sumprod};
+%         list_fixed_dim            = {TF.bukin2,TF.bukin4,TF.bukin6,TF.schaffer2,TF.booth,TF.matyas,TF.cam3,TF.easom,TF.beale,TF.colville,TF.goldsteinprice,TF.bohachevsky1,TF.bohachevsky2,TF.bohachevsky3};
+     end
     
     methods (Static)
         
         %% functions with known global minimum
-        
+             
         function [fval] = f_ackley(x)
         % typical domain: [-33,33] or larger
         % global minimum: [0] at [0,...,0]
@@ -342,6 +350,21 @@ classdef TF
 		end
         
         %% helper functions
+        
+        function cell_problems = f_getTestFunctions(dim_lb,dim_ub,smooth,unimodal)
+            % 0: no, 1: yes, 2: both
+            nTFs = length(TF.cell_list);
+            index = 1;
+            for j=1:nTFs
+                if ( (smooth == 2 || TF.cell_list{j}.smooth == smooth) ...
+                        && (unimodal == 2 || TF.cell_list{j}.unimodal == unimodal)...
+                        && TF.cell_list{j}.dim >= dim_lb ...
+                        && TF.cell_list{j}.dim <= dim_ub )
+                    cell_problems{index} = TF.cell_list{j};
+                    index = index + 1;
+                end
+            end
+        end
         
         function [lb,ub,xbst] = f_getVectors(simple_problem,dim)
             if (length(simple_problem.lb) == 1)

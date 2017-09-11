@@ -8,8 +8,10 @@ classdef Exercise
         dim
         lb
         ub
-        xbst
         fbst
+        xbst
+        smooth
+        unimodal
         
         % algorithm data
         alg
@@ -21,14 +23,16 @@ classdef Exercise
     end
     
     methods
-        function obj = Exercise(name,fun,dim,lb,ub,xbst,fbst,alg,x0,tolX,tolFun,maxIter,maxFunEvals)
+        function obj = Exercise(name,fun,dim,lb,ub,fbst,xbst,smooth,unimodal,alg,x0,tolX,tolFun,maxIter,maxFunEvals)
             obj.name = name;
             obj.fun = fun;
             obj.dim = dim;
             obj.lb = lb;
             obj.ub = ub;
-            obj.xbst = xbst;
             obj.fbst = fbst;
+            obj.xbst = xbst;
+            obj.smooth = smooth;
+            obj.unimodal = unimodal;
             
             obj.alg = alg;
             obj.x0 = x0;

@@ -10,6 +10,8 @@ classdef Result
         ub
         fbst
         xbst
+        smooth
+        unimodal
         
         % algorithm data
         alg
@@ -33,13 +35,16 @@ classdef Result
     end
     
     methods
-        function obj = Result(name,dim,lb,ub,fbst,xbst,alg,x0,tolX,tolFun,maxIter,maxFunEvals,fval,x,iter,funEvals,time,exitflag,comment)
+        function obj = Result(name,dim,lb,ub,fbst,xbst,smooth,unimodal,alg,x0,tolX,tolFun,maxIter,maxFunEvals,fval,x,iter,funEvals,time,exitflag,comment)
             obj.name = name;
             obj.dim = dim;
             obj.lb = lb;
             obj.ub = ub;
             obj.fbst = fbst;
             obj.xbst = xbst;
+            obj.smooth = smooth;
+            obj.unimodal = unimodal;
+            
             obj.alg = alg;
             obj.x0 = x0;
             obj.tolX = tolX;
@@ -70,6 +75,8 @@ classdef Result
             ub = cell(nResults,1);
             fbst = cell(nResults,1);
             xbst = cell(nResults,1);
+            smooth = cell(nResults,1);
+            unimodal = cell(nResults,1);
             alg = cell(nResults,1);
             x0 = cell(nResults,1);
             tolX = cell(nResults,1);
@@ -91,6 +98,8 @@ classdef Result
                 ub{j} = cell_results{j}.ub;
                 fbst{j} = cell_results{j}.fbst;
                 xbst{j} = cell_results{j}.xbst;
+                smooth{j} = cell_results{j}.smooth;
+                unimodal{j} = cell_results{j}.unimodal;
                 alg{j} = cell_results{j}.alg;
                 x0{j} = cell_results{j}.x0;
                 tolX{j} = cell_results{j}.tolX;
@@ -113,6 +122,8 @@ classdef Result
                 ub,...
                 fbst,...
                 xbst,...
+                smooth,...
+                unimodal,...
                 alg,...
                 x0,...
                 tolX,...

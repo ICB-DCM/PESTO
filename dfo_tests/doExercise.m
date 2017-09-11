@@ -10,10 +10,10 @@ function [ result ] = doExercise( ex )
             
             starttime = cputime;
             [x,fval,exitflag,output] = fmincon(ex.fun,ex.x0,[],[],[],[],ex.lb,ex.ub,[],options);
-            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.iterations,output.funcCount,cputime-starttime,exitflag,'');
+            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.iterations,output.funcCount,cputime-starttime,exitflag,'');
         
-        case 'fminsearch'
-            % does not take bounds
+        case 'fminsearchbound'
+            % fminsearch does not take bounds
             options.MaxFunEvals = ex.maxFunEvals;
             options.MaxIter = ex.maxIter;
             options.TolX = ex.tolX;
@@ -21,8 +21,8 @@ function [ result ] = doExercise( ex )
             options.Display = 'off';
             
             starttime = cputime;
-            [x,fval,exitflag,output] = fminsearch(ex.fun,ex.x0,options);
-            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.iterations,output.funcCount,cputime-starttime,exitflag,'');
+            [x,fval,exitflag,output] = fminsearchbound(ex.fun,ex.x0,ex.lb,ex.ub,options);
+            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.iterations,output.funcCount,cputime-starttime,exitflag,'');
                    
         case {'meigo-ess-fmincon','meigo-ess-dhc'}
             problem.f = 'functionHandleWrap';
@@ -45,7 +45,7 @@ function [ result ] = doExercise( ex )
             
             starttime = cputime;
             ret = MEIGO(problem,options,'ESS',ex.fun);
-            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,ret.fbest,ret.xbest,0,ret.numeval,cputime-starttime,ret.end_crit,'');
+            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,ret.fbest,ret.xbest,0,ret.numeval,cputime-starttime,ret.end_crit,'');
             
         case 'hctt'
             options.MaxFunEvals = ex.maxFunEvals;
@@ -54,7 +54,7 @@ function [ result ] = doExercise( ex )
             options.TolFun = ex.tolFun;
             
             [x,fval,exitflag,output] = hillClimbThisThing(ex.fun,ex.x0,ex.lb,ex.ub,options);
-            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.iterations,output.funcCount,output.t_cpu,exitflag,'');
+            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.iterations,output.funcCount,output.t_cpu,exitflag,'');
         
         case 'cs'
             options.MaxFunEvals = ex.maxFunEvals;
@@ -63,7 +63,7 @@ function [ result ] = doExercise( ex )
             options.TolFun = ex.tolFun;
             
             [x,fval,exitflag,output] = coordinateSearch(ex.fun,ex.x0,ex.lb,ex.ub,options);
-            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.iterations,output.funcCount,output.t_cpu,exitflag,'');
+            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.iterations,output.funcCount,output.t_cpu,exitflag,'');
             
         case 'dhc'
             options.MaxFunEvals = ex.maxFunEvals;
@@ -72,7 +72,7 @@ function [ result ] = doExercise( ex )
             options.TolFun = ex.tolFun;
             
             [x,fval,exitflag,output] = dynamicHillClimb(ex.fun,ex.x0,ex.lb,ex.ub,options);
-            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.iterations,output.funcCount,output.t_cpu,exitflag,'');
+            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.iterations,output.funcCount,output.t_cpu,exitflag,'');
             
         otherwise
             error('Could not identify optimizer');
