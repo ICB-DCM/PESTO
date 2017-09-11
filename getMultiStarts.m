@@ -100,7 +100,7 @@ if isempty(options.start_index)
 end
 parameters = parametersSanityCheck(parameters);
 
-if strcmp(options.localOptimizer, 'fmincon')
+if (strcmp(options.localOptimizer, 'fmincon') && ( ~isfield(options.localOptimizerOptions, 'MaxFunEvals') || isempty(options.localOptimizerOptions.MaxFunEvals) ) )
     options.localOptimizerOptions.MaxFunEvals = 400*parameters.number;
 end
 

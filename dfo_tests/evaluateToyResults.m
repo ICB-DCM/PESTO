@@ -10,6 +10,7 @@ cell_results_arbdim_global = cell_results;
 cell_results_all = vertcat(cell_results_fixeddim_local,cell_results_fixeddim_global,cell_results_arbdim_local,cell_results_arbdim_global);
 
 % get best results
+disp('----get best results for each exercise (among several runs): cell_results_best');
 cell_results_best = EvaluationHelper.f_extractBestResults(cell_results_all);
 
 for j=1:length(cell_results_best), cell_results_best{j}.printTiny(); end
@@ -25,9 +26,10 @@ for j=1:length(cell_results_best), cell_results_best{j}.printTiny(); end
 % tab_results_best = Result.cell_to_table(cell_results_best);
 
 % which algorithm gave the best result?
-map_shares = EvaluationHelper.f_getSolvedShare(cell_results_best);
 
 % how many solutions did the algorithms find?
+disp('----share of good solutions found by the algorithms: map_shares');
+map_shares = EvaluationHelper.f_getSolvedShare(cell_results_best);
 
 % what about smooth/unimodal?
 

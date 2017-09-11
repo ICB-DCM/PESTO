@@ -16,7 +16,7 @@ function [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options)
 %   ExpandFactor      : (default 2)
 %   ContractFactor    : (default 0.45)
 %   StuckSearchFactor : how far to expand again after got stuck (default 4)
-%   Barrier           : use barrier on bounds (default none)
+%   Barrier           : use barrier on bounds (default extreme barrier)
 %
 % Output:
 % x   : best guess for parameters

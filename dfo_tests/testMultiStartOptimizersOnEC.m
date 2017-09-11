@@ -52,13 +52,13 @@ n_starts = 10;
 lb = lowerBound * ones(4,1);
 ub = upperBound * ones(4,1);
 
-% disp('fmincon:');
-% parameters_fmincon = runMultiStarts(objectiveFunction, 1, n_starts, 'fmincon', 4, lb, ub);
-% printResultParameters(parameters_fmincon);
+disp('fmincon:');
+parameters_fmincon = runMultiStarts(objectiveFunction, 1, n_starts, 'fmincon', 4, lb, ub);
+printResultParameters(parameters_fmincon);
 
-% disp('hctt:');
-% parameters_hctt = runMultiStarts(objectiveFunction, 1, n_starts, 'hctt', 4, lb, ub);
-% printResultParameters(parameters_hctt);
+disp('hctt:');
+parameters_hctt = runMultiStarts(objectiveFunction, 1, n_starts, 'hctt', 4, lb, ub);
+printResultParameters(parameters_hctt);
 
 disp('cs:');
 parameters_cs = runMultiStarts(objectiveFunction, 1, n_starts, 'cs', 4, lb, ub);
