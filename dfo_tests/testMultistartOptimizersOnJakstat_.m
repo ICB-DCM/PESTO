@@ -5,6 +5,8 @@ clear;
 close all;
 clear persistent;
 
+addpath(genpath('../examples'));
+
 nStart = 3;
 
 % Seed random number generator

@@ -2,6 +2,8 @@
 clear;
 close all;
 
+addpath(genpath('../examples'));
+
 % Seed the random number generator. Seeding the random number generator
 % ensures that everytime this example is run, the same sequence of random
 % numbers is generated, and thus, the same starting points for multi-start 
@@ -95,11 +97,14 @@ else
 end
 
 % Optimization
-parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
-printResultParameters(parameters);
+parameters_fmincon = runMultiStarts(objectiveFunction, 1, 10, 'fmincon', 2, lb, ub);
+printResultParameters(parameters_fmincon);
 
 parameters_hctt = runMultiStarts(objectiveFunction, 1, 10, 'hctt', 2, lb, ub);
 printResultParameters(parameters_hctt);
+
+parameters_cs = runMultiStarts(objectiveFunction, 1, 10, 'cs', 2, lb, ub);
+printResultParameters(parameters_cs);
 
 parameters_dhc = runMultiStarts(objectiveFunction, 1, 10, 'dhc', 2, lb, ub);
 printResultParameters(parameters_dhc);
@@ -119,6 +124,12 @@ function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, l
     options.localOptimizerOptions.TolFun        = 1e-8;
     options.localOptimizerOptions.MaxFunEvals   = 2500;
     options.localOptimizerOptions.MaxIter       = 2500;
+    
+    % for fmincon
+    options.localOptimizerOptions.MaxFunctionEvaluations = 2500;
+    options.localOptimizerOptions.MaxIterations = 2500;
+    options.localOptimizerOptions.StepTolerance = 1e-8;
+    options.localOptimizerOptions.Display = 'off';
     
     parameters.number = nPar;
     parameters.min = parMin;

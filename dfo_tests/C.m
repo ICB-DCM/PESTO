@@ -20,6 +20,8 @@ classdef C
         cell_solvers_global        = {'meigo-ess-fmincon','meigo-ess-dhc'};
         nSolvers_global            = length(C.cell_solvers_global);
         
+        fval_tolerance  = 1e-3;
+        
     end
     
     methods

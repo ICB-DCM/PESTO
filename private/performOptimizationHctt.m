@@ -3,6 +3,10 @@ function parameters = performOptimizationHctt(parameters, objective_function, iS
     options_hctt.TolX        = options.localOptimizerOptions.TolX;
     options_hctt.TolFun      = options.localOptimizerOptions.TolFun;
     options_hctt.MaxIter     = options.localOptimizerOptions.MaxIter;
+	options_hctt.MaxFunEvals = options.localOptimizerOptions.MaxFunEvals;
+	if (isfield(options.localOptimizerOptions,'Barrier') && ~isempty(options.localOptimizerOptions.Barrier))
+		options_hctt.Barrier		= options.localOptimizerOptions.Barrier;
+	end
     
     x0 = parameters.MS.par0(:,iStart);
     lb = parameters.min;

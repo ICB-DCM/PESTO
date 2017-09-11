@@ -7,6 +7,8 @@ function cell_results = testOnToyFunctions(mode)
 
     
 %% prepare exercises
+
+rng(1);
     
 cell_exercises = createExercises(mode);
 

@@ -220,6 +220,7 @@ function fval = f_wrap_fun(x,fun,lb,ub,barrier,jIter,maxIter)
         fval = fun(x);
         fval = barrierFunction(fval, [], x, [lb, ub], jIter, maxIter, barrier);
     else
+        % extreme barrier
         if (any(x>ub) || any(x<lb))
             fval = inf;
         else
@@ -324,7 +325,7 @@ function [tolX,tolFun,maxFunEvals,maxIter,outputFcn,...
     if (isfield(options,'ExpandFactor') && ~isempty(options.ExpandFactor))
         expandFactor              = options.ExpandFactor;
     else
-        expandFactor              = 2;
+        expandFactor              = 2.1;
     end
     
     if (isfield(options,'ContractFactor') && ~isempty(options.ContractFactor))

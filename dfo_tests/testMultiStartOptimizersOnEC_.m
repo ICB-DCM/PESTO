@@ -3,6 +3,7 @@ clear;
 clear persistent;
 close all;
 
+addpath(genpath('../examples'));
 
 % Seed random number generator
 rng(0);
@@ -47,23 +48,23 @@ objectiveFunction = @(theta) logLikelihoodEC(theta, yMeasured, sigma2, con0, nTi
 disp(['True parameters: ',mat2str(theta)]);
 
 disp(' Optimizing parameters...');
-n_starts = 5;
+n_starts = 10;
 lb = lowerBound * ones(4,1);
 ub = upperBound * ones(4,1);
 
-disp('Fmincon:');
-parameters_fmincon = runMultiStarts(objectiveFunction, 1, n_starts, 'fmincon', 4, lb, ub);
-printResultParameters(parameters_fmincon);
+% disp('fmincon:');
+% parameters_fmincon = runMultiStarts(objectiveFunction, 1, n_starts, 'fmincon', 4, lb, ub);
+% printResultParameters(parameters_fmincon);
 
-disp('Fminsearch:');
-parameters_fminsearch = runMultiStarts(objectiveFunction, 1, n_starts, 'fminsearch', 4, lb, ub);
-printResultParameters(parameters_fminsearch);
+% disp('hctt:');
+% parameters_hctt = runMultiStarts(objectiveFunction, 1, n_starts, 'hctt', 4, lb, ub);
+% printResultParameters(parameters_hctt);
 
-disp('Hctt:');
-parameters_hctt = runMultiStarts(objectiveFunction, 1, n_starts, 'hctt', 4, lb, ub);
-printResultParameters(parameters_hctt);
+disp('cs:');
+parameters_cs = runMultiStarts(objectiveFunction, 1, n_starts, 'cs', 4, lb, ub);
+printResultParameters(parameters_cs);
 
-disp('Dhc:');
+disp('dhc:');
 parameters_dhc = runMultiStarts(objectiveFunction, 1, n_starts, 'dhc', 4, lb, ub);
 printResultParameters(parameters_dhc);
 
@@ -78,13 +79,20 @@ function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, l
     options.comp_type = 'sequential';
     options.n_starts = nStarts;
     options.objOutNumber = objOutNumber;
-    options.mode = 'silent';
+    options.mode = 'visual';
     options.localOptimizer = localOptimizer;
     options.localOptimizerOptions.GradObj="off";
-    options.localOptimizerOptions.TolX          = 1e-4;
-    options.localOptimizerOptions.TolFun        = 1e-4;
-    options.localOptimizerOptions.MaxFunEvals   = 2000;
-    options.localOptimizerOptions.MaxIter       = 2000;
+    options.localOptimizerOptions.TolX          = 1e-8;
+    options.localOptimizerOptions.TolFun        = 1e-8;
+    options.localOptimizerOptions.MaxFunEvals   = 2500;
+    options.localOptimizerOptions.MaxIter       = 2500;
+    if (isequal(localOptimizer,'hctt')), options.localOptimizerOptions.Barrier = 'log-barrier'; end
+    
+    % for fmincon
+    options.localOptimizerOptions.MaxFunctionEvaluations = 2500;
+    options.localOptimizerOptions.MaxIterations = 2500;
+    options.localOptimizerOptions.StepTolerance = 1e-8;
+    options.localOptimizerOptions.Display = 'off';
     
     parameters.number = nPar;
     parameters.min = parMin;

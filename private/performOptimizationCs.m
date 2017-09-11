@@ -3,6 +3,10 @@ function parameters = performOptimizationCs(parameters, objective_function, iSta
     options_cs.TolX        = options.localOptimizerOptions.TolX;
     options_cs.TolFun      = options.localOptimizerOptions.TolFun;
     options_cs.MaxIter     = options.localOptimizerOptions.MaxIter;
+	options_cs.MaxFunEvals = options.localOptimizerOptions.MaxFunEvals;
+	if (isfield(options.localOptimizerOptions,'Barrier') && ~isempty(options.localOptimizerOptions.Barrier))
+		options_cs.Barrier		= options.localOptimizerOptions.Barrier;
+	end
     
     x0 = parameters.MS.par0(:,iStart);
     lb = parameters.min;

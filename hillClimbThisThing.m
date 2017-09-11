@@ -11,7 +11,7 @@ function [x, fval, exitflag, output] = hillClimbThisThing(fun, x0, lb, ub, optio
         visual = false;
     end
     
-    % Set options
+    % Set options % TODO pass as parameter
     logbar = 'log-barrier';
     
     % align vectors in 1st dimension

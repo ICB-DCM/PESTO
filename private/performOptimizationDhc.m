@@ -3,6 +3,10 @@ function parameters = performOptimizationDhc(parameters, objective_function, iSt
     options_dhc.TolX        = options.localOptimizerOptions.TolX;
     options_dhc.TolFun      = options.localOptimizerOptions.TolFun;
     options_dhc.MaxIter     = options.localOptimizerOptions.MaxIter;
+	options_dhc.MaxFunEvals = options.localOptimizerOptions.MaxFunEvals;
+	if (isfield(options.localOptimizerOptions,'Barrier') && ~isempty(options.localOptimizerOptions.Barrier))
+		options_dhc.Barrier		= options.localOptimizerOptions.Barrier;
+	end
     
     x0 = parameters.MS.par0(:,iStart);
     lb = parameters.min;
