@@ -1,3 +1,5 @@
+close all;
+
 load('cell_results_test-fixeddim-local.mat');
 cell_results_fixeddim_local = cell_results;
 load('cell_results_test-fixeddim-global.mat');
@@ -11,10 +13,9 @@ cell_results_arbdim_global = cell_results;
 cell_results_all = vertcat(cell_results_fixeddim_local,cell_results_fixeddim_global,cell_results_arbdim_local,cell_results_arbdim_global);
 
 % get best results
-disp('----get best results for each exercise (among several runs): cell_results_best');
 cell_results_best = EvaluationHelper.f_extractBestResults(cell_results_all);
 
-for j=1:length(cell_results_best), cell_results_best{j}.printTiny(); end
+% for j=1:length(cell_results_best), cell_results_best{j}.printTiny(); end
 
 % transform to table for grouping
 % tab_results_fixeddim_local = Result.cell_to_table(cell_results_fixeddim_local);
@@ -29,7 +30,6 @@ for j=1:length(cell_results_best), cell_results_best{j}.printTiny(); end
 % which algorithm gave the best result?
 
 % how many solutions did the algorithms find?
-disp('----share of good solutions found by the algorithms: map_shares');
 map_shares = EvaluationHelper.f_getSolvedShare(cell_results_best);
 
 % what about smooth/unimodal?
@@ -46,6 +46,13 @@ cell_results_best_multimodal = EvaluationHelper.f_getAllHaving(cell_results_best
 map_shares_multimodal = EvaluationHelper.f_getSolvedShare(cell_results_best_multimodal);
 
 % what about dim?
+cell_cell_results_best_dim = cell(C.nDims,1);
+cell_map_best_dim_shares = cell(C.nDims,1);
+for j=1:C.nDims
+    cell_cell_results_best_dim{j} = EvaluationHelper.f_getAllHaving(cell_results_best,C.arr_dims(j),C.arr_dims(j),2,2);
+    cell_map_best_dim_shares{j} = EvaluationHelper.f_getSolvedShare(cell_cell_results_best_dim{j});
+end
+
 cell_results_best_dimleq10 = EvaluationHelper.f_getAllHaving(cell_results_best,-1,10,2,2);
 map_shares_dimleq10 = EvaluationHelper.f_getSolvedShare(cell_results_best_dimleq10);
 
@@ -53,33 +60,44 @@ cell_results_best_dimgeq50 = EvaluationHelper.f_getAllHaving(cell_results_best,5
 map_shares_dimgeq50 = EvaluationHelper.f_getSolvedShare(cell_results_best_dimgeq50);
 
 % text output
-keys(map_shares)
-values(map_shares)
-
-keys(map_shares_smooth)
-values(map_shares_smooth)
-
-keys(map_shares_nonsmooth)
-values(map_shares_nonsmooth)
-
-keys(map_shares_unimodal)
-values(map_shares_multimodal)
-
-keys(map_shares_multimodal)
-values(map_shares_multimodal)
-
-keys(map_shares_dimleq10)
-values(map_shares_dimleq10)
-
-keys(map_shares_dimgeq50)
-values(map_shares_dimgeq50)
+% keys(map_shares)
+% values(map_shares)
+% 
+% keys(map_shares_smooth)
+% values(map_shares_smooth)
+% 
+% keys(map_shares_nonsmooth)
+% values(map_shares_nonsmooth)
+% 
+% keys(map_shares_unimodal)
+% values(map_shares_multimodal)
+% 
+% keys(map_shares_multimodal)
+% values(map_shares_multimodal)
+% 
+% keys(map_shares_dimleq10)
+% values(map_shares_dimleq10)
+% 
+% keys(map_shares_dimgeq50)
+% values(map_shares_dimgeq50)
 
 % time
 
-map_time = EvaluationHelper.f_getAverageTime(cell_results_all);
+map_time = EvaluationHelper.f_getAverageTimePerAlg(cell_results_all);
 
-keys(map_time)
-values(map_time)
+% keys(map_time)
+% values(map_time)
+
+% time and function evaluations
+cell_cell_results_all_dim = cell(C.nDims,1);
+cell_map_all_dim_time   = cell(C.nDims,1);
+cell_map_all_dim_fevals = cell(C.nDims,1);
+for j=1:C.nDims
+    cell_cell_results_all_dim{j} = EvaluationHelper.f_getAllHaving(cell_results_all,C.arr_dims(j),C.arr_dims(j),2,2);
+    cell_map_all_dim_time{j}   = EvaluationHelper.f_getAverageTimePerAlg(cell_cell_results_all_dim{j});
+    cell_map_all_dim_fevals{j} = EvaluationHelper.f_getAverageFevalsPerAlg(cell_cell_results_all_dim{j});
+end
+
 
 %% visualize
 markers = {'o','+','*','.','x','s','d','^','v','<','>','p','h'};
@@ -87,8 +105,10 @@ nMarkers = length(markers);
 colors  = {'r','m','c','y','g','b','k'};
 nColors = length(colors);
 
-all_keys = keys(map_shares);
-nKeys = length(all_keys);
+% smooth, unimodal
+cell_keys = keys(map_shares);
+nKeys = length(cell_keys);
+
 v_x = 1:5;
 v_y = zeros(nKeys,5);
 cell_maps = {map_shares,map_shares_smooth,map_shares_nonsmooth,map_shares_unimodal,map_shares_multimodal};
@@ -99,14 +119,77 @@ for j=1:nKeys
        v_y(j,k) = tmp_map(tmp_keys{j});
    end
 end
-
-fig = figure();
+fig = figure('name','smooth/modal');
 hold on;
-hold all;
 for j=1:nKeys
-    plot(v_x,v_y(j,:),[markers{mod(j,nMarkers)+1} colors{mod(j,nColors)+1} '-'], 'DisplayName', all_keys{j}); 
+    plot(v_x,v_y(j,:),[markers{mod(j,nMarkers)+1} colors{mod(j,nColors)+1} '-'], 'DisplayName', cell_keys{j}); 
 end
 hold off;
 legend('show','Location','northeastoutside');
-xticks([1:5]);
+xticks(1:5);
 xticklabels({'all','smooth','nonsmooth','unimodal','multimodal'});
+
+% dims
+v_x = 1:C.nDims;
+v_y = zeros(nKeys,1);
+for j=1:nKeys
+   for k=1:C.nDims
+       tmp_map = cell_map_best_dim_shares{k};
+       tmp_keys = keys(tmp_map);
+       v_y(j,k) = tmp_map(tmp_keys{j});
+   end
+end
+fig = figure('name','dims');
+hold on;
+for j=1:nKeys
+    plot(v_x,v_y(j,:),[markers{mod(j,nMarkers)+1} colors{mod(j,nColors)+1} '-'], 'DisplayName', cell_keys{j}); 
+end
+hold off;
+legend('show','Location','northeastoutside');
+xticks(1:C.nDims);
+xticklabels(C.arr_dims);
+
+% fevals
+v_x = 1:C.nDims;
+v_y = zeros(nKeys,1);
+for j=1:nKeys
+   for k=1:C.nDims
+       tmp_map = cell_map_all_dim_time{k};
+       tmp_keys = keys(tmp_map);
+       v_y(j,k) = tmp_map(tmp_keys{j});
+   end
+end
+fig = figure('name','time');
+hold on;
+for j=1:nKeys
+    plot(v_x,log10(v_y(j,:)),[markers{mod(j,nMarkers)+1} colors{mod(j,nColors)+1} '-'], 'DisplayName', cell_keys{j}); 
+end
+hold off;
+legend('show','Location','northeastoutside');
+xticks(1:C.nDims);
+xticklabels(C.arr_dims);
+xlabel('dim');
+ylabel('log10(avgTime)');
+
+% fevals
+v_x = 1:C.nDims;
+v_y = zeros(nKeys,1);
+for j=1:nKeys
+   for k=1:C.nDims
+       tmp_map = cell_map_all_dim_fevals{k};
+       tmp_keys = keys(tmp_map);
+       v_y(j,k) = tmp_map(tmp_keys{j});
+   end
+end
+fig = figure('name','funEvals');
+hold on;
+for j=1:nKeys
+    plot(v_x,log10(v_y(j,:)),[markers{mod(j,nMarkers)+1} colors{mod(j,nColors)+1} '-'], 'DisplayName', cell_keys{j}); 
+end
+plot(1:C.nDims,log10(C.maxFunEvals)*ones(1,C.nDims),'-r','DisplayName','maxFunEvals');
+hold off;
+legend('show','Location','northeastoutside');
+xticks(1:C.nDims);
+xticklabels(C.arr_dims);
+xlabel('dim');
+ylabel('log10(avgFunEvals)');
