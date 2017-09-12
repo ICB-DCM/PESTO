@@ -73,6 +73,33 @@ classdef EvaluationHelper
             end
         end
         
+        function [ map ] = f_getAverageTime(cell_results)
+            map = containers.Map;
+            map_total = containers.Map;
+            
+            nResults = length(cell_results);
+            for j=1:nResults
+               res = cell_results{j};
+               % init
+               if (~isKey(map_total,res.alg))
+                   map_total(res.alg) = 0;
+                   map(res.alg) = 0;
+               end
+               
+               % update
+               map_total(res.alg) = map_total(res.alg) + 1;
+               map(res.alg) = map(res.alg) + res.time;
+            end
+            
+            % get share
+            cell_key = keys(map_total);
+            nKeys = length(cell_key);
+            for j=1:nKeys
+                key = cell_key{j};
+                map(key) = map(key) / map_total(key);
+            end
+        end
+        
         function [ cell_results_having ] = f_getAllHaving(cell_results,dim_lb,dim_ub,smooth,unimodal)
             % 0: no, 1: yes, 2: both
             n = length(cell_results);

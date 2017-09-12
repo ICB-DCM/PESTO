@@ -180,7 +180,7 @@ parametersMultistart = getMultiStarts(parameters, objectiveFunction, optionsPest
 % optionsPesto.profile_method = 'integration';
 
 % Profile likelihood calculation
-parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
+parameters = getParameterProfiles(parametersMultistart, objectiveFunction, optionsPesto);
 
 
 %% Cleaning up

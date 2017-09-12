@@ -74,5 +74,39 @@ values(map_shares_dimleq10)
 keys(map_shares_dimgeq50)
 values(map_shares_dimgeq50)
 
-% visualize
+% time
 
+map_time = EvaluationHelper.f_getAverageTime(cell_results_all);
+
+keys(map_time)
+values(map_time)
+
+%% visualize
+markers = {'o','+','*','.','x','s','d','^','v','<','>','p','h'};
+nMarkers = length(markers);
+colors  = {'r','m','c','y','g','b','k'};
+nColors = length(colors);
+
+all_keys = keys(map_shares);
+nKeys = length(all_keys);
+v_x = 1:5;
+v_y = zeros(nKeys,5);
+cell_maps = {map_shares,map_shares_smooth,map_shares_nonsmooth,map_shares_unimodal,map_shares_multimodal};
+for j=1:nKeys
+   for k=1:5
+       tmp_map = cell_maps{k};
+       tmp_keys = keys(tmp_map);
+       v_y(j,k) = tmp_map(tmp_keys{j});
+   end
+end
+
+fig = figure();
+hold on;
+hold all;
+for j=1:nKeys
+    plot(v_x,v_y(j,:),[markers{mod(j,nMarkers)+1} colors{mod(j,nColors)+1} '-'], 'DisplayName', all_keys{j}); 
+end
+hold off;
+legend('show','Location','northeastoutside');
+xticks([1:5]);
+xticklabels({'all','smooth','nonsmooth','unimodal','multimodal'});

@@ -46,12 +46,31 @@ function [ result ] = doExercise( ex )
             starttime = cputime;
             ret = MEIGO(problem,options,'ESS',ex.fun);
             result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,ret.fbest,ret.xbest,-1,ret.numeval,cputime-starttime,ret.end_crit,'');
+          
+        case 'meigo-ess-ydhc'
+            problem.f = 'functionHandleWrap';
+            problem.x_L = ex.lb;
+            problem.x_U = ex.ub;
+            problem.x_0 = ex.x0;
             
+            options.inter_save = false;
+            options.maxeval = ex.maxFunEvals;
+            options.local.solver = 'ydhc';
+            options.local.finish = 'ydhc';
+            options.local.iterprint = 0; % no output after each iteration
+            options.iterprint = 0;
+            options.plot = 0;
+            options.local.tol = 3; % does not take tolerance really
+            
+            starttime = cputime;
+            ret = MEIGO(problem,options,'ESS',ex.fun);
+            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,ret.fbest,ret.xbest,-1,ret.numeval,cputime-starttime,ret.end_crit,'');
+          
         case 'meigo-dhc'
             initsize = 0.1;
             thres = ex.tolX;
             local_iterprint = 0;
-            weight = 1e6; % weigt that multiplies the penalty term added to the objfun in constrained problems
+            weight = 1e6; % weight that multiplies the penalty term added to the objfun in constrained problems
             tolc = 1e-5; % maximum absolute violation of the constraints
             c_L = [];
             c_U = [];

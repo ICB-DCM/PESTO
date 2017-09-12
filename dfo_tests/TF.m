@@ -42,7 +42,6 @@ classdef TF
         colville       = struct(TF.name, 'colville', TF.fun, @TF.f_colville, TF.lb, -10, TF.ub, 10, TF.xbst, 1, TF.fbst, 0, TF.dim, 4, TF.smooth, 1, TF.unimodal, 0);
         step           = struct(TF.name, 'step', TF.fun, @TF.f_step, TF.lb, -1, TF.ub, 1, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 0, TF.unimodal, 0);
         nesterov       = struct(TF.name, 'nesterov', TF.fun, @TF.f_nesterov, TF.lb, -10, TF.ub, 10, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 0, TF.unimodal, 1);
-        goldsteinprice = struct(TF.name, 'goldsteinprice', TF.fun, @TF.f_goldsteinprice, TF.lb, -2, TF.ub, 2, TF.xbst, [0;1], TF.fbst, 3, TF.dim, 2, TF.smooth, 1, TF.unimodal, 1);
         dixonprice     = struct(TF.name, 'dixonprice', TF.fun, @TF.f_dixonprice, TF.lb, -10, TF.ub, 10, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
         trid           = struct(TF.name, 'trid', TF.fun, @TF.f_trid, TF.lb, -2, TF.ub, 2, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
         bohachevsky1   = struct(TF.name, 'bohachevsky1', TF.fun, @TF.f_bohachevsky1, TF.lb, -100, TF.ub, 120, TF.xbst, 0, TF.fbst, 0, TF.dim, 2, TF.smooth, 1, TF.unimodal, 1);
@@ -51,14 +50,14 @@ classdef TF
 		quartic 	   = struct(TF.name, 'quartic', TF.fun, @TF.f_quartic, TF.lb, -10, TF.ub, 9, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
 		schwefel1 	   = struct(TF.name, 'schwefel1', TF.fun, @TF.f_schwefel1, TF.lb, -100, TF.ub, 100, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
 		schwefel2 	   = struct(TF.name, 'schwefel2', TF.fun, @TF.f_schwefel2, TF.lb, -100, TF.ub, 100, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
-		schwefel4 	   = struct(TF.name, 'schwefel4', TF.fun, @TF.f_schwefel4, TF.lb, 0, TF.ub, 10, TF.xbst, 1, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
+		schwefel4 	   = struct(TF.name, 'schwefel4', TF.fun, @TF.f_schwefel4, TF.lb, -6, TF.ub, 10, TF.xbst, 1, TF.fbst, 0, TF.dim, Inf, TF.smooth, 1, TF.unimodal, 1);
 		max      	   = struct(TF.name, 'max', TF.fun, @TF.f_max, TF.lb, -100, TF.ub, 100, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 0, TF.unimodal, 1);	
-		sumprod 	   = struct(TF.name, 'sumprod', TF.fun, @TF.f_sumprod, TF.lb, -1, TF.ub, 1, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 0, TF.unimodal, 1)
+		sumprod 	   = struct(TF.name, 'sumprod', TF.fun, @TF.f_sumprod, TF.lb, -2, TF.ub, 2, TF.xbst, 0, TF.fbst, 0, TF.dim, Inf, TF.smooth, 0, TF.unimodal, 1)
 		
         cell_list = {TF.ackley,TF.bukin2,TF.bukin4,TF.bukin6,TF.griewank,TF.levy,TF.rastrigin,...
             TF.schaffer2,TF.square,TF.hyperellipse,TF.norm1,TF.sumofpowers,TF.booth,TF.matyas,...
             TF.zakharov,TF.cam3,TF.rosenbrock,TF.easom,TF.beale,TF.colville,TF.step,TF.nesterov,...
-            TF.goldsteinprice,TF.dixonprice,TF.trid,TF.bohachevsky1,TF.bohachevsky2,...
+            TF.dixonprice,TF.trid,TF.bohachevsky1,TF.bohachevsky2,...
             TF.bohachevsky3,TF.quartic,TF.schwefel1,TF.schwefel2,TF.schwefel4,TF.max,TF.sumprod};
         
         % lists
@@ -90,7 +89,7 @@ classdef TF
         function [fval] = f_bukin2(x)
         % x\in\R^2
         % typical domain: [-15;-3]*[-5,3]
-        % global minimum: [0] at [-10,1]
+        % global minimum: [0] at [-10,0]
             fval = 100*(x(2)-0.01*x(1)^2+1)^2 + 0.01*(x(1)+10)^2;
         end
         
@@ -144,7 +143,7 @@ classdef TF
         % x\in\R^2
         % typical domain: [-100,100]
         % global minimum: [0] at [0,0]
-            fval = 0.5 + ( (sin(x(1)^2-x(2))^2)-0.5 ) / ( 1+0.001*(x(1)^2+x(2)^2) )^2;
+            fval = 0.5 + ( (sin(x(1)^2-x(2)^2)^2)-0.5 ) / ( 1+0.001*(x(1)^2+x(2)^2) )^2;
         end
         
         function [fval] = f_square(x)
@@ -248,14 +247,6 @@ classdef TF
             fval = sum(x.^2)/2+sum(abs(x));
         end
         
-        function [fval] = f_goldsteinprice(x)
-        % x\in\R
-        % global minimum: [3] at [0,-1]
-            x1=x(1);x2=x(2);
-            
-            fval = (1+(x1+x2+1)^2*(19-14*x1+3*x1^2-14*x2+6*x1*x2+3*x2^2)) * (30+(2*x1-3*x2)^2*(18-32*x1+12*x1^2+48*x2-36*x1*x2+27*x2^2));
-        end
-        
         function [fval] = f_dixonprice(x)
             dim = length(x);
             
@@ -264,7 +255,7 @@ classdef TF
                 w(j) = x(j)+2^(-(2^j-2)/(2^j));
             end
             
-                sum = 0;
+            sum = 0;
             for j=2:dim
                 sum = sum + j*(2*w(j)^2-w(j-1))^2;
             end
@@ -282,10 +273,10 @@ classdef TF
             
             sum2 = 0;
             for j=2:dim
-                sum2 = sum2 + x(j)*x(j-1);
+                sum2 = sum2 + w(j)*w(j-1);
             end
             
-            fval = sum((x-1).^2) - sum2 + dim*(dim+4)*(dim-1)/6;
+            fval = sum((w-1).^2) - sum2 + dim*(dim+4)*(dim-1)/6;
         end
 		
 		function [fval] = f_bohachevsky1(x)
