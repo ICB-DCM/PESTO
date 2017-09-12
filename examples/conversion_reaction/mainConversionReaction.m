@@ -108,16 +108,16 @@ properties.number = length(properties.name);
 % some of its properties are set accordingly.
 
 % Options
-optionsMultistart = PestoOptions();
-optionsMultistart.obj_type = 'log-posterior';
-optionsMultistart.n_starts = 20;
-optionsMultistart.comp_type = 'sequential';
-optionsMultistart.mode = 'visual';
-optionsMultistart.plot_options.add_points.par = theta_true;
-optionsMultistart.plot_options.add_points.logPost = objectiveFunction(theta_true);
-optionsMultistart.plot_options.add_points.prop = nan(properties.number,1);
+optionsPesto = PestoOptions();
+optionsPesto.obj_type = 'log-posterior';
+optionsPesto.n_starts = 20;
+optionsPesto.comp_type = 'sequential';
+optionsPesto.mode = 'visual';
+optionsPesto.plot_options.add_points.par = theta_true;
+optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta_true);
+optionsPesto.plot_options.add_points.prop = nan(properties.number,1);
 for j = 1 : properties.number
-    optionsMultistart.plot_options.add_points.prop(j) = properties.function{j}(optionsMultistart.plot_options.add_points.par);
+    optionsPesto.plot_options.add_points.prop(j) = properties.function{j}(optionsPesto.plot_options.add_points.par);
 end
 
 % The example can also be run in parallel mode: Uncomment this, if wanted
@@ -128,14 +128,14 @@ end
 % n_workers = 10;
 
 % Open parpool
-if strcmp(optionsMultistart.comp_type, 'parallel') && (n_workers >= 2)
+if strcmp(optionsPesto.comp_type, 'parallel') && (n_workers >= 2)
     parpool(n_workers); 
 else
-    optionsMultistart.comp_type = 'sequential';
+    optionsPesto.comp_type = 'sequential';
 end
 
 % Optimization
-parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
+parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
 
 %% Choosing different optimizers
@@ -175,7 +175,7 @@ parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistart);
 % The measured data is visualized in plot, together with fit for the best
 % parameter value found during getMultiStarts
 
-if strcmp(optionsMultistart.mode,'visual')
+if strcmp(optionsPesto.mode,'visual')
     % Simulation
     tsim = linspace(t(1),t(end),100);
     ysim = simulateConversionReaction(exp(parameters.MS.par(:,1)),tsim);
@@ -194,7 +194,7 @@ end
 % The uncertainty of the estimated parameters is visualized by computing
 % and plotting profile likelihoods. In getParameterProfiles, this is done
 % by using repeated reoptimization, if standard setings are used.
-parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultistart);
+parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
 
 
 %% Markov Chain Monte Carlo sampling -- Parameters
@@ -204,38 +204,38 @@ parameters = getParameterProfiles(parameters, objectiveFunction, optionsMultista
 % effectively an adapted Metropolis algorithm single-chain algorithm.
 
 % Building a struct covering all sampling options:
-optionsSampling = PestoSamplingOptions();
-optionsSampling.nIterations = 1e4;
-optionsSampling.mode = optionsMultistart.mode;
+optionsPesto.MCMC.nIterations = 1e4;
+optionsPesto.MCMC.mode = optionsPesto.mode;
 
 % PT specific options:
-optionsSampling.samplingAlgorithm   = 'PT';
-optionsSampling.PT.nTemps           = 1;
-optionsSampling.PT.temperatureAdaptionScheme = 'Lacki15'; %'Vousden16'; 
+optionsPesto.MCMC.samplingAlgorithm   = 'PT';
+optionsPesto.MCMC.PT.nTemps           = 1;
+optionsPesto.MCMC.PT.temperatureAdaptionScheme = 'Lacki15'; %'Vousden16'; 
 
 % Initialize the chains by making use of the preceeding multi-start local
 % optimization, all of them starting from the same point
-optionsSampling.theta0 = parameters.MS.par(:,1); 
-optionsSampling.sigma0 = 0.5 * inv(squeeze(parameters.MS.hessian(:,:,1)));
+optionsPesto.MCMC.theta0 = parameters.MS.par(:,1); 
+optionsPesto.MCMC.sigma0 = 0.5 * inv(squeeze(parameters.MS.hessian(:,:,1)));
 
 % Run the sampling
-parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
+parameters = getParameterSamples(parameters, objectiveFunction, optionsPesto);
 
 
 %% Confidence interval evaluation -- Parameters
-% Confidence intervals to the confidence levels fixed in the array alpha
+% Confidence intervals to the confidence levels fixed in the array
+% alpha
 % are computed based on local approximations from the Hessian matrix at the
 % optimum, based on the profile likelihoods and on the parameter sampling.
 
 alpha = [0.9,0.95,0.99];
-parameters = getParameterConfidenceIntervals(parameters, alpha, optionsMultistart);
+parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
 
 
 %% Evaluation of properties for multi-start local optimization results -- Properties
 % The values of the properties are evaluated at the end points of the
 % multi-start optimization runs by getPropertyMultiStarts.
 
-optionsProperties = optionsMultistart.copy();
+optionsProperties = optionsPesto.copy();
 optionsProperties.fh = [];
 properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
 
@@ -265,7 +265,7 @@ properties = getPropertyConfidenceIntervals(properties, alpha, optionsProperties
 
 %% Comparison of calculated parameter profiles
 
-if strcmp(optionsMultistart.mode, 'visual')
+if strcmp(optionsPesto.mode, 'visual')
     % Open figure
     figure('Name','Conversion reaction: Comparison of parameter profiles');
     
@@ -285,6 +285,6 @@ end
 
 %% Close the pools of parallel working threads
 
-if strcmp(optionsMultistart.comp_type, 'parallel') && (n_workers >= 2)
+if strcmp(optionsPesto.comp_type, 'parallel') && (n_workers >= 2)
     delete(gcp('nocreate'))
 end

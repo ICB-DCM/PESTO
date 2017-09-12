@@ -47,6 +47,9 @@ classdef PestoOptions < matlab.mixin.SetGet
         % information and without the Pesto FD routine.
         objOutNumber = 3;
         
+        fixedParameters = [];
+        
+        fixedParameterValues = [];
         
         
         % <!-- Options concerning the output -->
