@@ -1,6 +1,6 @@
 function [ result ] = doExercise( ex )
 %RUNEXERCISE runs exercise
-
+    
     switch (ex.alg)
         case 'fmincon'
             options.MaxFunctionEvaluations = ex.maxFunEvals;
@@ -45,8 +45,26 @@ function [ result ] = doExercise( ex )
             
             starttime = cputime;
             ret = MEIGO(problem,options,'ESS',ex.fun);
-            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,ret.fbest,ret.xbest,0,ret.numeval,cputime-starttime,ret.end_crit,'');
+            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,ret.fbest,ret.xbest,-1,ret.numeval,cputime-starttime,ret.end_crit,'');
             
+        case 'meigo-dhc'
+            initsize = 0.1;
+            thres = ex.tolX;
+            local_iterprint = 0;
+            weight = 1e6; % weigt that multiplies the penalty term added to the objfun in constrained problems
+            tolc = 1e-5; % maximum absolute violation of the constraints
+            c_L = [];
+            c_U = [];
+            
+            try
+                starttime = cputime;
+                [fval,x,numeval] = dhc('functionHandleWrap',ex.x0,initsize,thres,ex.maxFunEvals,ex.lb,ex.ub,weight,c_L,c_U,local_iterprint,tolc,ex.fun);
+                result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,-1,numeval,cputime-starttime,0,'');
+            catch exception
+                warning(exception.message);
+                result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,nan,nan,-1,nan,cputime-starttime,0,exception.message);
+            end
+                            
         case 'hctt'
             options.MaxFunEvals = ex.maxFunEvals;
             options.MaxIter = ex.maxIter;

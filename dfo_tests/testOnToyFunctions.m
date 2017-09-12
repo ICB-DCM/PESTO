@@ -1,9 +1,11 @@
 function cell_results = testOnToyFunctions(mode)
 % mode:
-%   arbdim-local
-%   arbdim-global
-%   fixeddim-local
-%   fixeddim-global
+%     arbdim-local
+%     arbdim-global
+%     fixeddim-local
+%     fixeddim-global
+% varargin:
+%     cell_
 
     
 %% prepare exercises

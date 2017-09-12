@@ -7,7 +7,7 @@ clear persistent;
 
 addpath(genpath('../examples'));
 
-nStart = 3;
+nStart = 10;
 
 % Seed random number generator
 %rng(0);
@@ -42,14 +42,15 @@ amiData           = amidata(amiData);     % calling the AMICI routine
 % PESTO routines to work are created and set to convenient values
 
 % parameters
-parameters.min     = -5 * ones(17,1);
-parameters.max     =  3 * ones(17,1);
+nPar = 17;
+parameters.min     = -5 * ones(nPar,1);
+parameters.max     =  3 * ones(nPar,1);
 parameters.max(4)  =  6;
 parameters.max(2)  =  6;
 parameters.min(10) = -6;
 parameters.min(4)  = -3;
 parameters.min(2)  = -3;
-parameters.number  = length(parameters.min);
+parameters.number  = nPar;
 parameters.name    = {'log_{10}(p1)','log_{10}(p2)','log_{10}(p3)','log_{10}(p4)','log_{10}(init_{STAT})',...
     'log_{10}(sp1)','log_{10}(sp2)','log_{10}(sp3)','log_{10}(sp4)','log_{10}(sp5)',...
     'log_{10}(offset_{tSTAT})','log_{10}(offset_{pSTAT})','log_{10}(scale_{tSTAT})','log_{10}(scale_{pSTAT})',...
@@ -67,43 +68,62 @@ objectiveFunction = @(theta) logLikelihoodJakstat(theta, amiData);
 optionsPesto          = PestoOptions();
 optionsPesto.proposal = 'user-supplied';
 optionsPesto.obj_type = 'log-posterior';
-optionsPesto.mode     = 'visual';
+optionsPesto.mode     = 'silent';
 
-% Multi-start local optimization part
-optionsPesto.n_starts = nStart;
-optionsPesto.localOptimizer = 'fmincon';
-optionsPesto.localOptimizerOptions = optimset(...
-    'Algorithm', 'interior-point',...
-    'GradObj', 'on',...
-    'Display', 'off', ... 'Hessian', 'on', ... uncomment this to use the Hessian for optimization 
-    'MaxIter', 10000,...
-    'TolX', 1e-10,...
-    'TolFun', 1e-10,...
-    'MaxFunEvals', 10000*parameters.number);
-    
 % Run getMultiStarts
 fprintf('\n Perform optimization...');
 
-parametersMultistart_fmincon = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+parametersMultistart_fmincon = runMultiStarts(objectiveFunction, 1, nStart, 'fmincon', nPar, lb, ub);
 
-optionsPesto.objOutNumber = 1;
-optionsPesto.localOptimizerOptions.MaxIter     = 10000;
-optionsPesto.localOptimizerOptions.MaxFunEvals = 10000*parameters.number;
+parametersMultistart_hctt = runMultiStarts(objectiveFunction, 1, nStart, 'hctt', nPar, lb, ub);
 
-% optionsPesto.localOptimizer = 'hctt';
-% parametersMultistart_hctt = getMultiStarts(parameters, objectiveFunction, optionsPesto);
-% optionsPesto.localOptimizer = 'cs';
-% parametersMultistart_cs = getMultiStarts(parameters, objectiveFunction, optionsPesto);
-optionsPesto.localOptimizer = 'dhc';
-parametersMultistart_dhc = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+parametersMultistart_cs = runMultiStarts(objectiveFunction, 1, nStart, 'cs', nPar, lb, ub);
+
+parametersMultistart_dhc = runMultiStarts(objectiveFunction, 1, nStart, 'dhc', nPar, lb, ub);
 % parametersHybrid = getMultiStarts(parameters, objectiveFunction, optionsPestoHybrid);
 % parametersGlobal = getMultiStarts(parameters, objectiveFunction, optionsPestoGlobal);
 
 disp('fmincon:');
 printResultParameters(parametersMultistart_fmincon);
-% disp('hctt:');
-% printResultParameters(parametersMultistart_hctt);
-% disp('cs:');
-% printResultParameters(parametersMultistart_cs);
+disp('hctt:');
+printResultParameters(parametersMultistart_hctt);
+disp('cs:');
+printResultParameters(parametersMultistart_cs);
 disp('dhc:');
 printResultParameters(parametersMultistart_dhc);
+
+save('data_jakstat.mat');
+
+function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, localOptimizer, nPar, parMin, parMax)
+    clearPersistentVariables();
+    
+    tol = 1e-10;
+    numevals = 1000*nPar;
+    
+    options = PestoOptions();
+    options.obj_type = 'log-posterior';
+    options.comp_type = 'sequential';
+    options.n_starts = nStarts;
+    options.objOutNumber = objOutNumber;
+    options.mode = 'visual';
+    options.localOptimizer = localOptimizer;
+    options.localOptimizerOptions.GradObj="off";
+    options.localOptimizerOptions.TolX          = tol;
+    options.localOptimizerOptions.TolFun        = tol;
+    options.localOptimizerOptions.MaxFunEvals   = numevals;
+    options.localOptimizerOptions.MaxIter       = numevals;
+    if (isequal(localOptimizer,'hctt')), options.localOptimizerOptions.Barrier = 'log-barrier'; end
+    
+    % for fmincon
+    options.localOptimizerOptions.MaxFunctionEvaluations = numevals;
+    options.localOptimizerOptions.MaxIterations = numevals;
+    options.localOptimizerOptions.StepTolerance = tol;
+    options.localOptimizerOptions.Display = 'off';
+    
+    parameters.number = nPar;
+    parameters.min = parMin;
+    parameters.max = parMax;
+    
+    parameters = getMultiStarts(parameters, objectiveFunction, options);
+    
+end

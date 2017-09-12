@@ -109,8 +109,13 @@ printResultParameters(parameters_cs);
 parameters_dhc = runMultiStarts(objectiveFunction, 1, 10, 'dhc', 2, lb, ub);
 printResultParameters(parameters_dhc);
 
+save('data_cr.mat');
+
 function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, localOptimizer, nPar, parMin, parMax)
     clearPersistentVariables();
+    
+    tol = 1e-10;
+    numevals = 1000*nPar;
     
     options = PestoOptions();
     options.obj_type = 'log-posterior';
@@ -120,15 +125,16 @@ function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, l
     options.mode = 'visual';
     options.localOptimizer = localOptimizer;
     options.localOptimizerOptions.GradObj="off";
-    options.localOptimizerOptions.TolX          = 1e-8;
-    options.localOptimizerOptions.TolFun        = 1e-8;
-    options.localOptimizerOptions.MaxFunEvals   = 2500;
-    options.localOptimizerOptions.MaxIter       = 2500;
+    options.localOptimizerOptions.TolX          = tol;
+    options.localOptimizerOptions.TolFun        = tol;
+    options.localOptimizerOptions.MaxFunEvals   = numevals;
+    options.localOptimizerOptions.MaxIter       = numevals;
+    if (isequal(localOptimizer,'hctt')), options.localOptimizerOptions.Barrier = 'log-barrier'; end
     
     % for fmincon
-    options.localOptimizerOptions.MaxFunctionEvaluations = 2500;
-    options.localOptimizerOptions.MaxIterations = 2500;
-    options.localOptimizerOptions.StepTolerance = 1e-8;
+    options.localOptimizerOptions.MaxFunctionEvaluations = numevals;
+    options.localOptimizerOptions.MaxIterations = numevals;
+    options.localOptimizerOptions.StepTolerance = tol;
     options.localOptimizerOptions.Display = 'off';
     
     parameters.number = nPar;

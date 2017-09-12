@@ -73,6 +73,22 @@ classdef EvaluationHelper
             end
         end
         
+        function [ cell_results_having ] = f_getAllHaving(cell_results,dim_lb,dim_ub,smooth,unimodal)
+            % 0: no, 1: yes, 2: both
+            n = length(cell_results);
+            index = 1;
+            for j=1:n
+                res = cell_results{j};
+                if ( (smooth == 2 || res.smooth == smooth) ...
+                        && (unimodal == 2 || res.unimodal == unimodal)...
+                        && res.dim >= dim_lb ...
+                        && res.dim <= dim_ub )
+                    cell_results_having{index} = res;
+                    index = index + 1;
+                end
+            end
+        end
+        
     end
     
 end
