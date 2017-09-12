@@ -382,7 +382,7 @@ classdef TF
         end
         
         function fun_with_noise = f_addNoiseSmall(fun)
-            fun_with_noise = @(x) fun(x)*(1+1e-3*randn(1));
+            fun_with_noise = @(x) fun(x)*(1+1e-6*randn(1));
         end
         
         function fun_with_noise = f_addNoiseBig(fun)

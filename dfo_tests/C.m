@@ -17,7 +17,7 @@ classdef C
         
         cell_solvers_local         = {'fmincon','fminsearchbound','meigo-dhc','hctt','cs','dhc'};
         nSolvers_local             = length(C.cell_solvers_local);
-        cell_solvers_global        = {'meigo-ess-fmincon','meigo-ess-dhc','meigo-ess-ydhc'};
+        cell_solvers_global        = {'cmaes','meigo-ess-fmincon','meigo-ess-dhc','meigo-ess-ydhc'};
         nSolvers_global            = length(C.cell_solvers_global);
         
         fval_tolerance  = 1e-3;

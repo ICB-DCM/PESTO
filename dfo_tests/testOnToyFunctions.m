@@ -4,8 +4,6 @@ function cell_results = testOnToyFunctions(mode)
 %     arbdim-global
 %     fixeddim-local
 %     fixeddim-global
-% varargin:
-%     cell_
 
     
 %% prepare exercises
@@ -22,6 +20,7 @@ cell_results = cell(nExercises,1);
 
 parfor jExercise = 1:nExercises
     ex = cell_exercises{jExercise};
+    disp([ex.name ' ' ex.alg]);
     
     result = doExercise(ex);
     

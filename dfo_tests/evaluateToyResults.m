@@ -193,3 +193,62 @@ xticks(1:C.nDims);
 xticklabels(C.arr_dims);
 xlabel('dim');
 ylabel('log10(avgFunEvals)');
+
+%% some tests with noise
+
+load('cell_results_test-fixeddim-local-noise.mat');
+cell_results_fixeddim_local_noise = cell_results;
+load('cell_results_test-fixeddim-global-noise.mat');
+cell_results_fixeddim_global_noise = cell_results;
+load('cell_results_test-arbdim-local-noise.mat');
+cell_results_arbdim_local_noise = cell_results;
+load('cell_results_test-arbdim-global-noise.mat');
+cell_results_arbdim_global_noise = cell_results;
+
+% gather all possible results in one list
+cell_results_all_noise = vertcat(cell_results_fixeddim_local_noise,cell_results_fixeddim_global_noise,cell_results_arbdim_local_noise,cell_results_arbdim_global_noise);
+
+% get best results
+cell_results_best_noise = EvaluationHelper.f_extractBestResults(cell_results_all_noise);
+
+% for j=1:length(cell_results_best), cell_results_best{j}.printTiny(); end
+
+% which algorithm gave the best result?
+
+% how many solutions did the algorithms find?
+map_shares_noise = EvaluationHelper.f_getSolvedShare(cell_results_best_noise);
+
+% what about smooth/unimodal?
+cell_results_best_smooth_noise = EvaluationHelper.f_getAllHaving(cell_results_best_noise,-1,Inf,1,2);
+map_shares_smooth_noise = EvaluationHelper.f_getSolvedShare(cell_results_best_smooth_noise);
+
+cell_results_best_nonsmooth_noise = EvaluationHelper.f_getAllHaving(cell_results_best_noise,-1,Inf,0,2);
+map_shares_nonsmooth_noise = EvaluationHelper.f_getSolvedShare(cell_results_best_nonsmooth_noise);
+
+cell_results_best_unimodal_noise = EvaluationHelper.f_getAllHaving(cell_results_best_noise,-1,Inf,2,1);
+map_shares_unimodal_noise = EvaluationHelper.f_getSolvedShare(cell_results_best_unimodal_noise);
+
+cell_results_best_multimodal_noise = EvaluationHelper.f_getAllHaving(cell_results_best_noise,-1,Inf,2,0);
+map_shares_multimodal_noise = EvaluationHelper.f_getSolvedShare(cell_results_best_multimodal_noise);
+
+%% visualize
+
+v_x = 1:5;
+v_y = zeros(nKeys,5);
+cell_maps_noise = {map_shares_noise,map_shares_smooth_noise,map_shares_nonsmooth_noise,map_shares_unimodal_noise,map_shares_multimodal_noise};
+for j=1:nKeys
+   for k=1:5
+       tmp_map = cell_maps_noise{k};
+       tmp_keys = keys(tmp_map);
+       v_y(j,k) = tmp_map(tmp_keys{j});
+   end
+end
+fig = figure('name','smooth/modal with noise');
+hold on;
+for j=1:nKeys
+    plot(v_x,v_y(j,:),[markers{mod(j,nMarkers)+1} colors{mod(j,nColors)+1} '-'], 'DisplayName', cell_keys{j}); 
+end
+hold off;
+legend('show','Location','northeastoutside');
+xticks(1:5);
+xticklabels({'all','smooth','nonsmooth','unimodal','multimodal'});

@@ -23,7 +23,20 @@ function [ result ] = doExercise( ex )
             starttime = cputime;
             [x,fval,exitflag,output] = fminsearchbound(ex.fun,ex.x0,ex.lb,ex.ub,options);
             result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.iterations,output.funcCount,cputime-starttime,exitflag,'');
-                   
+          
+        case 'cmaes'
+            fitfun = 'functionHandleWrap';
+            options.MaxFunEvals = ex.maxFunEvals;
+            options.MaxIter = ex.maxIter;
+            options.TolX = ex.tolX;
+            options.TolFun = ex.tolFun;
+            options.LBounds = ex.lb;
+            options.UBounds = ex.ub;
+            
+            starttime = cputime;
+            [x,fval,counteval,exitflag,~,~] = cmaes(fitfun,ex.x0,[],options,ex.fun);
+            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,-1,counteval,cputime-starttime,exitflag,'');
+            
         case {'meigo-ess-fmincon','meigo-ess-dhc'}
             problem.f = 'functionHandleWrap';
             problem.x_L = ex.lb;
