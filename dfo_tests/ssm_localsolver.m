@@ -319,6 +319,33 @@ switch local_solver
 
         [fval,x,numeval]=dhc(fobj,X0,initsize,thres,100*nvar,x_L,x_U,weight,c_L,c_U,local_iterprint,tolc,varargin{:});
         exitflag=1;
+		
+	case 'ydhc'
+		nvar=numel(X0);
+        X0=(X0-x_L)./(x_U-x_L);
+
+        %initsize=max((x_U-x_L)/2);
+        initsize=0.1;
+
+
+        if local_tol==1
+            thres=1e-6;
+        elseif local_tol==2
+            thres=1e-8;
+        elseif local_tol==3
+            thres=1e-10;
+        end
+		
+		options.MaxFunEvals = 100*nvar;
+		options.MaxIter = 100*nvar;
+		options.TolX = thres;
+		options.TolFun = thres;
+		
+		fun = @(x) feval(fobj,x,varargin{:});
+
+		[x,fval,exitflag,output] = dynamicHillClimb(fun,X0,x_L,x_U,options);
+        exitflag=1;
+		numeval = output.funcCount;
 
     case 'fsqp'
         %fsqp

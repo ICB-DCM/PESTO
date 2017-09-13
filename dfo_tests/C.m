@@ -15,7 +15,7 @@ classdef C
         maxFunEvals     = 2500;
         maxIter         = C.maxFunEvals + 1;
         
-        cell_solvers_local         = {'fmincon','fminsearchbound','meigo-dhc','hctt','cs','dhc'};
+        cell_solvers_local         = {'fmincon','fminsearchbound','meigo-dhc','hctt','cs','dhc','dhc2'};
         nSolvers_local             = length(C.cell_solvers_local);
         cell_solvers_global        = {'cmaes','meigo-ess-fmincon','meigo-ess-dhc','meigo-ess-ydhc'};
         nSolvers_global            = length(C.cell_solvers_global);

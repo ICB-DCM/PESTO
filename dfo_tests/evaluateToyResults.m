@@ -8,9 +8,11 @@ load('cell_results_test-arbdim-local.mat');
 cell_results_arbdim_local = cell_results;
 load('cell_results_test-arbdim-global.mat');
 cell_results_arbdim_global = cell_results;
+load('cell_results_test-local-dhc2.mat');
+cell_results_local_dhc2 = cell_results;
 
 % gather all possible results in one list
-cell_results_all = vertcat(cell_results_fixeddim_local,cell_results_fixeddim_global,cell_results_arbdim_local,cell_results_arbdim_global);
+cell_results_all = vertcat(cell_results_fixeddim_local,cell_results_fixeddim_global,cell_results_arbdim_local,cell_results_arbdim_global,cell_results_local_dhc2);
 
 % get best results
 cell_results_best = EvaluationHelper.f_extractBestResults(cell_results_all);
@@ -208,9 +210,11 @@ load('cell_results_test-arbdim-local-noise.mat');
 cell_results_arbdim_local_noise = cell_results;
 load('cell_results_test-arbdim-global-noise.mat');
 cell_results_arbdim_global_noise = cell_results;
+load('cell_results_test-local-noise-dhc2.mat');
+cell_results_local_noise_dhc2 = cell_results;
 
 % gather all possible results in one list
-cell_results_all_noise = vertcat(cell_results_fixeddim_local_noise,cell_results_fixeddim_global_noise,cell_results_arbdim_local_noise,cell_results_arbdim_global_noise);
+cell_results_all_noise = vertcat(cell_results_fixeddim_local_noise,cell_results_fixeddim_global_noise,cell_results_arbdim_local_noise,cell_results_arbdim_global_noise,cell_results_local_noise_dhc2);
 
 % get best results
 cell_results_best_noise = EvaluationHelper.f_extractBestResults(cell_results_all_noise);
@@ -284,7 +288,7 @@ for j=1:nKeys
        v_y(j,k) = tmp_map(tmp_keys{j});
    end
 end
-fig = figure('name','dims');
+fig = figure('name','dims with noise');
 hold on;
 for j=1:nKeys
     plot(v_x,v_y(j,:),[markers{mod(j,nMarkers)+1} colors{mod(j,nColors)+1} '-'], 'DisplayName', cell_keys{j}); 

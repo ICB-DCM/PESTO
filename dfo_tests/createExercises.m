@@ -3,10 +3,10 @@ function [ cell_exercises ] = createExercises( mode, varargin )
 
 % TODO tidy up code
 
-    if (nargin > 0) 
+    if (nargin > 1) 
         % passed a single solver
         % varargin{1} = solvername
-        solver = cell2mat(varargin{1});
+        solver = varargin{1};
         
         list_arbdim = TF.f_getTestFunctions(Inf,Inf,2,2);
         nTfsArbDim = length(list_arbdim);
