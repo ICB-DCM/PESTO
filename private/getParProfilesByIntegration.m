@@ -699,7 +699,7 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, negLogPost, pa
     switch options.solver.hessian
         case 'user-supplied'
             [~, GL, HL] = negLogPost(y);
-        case {'bfgs', 'sr1'}
+        case {'bfgs', 'sr1', 'dfp'}
             [~, GL] = negLogPost(y);
             HL = approximateHessian(y, -GL, [], options.solver.hessian, []);
         otherwise
@@ -828,6 +828,14 @@ function hessian = approximateHessian(theta, grad, hess, method, flag)
                     u = delGrad - lastHess * delTheta;
                     v = u * u' / (u' * delTheta);
                     hessian = lastHess + v;
+                case 'dfp'
+                    delTheta = theta - lastTheta;
+                    delGrad = grad - lastGrad;
+                    gamma = 1 / (delGrad' * delTheta);
+                    u1 = eye(length(theta)) - gamma * (delGrad * delTheta');
+                    u2 = eye(length(theta)) - gamma * (delTheta * delGrad');
+                    v = gamma * (delGrad * delGrad'); 
+                    hessian = u1 * lastHess * u2 + v;
             end
             
             % Replace old by new values for next call
