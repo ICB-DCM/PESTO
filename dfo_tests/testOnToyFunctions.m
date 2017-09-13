@@ -1,4 +1,4 @@
-function cell_results = testOnToyFunctions(mode)
+function cell_results = testOnToyFunctions(mode,varargin)
 % mode:
 %     arbdim-local
 %     arbdim-global
@@ -10,7 +10,7 @@ function cell_results = testOnToyFunctions(mode)
 
 rng(1);
     
-cell_exercises = createExercises(mode);
+cell_exercises = createExercises(mode,varargin);
 
 %% solve problems
 
@@ -28,7 +28,12 @@ parfor jExercise = 1:nExercises
 end
 
 tab_results = Result.cell_to_table(cell_results);
-save(['cell_results_test-',mode,'.mat'],'cell_results');
-save(['tab_results_test-',mode,'.mat'],'tab_results');
+if(nargin > 0)
+    varg = ['-',cell2str(varargin{1})];
+else
+    varg = '';
+end
+save(['cell_results_test-',mode,varg,'.mat'],'cell_results');
+save(['tab_results_test-',mode,varg,'.mat'],'tab_results');
 
 end

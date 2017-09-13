@@ -124,6 +124,16 @@ function [ result ] = doExercise( ex )
             [x,fval,exitflag,output] = dynamicHillClimb(ex.fun,ex.x0,ex.lb,ex.ub,options);
             result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.iterations,output.funcCount,output.t_cpu,exitflag,'');
             
+        case 'dhc2'
+            options.MaxFunEvals = ex.maxFunEvals;
+            options.MaxIter = ex.maxIter;
+            options.TolX = ex.tolX;
+            options.TolFun = ex.tolFun;
+            options.Mode = 2;
+            
+            [x,fval,exitflag,output] = dynamicHillClimb(ex.fun,ex.x0,ex.lb,ex.ub,options);
+            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.iterations,output.funcCount,output.t_cpu,exitflag,'');
+         
         otherwise
             error('Could not identify optimizer');
     end

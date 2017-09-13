@@ -5,6 +5,8 @@ numPoints = 50;
 
 for jTf=1:nTfs
     tf = TF.cell_list{jTf};
+    fun = tf.fun;
+    %fun = TF.f_addNoiseBig(tf.fun);
     if ( tf.dim == 2 || tf.dim == Inf )
         fig = figure('name',tf.name);
         [lb,ub,xbst] = TF.f_getVectors(tf, 2);
@@ -14,10 +16,10 @@ for jTf=1:nTfs
         z = zeros(size(x,1),size(x,2));
         for j=1:size(x,1)
             for k=1:size(x,2)
-                z(j,k)=tf.fun([x(j,k);y(j,k)]);
+                z(j,k)=fun([x(j,k);y(j,k)]);
             end
         end
-        surfc(x,y,z,'EdgeColor',[0.8,0.8,0.8]);    
+        surfc(x,y,z,'EdgeColor',[0.8,0.8,0.8]);
         alpha(0.5);
         xlabel('x');
         ylabel('y');

@@ -45,161 +45,393 @@ function [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options)
         visual = false;
     end
     
-    % create column vectors
-    lb      = lb(:);
-    ub      = ub(:);
-    x0      = x0(:);
-    normalize   = @(x) f_normalize(x,lb,ub);
-    denormalize = @(y) f_denormalize(y,lb,ub);
-    y0      = normalize(x0);
-    tolY    = tolX / norm(ub-lb);
-    % max step size
-    vmax = initialStepSize * ones(dim,1);
-    
-    % wrap function to consider boundaries
-    fun = @(y,jIter) f_wrap_fun(denormalize(y),fun,lb,ub,barrier,jIter,maxIter);
-    
-    % init run variables
-    smax   = [vmax;-1];        % array of max step sizes, extra value for extra vector
-    step   = f_init_step(vmax); % matrix of step vectors
-    xstep  = step;             % steps before last motion
-    gradv  = zeros(dim,1);     % gradient vector
-    gradi  = -1;               % index of gradient vector, -1 indicates gradv is not set
-    lastv  = zeros(dim,1);     % last step taken
-    stuck  = false;            % is process stuck (in min/max)? set when step sizes are small
-                               % then step vectors are increased
-    done   = false;            % is some finishing criterion fulfilled?
-      
-    nVec   = 2*dim + 2;            % maximum index in step matrix
-    opp_j  = @(j) f_opp_j(j,nVec); % short for opposite index in step matrix
-    
-    % init meta variables
-    jIter     = 0;         % number of iterations, should be <= maxIter
-    exitflag  = -1;        % flag indicating exit reason
-    starttime = cputime;   % to measure time difference
-    funEvals  = 0;         % function evaluations
-    
-    % init x, fval
-    ybst      = y0;
-    fbst      = fun(ybst,jIter);
-    funEvals  = funEvals + 1;
-    
-    if (visual)
-        f_output(denormalize(ybst),fbst,jIter,'init',outputFcn); % create new figure and initialize
-        f_output(denormalize(ybst),fbst,jIter,'iter',outputFcn); % first iteration with start point and jIter = 0
-    end
-    
-    while (~done)
-        % fprintf(strcat('%d\t|\t%.15f\t|\t',mat2str(denormalize(ybst)),' \t|\t',mat2str(step),'\n'),jIter,fbst);
-        
-        % increase counter
-        jIter = jIter + 1;
-                
-        if (stuck)
-            % choose the smallest step, if any is smaller than the maximum size
-            [v,j] = f_min(step,smax,stuckSearchFactor*tolY);
-        else
-            % choose the largest step
-            [v,j] = f_max(step);
+    if (isfield(options,'Mode') && ~isempty(options.Mode))
+        switch(options.Mode)
+            case 1
+                dhc_mode_1();
+            case 2
+                dhc_mode_2();
+            otherwise
+                error('could not identiy dynamicHillClimb options.mode');
         end
-        
-        % j == -1 indicates minimum found
-        if ( j ~= -1 && jIter <= maxIter && funEvals <= maxFunEvals )
-            
-            % compute next x, fval
-            ycur = ybst + v;
-            fcur = fun(ycur,jIter);
-            funEvals = funEvals + 1;
-
-            % is better estimate?
-            delta_f = fcur - fbst;
-            if ( delta_f < 0 && (norm(v)>tolX/stuckSearchFactor || abs(delta_f) > tolFun) )
-                stuck = false; % we are not stuck somewhere (anymore)
-                % update x, fval
-                ybst = ycur;   
-                fbst = fcur;
-                % contract opp step to not try the previous point next
-                step(:,opp_j(j)) = -contractFactor*v; 
-                % TODO do? 
-                % step(:,j) = expandFactor*step(:,j);
-                % if last step repeated, expand the current step
-                if ( norm(step(:,j)-lastv) < eps )
-                    v = expandFactor*v;
-                end
-                % xstep always contains the steps of the last time we moved
-                xstep = step;
-                % record the last step
-                lastv = v;
-                % record step
-                step(:,j) = v;
-
-                % update gradient vector
-                if (gradi == -1)
-                    % if gradv empty, set gradv to current step and record index
-                    gradv = v;
-                    gradi = min([j, opp_j(j)]);
-                elseif (gradi == min([j, opp_j(j)]))
-                    % if gradv is parallel to current step, add the current vector
-                    gradv = gradv + v;
-                else
-                    % else update the extra vector
-                    step(:,dim+1) = gradv + v;
-                    % set extra entry in smax to max of current step smax and gradv smax
-                    % (bound for norm of gradient)
-                    smax(dim+1)   = max([smax(min([j,opp_j(j)])),smax(gradi)]);
-                    % set the opp step to - extra step
-                    step(:,dim+2) = -step(:,dim+1);
-                    % update gradv
-                    % TODO every round?
-                    %gradv         = step(:,j);
-                    gradi =-1;%        = min([j, opp_j(j)]);
-                end
-            % else: if already stuck, increase the current step size
-            else
-                if (stuck)
-                    step(:,j) = expandFactor*v;
-                % else: if current step norm >= tolX, decrease the current step size
-                elseif ( norm(step(:,j)) >= tolY )
-                    step(:,j) = contractFactor*v;
-                % else: (norm < tolX), set the stuck flag and set all steps to
-                % expandFactor times the last recorded steps
-                else
-                    stuck = true;
-                    step = expandFactor * xstep;
-                end
-            end
-            
-            % update output
-            if (visual)
-                f_output(denormalize(ybst),fbst,jIter,'iter',outputFcn); 
-            end
-            
-        else % somehow done
-            done = true;
-            if (jIter <= maxIter && funEvals <= maxFunEvals)
-                % found a local minimum
-                exitflag = 1;
-            else
-                % needed too long
-                exitflag = 0;
-            end
-        end     
-        
+    else
+        dhc_mode_1();
     end
     
-    % assign return values
-    x                   = denormalize(ybst);
-    fval                = fbst;
-    output.funcCount    = funEvals;
-    output.iterations   = jIter;
-    output.algorithm    = 'Dynamic Hill Climb';
-    output.t_cpu        = cputime - starttime;
+    %% dhc_mode_1
+    function dhc_mode_1()
+        
+        % create column vectors
+        lb      = lb(:);
+        ub      = ub(:);
+        x0      = x0(:);
+        normalize   = @(x) f_normalize(x,lb,ub);
+        denormalize = @(y) f_denormalize(y,lb,ub);
+        y0      = normalize(x0);
+        tolY    = tolX / norm(ub-lb);
+        % max step size
+        vmax = initialStepSize * ones(dim,1);
+
+        % wrap function to consider boundaries
+        fun = @(y,jIter) f_wrap_fun(denormalize(y),fun,lb,ub,barrier,jIter,maxIter);
+
+        % init run variables
+        smax   = [vmax;-1];        % array of max step sizes, extra value for extra vector
+        step   = f_init_step(vmax); % matrix of step vectors
+        xstep  = step;             % steps before last motion
+        gradv  = zeros(dim,1);     % gradient vector
+        gradi  = -1;               % index of gradient vector, -1 indicates gradv is not set
+        lastv  = zeros(dim,1);     % last step taken
+        stuck  = false;            % is process stuck (in min/max)? set when step sizes are small
+                                   % then step vectors are increased
+        done   = false;            % is some finishing criterion fulfilled?
+
+        nVec   = 2*dim + 2;            % maximum index in step matrix
+        opp_j  = @(j) f_opp_j(j,nVec); % short for opposite index in step matrix
+
+        % init meta variables
+        jIter     = 0;         % number of iterations, should be <= maxIter
+        exitflag  = -1;        % flag indicating exit reason
+        starttime = cputime;   % to measure time difference
+        funEvals  = 0;         % function evaluations
+
+        % init x, fval
+        ybst      = y0;
+        fbst      = fun(ybst,jIter);
+        funEvals  = funEvals + 1;
+
+        if (visual)
+            f_output(denormalize(ybst),fbst,jIter,'init',outputFcn); % create new figure and initialize
+            f_output(denormalize(ybst),fbst,jIter,'iter',outputFcn); % first iteration with start point and jIter = 0
+        end
+
+        while (~done)
+            % fprintf(strcat('%d\t|\t%.15f\t|\t',mat2str(denormalize(ybst)),' \t|\t',mat2str(step),'\n'),jIter,fbst);
+
+            % increase counter
+            jIter = jIter + 1;
+
+            if (stuck)
+                % choose the smallest step, if any is smaller than the maximum size
+                [v,j] = f_min(step,smax,stuckSearchFactor*tolY);
+            else
+                % choose the largest step
+                [v,j] = f_max(step);
+            end
+
+            % j == -1 indicates minimum found
+            if ( j ~= -1 && jIter <= maxIter && funEvals <= maxFunEvals )
+
+                % compute next x, fval
+                ycur = ybst + v;
+                fcur = fun(ycur,jIter);
+                funEvals = funEvals + 1;
+
+                % is better estimate?
+                delta_f = fcur - fbst;
+                if ( delta_f < 0 && (norm(v)>tolX/stuckSearchFactor || abs(delta_f) > tolFun) )
+                    stuck = false; % we are not stuck somewhere (anymore)
+                    % update x, fval
+                    ybst = ycur;   
+                    fbst = fcur;
+                    % contract opp step to not try the previous point next
+                    step(:,opp_j(j)) = -contractFactor*v; 
+                    % TODO do? 
+                    % step(:,j) = expandFactor*step(:,j);
+                    % if last step repeated, expand the current step
+                    if ( norm(step(:,j)-lastv) < eps )
+                        v = expandFactor*v;
+                    end
+                    % xstep always contains the steps of the last time we moved
+                    xstep = step;
+                    % record the last step
+                    lastv = v;
+                    % record step
+                    step(:,j) = v;
+
+                    % update gradient vector
+                    if (gradi == -1)
+                        % if gradv empty, set gradv to current step and record index
+                        gradv = v;
+                        gradi = min([j, opp_j(j)]);
+                    elseif (gradi == min([j, opp_j(j)]))
+                        % if gradv is parallel to current step, add the current vector
+                        gradv = gradv + v;
+                    else
+                        % else update the extra vector
+                        step(:,dim+1) = gradv + v;
+                        % set extra entry in smax to max of current step smax and gradv smax
+                        % (bound for norm of gradient)
+                        smax(dim+1)   = max([smax(min([j,opp_j(j)])),smax(gradi)]);
+                        % set the opp step to - extra step
+                        step(:,dim+2) = -step(:,dim+1);
+                        % update gradv
+                        % TODO every round?
+                        %gradv         = step(:,j);
+                        gradi =-1;%        = min([j, opp_j(j)]);
+                    end
+                % else: if already stuck, increase the current step size
+                else
+                    if (stuck)
+                        step(:,j) = expandFactor*v;
+                    % else: if current step norm >= tolX, decrease the current step size
+                    elseif ( norm(step(:,j)) >= tolY )
+                        step(:,j) = contractFactor*v;
+                    % else: (norm < tolX), set the stuck flag and set all steps to
+                    % expandFactor times the last recorded steps
+                    else
+                        stuck = true;
+                        step = expandFactor * xstep;
+                    end
+                end
+
+                % update output
+                if (visual)
+                    f_output(denormalize(ybst),fbst,jIter,'iter',outputFcn); 
+                end
+
+            else % somehow done
+                done = true;
+                if (jIter <= maxIter && funEvals <= maxFunEvals)
+                    % found a local minimum
+                    exitflag = 1;
+                else
+                    % needed too long
+                    exitflag = 0;
+                end
+            end     
+
+        end
+
+        % assign return values
+        x                   = denormalize(ybst);
+        fval                = fbst;
+        output.funcCount    = funEvals;
+        output.iterations   = jIter;
+        output.algorithm    = 'Dynamic Hill Climb';
+        output.t_cpu        = cputime - starttime;
+
+        % finalize output
+        if (visual)
+            f_output(denormalize(ybst),fbst,jIter,'done',outputFcn); 
+        end
     
-    % finalize output
-    if (visual)
-        f_output(denormalize(ybst),fbst,jIter,'done',outputFcn); 
     end
+
+    %% dhc_mode_2
+    function dhc_mode_2()
+    
+        % create column vectors
+        lb      = lb(:);
+        ub      = ub(:);
+        x0      = x0(:);
+        normalize   = @(x) f_normalize(x,lb,ub);
+        denormalize = @(y) f_denormalize(y,lb,ub);
+        y0      = normalize(x0);
+        tolY    = tolX / norm(ub-lb);
+        % max step size
+        vmax = initialStepSize * ones(dim,1);
+
+        % wrap function to consider boundaries
+        fun = @(y,jIter) f_wrap_fun(denormalize(y),fun,lb,ub,barrier,jIter,maxIter);
+
+        % init run variables
+        smax   = [vmax;-1];        % array of max step sizes, extra value for extra vector
+        [step,norms]   = f_init_step_2(vmax); % matrix of step vectors
+        xstep  = step;             % steps before last motion
+        xnorms = norms;
+        gradv  = zeros(dim,1);     % gradient vector
+        gradi  = -1;               % index of gradient vector, -1 indicates gradv is not set
+        lastv  = zeros(dim,1);     % last step taken
+        stuck  = false;            % is process stuck (in min/max)? set when step sizes are small
+                                   % then step vectors are increased
+        done   = false;            % is some finishing criterion fulfilled?
+
+        nVec   = 2*dim + 2;            % maximum index in step matrix
+        opp_j  = @(j) f_opp_j(j,nVec); % short for opposite index in step matrix
+
+        % init meta variables
+        jIter     = 0;         % number of iterations, should be <= maxIter
+        exitflag  = -1;        % flag indicating exit reason
+        starttime = cputime;   % to measure time difference
+        funEvals  = 0;         % function evaluations
+
+        % init x, fval
+        ybst      = y0;
+        fbst      = fun(ybst,jIter);
+        funEvals  = funEvals + 1;
+        
+        % create cache to remember last values
+%         cache = java.util.LinkedList();
+%         cache.addFirst({initialStepSize,ybst});
+%         cacheSize = 4;
+
+        if (visual)
+            f_output(denormalize(ybst),fbst,jIter,'init',outputFcn); % create new figure and initialize
+            f_output(denormalize(ybst),fbst,jIter,'iter',outputFcn); % first iteration with start point and jIter = 0
+        end
+
+        while (~done)
+            % fprintf(strcat('%d\t|\t%.15f\t|\t',mat2str(denormalize(ybst)),' \t|\t',mat2str(step),'\n'),jIter,fbst);
+
+            % increase counter
+            jIter = jIter + 1;
+            
+            if (stuck)
+                % choose the smallest step, if any is smaller than the maximum size
+                [v,j] = f_min_2(step,norms,smax,stuckSearchFactor*tolY);
+            else
+                % first try interpolation with previous values
+%                 if (cache.size() >= cacheSize)
+%                     % prepare data
+%                     arr_t = zeros(1,cacheSize);
+%                     arr_y = zeros(dim,cacheSize);
+%                     for j=0:cacheSize-1
+%                         cacheEl = cache.get(j);
+%                         arr_t(cacheSize-j) = cacheEl(1);
+%                         arr_y(:,cacheSize-j) = cacheEl(2);
+%                     end
+% 
+%                     ycur = zeros(dim,1);
+%                     for k=1:dim
+%                         p = vander(arr_t)\transpose(arr_y(k,:));
+%                         ycur(k) = polyval(p,2*arr_t(cacheSize)-arr_t(cacheSize-1));
+%                     end
+%                     fcur = fun(ycur,jIter);
+%                     funEvals = funEvals + 1;
+%                     if (fcur < fbst)
+%                         v = ycur -ybst;
+%                         ybst = ycur;
+%                         fbst = fcur;
+%                         % update cache
+%                         curCache = cache.get(0);
+%                         cache.addFirst({curCache(1)+norm(v),ybst});
+%                         if (cache.size() > cacheSize)
+%                             cache.removeLast();
+%                         end
+%                     end
+%                     
+%                 end
+                % choose the largest step
+                [v,j] = f_max_2(step,norms);
+            end
+
+            % j == -1 indicates minimum found
+            if ( j ~= -1 && jIter <= maxIter && funEvals <= maxFunEvals )
+
+                % compute next x, fval
+                ycur = ybst + v;
+                fcur = fun(ycur,jIter);
+                funEvals = funEvals + 1;
+
+                % is better estimate?
+                delta_f = fcur - fbst;
+                if ( delta_f < 0 && (norm(v)>tolX/stuckSearchFactor || abs(delta_f) > tolFun) )
+                    stuck = false; % we are not stuck somewhere (anymore)
+                    % update x, fval
+                    ybst = ycur;   
+                    fbst = fcur;
+                    % update cache
+%                     curCache = cache.get(0);
+%                     cache.addFirst({curCache(1)+norm(v),ybst});
+%                     if (cache.size() > cacheSize)
+%                         cache.removeLast();
+%                     end
+                    % contract opp step to not try the previous point next
+                    step(:,opp_j(j)) = -contractFactor*v;
+                    norms(opp_j(j)) = norm(step(:,opp_j(j)));
+                    % TODO do? no.
+                    % step(:,j) = expandFactor*step(:,j);
+                    % if last step repeated, expand the current step
+                    if ( norm(step(:,j)-lastv) < eps )
+                        v = expandFactor*v;
+                    end
+                    % xstep always contains the steps of the last time we moved
+                    xstep = step;
+                    xnorms = norms;
+                    % record the last step
+                    lastv = v;
+                    % record step
+                    step(:,j) = v;
+                    norms(j) = norm(v);
+
+                    % update gradient vector
+                    if (gradi == -1)
+                        % if gradv empty, set gradv to current step and record index
+                        gradv = v;
+                        gradi = min([j, opp_j(j)]);
+                    elseif (gradi == min([j, opp_j(j)]))
+                        % if gradv is parallel to current step, add the current vector
+                        gradv = (gradv + v)/2;
+                    else
+                        % else update the extra vector
+                        step(:,dim+1) = gradv + v;
+                        norms(dim+1) = norm(gradv + v);
+                        % set extra entry in smax to max of current step smax and gradv smax
+                        % (bound for norm of gradient)
+                        smax(dim+1)   = max([smax(min([j,opp_j(j)])),smax(gradi)]);
+                        % set the opp step to - extra step
+                        step(:,dim+2) = -step(:,dim+1);
+                        norms(dim+2) = norms(dim+1);
+                        % update gradv
+                        % TODO every round?
+                        %gradv         = step(:,j);
+                        gradi =-1;%        = min([j, opp_j(j)]);
+                    end
+                % else: if already stuck, increase the current step size
+                else
+                    if (stuck)
+                        step(:,j) = expandFactor*v;
+                        norms(j) = norm(step(:,j));
+                    % else: if current step norm >= tolX, decrease the current step size
+                    elseif ( norm(step(:,j)) >= tolY )
+                        step(:,j) = contractFactor*v;
+                        norms(j) = norm(step(:,j));
+                    % else: (norm < tolX), set the stuck flag and set all steps to
+                    % expandFactor times the last recorded steps
+                    else
+                        stuck = true;
+                        step = expandFactor * xstep;
+                        norms = abs(expandFactor)*xnorms;
+                    end
+                end
+
+                % update output
+                if (visual)
+                    f_output(denormalize(ybst),fbst,jIter,'iter',outputFcn); 
+                end
+
+            else % somehow done
+                done = true;
+                if (jIter <= maxIter && funEvals <= maxFunEvals)
+                    % found a local minimum
+                    exitflag = 1;
+                else
+                    % needed too long
+                    exitflag = 0;
+                end
+            end     
+
+        end
+
+        % assign return values
+        x                   = denormalize(ybst);
+        fval                = fbst;
+        output.funcCount    = funEvals;
+        output.iterations   = jIter;
+        output.algorithm    = 'Dynamic Hill Climb';
+        output.t_cpu        = cputime - starttime;
+
+        % finalize output
+        if (visual)
+            f_output(denormalize(ybst),fbst,jIter,'done',outputFcn); 
+        end
+    
+    end
+
 end
+
+%% helper functions
 
 function y = f_normalize(x,lb,ub)
     y = (x-lb)./abs(ub-lb);
@@ -235,6 +467,7 @@ function step = f_init_step(vmax)
 % dim+1,dim+2 for gradient,
 % dim+3:2*dim+2 for negative coordinates  
     dim  = length(vmax);
+    
     nVec = 2*dim + 2;  
     step = zeros(dim,nVec);     
     for j=1:dim
@@ -242,6 +475,22 @@ function step = f_init_step(vmax)
        step(j,j)          = initStepSize;
        step(j,nVec-(j-1)) = -initStepSize;
     end
+end
+
+function [step,norms] = f_init_step_2(vmax)
+    dim  = length(vmax);
+    
+    nVec = 2*dim + 2;  
+    step = zeros(dim,nVec); 
+    norms = zeros(1,nVec);
+    for j=1:dim
+       initStepSize       = abs(vmax(j));
+       step(j,j)          = initStepSize;
+       step(j,nVec-(j-1)) = -initStepSize;
+       norms(j) = initStepSize;
+       norms(nVec-(j-1)) = initStepSize;
+    end
+    
 end
 
 function [v_max,j_max] = f_max(step)
@@ -261,6 +510,11 @@ function [v_max,j_max] = f_max(step)
     end          
 end
 
+function [v_max,j_max] = f_max_2(step,norms)
+    [~,j_max] = max(norms);
+    v_max = step(:,j_max);        
+end
+
 function [v_min,j_min] = f_min(step,smax,tolerance)
 % find step with smallest norm, if one exists whose norm is smaller than
 % the corresponding smax max step size
@@ -277,6 +531,24 @@ function [v_min,j_min] = f_min(step,smax,tolerance)
             v_min = v;
         end
     end      
+end
+
+function [v_min,j_min] = f_min_2(step,norms,smax,tolerance)
+% find step with smallest norm, if one exists whose norm is smaller than
+% the corresponding smax max step size
+    minnorm = -1;
+    j_min   = -1; % -1 used as indicator in calling function
+    v_min   = -1;
+    nVec    = size(step,2);
+    for j=1:nVec
+        vnorm = norms(j);
+        if ( vnorm <= tolerance && (vnorm < minnorm || minnorm < 0) && vnorm > 0) % tolerance % smax(min([j, nVec-(j-1)])) 
+            minnorm = vnorm;
+            j_min = j;
+        end
+    end
+    
+    if (j_min ~= -1), v_min = step(:,j_min); end
 end
 
 function [tolX,tolFun,maxFunEvals,maxIter,outputFcn,...
@@ -331,7 +603,7 @@ function [tolX,tolFun,maxFunEvals,maxIter,outputFcn,...
     if (isfield(options,'ContractFactor') && ~isempty(options.ContractFactor))
         contractFactor            = options.ContractFactor;
     else
-        contractFactor            = 0.45;
+        contractFactor            = 0.47;
     end
     
     if (isfield(options,'StuckSearchFactor') && ~isempty(options.StuckSearchFactor))

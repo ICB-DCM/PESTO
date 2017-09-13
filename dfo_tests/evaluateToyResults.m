@@ -128,6 +128,8 @@ hold off;
 legend('show','Location','northeastoutside');
 xticks(1:5);
 xticklabels({'all','smooth','nonsmooth','unimodal','multimodal'});
+xlabel('function types');
+ylabel('solved problems');
 
 % dims
 v_x = 1:C.nDims;
@@ -148,6 +150,8 @@ hold off;
 legend('show','Location','northeastoutside');
 xticks(1:C.nDims);
 xticklabels(C.arr_dims);
+xlabel('dim');
+ylabel('solved problems');
 
 % fevals
 v_x = 1:C.nDims;
@@ -231,8 +235,23 @@ map_shares_unimodal_noise = EvaluationHelper.f_getSolvedShare(cell_results_best_
 cell_results_best_multimodal_noise = EvaluationHelper.f_getAllHaving(cell_results_best_noise,-1,Inf,2,0);
 map_shares_multimodal_noise = EvaluationHelper.f_getSolvedShare(cell_results_best_multimodal_noise);
 
+% what about dim?
+cell_cell_results_best_dim_noise = cell(C.nDims,1);
+cell_map_best_dim_shares_noise = cell(C.nDims,1);
+for j=1:C.nDims
+    cell_cell_results_best_dim_noise{j} = EvaluationHelper.f_getAllHaving(cell_results_best_noise,C.arr_dims(j),C.arr_dims(j),2,2);
+    cell_map_best_dim_shares_noise{j} = EvaluationHelper.f_getSolvedShare(cell_cell_results_best_dim_noise{j});
+end
+
+cell_results_best_dimleq10 = EvaluationHelper.f_getAllHaving(cell_results_best,-1,10,2,2);
+map_shares_dimleq10 = EvaluationHelper.f_getSolvedShare(cell_results_best_dimleq10);
+
+cell_results_best_dimgeq50 = EvaluationHelper.f_getAllHaving(cell_results_best,50,Inf,0,2);
+map_shares_dimgeq50 = EvaluationHelper.f_getSolvedShare(cell_results_best_dimgeq50);
+
 %% visualize
 
+% smooth/unimodal
 v_x = 1:5;
 v_y = zeros(nKeys,5);
 cell_maps_noise = {map_shares_noise,map_shares_smooth_noise,map_shares_nonsmooth_noise,map_shares_unimodal_noise,map_shares_multimodal_noise};
@@ -252,3 +271,27 @@ hold off;
 legend('show','Location','northeastoutside');
 xticks(1:5);
 xticklabels({'all','smooth','nonsmooth','unimodal','multimodal'});
+xlabel('function types');
+ylabel('solved problems');
+
+% dims
+v_x = 1:C.nDims;
+v_y = zeros(nKeys,1);
+for j=1:nKeys
+   for k=1:C.nDims
+       tmp_map = cell_map_best_dim_shares_noise{k};
+       tmp_keys = keys(tmp_map);
+       v_y(j,k) = tmp_map(tmp_keys{j});
+   end
+end
+fig = figure('name','dims');
+hold on;
+for j=1:nKeys
+    plot(v_x,v_y(j,:),[markers{mod(j,nMarkers)+1} colors{mod(j,nColors)+1} '-'], 'DisplayName', cell_keys{j}); 
+end
+hold off;
+legend('show','Location','northeastoutside');
+xticks(1:C.nDims);
+xticklabels(C.arr_dims);
+xlabel('dim');
+ylabel('solved problems');
