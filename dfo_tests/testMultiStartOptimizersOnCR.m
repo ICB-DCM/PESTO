@@ -129,6 +129,7 @@ function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, l
     options.localOptimizerOptions.TolFun        = tol;
     options.localOptimizerOptions.MaxFunEvals   = numevals;
     options.localOptimizerOptions.MaxIter       = numevals;
+    options.localOptimizerOptions.Mode          = 2;
     if (isequal(localOptimizer,'hctt')), options.localOptimizerOptions.Barrier = 'log-barrier'; end
     
     % for fmincon

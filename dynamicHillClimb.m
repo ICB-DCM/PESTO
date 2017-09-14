@@ -362,7 +362,7 @@ function [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options)
                         gradi = min([j, opp_j(j)]);
                     elseif (gradi == min([j, opp_j(j)]))
                         % if gradv is parallel to current step, add the current vector
-                        gradv = (gradv + v)/2;
+                        gradv = (gradv + v);
                     else
                         % else update the extra vector
                         step(:,dim+1) = gradv + v;

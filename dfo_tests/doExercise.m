@@ -54,7 +54,7 @@ function [ result ] = doExercise( ex )
             options.local.iterprint = 0; % no output after each iteration
             options.iterprint = 0;
             options.plot = 0;
-            options.local.tol = 3; % does not take tolerance really
+            %options.local.tol = 3; % does not take tolerance really
             
             starttime = cputime;
             ret = MEIGO(problem,options,'ESS',ex.fun);
@@ -69,11 +69,11 @@ function [ result ] = doExercise( ex )
             options.inter_save = false;
             options.maxeval = ex.maxFunEvals;
             options.local.solver = 'ydhc';
-            options.local.finish = 'ydhc';
+            options.local.finish = 'fmincon';
             options.local.iterprint = 0; % no output after each iteration
             options.iterprint = 0;
             options.plot = 0;
-            options.local.tol = 3; % does not take tolerance really
+            %options.local.tol = 3; % does not take tolerance really
             
             starttime = cputime;
             ret = MEIGO(problem,options,'ESS',ex.fun);

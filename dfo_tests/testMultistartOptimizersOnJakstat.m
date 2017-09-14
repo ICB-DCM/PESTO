@@ -56,6 +56,9 @@ parameters.name    = {'log_{10}(p1)','log_{10}(p2)','log_{10}(p3)','log_{10}(p4)
     'log_{10}(offset_{tSTAT})','log_{10}(offset_{pSTAT})','log_{10}(scale_{tSTAT})','log_{10}(scale_{pSTAT})',...
     'log_{10}(\sigma_{pSTAT})','log_{10}(\sigma_{tSTAT})','log_{10}(\sigma_{pEpoR})'};
 
+lb = parameters.min;
+ub = parameters.max;
+
 % Initial guess for the parameters
 par0 = bsxfun(@plus,parameters.min,bsxfun(@times,parameters.max ...
        - parameters.min, lhsdesign(1000,parameters.number,'smooth','off')'));
@@ -112,6 +115,7 @@ function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, l
     options.localOptimizerOptions.TolFun        = tol;
     options.localOptimizerOptions.MaxFunEvals   = numevals;
     options.localOptimizerOptions.MaxIter       = numevals;
+    options.localOptimizerOptions.Mode          = 2;
     if (isequal(localOptimizer,'hctt')), options.localOptimizerOptions.Barrier = 'log-barrier'; end
     
     % for fmincon

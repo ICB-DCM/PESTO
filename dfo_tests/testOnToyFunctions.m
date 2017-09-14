@@ -33,7 +33,8 @@ function cell_results = testOnToyFunctions(mode,varargin)
     else
         varg = '';
     end
-    save(['cell_results_test-',mode,varg,'.mat'],'cell_results');
-    save(['tab_results_test-',mode,varg,'.mat'],'tab_results');
+    time = '';%['-',datestr(datetime('now'),'yyyymmddHHMMSS')];
+    save(['cell_results_test-',mode,varg,time,'.mat'],'cell_results');
+    save(['tab_results_test-',mode,varg,time,'.mat'],'tab_results');
 
 end

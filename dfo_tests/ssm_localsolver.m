@@ -340,6 +340,8 @@ switch local_solver
 		options.MaxIter = 100*nvar;
 		options.TolX = thres;
 		options.TolFun = thres;
+        options.InitialStepSize = initsize;
+		options.Mode = 2;
 		
 		fun = @(x) feval(fobj,x,varargin{:});
 

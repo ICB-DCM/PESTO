@@ -8,11 +8,11 @@ load('cell_results_test-arbdim-local.mat');
 cell_results_arbdim_local = cell_results;
 load('cell_results_test-arbdim-global.mat');
 cell_results_arbdim_global = cell_results;
-load('cell_results_test-local-dhc2.mat');
-cell_results_local_dhc2 = cell_results;
+% load('cell_results_test-local-dhc2.mat');
+% cell_results_local_dhc2 = cell_results;
 
 % gather all possible results in one list
-cell_results_all = vertcat(cell_results_fixeddim_local,cell_results_fixeddim_global,cell_results_arbdim_local,cell_results_arbdim_global,cell_results_local_dhc2);
+cell_results_all = vertcat(cell_results_fixeddim_local,cell_results_fixeddim_global,cell_results_arbdim_local,cell_results_arbdim_global);
 
 % get best results
 cell_results_best = EvaluationHelper.f_extractBestResults(cell_results_all);
@@ -34,6 +34,9 @@ cell_results_best = EvaluationHelper.f_extractBestResults(cell_results_all);
 % how many solutions did the algorithms find?
 map_shares = EvaluationHelper.f_getSolvedShare(cell_results_best);
 
+% and avgd over all iterates?
+map_shares_all = EvaluationHelper.f_getSolvedShare(cell_results_all);
+
 % what about smooth/unimodal?
 cell_results_best_smooth = EvaluationHelper.f_getAllHaving(cell_results_best,-1,Inf,1,2);
 map_shares_smooth = EvaluationHelper.f_getSolvedShare(cell_results_best_smooth);
@@ -47,6 +50,19 @@ map_shares_unimodal = EvaluationHelper.f_getSolvedShare(cell_results_best_unimod
 cell_results_best_multimodal = EvaluationHelper.f_getAllHaving(cell_results_best,-1,Inf,2,0);
 map_shares_multimodal = EvaluationHelper.f_getSolvedShare(cell_results_best_multimodal);
 
+% and over all
+cell_results_best_smooth = EvaluationHelper.f_getAllHaving(cell_results_all,-1,Inf,1,2);
+map_shares_all_smooth = EvaluationHelper.f_getSolvedShare(EvaluationHelper.f_getAllHaving(cell_results_all,-1,Inf,1,2));
+
+cell_results_all_nonsmooth = EvaluationHelper.f_getAllHaving(cell_results_all,-1,Inf,0,2);
+map_shares_all_nonsmooth = EvaluationHelper.f_getSolvedShare(cell_results_all_nonsmooth);
+
+cell_results_all_unimodal = EvaluationHelper.f_getAllHaving(cell_results_all,-1,Inf,2,1);
+map_shares_all_unimodal = EvaluationHelper.f_getSolvedShare(cell_results_all_unimodal);
+
+cell_results_all_multimodal = EvaluationHelper.f_getAllHaving(cell_results_all,-1,Inf,2,0);
+map_shares_all_multimodal = EvaluationHelper.f_getSolvedShare(cell_results_all_multimodal);
+
 % what about dim?
 cell_cell_results_best_dim = cell(C.nDims,1);
 cell_map_best_dim_shares = cell(C.nDims,1);
@@ -55,11 +71,13 @@ for j=1:C.nDims
     cell_map_best_dim_shares{j} = EvaluationHelper.f_getSolvedShare(cell_cell_results_best_dim{j});
 end
 
-cell_results_best_dimleq10 = EvaluationHelper.f_getAllHaving(cell_results_best,-1,10,2,2);
-map_shares_dimleq10 = EvaluationHelper.f_getSolvedShare(cell_results_best_dimleq10);
-
-cell_results_best_dimgeq50 = EvaluationHelper.f_getAllHaving(cell_results_best,50,Inf,0,2);
-map_shares_dimgeq50 = EvaluationHelper.f_getSolvedShare(cell_results_best_dimgeq50);
+% and over all
+cell_cell_results_all_dim = cell(C.nDims,1);
+cell_map_all_dim_shares = cell(C.nDims,1);
+for j=1:C.nDims
+    cell_cell_results_all_dim{j} = EvaluationHelper.f_getAllHaving(cell_results_all,C.arr_dims(j),C.arr_dims(j),2,2);
+    cell_map_all_dim_shares{j} = EvaluationHelper.f_getSolvedShare(cell_cell_results_all_dim{j});
+end
 
 % text output
 % keys(map_shares)
@@ -133,6 +151,36 @@ xticklabels({'all','smooth','nonsmooth','unimodal','multimodal'});
 xlabel('function types');
 ylabel('solved problems');
 
+saveas(fig, [pwd '/results/smooth-modal.png']); 
+
+% and for all
+cell_keys = keys(map_shares_all);
+nKeys = length(cell_keys);
+
+v_x = 1:5;
+v_y = zeros(nKeys,5);
+cell_maps = {map_shares_all,map_shares_all_smooth,map_shares_all_nonsmooth,map_shares_all_unimodal,map_shares_all_multimodal};
+for j=1:nKeys
+   for k=1:5
+       tmp_map = cell_maps{k};
+       tmp_keys = keys(tmp_map);
+       v_y(j,k) = tmp_map(tmp_keys{j});
+   end
+end
+fig = figure('name','smooth/modal (all)');
+hold on;
+for j=1:nKeys
+    plot(v_x,v_y(j,:),[markers{mod(j,nMarkers)+1} colors{mod(j,nColors)+1} '-'], 'DisplayName', cell_keys{j}); 
+end
+hold off;
+legend('show','Location','northeastoutside');
+xticks(1:5);
+xticklabels({'all','smooth','nonsmooth','unimodal','multimodal'});
+xlabel('function types');
+ylabel('solved problems');
+
+saveas(fig, [pwd '/results/smooth-modal-all.png']); 
+
 % dims
 v_x = 1:C.nDims;
 v_y = zeros(nKeys,1);
@@ -155,7 +203,33 @@ xticklabels(C.arr_dims);
 xlabel('dim');
 ylabel('solved problems');
 
-% fevals
+saveas(fig, [pwd '/results/dims.png']); 
+
+% and for all
+v_x = 1:C.nDims;
+v_y = zeros(nKeys,1);
+for j=1:nKeys
+   for k=1:C.nDims
+       tmp_map = cell_map_all_dim_shares{k};
+       tmp_keys = keys(tmp_map);
+       v_y(j,k) = tmp_map(tmp_keys{j});
+   end
+end
+fig = figure('name','dims');
+hold on;
+for j=1:nKeys
+    plot(v_x,v_y(j,:),[markers{mod(j,nMarkers)+1} colors{mod(j,nColors)+1} '-'], 'DisplayName', cell_keys{j}); 
+end
+hold off;
+legend('show','Location','northeastoutside');
+xticks(1:C.nDims);
+xticklabels(C.arr_dims);
+xlabel('dim');
+ylabel('solved problems');
+
+saveas(fig, [pwd '/results/dims-all.png']); 
+
+% time
 v_x = 1:C.nDims;
 v_y = zeros(nKeys,1);
 for j=1:nKeys
@@ -176,6 +250,8 @@ xticks(1:C.nDims);
 xticklabels(C.arr_dims);
 xlabel('dim');
 ylabel('log10(avgTime)');
+
+saveas(fig, [pwd '/results/time.png']); 
 
 % fevals
 v_x = 1:C.nDims;
@@ -200,6 +276,8 @@ xticklabels(C.arr_dims);
 xlabel('dim');
 ylabel('log10(avgFunEvals)');
 
+saveas(fig, [pwd '/results/fevals.png']); 
+
 %% some tests with noise
 
 load('cell_results_test-fixeddim-local-noise.mat');
@@ -210,11 +288,11 @@ load('cell_results_test-arbdim-local-noise.mat');
 cell_results_arbdim_local_noise = cell_results;
 load('cell_results_test-arbdim-global-noise.mat');
 cell_results_arbdim_global_noise = cell_results;
-load('cell_results_test-local-noise-dhc2.mat');
-cell_results_local_noise_dhc2 = cell_results;
+% load('cell_results_test-local-noise-dhc2.mat');
+% cell_results_local_noise_dhc2 = cell_results;
 
 % gather all possible results in one list
-cell_results_all_noise = vertcat(cell_results_fixeddim_local_noise,cell_results_fixeddim_global_noise,cell_results_arbdim_local_noise,cell_results_arbdim_global_noise,cell_results_local_noise_dhc2);
+cell_results_all_noise = vertcat(cell_results_fixeddim_local_noise,cell_results_fixeddim_global_noise,cell_results_arbdim_local_noise,cell_results_arbdim_global_noise);
 
 % get best results
 cell_results_best_noise = EvaluationHelper.f_extractBestResults(cell_results_all_noise);
@@ -278,6 +356,8 @@ xticklabels({'all','smooth','nonsmooth','unimodal','multimodal'});
 xlabel('function types');
 ylabel('solved problems');
 
+saveas(fig, [pwd '/results/smooth-modal-noise.png']); 
+
 % dims
 v_x = 1:C.nDims;
 v_y = zeros(nKeys,1);
@@ -299,3 +379,5 @@ xticks(1:C.nDims);
 xticklabels(C.arr_dims);
 xlabel('dim');
 ylabel('solved problems');
+
+saveas(fig, [pwd '/results/dims-noise.png']); 
