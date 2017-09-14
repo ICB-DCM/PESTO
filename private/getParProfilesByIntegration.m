@@ -437,12 +437,21 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
             GL(ind) = 0;
             
             if (sqrt(sum(GL.^2)) > options.solver.GradTol)
-                display('Lost optimal path, doing a reoptimization!');
-                [newY, L, GL] = reoptimizePath(y(:,iT), ind, objectiveFunction, borders, options);
-                y(:,iT) = [newY(1:ind-1); y(ind,iT); newY(ind:end)];
-                yCorrection(:,iT) = y(:,iT);
-                reOptSteps = reOptSteps + 1;
-                status = 1;
+                isBord = 0;
+                for bord = reshape(borders, [1 numel(borders)])
+                    if (abs(y(ind) - bord) < 1e-8)
+                        display('Lost optimal path at border!');
+                        isBord = 1;
+                    end
+                end
+                if ~isBord
+                    display('Lost optimal path, doing a reoptimization!');
+                    [newY, L, GL] = reoptimizePath(y(:,iT), ind, objectiveFunction, borders, options);
+                    y(:,iT) = [newY(1:ind-1); y(ind,iT); newY(ind:end)];
+                    yCorrection(:,iT) = y(:,iT);
+                    reOptSteps = reOptSteps + 1;
+                    status = 1;
+                end
             end
             
             % Write ratio and increase counter
