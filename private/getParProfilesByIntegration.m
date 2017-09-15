@@ -518,7 +518,12 @@ function y = doOptimizationSteps(parameters, thetaFull, objectiveFunction, borde
     I2 = (iPar+1 : length(theta))';
     I = [I1; I2];
     stepCounter = 1;
-    dtheta = (thetaFull(end, :) - thetaFull(end-10, :))';
+    
+    % Initialize direction
+    dtheta = zeros(length(thetaFull(end, :)),1);
+    dtheta(iPar) = s * options.options_getNextPoint.guess;
+        
+    % dtheta = (thetaFull(end, :) - thetaFull(end-10, :))';
     borders(iPar,:) = [options.P.min(iPar), options.P.max(iPar)];
     logPost = parameters.MS.logPost(options.MAP_index);
     logPost_max = parameters.MS.logPost(1);
@@ -527,7 +532,7 @@ function y = doOptimizationSteps(parameters, thetaFull, objectiveFunction, borde
     % Sequential update
     while (options.P.min(iPar) < theta(iPar)) && (theta(iPar) < options.P.max(iPar)) && ...
             (logPost >= (log(options.R_min) + logPost_max) && ...
-            stepCounter < 4)
+            stepCounter < 5)
     
         % Proposal of next profile point
         [theta_next,~] = ...
@@ -549,6 +554,11 @@ function y = doOptimizationSteps(parameters, thetaFull, objectiveFunction, borde
         % Construction of reduced linear constraints
         [A,b,Aeq,beq] = getConstraints(theta, parameters, I);
         
+        if (~isfield(options.localOptimizerOptions, 'HessFcn') ...
+            || isempty(options.localOptimizerOptions.HessFcn))
+            % this only works for box-constraints at the moment
+            options.profileReoptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
+        end 
         % Optimization
         [theta_I_opt, L, ~, ~, ~, newGL, newHL] = ...
             fmincon(negLogPostReduced, ...
