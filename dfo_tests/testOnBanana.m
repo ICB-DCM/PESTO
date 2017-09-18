@@ -1,18 +1,22 @@
 % adapted from <https://de.mathworks.com/help/optim/examples/banana-function-minimization.html#responsive_offcanvas>
 % see there for explanations
 
-clear;
-close all;
+% clear;
+% close all;
 %rng(0);
 
-fun = @TF.f_rosenbrock;
+fun = @TF.f_square;
 %fun = @TestFunctions.f_griewank;
 %fun = @TestFunctions.f_booth;
 %fun = @TestFunctions.f_ackley;
 
-lb=[-2;-1];
-ub=[2;3];
-x0 = [-1.5;0.5];
+lb = -2*ones(50,1);
+ub = 2*ones(50,1);
+x0 = -1*ones(50,1);
+
+% lb=[-2;-1];
+% ub=[2;3];
+% x0 = [-1.5;0.5];
 
 %% Optimization without Derivatives
 
@@ -39,23 +43,23 @@ disp('----Optimization with own algorithms:');
 clear options;
 options.TolX          = 1e-6;
 options.TolFun        = 1e-6;
-options.MaxFunEvals   = 2500;
-options.MaxIter       = 2500;
+options.MaxFunEvals   = 25000;
+options.MaxIter       = 25000;
 %options.OutputFcn     = outputFunction;
 options.Mode          = 2;
 
-% disp('--hctt:');
-% [x, fval, exitflag, output] = hillClimbThisThing(fun,x0,lb,ub,options);
-% printXFvalExitflagOutput(x,fval,exitflag,output);
+disp('--hctt:');
+[x, fval, exitflag, output] = hillClimbThisThing(fun,x0,lb,ub,options);
+printXFvalExitflagOutput(x,fval,exitflag,output);
 
 disp('--dhc:');
 [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options);
 printXFvalExitflagOutput(x,fval,exitflag,output);
 
-% disp('--cs:');
-% [x, fval, eflag, output] = coordinateSearch(fun,x0,lb,ub,options);
-% printXFvalExitflagOutput(x,fval,eflag,output);
-% 
+disp('--cs:');
+[x, fval, eflag, output] = coordinateSearch(fun,x0,lb,ub,options);
+printXFvalExitflagOutput(x,fval,eflag,output);
+
 % %% Optimization with Estimated Derivatives
 % 
 % disp('----Optimization with Estimated Derivatives:');

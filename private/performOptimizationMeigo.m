@@ -20,7 +20,7 @@ function parameters = performOptimizationMeigo(parameters, objective_function, i
     % parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
     % parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
 
-    parameters.MS.J(1, i) = -J_0;
+    % parameters.MS.J(1, i) = -J_0; % TODO
     parameters.MS.logPost(i) = -Results.fbest;
     parameters.MS.par(:,i) = Results.xbest;
     parameters.MS.n_objfun(i) = Results.numeval;

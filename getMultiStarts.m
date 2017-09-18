@@ -280,8 +280,7 @@ if strcmp(options.comp_type, 'sequential')
                     parameters = performOptimizationHctt(parameters, objective_function, iMS, options);
                     
                 case 'cs'
-                    %Optimization using coordinate search as local
-                    %optimizer
+                    %Optimization using coordinate search as local optimizer
                     parameters = performOptimizationCs(parameters, objective_function, iMS, options);
                     
                 case 'dhc'

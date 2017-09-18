@@ -9,7 +9,7 @@ function parameters = performOptimizationFmincon(parameters, objective_function,
         parameters.max,...     % upper bound
         [],options.localOptimizerOptions);   % options
 
-    % Assignment of results
+    % Assignment of results    
     parameters.MS.J(1, i) = -J_0;
     parameters.MS.logPost(i) = -J_opt;
     parameters.MS.par(:,i) = theta;
@@ -24,5 +24,4 @@ function parameters = performOptimizationFmincon(parameters, objective_function,
     parameters.MS.n_objfun(i) = results_fmincon.funcCount;
     parameters.MS.n_iter(i) = results_fmincon.iterations;
     parameters.MS.hessian(:,:,i) = full(hessian_opt);
-
 end
