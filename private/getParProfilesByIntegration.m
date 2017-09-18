@@ -482,6 +482,12 @@ function [newY, newL, newGL] = reoptimizePath(theta, iPar, objectiveFunction, bo
     options.profileReoptimizationOptions.Display = 'off';
     negLogPostReduced = setObjectiveWrapper(objectiveFunction, options, 'negative log-posterior', iPar, theta(iPar), true, true);
     
+    if (~isfield(options.profileReoptimizationOptions, 'HessFcn') ...
+        || isempty(options.profileReoptimizationOptions.HessFcn))
+        % this only works for box-constraints at the moment
+        options.profileReoptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
+    end 
+        
     % Optimization
     [newY, newL, ~, ~, ~, newGL, newHL] = ...
         fmincon(negLogPostReduced,...
@@ -554,8 +560,8 @@ function y = doOptimizationSteps(parameters, thetaFull, objectiveFunction, borde
         % Construction of reduced linear constraints
         [A,b,Aeq,beq] = getConstraints(theta, parameters, I);
         
-        if (~isfield(options.localOptimizerOptions, 'HessFcn') ...
-            || isempty(options.localOptimizerOptions.HessFcn))
+        if (~isfield(options.profileReoptimizationOptions, 'HessFcn') ...
+            || isempty(options.profileReoptimizationOptions.HessFcn))
             % this only works for box-constraints at the moment
             options.profileReoptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
         end 
@@ -761,21 +767,23 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, negLogPost, pa
     % Check, if parameter bounds are violated
     lRebuild = 0;
     for i = 1 : npar
-        if (y(i) <= borders(i, 1))
-            if(dth(i) < 0)
-                GL(i) = 0;
-                HL(i,:) = 0;
-                HL(:,i) = 0;
-                HL(i,i) = -1;
-                lRebuild = 1;
-            end
-        elseif (y(i) >= borders(i, 2))
-            if(dth(i) > 0)
-                GL(i) = 0;
-                HL(i,:) = 0;
-                HL(:,i) = 0;
-                HL(i,i) = -1;
-                lRebuild = 1;
+        if (i ~= ind)
+            if (y(i) <= borders(i, 1))
+                if(dth(i) < 0)
+                    GL(i) = 0;
+                    HL(i,:) = 0;
+                    HL(:,i) = 0;
+                    HL(i,i) = -1;
+                    lRebuild = 1;
+                end
+            elseif (y(i) >= borders(i, 2))
+                if(dth(i) > 0)
+                    GL(i) = 0;
+                    HL(i,:) = 0;
+                    HL(:,i) = 0;
+                    HL(i,i) = -1;
+                    lRebuild = 1;
+                end
             end
         end
     end
