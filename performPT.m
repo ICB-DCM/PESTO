@@ -1,4 +1,5 @@
 function res = performPT( logPostHandle, par, opt )
+   
    % performPT.m uses an Parallel Tempering algorithm to sample
    % from an objective function
    % 'logPostHandle'. The tempered chains are getting swapped using an equi
@@ -141,9 +142,6 @@ function res = performPT( logPostHandle, par, opt )
       otherwise
          error('Dimension of options.Sigma0 is incorrect.');
    end
-%    oldS = log(1./beta(2:end)-1./beta(1:end-1));
-%    newS = log(1./beta(2:end)-1./beta(1:end-1));
-   sigmaProp = nan(nPar,nPar,nTemps);
    logPost = nan(nTemps,1);
    logPostProp = nan(nTemps,1);
    for l = 1:nTemps
@@ -200,30 +198,13 @@ function res = performPT( logPostHandle, par, opt )
             inbounds = 1;
             
             % Proposed posterior value
-            logPostProp(l) = logPostHandle(thetaProp(:,l));
-            
-            % New sigma
-            sigmaProp(:,:,l) = sigmaScale(l)^2 * sigmaHist(:,:,l);
-            
-            % Regularization of proposed sigma
-            [~,p] = cholcov(sigmaProp(:,:,l),0);
-            if p ~= 0
-               sigmaProp(:,:,l) = sigmaProp(:,:,l) + regFactor*eye(nPar);
-               sigmaProp(:,:,l) = (sigmaProp(:,:,l)+sigmaProp(:,:,l)')/2;
-               [~,p] = cholcov(sigmaProp(:,:,l),0);
-               if p ~= 0
-                  sigmaProp(:,:,l) = sigmaProp(:,:,l) + max(max(sigmaProp(:,:,l)))/1000*eye(nPar);
-                  sigmaProp(:,:,l) = (sigmaProp(:,:,l)+sigmaProp(:,:,l)')/2;
-               end
-            end
+            logPostProp(l) = logPostHandle(thetaProp(:,l)); 
             
          else
             inbounds = 0;
          end
          
-         % Transition and Acceptance Probabilities
-%          if (inbounds == 1) && (l == nTemps)
-%             pAcc(l) = 0;         
+         % Transition and Acceptance Probabilities      
          if (inbounds == 1) && (logPostProp(l) > -inf) && (logPostProp(l) < inf)
             logTransFor(l) = 1;
             logTransBack(l) = 1;

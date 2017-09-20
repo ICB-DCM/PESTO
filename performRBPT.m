@@ -1,4 +1,5 @@
 function res = performRBPT( logPostHandle, par, opt )
+   
    % performPT.m uses an Region Based adaptive Parallel Tempering algorithm to sample
    % from an objective function
    % 'logPostHandle'. The tempered chains are getting swapped using an equi

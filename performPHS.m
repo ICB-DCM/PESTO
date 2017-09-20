@@ -1,4 +1,5 @@
 function res = performPHS( logPostHandle, par, opt )
+   
    % performPHS.m uses Parallel Hierarchical Sampling algorithm to sample from an objective function
    % 'logPostHandle'. The code is based on [RigatMira2012].
    % The 'mother' chain is swaped with one of the auxillary chains in each iteration.
