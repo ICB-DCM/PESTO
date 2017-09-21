@@ -37,7 +37,8 @@ function [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options)
     
     % interpret options
     [tolX,tolFun,maxFunEvals,maxIter,outputFcn,...
-    initialStepSize,expandFactor,contractFactor,stuckSearchFactor,barrier]...
+    initialStepSize,expandFactor,contractFactor,stuckSearchFactor,barrier,...
+    mode]...
         = f_extractOptions(options,dim);
     if (isa(outputFcn,'function_handle'))
         visual = true;
@@ -45,9 +46,16 @@ function [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options)
         visual = false;
     end
     
-    dhc_mode_1();
+    switch mode
+        case 1
+            dhc_mode_1();
+        case 2
+            dhc_mode_2();
+        otherwise
+            dhc_mode_1();
+    end
        
-    %% dhc_mode_2
+    %% dhc_mode_1
     function dhc_mode_1()
     
         % create column vectors
@@ -140,7 +148,7 @@ function [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options)
                 [v,j] = f_max_2(step,norms);
             end
             
-            if (mod(jIter, 100) == 0), fprintf(strcat('%d\t|\t%.15f\t|\t%.15f\n'),jIter,fbst,norm(v)); end
+%             if (mod(jIter, 100) == 0), fprintf(strcat('%d\t|\t%.15f\t|\t%.15f\n'),jIter,fbst,norm(v)); end
 
 
             % j == -1 indicates minimum found
@@ -381,32 +389,33 @@ function [v_min,j_min] = f_min_2(step,norms,smax,tolerance)
 end
 
 function [tolX,tolFun,maxFunEvals,maxIter,outputFcn,...
-    initialStepSize,expandFactor,contractFactor,stuckSearchFactor,barrier]...
+    initialStepSize,expandFactor,contractFactor,stuckSearchFactor,barrier,...
+    mode]...
     = f_extractOptions(options,dim)
 % interpret options
 
     if (isfield(options,'TolX') && ~isempty(options.TolX))
         tolX    = options.TolX;
     else
-        tolX    = 1e-6;
+        tolX    = 1e-8;
     end
     
     if (isfield(options,'TolFun') && ~isempty(options.TolFun))
         tolFun  = options.TolFun;
     else
-        tolFun  = 1e-6;
+        tolFun  = 1e-8;
     end
     
     if (isfield(options,'MaxFunEvals') && ~isempty(options.MaxFunEvals))
         maxFunEvals = options.MaxFunEvals;
     else
-        maxFunEvals = 400*dim;
+        maxFunEvals = 1000*dim;
     end
     
     if (isfield(options,'MaxIter') && ~isempty(options.MaxIter))
         maxIter = options.MaxIter;
     else
-        maxIter = 200*dim;
+        maxIter = 1000*dim;
     end
     
     if (isfield(options,'OutputFcn') && ~isempty(options.OutputFcn))
@@ -426,13 +435,13 @@ function [tolX,tolFun,maxFunEvals,maxIter,outputFcn,...
     if (isfield(options,'ExpandFactor') && ~isempty(options.ExpandFactor))
         expandFactor              = options.ExpandFactor;
     else
-        expandFactor              = 4.1;
+        expandFactor              = 2.1;
     end
     
     if (isfield(options,'ContractFactor') && ~isempty(options.ContractFactor))
         contractFactor            = options.ContractFactor;
     else
-        contractFactor            = 0.87;
+        contractFactor            = 0.47;
     end
     
     if (isfield(options,'StuckSearchFactor') && ~isempty(options.StuckSearchFactor))
@@ -445,6 +454,12 @@ function [tolX,tolFun,maxFunEvals,maxIter,outputFcn,...
         barrier                   = options.Barrier;
     else
         barrier                   = '';
+    end
+    
+    if (isfield(options,'Mode') && ~isempty(options.Mode))
+        mode = options.Mode;
+    else
+        mode = -1;
     end
     
 end
