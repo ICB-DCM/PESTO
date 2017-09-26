@@ -250,7 +250,7 @@ parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
 
 % Computation for the second mode
 optionsPesto.fh = [];
-parametersAlt.MAP_index = MAP_index2;
+optionsPesto.MAP_index = MAP_index2;
 
 % Now only the profiles 3 and 4 should be recomputed, since all the other
 % profiles are identical for the second mode

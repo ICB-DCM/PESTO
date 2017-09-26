@@ -51,12 +51,12 @@ rng(0);
 % al.
 
 [exdir,~,~]=fileparts(which('mainJakstatSignaling.m'));
-% try
-%     amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 1);
-% catch ME
-%     warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
-%     rethrow(ME);
-% end
+try
+    amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 1);
+catch ME
+    warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
+    rethrow(ME);
+end
 
 %% Data
 % Experimental data is read out from an .xls-file and written to an AMICI
@@ -99,15 +99,8 @@ optionsPesto          = PestoOptions();
 optionsPesto.trace    = true;
 optionsPesto.proposal = 'user-supplied';
 optionsPesto.obj_type = 'log-posterior';
-<<<<<<< HEAD
 optionsPesto.mode     = 'visual';
 
-
-=======
-optionsPesto.mode     = 'silent';
-
-
->>>>>>> 8c125594dc246e3b83fde8e2100bf106c106e484
 %% Perform optimization
 % A parameters optimization is performed within the bound defined in
 % parameters.min and .max in order to infer the unknown parameters from 
