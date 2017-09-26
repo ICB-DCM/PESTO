@@ -436,6 +436,11 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
             [L, GL] = logPost(y(:,iT));
             GL(ind) = 0;
             
+            % Update Hessian, if approximation method ist used
+            if (~strcmp(options.solver.hessian, 'user-supplied'))
+                approximateHessian(y(:,iT), -GL, [], options.solver.hessian, 'write');
+            end
+            
             if (sqrt(sum(GL.^2)) > options.solver.GradTol)
                 isBord = 0;
                 for bord = reshape(borders, [1 numel(borders)])
@@ -479,7 +484,7 @@ function [newY, newL, newGL] = reoptimizePath(theta, iPar, objectiveFunction, bo
     I2 = (iPar+1 : length(theta))';
     I = [I1; I2];
     
-    options.profileReoptimizationOptions.Display = 'off';
+    % options.profileReoptimizationOptions.Display = 'off';
     negLogPostReduced = setObjectiveWrapper(objectiveFunction, options, 'negative log-posterior', iPar, theta(iPar), true, true);
     
     if (~isfield(options.profileReoptimizationOptions, 'HessFcn') ...
@@ -726,7 +731,7 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, negLogPost, pa
             [~, GL, HL] = negLogPost(y);
         case {'bfgs', 'sr1', 'dfp'}
             [~, GL] = negLogPost(y);
-            HL = approximateHessian(y, -GL, [], options.solver.hessian, []);
+            HL = approximateHessian(y, -GL, [], options.solver.hessian, 'read');
         otherwise
             error('Unknown type of Hessian computation.');
     end
@@ -838,7 +843,7 @@ function hessian = approximateHessian(theta, grad, hess, method, flag)
             lastHess(ind,:); hess(ind+1:end,1:ind-1), lastHess(ind+1:end,ind), hess(ind+1:end,ind+1:end)];
         lastGrad = [grad(1:ind-1); lastGrad(ind); grad(ind+1:end)];
 
-    else
+    elseif strcmp(flag, 'write')
         if (theta == lastTheta)
             hessian = lastHess;
         else
@@ -870,6 +875,9 @@ function hessian = approximateHessian(theta, grad, hess, method, flag)
             lastHess = hessian;
             lastTheta = theta;
         end
+        
+    elseif strcmp(flag, 'read')
+        hessian = lastHess;
     end
     
 end
@@ -982,6 +990,6 @@ function Mt = getMassmatrixDAE(c ,s, y, ind, negLogPost, parameterFunction)
     if (isempty(c))
         display(['Jacobian Evaluation around theta = ' y']);
     else
-        display(['Laufachse: ' num2str(s*c) '   Optimalit�t in theta: ', num2str(sqrt(GL1' * GL1)), '    Kondition: ', num2str(rcond(A1))]);
+        display(['Laufachse: ' num2str(s*c) '   Optimalit?t in theta: ', num2str(sqrt(GL1' * GL1)), '    Kondition: ', num2str(rcond(A1))]);
     end
 end
