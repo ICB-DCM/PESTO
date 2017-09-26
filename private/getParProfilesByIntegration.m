@@ -140,7 +140,7 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
                 'MaxNumSteps', options.solver.MaxNumSteps ...
             );
         
-        case {'ode45', 'ode15s', 'ode113'}
+        case {'ode45', 'ode23', 'ode23s', 'ode23t', 'ode15s', 'ode113'}
             odeMatlabOptions = odeset('RelTol', options.solver.RelTol, ...
                 'AbsTol', options.solver.AbsTol, ...
                 'MaxStep', options.solver.MaxStep ...
@@ -219,7 +219,8 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
                     if (strcmp(options.solver.type, 'ode15s'))
                         [~,y] = ode15s(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions); 
                     elseif (strcmp(options.solver.type, 'ode45'))
-                        [~,y] = ode45(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
+                        error('ode45 is currently not implemented for profiling.');
+                        % [~,y] = ode45(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
                     elseif (strcmp(options.solver.type, 'ode113'))
                         [~,y] = ode113(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions); 
                     elseif (strcmp(options.solver.type, 'ode23s'))
@@ -320,6 +321,7 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
 %                     CVodeFree;               
 
                 case 'ode15sDAE' 
+                    error('ode15sDAE is currently not implemented for profiling.');
                     daeMatlabOptions.Mass = @(t, y) getMassmatrixDAE(t, s, y, j, negLogPost, parameterFunction);
                     daeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, j, borders, negLogPost, options, parameters.MS.logPost(1));
                     [~, y] = ode15s(@(t,y) getRhsDAE(t, s, y, 1, j, negLogPost, options), [s*t0, s*T], theta, daeMatlabOptions);
@@ -990,6 +992,6 @@ function Mt = getMassmatrixDAE(c ,s, y, ind, negLogPost, parameterFunction)
     if (isempty(c))
         display(['Jacobian Evaluation around theta = ' y']);
     else
-        display(['Laufachse: ' num2str(s*c) '   Optimalit?t in theta: ', num2str(sqrt(GL1' * GL1)), '    Kondition: ', num2str(rcond(A1))]);
+        display(['Running axis: ' num2str(s*c) '   Optimality: ', num2str(sqrt(GL1' * GL1)), '    condition number: ', num2str(rcond(A1))]);
     end
 end
