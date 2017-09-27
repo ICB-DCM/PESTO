@@ -297,10 +297,10 @@ if strcmp(options.comp_type, 'sequential')
         end
         
         % Output
-        switch options.mode
-            case 'visual', fh = plotMultiStarts(parameters,fh,options.plot_options);
-            case 'text', disp(['  ' num2str(iMS,'%d') '/' num2str(length(options.start_index),'%d')]);
-            case 'silent' % no output
+        if contains (options.mode,'visual'), fh = plotMultiStarts(parameters,fh,options.plot_options); end
+        if contains (options.mode,'text')
+            disp(['  ' num2str(iMS,'%d') '/' num2str(length(options.start_index),'%d')]);
+            fprintf('fval = %.15f, t = %.6f\n',parameters.MS.logPost(iMS),parameters.MS.t_cpu(iMS));
         end
         
         % Abort the calculation if the waitbar is cancelled

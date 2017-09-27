@@ -58,46 +58,37 @@ parameters.name    = {'log_{10}(p1)','log_{10}(p2)','log_{10}(p3)','log_{10}(p4)
 
 lb = parameters.min;
 ub = parameters.max;
-
-% Initial guess for the parameters
-par0 = bsxfun(@plus,parameters.min,bsxfun(@times,parameters.max ...
-       - parameters.min, lhsdesign(1000,parameters.number,'smooth','off')'));
-parameters.guess = par0(:,1:100);
-
 % objective function
 objectiveFunction = @(theta) logLikelihoodJakstat(theta, amiData);
 
-% PestoOptions
-optionsPesto          = PestoOptions();
-optionsPesto.proposal = 'user-supplied';
-optionsPesto.obj_type = 'log-posterior';
-optionsPesto.mode     = 'silent';
-
 % Run getMultiStarts
-fprintf('\n Perform optimization...');
+fprintf('\n Perform optimization...\n');
 
-parametersMultistart_fmincon = runMultiStarts(objectiveFunction, 1, nStart, 'fmincon', nPar, lb, ub);
-
-parametersMultistart_hctt = runMultiStarts(objectiveFunction, 1, nStart, 'hctt', nPar, lb, ub);
-
-parametersMultistart_cs = runMultiStarts(objectiveFunction, 1, nStart, 'cs', nPar, lb, ub);
-
-parametersMultistart_dhc = runMultiStarts(objectiveFunction, 1, nStart, 'dhc', nPar, lb, ub);
-% parametersHybrid = getMultiStarts(parameters, objectiveFunction, optionsPestoHybrid);
-% parametersGlobal = getMultiStarts(parameters, objectiveFunction, optionsPestoGlobal);
+n_starts = 10;
 
 disp('fmincon:');
-printResultParameters(parametersMultistart_fmincon);
+parameters_fmincon = runMultiStarts(objectiveFunction, 1, n_starts, 'fmincon', nPar, lb, ub);
+printResultParameters(parameters_fmincon);
+
 disp('hctt:');
-printResultParameters(parametersMultistart_hctt);
+parameters_hctt = runMultiStarts(objectiveFunction, 1, n_starts, 'hctt', nPar, lb, ub);
+printResultParameters(parameters_hctt);
+
 disp('cs:');
-printResultParameters(parametersMultistart_cs);
+parameters_cs = runMultiStarts(objectiveFunction, 1, n_starts, 'cs', nPar, lb, ub);
+printResultParameters(parameters_cs);
+
 disp('dhc:');
-printResultParameters(parametersMultistart_dhc);
+parameters_dhc = runMultiStarts(objectiveFunction, 1, n_starts, 'dhc', nPar, lb, ub);
+printResultParameters(parameters_dhc);
 
-save('data_jakstat.mat');
+disp('dhc2:');
+parameters_dhc2 = runMultiStarts(objectiveFunction, 1, n_starts, 'dhc', nPar, lb, ub, 2);
+printResultParameters(parameters_dhc2);
 
-function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, localOptimizer, nPar, parMin, parMax)
+save('data_js.mat');
+
+function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, localOptimizer, nPar, parMin, parMax, varargin)
     clearPersistentVariables();
     
     tol = 1e-10;
@@ -115,7 +106,7 @@ function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, l
     options.localOptimizerOptions.TolFun        = tol;
     options.localOptimizerOptions.MaxFunEvals   = numevals;
     options.localOptimizerOptions.MaxIter       = numevals;
-    options.localOptimizerOptions.Mode          = 2;
+    if nargin > 7, options.localOptimizerOptions.Mode          = varargin{1}; end
     if (isequal(localOptimizer,'hctt')), options.localOptimizerOptions.Barrier = 'log-barrier'; end
     
     % for fmincon

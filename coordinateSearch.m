@@ -30,6 +30,9 @@ function [ x, fval, exitflag, output ] = coordinateSearch( fun, x0, lb, ub, opti
 %   funcCount   : number of function evaluations
 %   algorithm   : name of the algorithm
 %   t_cpu       : cpu time
+%
+% History:
+% 2017/09/27 Yannik Schaelte
 
     dim = length(x0);
     

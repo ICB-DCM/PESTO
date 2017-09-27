@@ -10,11 +10,11 @@ load('cell_results_test-arbdim-global.mat');
 cell_results_arbdim_global = cell_results;
 % load('cell_results_test-local-dhc3.mat');
 % cell_results_local_dhc3 = cell_results;
-load('cell_results_test-global-meigo-ess-ydhc.mat');
-cell_results_global_meigo_dhc2 = cell_results;
+% load('cell_results_test-global-meigo-ess-ydhc.mat');
+% cell_results_global_meigo_dhc2 = cell_results;
 
 % gather all possible results in one list
-cell_results_all = vertcat(cell_results_fixeddim_local,cell_results_fixeddim_global,cell_results_arbdim_local,cell_results_arbdim_global,cell_results_global_meigo_dhc2);
+cell_results_all = vertcat(cell_results_fixeddim_local,cell_results_fixeddim_global,cell_results_arbdim_local,cell_results_arbdim_global);
 
 % get best results
 cell_results_best = EvaluationHelper.f_extractBestResults(cell_results_all);

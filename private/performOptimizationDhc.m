@@ -1,9 +1,10 @@
 function parameters = performOptimizationDhc(parameters, objective_function, iStart, options)
-
-    options_dhc.TolX        = options.localOptimizerOptions.TolX;
-    options_dhc.TolFun      = options.localOptimizerOptions.TolFun;
-    options_dhc.MaxIter     = options.localOptimizerOptions.MaxIter;
-	options_dhc.MaxFunEvals = options.localOptimizerOptions.MaxFunEvals;
+    lOptions = options.localOptimizerOptions;
+    options_dhc.TolX        = lOptions.TolX;
+    options_dhc.TolFun      = lOptions.TolFun;
+    options_dhc.MaxIter     = lOptions.MaxIter;
+	options_dhc.MaxFunEvals = lOptions.MaxFunEvals;
+    if isfield(lOptions,'Mode'), options_dhc.Mode = lOptions.Mode; end
 	if (isfield(options.localOptimizerOptions,'Barrier') && ~isempty(options.localOptimizerOptions.Barrier))
 		options_dhc.Barrier		= options.localOptimizerOptions.Barrier;
 	end

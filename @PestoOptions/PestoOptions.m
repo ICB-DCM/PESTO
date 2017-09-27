@@ -449,11 +449,12 @@ classdef PestoOptions < matlab.mixin.SetGet
         end
         
         function set.mode(this, value)
-            if (strcmp(value, 'visual') || strcmp(value, 'text') || strcmp(value, 'silent') || strcmp(value, 'debug'))
-                this.mode = value;
-            else
-                error('PestoOptions.mode must be set to either "visual", "text", "silent" or "debug".');
-            end
+            this.mode = value;
+%             if (strcmp(value, 'visual') || strcmp(value, 'text') || strcmp(value, 'silent') || strcmp(value, 'debug'))
+%                 this.mode = value;
+%             else
+%                 error('PestoOptions.mode must be set to either "visual", "text", "silent" or "debug".');
+%             end
         end
         
         function set.proposal(this, value)

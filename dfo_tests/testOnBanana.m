@@ -5,14 +5,14 @@
 % close all;
 %rng(0);
 
-fun = @TF.f_square;
+fun = @TF.f_rosenbrock;
 %fun = @TestFunctions.f_griewank;
-%fun = @TestFunctions.f_booth;
+% fun = @TF.f_bukin4;
 %fun = @TestFunctions.f_ackley;
 
-lb = -2*ones(50,1);
-ub = 2*ones(50,1);
-x0 = -1*ones(50,1);
+lb = -10*ones(20,1);
+ub = 10*ones(20,1);
+x0 = -4*ones(20,1);
 
 % lb=[-2;-1];
 % ub=[2;3];
@@ -41,8 +41,8 @@ outputFunction = @(x,optimValues,state) outputProgress(x,optimValues,state,fun,l
 disp('----Optimization with own algorithms:');
 
 clear options;
-options.TolX          = 1e-6;
-options.TolFun        = 1e-6;
+options.TolX          = 1e-10;
+options.TolFun        = 1e-10;
 options.MaxFunEvals   = 25000;
 options.MaxIter       = 25000;
 %options.OutputFcn     = outputFunction;

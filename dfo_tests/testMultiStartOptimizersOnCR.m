@@ -106,12 +106,15 @@ printResultParameters(parameters_hctt);
 parameters_cs = runMultiStarts(objectiveFunction, 1, 10, 'cs', 2, lb, ub);
 printResultParameters(parameters_cs);
 
-parameters_dhc = runMultiStarts(objectiveFunction, 1, 10, 'dhc', 2, lb, ub);
+parameters_dhc = runMultiStarts(objectiveFunction, 1, 10, 'dhc', 2, lb, ub, 1);
 printResultParameters(parameters_dhc);
+
+parameters_dhc2 = runMultiStarts(objectiveFunction, 1, 10, 'dhc', 2, lb, ub, 2);
+printResultParameters(parameters_dhc2);
 
 save('data_cr.mat');
 
-function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, localOptimizer, nPar, parMin, parMax)
+function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, localOptimizer, nPar, parMin, parMax, varargin)
     clearPersistentVariables();
     
     tol = 1e-10;
@@ -129,7 +132,7 @@ function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, l
     options.localOptimizerOptions.TolFun        = tol;
     options.localOptimizerOptions.MaxFunEvals   = numevals;
     options.localOptimizerOptions.MaxIter       = numevals;
-    options.localOptimizerOptions.Mode          = 2;
+    if nargin > 7, options.localOptimizerOptions.Mode          = varargin{1}; end
     if (isequal(localOptimizer,'hctt')), options.localOptimizerOptions.Barrier = 'log-barrier'; end
     
     % for fmincon
