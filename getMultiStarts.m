@@ -184,8 +184,7 @@ end
 
 % Define the negative log-posterior funtion
 % (fmincon needs the neagtive log posterior for optimization)
-negLogPost = @(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
-negLogPostWErrorCount = @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber);
+negLogPost = setObjectiveWrapper(objective_function, options, 'negative log-posterior', [], [], true, true);
         
 % Check, if Hessian should be used and if a Hessian function was set, 
 % otherwise use the third output of the objective function instead
@@ -196,7 +195,7 @@ if (strcmp(options.localOptimizer, 'fmincon') && ...
         || isempty(options.localOptimizerOptions.HessFcn))
         
         % this only works for box-constraints at the moment
-        options.localOptimizerOptions.HessFcn = @(varargin) HessianWrap(negLogPostWErrorCount, varargin);
+        options.localOptimizerOptions.HessFcn = @(varargin) HessianWrap(negLogPost, varargin);
     end    
 end
         
@@ -242,14 +241,14 @@ if strcmp(options.comp_type, 'sequential')
                 % seperately (IP) or with the objective function (TR), so
                 % different cases have to be checked.
                 if strcmp(options.localOptimizerOptions.Algorithm, 'interior-point')
-                    [J_0,~] = negLogPostWErrorCount(parameters.MS.par0(:,iMS));
+                    [J_0,~] = negLogPost(parameters.MS.par0(:,iMS));
                 else
-                    [J_0,~,~] = negLogPostWErrorCount(parameters.MS.par0(:,iMS));
+                    [J_0,~,~] = negLogPost(parameters.MS.par0(:,iMS));
                 end
             elseif (strcmp(options.localOptimizerOptions.GradObj, 'on'))
-                [J_0,~] = negLogPostWErrorCount(parameters.MS.par0(:,iMS)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+                [J_0,~] = negLogPost(parameters.MS.par0(:,iMS));
             else
-                J_0 = negLogPostWErrorCount(parameters.MS.par0(:,iMS)); % objectiveWrapWErrorCount(parameters.MS.par0(:,i),objective_function,options.obj_type,options.objOutNumber);
+                J_0 = negLogPost(parameters.MS.par0(:,iMS));
             end
             parameters.MS.logPost0(iMS) = -J_0;
         else
@@ -264,7 +263,7 @@ if strcmp(options.comp_type, 'sequential')
                 %% fmincon as local optimizer
                 % Optimization using fmincon
                 [theta,J_opt,parameters.MS.exitflag(iMS),results_fmincon,~,gradient_opt,hessian_opt] = ...
-                    fmincon(negLogPostWErrorCount,...  % negative log-likelihood function
+                    fmincon(negLogPost,...  % negative log-likelihood function
                     parameters.MS.par0(:,iMS),...    % initial parameter
                     parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
                     parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
@@ -309,7 +308,7 @@ if strcmp(options.comp_type, 'sequential')
                 if strcmp(options.localOptimizer, 'meigo-vns')
                     meigoAlgo = 'VNS';
                 end
-                objFunHandle = @(theta) objectiveWrapWErrorCount(theta',objective_function,options.obj_type,options.objOutNumber);
+                objFunHandle = @(theta) negLogPost(theta');
                 Results = MEIGO(problem, options.localOptimizerOptions, meigoAlgo, objFunHandle);
                 
                 %TODO
@@ -322,7 +321,7 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.n_objfun(iMS) = Results.numeval;
                 parameters.MS.n_iter(iMS) = size(Results.neval, 2);
                 
-                [~, G_opt, H_opt] = objectiveWrapWErrorCount(parameters.MS.par(:,iMS),objective_function,options.obj_type,options.objOutNumber);
+                [~, G_opt, H_opt] = negLogPost(parameters.MS.par(:,iMS),objective_function,options.obj_type,options.objOutNumber);
                 parameters.MS.hessian(:,:,iMS) = H_opt;
                 parameters.MS.gradient(:,iMS) = G_opt;
                 
@@ -345,7 +344,7 @@ if strcmp(options.comp_type, 'sequential')
                 problem.A = parameters.constraints.A;
                 problem.b = parameters.constraints.b;
                 
-                objFunHandle = @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber);
+                objFunHandle = @(theta) negLogPost(theta);
                 [theta,bestLogPost,RunData] = PSwarm(problem, struct('x', parameters.MS.par0(:,iMS)), options.localOptimizerOptions, objFunHandle);
                 
                 parameters.MS.logPost0(1, iMS) = nan;
@@ -354,7 +353,7 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.n_objfun(iMS) = RunData.ObjFunCounter;
                 parameters.MS.n_iter(iMS) = RunData.IterCounter;
                 
-                [~, G_opt, H_opt] = objectiveWrapWErrorCount(parameters.MS.par(:,iMS),objective_function,options.obj_type,options.objOutNumber);
+                [~, G_opt, H_opt] = negLogPost(parameters.MS.par(:,iMS),objective_function,options.obj_type,options.objOutNumber);
                 parameters.MS.hessian(:,:,iMS) = H_opt;
                 parameters.MS.gradient(:,iMS) = G_opt;
 
@@ -625,18 +624,4 @@ function saveResults(parameters,options,i)
         dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__time_trace.csv']),parameters.MS.time_trace(:,i),'delimiter',',','precision',12);
     end
 
-end
-
-
-%% Hessian function for optimization
-function Hessian = HessianWrap(negLogPostWErrorCount, varargin)
-% This function is a dummy for the Hessian function from fmincon
-    
-    if (nargin == 0)
-        error('No parameter vector provided the Hessian function!');
-    else
-        theta = varargin{1}{1};
-    end
-    
-    [~, ~, Hessian] = negLogPostWErrorCount(theta);
 end

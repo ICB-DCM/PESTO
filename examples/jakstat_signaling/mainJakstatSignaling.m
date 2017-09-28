@@ -32,8 +32,8 @@
 %% Preliminary
 % Clean up
 
-clear all;
-close all;
+% clear all;
+% close all;
 clc;
 
 TextSizes.DefaultAxesFontSize = 14;
@@ -51,12 +51,12 @@ rng(0);
 % al.
 
 [exdir,~,~]=fileparts(which('mainJakstatSignaling.m'));
-% try
-%     amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 1);
-% catch ME
-%     warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
-%     rethrow(ME);
-% end
+try
+    amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 1);
+catch ME
+    warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
+    rethrow(ME);
+end
 
 %% Data
 % Experimental data is read out from an .xls-file and written to an AMICI
@@ -88,8 +88,8 @@ parameters.name    = {'log_{10}(p1)','log_{10}(p2)','log_{10}(p3)','log_{10}(p4)
 
 % Initial guess for the parameters
 par0 = bsxfun(@plus,parameters.min,bsxfun(@times,parameters.max ...
-       - parameters.min, lhsdesign(1000,parameters.number,'smooth','off')'));
-parameters.guess = par0(:,1:100);
+       - parameters.min, lhsdesign(50,parameters.number,'smooth','off')'));
+parameters.guess = par0(:,1:50);
 
 % objective function
 objectiveFunction = @(theta) logLikelihoodJakstat(theta, amiData);
@@ -99,8 +99,7 @@ optionsPesto          = PestoOptions();
 optionsPesto.trace    = true;
 optionsPesto.proposal = 'user-supplied';
 optionsPesto.obj_type = 'log-posterior';
-optionsPesto.mode     = 'silent';
-
+optionsPesto.mode     = 'visual';
 
 %% Perform optimization
 % A parameters optimization is performed within the bound defined in
@@ -136,14 +135,6 @@ optionsPesto.localOptimizerOptions = optimset(...
 % % Hybrid-type optimization part (requires the MEIGO toolbox)
 % % (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
 % % uncomment):
-% optionsPestoHybrid = optionsPesto.copy;
-% optionsPestoHybrid.localOptimizer = 'meigo-ess';
-% MeigoOptions = struct(...
-%     'maxeval', 10000, ...
-%     'local', struct('solver', 'fmincon', ...
-%     'finish', 'fmincon', ...
-%     'iterprint', 1) ...
-%     );
 % optionsPestoHybrid.localOptimizerOptions = MeigoOptions;
 % 
 % % Global optimization part (requires the PSwarm toolbox)

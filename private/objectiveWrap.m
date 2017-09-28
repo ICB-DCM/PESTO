@@ -1,64 +1,58 @@
-function varargout = objectiveWrap(varargin)
+function varargout = objectiveWrap(theta, objectiveFunction, wrapperOptions, varargin)
 
     % This function is used as interface to the user-provided objective
     % function. It adapts the sign and supplies the correct number of outputs.
     % Furthermore, it catches errors in the user-supplied objective function.
     %   theta ... parameter vector
     %   fun ... user-supplied objective function
-    %   type ... type of user-supplied objective function
-    %   outNumber ... Maximum of outputs, the original objFun provides
-
-    % Catch up possible overload
-    switch nargin
-        case {0, 1, 2, 3}
-            error('Call to objective function giving not enough inputs.')
-        case 4
-            theta             = varargin{1};
-            objectiveFunction = varargin{2};
-            type              = varargin{3};
-            outNumber         = varargin{4};
-            I                 = 1 : length(theta);
-            showWarning       = false;
-        case 5
-            theta             = varargin{1};
-            objectiveFunction = varargin{2};
-            type              = varargin{3};
-            outNumber         = varargin{4};
-            I                 = varargin{5};
-            showWarning       = false;
-        case 6
-            theta             = varargin{1};
-            objectiveFunction = varargin{2};
-            type              = varargin{3};
-            outNumber         = varargin{4};
-            I                 = varargin{5};
-            showWarning       = varargin{5};
-        otherwise
-            error('Call to objective function giving too many inputs.')
+    %   options ... cell array with following fields
+    %       * {1} ... type 'log-posterior' or 'negative log-posterior'
+    %       * {2} ... index set with fixed parameter values
+    %       * {3} ... fixed parameter values corresponding to the index set
+    %       * {4} ... maximum number of outputs of the objective function
+    %       * {5} ... optimizer (fmincon, meigo-ess, lsqnonlin, delos, ...)
+    %       * {6} ... global error count (true or false)
+    %       * {7} ... display warnings
+    
+    % Process input
+    objSign = wrapperOptions{1};
+    fixedTheta = wrapperOptions{2};
+    outNumber = wrapperOptions{4};
+    countErrors = wrapperOptions{6};
+    showWarnings = wrapperOptions{7};
+    if isempty(fixedTheta)
+        longTheta = theta;
+        freeInd = 1 : length(theta);
+    else
+        nTheta = length(theta) + length(fixedTheta);
+        freeInd = 1:nTheta;
+        freeInd(fixedTheta) = [];
+        longTheta = nan(nTheta,1);
+        longTheta(freeInd) = theta;
+        longTheta(fixedTheta) = wrapperOptions{3};
     end
+    
+%     if (~isempty(varargin))
+%         minibatch = varargin{1};
+%     end
 
+    global error_count;
+    
     try
         switch nargout
             case {0,1}
-                J = objectiveFunction(theta);
-                switch type
-                    case 'log-posterior'          , varargout = {-J};
-                    case 'negative log-posterior' , varargout = { J};
-                end
+                J = objectiveFunction(longTheta);
+                varargout = {objSign * J};
                 
             case 2
                 switch outNumber
                     case 1
-                        J = objectiveFunction(theta);
-                        G = getFiniteDifferences(theta, objectiveFunction, 1);
+                        J = objectiveFunction(longTheta);
+                        G = getFiniteDifferences(longTheta, objectiveFunction, 1);
                     case {2, 3}
-                        [J, G] = objectiveFunction(theta);
+                        [J, G] = objectiveFunction(longTheta);
                 end
-                
-                switch type
-                    case 'log-posterior'          , varargout = {-J,-G(I)};
-                    case 'negative log-posterior' , varargout = { J, G(I)};
-                end
+                varargout = {objSign * J, objSign * G(freeInd)};
                 if any(any(~isfinite(G)))
                     error('Gradient contains NaNs or Infs')
                 end
@@ -66,18 +60,15 @@ function varargout = objectiveWrap(varargin)
             case 3
                 switch outNumber
                     case 1
-                        [J, G, H] = getFiniteDifferences(theta, objectiveFunction, 2);
+                        [J, G, H] = getFiniteDifferences(longTheta, objectiveFunction, 2);
                     case 2
-                        [J, G] = objectiveFunction(theta);
-                        H = getFiniteDifferences(theta, objectiveFunction, 3);
+                        [J, G] = objectiveFunction(longTheta);
+                        H = getFiniteDifferences(longTheta, objectiveFunction, 3);
                     case 3
-                        [J, G, H] = objectiveFunction(theta);
+                        [J, G, H] = objectiveFunction(longTheta);
                 end
-
-                switch type
-                    case 'log-posterior'          , varargout = {-J,-G(I),-H(I,I)};
-                    case 'negative log-posterior' , varargout = { J, G(I), H(I,I)};
-                end
+                
+                varargout = {objSign * J, objSign * G(freeInd), objSign * H(freeInd, freeInd)};
                 if any(any(~isfinite(G)))
                     error('Gradient contains NaNs or Infs')
                 end
@@ -86,22 +77,31 @@ function varargout = objectiveWrap(varargin)
                 end
         end
 
+        if countErrors
+            % Reset error count
+            error_count = max(error_count - 1, 0);
+        end
+        
     catch error_msg
         % Display a warning with error message
-        if showWarning
+        if showWarnings
             warning(['Evaluation of likelihood failed because: ' error_msg.message]);
             display(['Last Error in function ' error_msg.stack(1).name ', line ' ...
                 num2str(error_msg.stack(1).line) ', file ' error_msg.stack(1).file '.']);
         end
-
+        if countErrors
+            % Increase error count
+            error_count = error_count + 1;
+        end
+        
         % Derive output
         switch nargout
             case {0,1}
-                varargout = {inf};
+                varargout = {-objSign * inf};
             case 2
-                varargout = {inf,zeros(length(theta),1)};
+                varargout = {-objSign * inf,zeros(length(freeInd),1)};
             case 3
-                varargout = {inf,zeros(length(theta),1),zeros(length(theta))};
+                varargout = {-objSign * inf,zeros(length(freeInd),1),zeros(length(freeInd))};
         end
     end
 
