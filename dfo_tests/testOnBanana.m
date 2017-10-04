@@ -10,9 +10,9 @@ fun = @TF.f_rosenbrock;
 % fun = @TF.f_bukin4;
 %fun = @TestFunctions.f_ackley;
 
-lb = -10*ones(20,1);
-ub = 10*ones(20,1);
-x0 = -4*ones(20,1);
+lb = -10*ones(200,1);
+ub = 10*ones(200,1);
+x0 = -4*ones(200,1);
 
 % lb=[-2;-1];
 % ub=[2;3];
@@ -48,17 +48,17 @@ options.MaxIter       = 25000;
 %options.OutputFcn     = outputFunction;
 options.Mode          = 2;
 
-disp('--hctt:');
-[x, fval, exitflag, output] = hillClimbThisThing(fun,x0,lb,ub,options);
-printXFvalExitflagOutput(x,fval,exitflag,output);
+% disp('--hctt:');
+% [x, fval, exitflag, output] = hillClimbThisThing(fun,x0,lb,ub,options);
+% printXFvalExitflagOutput(x,fval,exitflag,output);
 
 disp('--dhc:');
 [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options);
 printXFvalExitflagOutput(x,fval,exitflag,output);
 
-disp('--cs:');
-[x, fval, eflag, output] = coordinateSearch(fun,x0,lb,ub,options);
-printXFvalExitflagOutput(x,fval,eflag,output);
+% disp('--cs:');
+% [x, fval, eflag, output] = coordinateSearch(fun,x0,lb,ub,options);
+% printXFvalExitflagOutput(x,fval,eflag,output);
 
 % %% Optimization with Estimated Derivatives
 % 

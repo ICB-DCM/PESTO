@@ -56,9 +56,9 @@ disp('fmincon:');
 parameters_fmincon = runMultiStarts(objectiveFunction, 1, n_starts, 'fmincon', 4, lb, ub);
 printResultParameters(parameters_fmincon);
 
-disp('hctt:');
-parameters_hctt = runMultiStarts(objectiveFunction, 1, n_starts, 'hctt', 4, lb, ub);
-printResultParameters(parameters_hctt);
+% disp('hctt:');
+% parameters_hctt = runMultiStarts(objectiveFunction, 1, n_starts, 'hctt', 4, lb, ub);
+% printResultParameters(parameters_hctt);
 
 disp('cs:');
 parameters_cs = runMultiStarts(objectiveFunction, 1, n_starts, 'cs', 4, lb, ub);
@@ -71,6 +71,14 @@ printResultParameters(parameters_dhc);
 disp('dhc2:');
 parameters_dhc2 = runMultiStarts(objectiveFunction, 1, n_starts, 'dhc', 4, lb, ub, 2);
 printResultParameters(parameters_dhc2);
+
+disp('dhc2:');
+parameters_dhc2 = runMultiStarts(objectiveFunction, 1, n_starts, 'dhc', 4, lb, ub, 2);
+printResultParameters(parameters_dhc2);
+
+disp('dhc3:');
+parameters_dhc3 = runMultiStarts(objectiveFunction, 1, n_starts, 'dhc', 4, lb, ub, 3);
+printResultParameters(parameters_dhc3);
 
 save('data_ec.mat');
 

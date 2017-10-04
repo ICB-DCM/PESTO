@@ -1,3 +1,6 @@
+% run nStart optimizations with "all" optimizers (always from the same
+% starting points!), for each test problem
+
 %% preliminaries
 
 clear;

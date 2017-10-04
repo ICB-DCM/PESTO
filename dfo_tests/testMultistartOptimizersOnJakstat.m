@@ -86,6 +86,10 @@ disp('dhc2:');
 parameters_dhc2 = runMultiStarts(objectiveFunction, 1, n_starts, 'dhc', nPar, lb, ub, 2);
 printResultParameters(parameters_dhc2);
 
+disp('dhc3:');
+parameters_dhc3 = runMultiStarts(objectiveFunction, 1, n_starts, 'dhc', nPar, lb, ub, 3);
+printResultParameters(parameters_dhc3);
+
 save('data_js.mat');
 
 function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, localOptimizer, nPar, parMin, parMax, varargin)

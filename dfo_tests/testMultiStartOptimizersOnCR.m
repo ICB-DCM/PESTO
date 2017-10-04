@@ -112,6 +112,9 @@ printResultParameters(parameters_dhc);
 parameters_dhc2 = runMultiStarts(objectiveFunction, 1, 10, 'dhc', 2, lb, ub, 2);
 printResultParameters(parameters_dhc2);
 
+parameters_dhc3 = runMultiStarts(objectiveFunction, 1, 10, 'dhc', 2, lb, ub, 3);
+printResultParameters(parameters_dhc3);
+
 save('data_cr.mat');
 
 function parameters = runMultiStarts(objectiveFunction, objOutNumber, nStarts, localOptimizer, nPar, parMin, parMax, varargin)
