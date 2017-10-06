@@ -115,16 +115,24 @@ function [ result ] = doExercise( ex )
             [x,fval,exitflag,output] = coordinateSearch(ex.fun,ex.x0,ex.lb,ex.ub,options);
             result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.iterations,output.funcCount,output.t_cpu,exitflag,'');
             
-        case {'dhc','dhc2'}
+        case {'dhc','dhc2','dhc3'}
             options.MaxFunEvals = ex.maxFunEvals;
             options.MaxIter = ex.maxIter;
             options.TolX = ex.tolX;
             options.TolFun = ex.tolFun;
             if ( contains(ex.alg,'2') ), options.Mode = 2; end
+            if ( contains(ex.alg,'3') ), options.Mode = 3; end
                  
             [x,fval,exitflag,output] = dynamicHillClimb(ex.fun,ex.x0,ex.lb,ex.ub,options);
             result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.iterations,output.funcCount,output.t_cpu,exitflag,'');
          
+        case {'bobyqa'}
+            options.MaxFunEvals = ex.maxFunEvals;
+            options.Rhoend = ex.tolX;
+            
+            [x,fval,exitflag,output] = bobyqa(ex.fun,ex.x0,ex.lb,ex.ub,options);
+            result = Result(ex.name,ex.dim,ex.lb,ex.ub,ex.fbst,ex.xbst,ex.smooth,ex.unimodal,ex.alg,ex.x0,ex.tolX,ex.tolFun,ex.maxIter,ex.maxFunEvals,fval,x,output.funcCount,output.funcCount,output.t_cpu,exitflag,'');
+            
         otherwise
             error('Could not identify optimizer');
     end

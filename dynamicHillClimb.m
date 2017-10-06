@@ -669,11 +669,11 @@ function [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options)
         if (visual)
             f_output(denormalize(ybst),fbst,jIter,'done',outputFcn); 
         end
-        numSuccessfulSteps
-        numCacheMaximal
-        numCacheWorked
-        numGradMaximal
-        numGradWorked
+%         numSuccessfulSteps
+%         numCacheMaximal
+%         numCacheWorked
+%         numGradMaximal
+%         numGradWorked
     end
 
 end

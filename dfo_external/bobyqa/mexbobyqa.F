@@ -1,63 +1,159 @@
-C
-C     Test problem for BOBYQA, the objective function being the sum of
-C     the reciprocals of all pairwise distances between the points P_I,
-C     I=1,2,...,M in two dimensions, where M=N/2 and where the components
-C     of P_I are X(2*I-1) and X(2*I). Thus each vector X of N variables
-C     defines the M points P_I. The initial X gives equally spaced points
-C     on a circle. Four different choices of the pairs (N,NPT) are tried,
-C     namely (10,16), (10,21), (20,26) and (20,41). Convergence to a local
-C     minimum that is not global occurs in both the N=10 cases. The details
-C     of the results are highly sensitive to computer rounding errors. The
-C     choice IPRINT=2 provides the current X and optimal F so far whenever
-C     RHO is reduced. The bound constraints of the problem require every
-C     component of X to be in the interval [-1,1].
-C
+#include <fintrf.h>
+C	Input:
+C	N,NPT,X,LB,UB,CALFUN,RHOBEG,RHOEND,MAXFUN,IPRINT
+C 	Output:
+C 	X     (giving the least calculated function value)
+C 	F     (CALFUN(X))
+C 	FEVAL (number of function evaluations)
+	SUBROUTINE MEXFUNCTION(NLHS,PLHS,NRHS,PRHS)
 
-	PROGRAM MAIN
-      IMPLICIT REAL*8 (A-H,O-Z)	  
-	  
-      DIMENSION X(100),XL(100),XU(100),W(500000)
-      TWOPI=8.0D0*DATAN(1.0D0)
-      BDL=-1.0D0
-      BDU=1.0D0
-      IPRINT=2
-      MAXFUN=500000
-      RHOBEG=1.0D-1
-      RHOEND=1.0D-6
-	  HOPF = 42
-      M=5
-   10 N=2*M
-      DO 20 I=1,N
-      XL(I)=BDL
-   20 XU(I)=BDU
-      DO 50 JCASE=1,2
-      NPT=N+6
-      IF (JCASE .EQ. 2) NPT=2*N+1
-      PRINT 30, M,N,NPT
-   30 FORMAT (//5X,'2D output with M =',I4,',  N =',I4,
-     1  '  and  NPT =',I4)
-      DO 40 J=1,M
-      TEMP=DFLOAT(J)*TWOPI/DFLOAT(M)
-      X(2*J-1)=DCOS(TEMP)
-   40 X(2*J)=DSIN(TEMP)
-      CALL BOBYQA (N,NPT,X,XL,XU,RHOBEG,RHOEND,IPRINT,MAXFUN,W)
-   50 CONTINUE
-      M=M+M
-      IF (M .LE. 10) GOTO 10
-      STOP
-	  
-		CONTAINS
-			SUBROUTINE CALFUN (N,X,F)
-				IMPLICIT REAL*8 (A-H,O-Z)
-				DIMENSION X(*)
-				F=HOPF
-				RETURN
-			END SUBROUTINE CALFUN
+C		input and output variables
+		MWPOINTER PLHS(*), PRHS(*)
+		INTEGER*8 NLHS,NRHS
+		
+C		mex stuff
+		INTEGER*8 MEXCALLMATLAB
+		MWPOINTER MXCREATEDOUBLEMATRIX,MXGETPR	,MXCREATENUMERICMATRIX
+		MWSIZE MXGETM,MXGETN
+		
+C 		get lengths of variables
+		
+C 		more variables
+		MWPOINTER p
+		REAL*8 rN,rNPT
+		INTEGER*8 N,NPT,WORKSPACE
+		
+C 		check input
+		IF (NRHS .LT. 10) THEN
+			CALL MEXERRMSGTXT('Wrong number of inputs.')
+		END IF
+		
+		p = MXGETPR(PRHS(1))
+		CALL MXCOPYPTRTOREAL8(p,rN,1)
+		N = INT(rN)
+		
+		p = MXGETPR(PRHS(2))
+		CALL MXCOPYPTRTOREAL8(p,rNPT,1)
+		NPT = INT(rNPT)
+		
+		WORKSPACE = INT((NPT+5)*(NPT+N)+3*N*(N+5)/2)
+		
+		CALL MAIN(N,NPT,WORKSPACE,NLHS,PLHS,NRHS,PRHS)
+
+		RETURN
+		
+	END
 			
-	SUBROUTINE BOBYQA (N,NPT,X,XL,XU,RHOBEG,RHOEND,IPRINT,
-     1  MAXFUN,W)
-      IMPLICIT REAL*8 (A-H,O-Z)
+	SUBROUTINE MAIN (N,NPT,WORKSPACE,NLHS,PLHS,NRHS,PRHS)
+		
+C		input and output variables
+		MWPOINTER PLHS(*), PRHS(*)
+		INTEGER*8 N,NPT,WORKSPACE,NLHS,NRHS
+		
+C		mex stuff
+		INTEGER*8 MEXCALLMATLAB
+		MWPOINTER MXCREATEDOUBLEMATRIX,MXGETPR
+		MWSIZE MXGETM,MXGETN
+		
+C		more variables
+		MWPOINTER p
+		REAL*8 rIPRINT,rMAXFUN,rFEVAL
+		INTEGER*8 IPRINT,MAXFUN,FEVAL
+		REAL*8 X(N),RHOBEG,RHOEND,LB(N),UB(N),W(WORKSPACE)
+		REAL*8 F
+		
+C       interpret input
+		
+		p = MXGETPR(PRHS(3))
+		CALL MXCOPYPTRTOREAL8(p,X,N)
+		
+		p = MXGETPR(PRHS(4))
+		CALL MXCOPYPTRTOREAL8(p,LB,N)
+		
+		p = MXGETPR(PRHS(5))
+		CALL MXCOPYPTRTOREAL8(p,UB,N)
+		
+C 		simply take FUN from PRHS(6)
+		
+		p = MXGETPR(PRHS(7))
+		CALL MXCOPYPTRTOREAL8(p,RHOBEG,1)
+		
+		p = MXGETPR(PRHS(8))
+		CALL MXCOPYPTRTOREAL8(p,RHOEND,1)
+		
+		p = MXGETPR(PRHS(9))
+		CALL MXCOPYPTRTOREAL8(p,rMAXFUN,1)
+		MAXFUN = INT(rMAXFUN)
+		
+		p = MXGETPR(PRHS(10))
+		CALL MXCOPYPTRTOREAL8(p,rIPRINT,1)
+		IPRINT = INT(rIPRINT)	
+		
+C 		count function evaluations
+		FEVAL = 7
+		
+C 		do optimization
+		
+		CALL BOBYQA (N,NPT,X,LB,UB,RHOBEG,RHOEND,IPRINT,MAXFUN,W)
+		
+C 		write output
+		
+		PLHS(1) = MXCREATEDOUBLEMATRIX(N,1,0)
+		p = MXGETPR(PLHS(1))
+		CALL MXCOPYREAL8TOPTR(X,p,N)
+		
+		CALL CALFUN(N,X,F)
+		PLHS(2) = MXCREATEDOUBLEMATRIX(1,1,0)
+		p = MXGETPR(PLHS(2))
+		CALL MXCOPYREAL8TOPTR(F,p,1)
+		
+		rFEVAL = REAL(FEVAL)
+		PLHS(3) = MXCREATEDOUBLEMATRIX(1,1,0)
+		p = MXGETPR(PLHS(3))
+		CALL MXCOPYREAL8TOPTR(rFEVAL,p,1)
+
+		RETURN
+		
+		CONTAINS
+
+	SUBROUTINE CALFUN (N,X,F)
+	
+C 		input variables
+		INTEGER*8 N
+		REAL*8 X(*)
+C 		output variables
+		REAL*8 F
+		
+C 		more variables
+		MWPOINTER PLHS1(1),PRHS1(2),pX,pF
+		INTEGER*8 NLHS1,NRHS1
+		
+		NRHS1 = 2
+C 		first argument: x
+		PRHS1(1) = MXCREATEDOUBLEMATRIX(N,1,0)	
+		pX = MXGETPR(PRHS1(1))
+		CALL MXCOPYREAL8TOPTR(X,pX,N)
+C 		second argument: fun
+		PRHS1(2) = PRHS(6)
+		
+		NLHS1 = 1
+		
+		CALL MEXCALLMATLAB(NLHS1,PLHS1,NRHS1,PRHS1,'funHandleWrap')
+		
+		pF = MXGETPR(PLHS1(1))
+		CALL MXCOPYPTRTOREAL8(pF,F,1)
+	
+		FEVAL = FEVAL+1
+		
+		RETURN
+		
+	END SUBROUTINE CALFUN
+			
+	SUBROUTINE BOBYQA (N,NPT,X,XL,XU,RHOBEG,RHOEND,IPRINT,MAXFUN,W)
+      
+	  IMPLICIT REAL*8 (A-H,O-Z)
       DIMENSION X(*),XL(*),XU(*),W(*)
+	  
 C
 C     This subroutine seeks the least value of a function of many variables,
 C     by applying a trust region method that forms quadratic models by
@@ -2131,6 +2227,4 @@ C
   200 RETURN
       END SUBROUTINE ALTMOV
 
-
-
-	END PROGRAM MAIN
+	END SUBROUTINE MAIN
