@@ -1,4 +1,6 @@
 function parameters = performOptimizationDhc(parameters, objective_function, iStart, options)
+   
+    % interpret options
     lOptions = options.localOptimizerOptions;
     options_dhc.TolX        = lOptions.TolX;
     options_dhc.TolFun      = lOptions.TolFun;

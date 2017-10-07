@@ -276,16 +276,20 @@ if strcmp(options.comp_type, 'sequential')
                     parameters = performOptimizationPswarm(parameters, objective_function, iMS, J_0, options);
                      
                 case 'hctt'
-                    %Optimization using dynamic hill climbin as local optimizer
+                    % Optimization using dynamic hill climbin as local optimizer
                     parameters = performOptimizationHctt(parameters, objective_function, iMS, options);
                     
                 case 'cs'
-                    %Optimization using coordinate search as local optimizer
+                    % Optimization using coordinate search as local optimizer
                     parameters = performOptimizationCs(parameters, objective_function, iMS, options);
                     
                 case 'dhc'
-                    %Optimization using dynamic hill climbin as local optimizer
+                    % Optimization using dynamic hill climbing as local optimizer
                     parameters = performOptimizationDhc(parameters, objective_function, iMS, options);
+                    
+                case 'bobyqa'
+                    % Optimization using bobya as local optimizer
+                    parameters = performOptimizationBobyqa(parameters, objective_function, iMS, options);
             end
             
         end

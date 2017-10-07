@@ -12,9 +12,11 @@ cell_results_arbdim_global = cell_results;
 % cell_results_local_dhc3 = cell_results;
 % load('cell_results_test-global-meigo-ess-ydhc.mat');
 % cell_results_global_meigo_dhc2 = cell_results;
+load('cell_results_test-local-bobyqa.mat');
+cell_results_local_bobyqa = cell_results;
 
 % gather all possible results in one list
-cell_results_all = vertcat(cell_results_fixeddim_local,cell_results_fixeddim_global,cell_results_arbdim_local,cell_results_arbdim_global);
+cell_results_all = vertcat(cell_results_fixeddim_local,cell_results_fixeddim_global,cell_results_arbdim_local,cell_results_arbdim_global,cell_results_local_bobyqa);
 
 % get best results
 cell_results_best = EvaluationHelper.f_extractBestResults(cell_results_all);
@@ -334,6 +336,9 @@ cell_results_best_dimgeq50 = EvaluationHelper.f_getAllHaving(cell_results_best,5
 map_shares_dimgeq50 = EvaluationHelper.f_getSolvedShare(cell_results_best_dimgeq50);
 
 %% visualize
+
+cell_keys = keys(map_shares_noise);
+nKeys = length(cell_keys);
 
 % smooth/unimodal
 v_x = 1:5;

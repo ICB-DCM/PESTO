@@ -1,18 +1,15 @@
-function [ y ] = funHandleWrap(x, fun, varargin)
-% Parameters:
-%   x: parameter vector
-%   fun: objective function handle
-%   varargin: 
+function [ y ] = funHandleWrap(x, calfun)
+% Wrapper to compute objective function value. Currently used global
+% variable in bobyqa.m, the argument calfun is not used.
 %
-% Return values:
-%   f: Objective function value
+% Input:
+%   x: parameter vector
+%   calfun: objective function handle or string representation
+%
+% Output:
+%   y: objective function value
 
-if ischar(fun), fun = str2func(fun); end
-
-if isa(fun,'function_handle')
-    y = fun(x);
-else
-   error('funHandleWrap failed'); 
-end
+fun = bobyqa();
+y = fun(x);
 
 end

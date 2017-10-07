@@ -1,5 +1,6 @@
 %% Preliminary
-clear;
+clear all;
+clear persistent;
 close all;
 
 addpath(genpath('../examples'));
@@ -114,6 +115,9 @@ printResultParameters(parameters_dhc2);
 
 parameters_dhc3 = runMultiStarts(objectiveFunction, 1, 10, 'dhc', 2, lb, ub, 3);
 printResultParameters(parameters_dhc3);
+
+parameters_bobyqa = runMultiStarts(objectiveFunction, 1, 10, 'bobyqa', 2, lb, ub);
+printResultParameters(parameters_bobyqa);
 
 save('data_cr.mat');
 

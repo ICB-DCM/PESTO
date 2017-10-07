@@ -1,7 +1,7 @@
 %% Preliminary
 % Clean up
 
-clear;
+clear all;
 close all;
 clear persistent;
 
@@ -89,6 +89,10 @@ printResultParameters(parameters_dhc2);
 disp('dhc3:');
 parameters_dhc3 = runMultiStarts(objectiveFunction, 1, n_starts, 'dhc', nPar, lb, ub, 3);
 printResultParameters(parameters_dhc3);
+
+disp('bobyqa:');
+parameters_bobyqa = runMultiStarts(objectiveFunction, 1, n_starts, 'bobyqa', nPar, lb, ub);
+printResultParameters(parameters_bobyqa);
 
 save('data_js.mat');
 
