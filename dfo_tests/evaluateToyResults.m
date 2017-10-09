@@ -8,15 +8,41 @@ load('cell_results_test-arbdim-local.mat');
 cell_results_arbdim_local = cell_results;
 load('cell_results_test-arbdim-global.mat');
 cell_results_arbdim_global = cell_results;
-% load('cell_results_test-local-dhc3.mat');
-% cell_results_local_dhc3 = cell_results;
+load('cell_results_test-local-dhc3.mat');
+cell_results_local_dhc3 = cell_results;
 % load('cell_results_test-global-meigo-ess-ydhc.mat');
 % cell_results_global_meigo_dhc2 = cell_results;
 load('cell_results_test-local-bobyqa.mat');
 cell_results_local_bobyqa = cell_results;
 
 % gather all possible results in one list
-cell_results_all = vertcat(cell_results_fixeddim_local,cell_results_fixeddim_global,cell_results_arbdim_local,cell_results_arbdim_global,cell_results_local_bobyqa);
+cell_results_all = vertcat(cell_results_fixeddim_local,cell_results_fixeddim_global,cell_results_arbdim_local,cell_results_arbdim_global,cell_results_local_dhc3,cell_results_local_bobyqa);
+
+% better names
+for j=1:length(cell_results_all)
+   res = cell_results_all{j};
+   
+   switch res.alg
+       case 'dhc'
+           res.alg = 'ydhc';
+       case 'dhc2'
+           res.alg = '-'; % ignore
+       case 'dhc3'
+           res.alg = 'ydhc3';
+       otherwise
+   end
+   
+   cell_results_all{j} = res;
+end
+
+tmp = cell(0);
+for j=1:length(cell_results_all)
+    res = cell_results_all{j};
+    if ~strcmp(res.alg, '-')
+        tmp{end+1} = res;
+    end
+end
+cell_results_all = tmp;
 
 % get best results
 cell_results_best = EvaluationHelper.f_extractBestResults(cell_results_all);
@@ -128,6 +154,10 @@ markers = {'o','+','*','.','x','s','d','^','v','<','>','p','h'};
 nMarkers = length(markers);
 colors  = {'r','m','c','y','g','b','k'};
 nColors = length(colors);
+
+TextSizes.DefaultAxesFontSize = 14;
+TextSizes.DefaultTextFontSize = 18;
+set(0,TextSizes);
 
 % smooth, unimodal
 cell_keys = keys(map_shares);
@@ -292,11 +322,39 @@ load('cell_results_test-arbdim-local-noise.mat');
 cell_results_arbdim_local_noise = cell_results;
 load('cell_results_test-arbdim-global-noise.mat');
 cell_results_arbdim_global_noise = cell_results;
-% load('cell_results_test-local-noise-dhc2.mat');
-% cell_results_local_noise_dhc2 = cell_results;
+load('cell_results_test-local-noise-dhc3.mat');
+cell_results_local_noise_dhc3 = cell_results;
+load('cell_results_test-local-noise-bobyqa.mat');
+cell_results_local_noise_bobyqa = cell_results;
 
 % gather all possible results in one list
-cell_results_all_noise = vertcat(cell_results_fixeddim_local_noise,cell_results_fixeddim_global_noise,cell_results_arbdim_local_noise,cell_results_arbdim_global_noise);
+cell_results_all_noise = vertcat(cell_results_fixeddim_local_noise,cell_results_fixeddim_global_noise,cell_results_arbdim_local_noise,cell_results_arbdim_global_noise,cell_results_local_noise_dhc3);
+
+% better names
+for j=1:length(cell_results_all_noise)
+   res = cell_results_all_noise{j};
+   
+   switch res.alg
+       case 'dhc'
+           res.alg = 'ydhc';          
+       case 'dhc2'
+           res.alg = '-'; % ignore
+       case 'dhc3'
+           res.alg = 'ydhc3';
+       otherwise
+   end
+   
+   cell_results_all_noise{j} = res;
+end
+
+tmp = cell(0);
+for j=1:length(cell_results_all_noise)
+    res = cell_results_all_noise{j};
+    if ~strcmp(res.alg, '-')
+        tmp{end+1} = res;
+    end
+end
+cell_results_all_noise = tmp;
 
 % get best results
 cell_results_best_noise = EvaluationHelper.f_extractBestResults(cell_results_all_noise);
