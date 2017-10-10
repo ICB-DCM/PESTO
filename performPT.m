@@ -97,10 +97,10 @@ function res = performPT( logPostHandle, par, opt )
    maxT = opt.PT.maxT;
    T = linspace(1,maxT^(1/exponentT),nTemps).^exponentT;
    beta = 1./T;
-%    beta = linspace(1,1/nTemps,nTemps).^exponentT;
-%    beta(end) = min(1/opt.PT.maxT,beta(end));
+   
+   % Special case of AM: necessary due to linspace behavior
    if nTemps == 1
-      T = 0;
+      T    = 1;
       beta = 1;
    end
    

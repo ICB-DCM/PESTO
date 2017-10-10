@@ -105,6 +105,12 @@ function res = performRBPT( logPostHandle, par, opt )
    T                 = linspace(1,maxT^(1/exponentT),nTemps).^exponentT;
    beta              = 1./T;
    
+   % Special case of AM: necessary due to linspace behavior
+   if nTemps == 1
+      T    = 1;
+      beta = 1;
+   end
+   
    oL                = nan(1,nTemps);
    nL                = nan(1,nTemps);
    acc               = zeros(nTemps,nMaxRegions);
