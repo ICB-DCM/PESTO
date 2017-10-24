@@ -176,6 +176,8 @@ parameters.MS.n_objfun = nan(length(options.start_index),1);
 parameters.MS.n_iter = nan(length(options.start_index),1);
 parameters.MS.t_cpu = nan(length(options.start_index),1);
 parameters.MS.exitflag = nan(length(options.start_index),1);
+parameters.MS.AIC = nan(length(options.start_index),1);
+parameters.MS.BIC = nan(length(options.start_index),1);
 if(options.trace)
     parameters.MS.par_trace = nan(parameters.number,maxOptimSteps+1,length(options.start_index));
     parameters.MS.fval_trace = nan(maxOptimSteps+1,length(options.start_index));
@@ -287,6 +289,11 @@ if strcmp(options.comp_type, 'sequential')
                 end
                 parameters.MS.n_objfun(iMS) = results_fmincon.funcCount;
                 parameters.MS.n_iter(iMS) = results_fmincon.iterations;
+                parameters.MS.AIC(iMS) = 2*parameters.number + 2*J_opt;
+                if ~isempty(options.nDatapoints)
+                    parameters.MS.BIC(iMS) = log(options.nDatapoints)*parameters.number + 2*J_opt;
+                end
+                    
                 try
                     parameters.MS.hessian(:,:,iMS) = full(hessian_opt);
                 catch err_msg
@@ -320,6 +327,10 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.par(:,iMS) = Results.xbest;
                 parameters.MS.n_objfun(iMS) = Results.numeval;
                 parameters.MS.n_iter(iMS) = size(Results.neval, 2);
+                parameters.MS.AIC(iMS) = 2*parameters.number + 2*J_opt;
+                if ~isempty(options.nDatapoints)
+                    parameters.MS.BIC(iMS) = log(options.nDatapoints)*parameters.number + 2*J_opt;
+                end
                 
                 [~, G_opt, H_opt] = negLogPost(parameters.MS.par(:,iMS),objective_function,options.obj_type,options.objOutNumber);
                 parameters.MS.hessian(:,:,iMS) = H_opt;
@@ -352,6 +363,10 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.par(:,iMS) = theta;
                 parameters.MS.n_objfun(iMS) = RunData.ObjFunCounter;
                 parameters.MS.n_iter(iMS) = RunData.IterCounter;
+                parameters.MS.AIC(iMS) = 2*parameters.number + 2*J_opt;
+                if ~isempty(options.nDatapoints)
+                    parameters.MS.BIC(iMS) = log(options.nDatapoints)*parameters.number + 2*J_opt;
+                end
                 
                 [~, G_opt, H_opt] = negLogPost(parameters.MS.par(:,iMS),objective_function,options.obj_type,options.objOutNumber);
                 parameters.MS.hessian(:,:,iMS) = H_opt;

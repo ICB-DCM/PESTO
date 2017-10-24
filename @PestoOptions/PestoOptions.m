@@ -47,9 +47,15 @@ classdef PestoOptions < matlab.mixin.SetGet
         % information and without the Pesto FD routine.
         objOutNumber = 3;
         
+        % Parameter inidices to be fixed, if any
         fixedParameters = [];
         
+        % Values of fixed parameters, same sorting as indices, if any
         fixedParameterValues = [];
+        
+        % Number of data points used for parameter estimation, which should 
+        % be used to compute the BIC (optional)
+        nDatapoints = [];
         
         
         % <!-- Options concerning the output -->
