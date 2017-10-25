@@ -1,5 +1,11 @@
 function parameters = performOptimizationFmincon(parameters, objective_function, i, J_0, options)
 
+    if isfield(parameters,'nonlcon')
+        nonlcon = parameters.nonlcon;
+    else
+        nonlcon = [];
+    end
+    
     [theta,J_opt,parameters.MS.exitflag(i),results_fmincon,~,gradient_opt,hessian_opt] = ...
         fmincon(@(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber),...  % negative log-likelihood function
         parameters.MS.par0(:,i),...    % initial parameter
@@ -7,7 +13,8 @@ function parameters = performOptimizationFmincon(parameters, objective_function,
         parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
         parameters.min,...     % lower bound
         parameters.max,...     % upper bound
-        [],options.localOptimizerOptions);   % options
+        nonlcon,...            % nonlinear constraints
+        options.localOptimizerOptions);   % options
 
     % Assignment of results    
     parameters.MS.J(1, i) = -J_0;
