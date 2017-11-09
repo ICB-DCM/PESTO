@@ -158,7 +158,7 @@ end
     
 % Run getMultiStarts
 fprintf('\n Perform optimization...');
-parametersMultistart = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 % parametersHybrid = getMultiStarts(parameters, objectiveFunction, optionsPestoHybrid);
 % parametersGlobal = getMultiStarts(parameters, objectiveFunction, optionsPestoGlobal);
 
