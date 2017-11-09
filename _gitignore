@@ -2,6 +2,10 @@
 *.fig
 *.mexa64
 *.mexmaci64
+*.mexw64
+*.mexw32
+*.o
+*.out
 simulate_*.m
 doc/out/
 doc/config/Doxyfile

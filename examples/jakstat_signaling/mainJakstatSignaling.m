@@ -51,12 +51,12 @@ rng(0);
 % al.
 
 [exdir,~,~]=fileparts(which('mainJakstatSignaling.m'));
-% try
-%     amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 1);
-% catch ME
-%     warning('There was a problem with the AMICI toolbox (available at https://github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
-%     rethrow(ME);
-% end
+try
+    amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 1);
+catch ME
+    warning('There was a problem with the AMICI toolbox (available at https://github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
+    rethrow(ME);
+end
 
 %% Data
 % Experimental data is read out from an .xls-file and written to an AMICI
