@@ -1,4 +1,4 @@
-function [parameters, fh] = getParProfilesByIntegration(parameters, objectiveFunction, options, varargin)
+function [parameters, fh] = getParProfilesByIntegration(parameters, objective_function, options, varargin)
 % getParProfilesByIntegration.m calculates the profiles likelihoods for the
 % model parameters, starting from the maximum a posteriori estimate. 
 % This is done by integrating an ODE which follows the optimal path for a
@@ -85,22 +85,18 @@ function [parameters, fh] = getParProfilesByIntegration(parameters, objectiveFun
     end
 
     %% Profile calculation -- SEQUENTIAL
-
-    % Assign the wrapped objective function
-    negLogPost = @(theta) @(theta) objectiveWrap(theta,objectiveFunction,options.obj_type,options.objOutNumber);
-    logPost = @(theta) posLogPost(theta, negLogPost);
     
     % Profile calculation
     if strcmp(options.comp_type, 'sequential')
         
         for j = options.profile_integ_index
-            parameters = integrateProfileForParameterI(parameters, objectiveFunction, j, options, fh);
+            parameters = integrateProfileForParameterI(parameters, objective_function, j, options, fh);
         end
         
         
     elseif strcmp(options.comp_type, 'parallel')
         parfor j = options.profile_integ_index
-            integrateProfileForParameterI(parameters, objectiveFunction, j, options, fh);
+            integrateProfileForParameterI(parameters, objective_function, j, options, fh);
         end
         
         % Output
@@ -116,7 +112,7 @@ end
 
 
 
-function parameters = integrateProfileForParameterI(parameters, objective_function, j, options, fh)
+function parameters = integrateProfileForParameterI(parameters, objectiveFunction, j, options, fh)
  
 
     % Define global variables for communication across ODE solver
@@ -130,7 +126,10 @@ function parameters = integrateProfileForParameterI(parameters, objective_functi
 
     % Initial condition (used only for Profile integration)
     t0 = parameters.MS.par(j, options.MAP_index);
-
+    
+    % Set objective function handle
+    negLogPost = setObjectiveWrapper(objectiveFunction, options, 'negative log-posterior', [], [], true, true);
+    
     switch options.solver.type
         case 'CVODE'            
             cvodeOptions = CVodeSetOptions('RelTol', options.solver.RelTol, ...
@@ -141,7 +140,7 @@ function parameters = integrateProfileForParameterI(parameters, objective_functi
                 'MaxNumSteps', options.solver.MaxNumSteps ...
             );
         
-        case {'ode45', 'ode15s', 'ode113'}
+        case {'ode45', 'ode23', 'ode23s', 'ode23t', 'ode15s', 'ode113'}
             odeMatlabOptions = odeset('RelTol', options.solver.RelTol, ...
                 'AbsTol', options.solver.AbsTol, ...
                 'MaxStep', options.solver.MaxStep ...
@@ -182,7 +181,7 @@ function parameters = integrateProfileForParameterI(parameters, objective_functi
         llhHistory = parameters.MS.logPost(options.MAP_index);
         reachedEnd = 0;
         OutputFunction = @(t, y, flag) checkOptimality(t, y, flag, s, j, ...
-            parameters.MS.logPost(options.MAP_index), objective_function, borders, options);
+            parameters.MS.logPost(1), objectiveFunction, borders, options);
 
         if ~strcmp(options.solver.hessian, 'user-supplied')
             approximateHessian(parameters.MS.par(:,options.MAP_index), -parameters.MS.gradient(:,options.MAP_index), parameters.MS.hessian(:,:,options.MAP_index), [], 'init');
@@ -214,22 +213,29 @@ function parameters = integrateProfileForParameterI(parameters, objective_functi
             llhHistory = llhHistory(end);
 
             switch options.solver.type
-                case {'ode45', 'ode15s', 'ode113'}
+                case {'ode45', 'ode15s', 'ode113','ode23', 'ode23s', 'ode23t'}
                     odeMatlabOptions.OutputFcn = OutputFunction;
-                    odeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, j, borders, objective_function, options, parameters.MS.logPost(1));
+                    odeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, j, borders, negLogPost, options, parameters.MS.logPost(1));
                     if (strcmp(options.solver.type, 'ode15s'))
-                        [~,y] = ode15s(@(t,y) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions); 
+                        [~,y] = ode15s(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions); 
                     elseif (strcmp(options.solver.type, 'ode45'))
-                        [~,y] = ode45(@(t,y) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
-                    else
-                        [~,y] = ode113(@(t,y) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
+                        error('ode45 is currently not implemented for profiling.');
+                        % [~,y] = ode45(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
+                    elseif (strcmp(options.solver.type, 'ode113'))
+                        [~,y] = ode113(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions); 
+                    elseif (strcmp(options.solver.type, 'ode23s'))
+                        [~,y] = ode23s(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
+                    elseif (strcmp(options.solver.type, 'ode23t'))
+                        [~,y] = ode23t(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);
+                    elseif (strcmp(options.solver.type, 'ode23'))
+                        [~,y] = ode23(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);
                     end
 
 
                     % If yCorrection is set to inf, then the ODE is too stiff, 
                     % some steps of optimization based calculation have to be done
                     if (yCorrection == inf)
-                        addY = doOptimizationSteps(parameters, y, objective_function, borders, j, s, options);
+                        addY = doOptimizationSteps(parameters, y, objectiveFunction, borders, j, s, options);
                         y = [y; addY];
                         optSteps = optSteps + 3;
                     else
@@ -250,74 +256,75 @@ function parameters = integrateProfileForParameterI(parameters, objective_functi
                     end
 
                 case 'CVODE' 
-                    cvodeOptions.RootsFn = @(t,y) getEndProfile(t, s, y, j, borders, objective_function, options, parameters.MS.logPost(1));
-                    CVodeInit(@(t,y,data) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options), options.solver.algorithm, options.solver.nonlinSolver, s*t0, theta, cvodeOptions);
-
-                    killCounter = 0;
-                    reachedEndCVODE = 0;
-                    iTer = 1;
-                    y = nan(ySize, 100);
-                    t = nan(1, 100);
-                    while (reachedEndCVODE == 0)
-                        try
-                            if(killCounter == 1)
-                                t_00 = t_tmp  + 1e-4;
-                                y_00 = y_tmp;
-                                cvodeOptions = CVodeSetOptions('RelTol', options.solver.RelTol, ...
-                                                'AbsTol', options.solver.AbsTol, ...
-                                                'MaxStep', options.solver.MaxStep, ...
-                                                'MinStep', options.solver.MinStep, ...
-                                                'LinearSolver', options.solver.linSolver, ...'StabilityLimDet', true, ...
-                                                'MaxNumSteps', options.solver.MaxNumSteps ...'MaxOrder', 12
-                                                );
-                                CVodeInit(@(t,y,data) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options), 'BDF', 'Newton', s*t_00, y_00, cvodeKillOptions);  
-                                killCounter = 0;
-                            end
-                            [~, t_tmp, y_tmp] = CVode(s*T, 'OneStep');
-                        catch
-                            t_000 = t_tmp  + 0.025;
-                            while(s*t_000 - s*t_tmp > 0)
-                                t_00 = t_tmp  + 5e-5;
-                                y_00 = y_tmp;
-                                cvodeKillOptions = CVodeSetOptions('RelTol', 1e-3, ...
-                                    'AbsTol', 1e-5, ...
-                                    'MaxStep', options.solver.MaxStep,...
-                                    'MinStep', 1e-4, ...
-                                    'LinearSolver', options.solver.linSolver, ...'StabilityLimDet', true, ...
-                                    'MaxNumSteps', options.solver.MaxNumSteps ...'MaxOrder', 12
-                                    );
-                                CVodeInit(@(t,y,data) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options), options.solver.algorithm, options.solver.nonlinSolver, s*t_00, y_00, cvodeOptions);  
-                                [~, t_tmp, y_tmp] = CVode(s*(t_00 + 0.025), 'OneStep');
-                            end
-                            killCounter = 1;
-                        end
-                        y(:, iTer) = y_tmp;
-                        t(1, iTer) = t_tmp;
-                        if ((cvodeOptions.RootsFn(t_tmp, y_tmp) < 0) || ((s*T - t_tmp) < 0))
-                            reachedEndCVODE = 1;
-                        end
-                        iTer = iTer + 1;
-                        if (abs(iTer/100) < 0.001)
-                            y = [y, zeros(ySize, 100)];
-                            t = [t, zeros(1, 100)];
-                        end
-                    end
-                    y = y(1:ySize, 1:iTer-1);
-                    if (s == 1)
-                        theta = y(:,:);
-                    else
-                        theta = fliplr(y(:,:));
-                    end
-                    t = t(1:iTer-1);
-
-                    %release CVODE Worksspace
-                    CVodeFree;               
+                    error('CVODE is currently not implemented for profiling.');
+%                     cvodeOptions.RootsFn = @(t,y) getEndProfile(t, s, y, j, borders, objective_function, options, parameters.MS.logPost(1));
+%                     CVodeInit(@(t,y,data) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options), options.solver.algorithm, options.solver.nonlinSolver, s*t0, theta, cvodeOptions);
+% 
+%                     killCounter = 0;
+%                     reachedEndCVODE = 0;
+%                     iTer = 1;
+%                     y = nan(ySize, 100);
+%                     t = nan(1, 100);
+%                     while (reachedEndCVODE == 0)
+%                         try
+%                             if(killCounter == 1)
+%                                 t_00 = t_tmp  + 1e-4;
+%                                 y_00 = y_tmp;
+%                                 cvodeOptions = CVodeSetOptions('RelTol', options.solver.RelTol, ...
+%                                                 'AbsTol', options.solver.AbsTol, ...
+%                                                 'MaxStep', options.solver.MaxStep, ...
+%                                                 'MinStep', options.solver.MinStep, ...
+%                                                 'LinearSolver', options.solver.linSolver, ...'StabilityLimDet', true, ...
+%                                                 'MaxNumSteps', options.solver.MaxNumSteps ...'MaxOrder', 12
+%                                                 );
+%                                 CVodeInit(@(t,y,data) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options), 'BDF', 'Newton', s*t_00, y_00, cvodeKillOptions);  
+%                                 killCounter = 0;
+%                             end
+%                             [~, t_tmp, y_tmp] = CVode(s*T, 'OneStep');
+%                         catch
+%                             t_000 = t_tmp  + 0.025;
+%                             while(s*t_000 - s*t_tmp > 0)
+%                                 t_00 = t_tmp  + 5e-5;
+%                                 y_00 = y_tmp;
+%                                 cvodeKillOptions = CVodeSetOptions('RelTol', 1e-3, ...
+%                                     'AbsTol', 1e-5, ...
+%                                     'MaxStep', options.solver.MaxStep,...
+%                                     'MinStep', 1e-4, ...
+%                                     'LinearSolver', options.solver.linSolver, ...'StabilityLimDet', true, ...
+%                                     'MaxNumSteps', options.solver.MaxNumSteps ...'MaxOrder', 12
+%                                     );
+%                                 CVodeInit(@(t,y,data) getRhsRed(t, s, y, j, borders, objective_function, parameterFunction, options), options.solver.algorithm, options.solver.nonlinSolver, s*t_00, y_00, cvodeOptions);  
+%                                 [~, t_tmp, y_tmp] = CVode(s*(t_00 + 0.025), 'OneStep');
+%                             end
+%                             killCounter = 1;
+%                         end
+%                         y(:, iTer) = y_tmp;
+%                         t(1, iTer) = t_tmp;
+%                         if ((cvodeOptions.RootsFn(t_tmp, y_tmp) < 0) || ((s*T - t_tmp) < 0))
+%                             reachedEndCVODE = 1;
+%                         end
+%                         iTer = iTer + 1;
+%                         if (abs(iTer/100) < 0.001)
+%                             y = [y, zeros(ySize, 100)];
+%                             t = [t, zeros(1, 100)];
+%                         end
+%                     end
+%                     y = y(1:ySize, 1:iTer-1);
+%                     if (s == 1)
+%                         theta = y(:,:);
+%                     else
+%                         theta = fliplr(y(:,:));
+%                     end
+%                     t = t(1:iTer-1);
+% 
+%                     %release CVODE Worksspace
+%                     CVodeFree;               
 
                 case 'ode15sDAE' 
-                    daeMatlabOptions.Mass = @(t, y) getMassmatrixDAE(t, s, y, j, objective_function, parameterFunction, options);
-                    daeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, j, borders, objective_function, options, parameters.MS.logPost(1));
-                    daeMatlabOptions.Mass = @(t,y) getMassmatrixDAE(t, s, y, j, objective_function, parameterFunction, options);
-                    [~, y] = ode15s(@(t,y) getRhsDAE(t, s, y, 1, j, objective_function, options), [s*t0, s*T], theta, daeMatlabOptions);
+                    error('ode15sDAE is currently not implemented for profiling.');
+                    daeMatlabOptions.Mass = @(t, y) getMassmatrixDAE(t, s, y, j, negLogPost, parameterFunction);
+                    daeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, j, borders, negLogPost, options, parameters.MS.logPost(1));
+                    [~, y] = ode15s(@(t,y) getRhsDAE(t, s, y, 1, j, negLogPost, options), [s*t0, s*T], theta, daeMatlabOptions);
 
                     if (s == 1)
                         theta = y';
@@ -408,6 +415,8 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
         
     else
         yCorrection = nan(size(y));
+       logPost = setObjectiveWrapper(objectiveFunction, options, 'log-posterior', [], [], true, true);
+        
         for iT = 1 : length(t)
             % Check if Minimum step size was violated
             dt = t(iT) - lastT;
@@ -426,27 +435,41 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
             end
 
             % Check, if first optimality is violated, reoptimize if necessary
-            [L, GL] = objectiveWrap(y(:,iT), objectiveFunction, options.obj_type, options.objOutNumber);
+            [L, GL] = logPost(y(:,iT));
             GL(ind) = 0;
             
+            % Update Hessian, if approximation method ist used
+            if (~strcmp(options.solver.hessian, 'user-supplied'))
+                approximateHessian(y(:,iT), -GL, [], options.solver.hessian, 'write');
+            end
+            
             if (sqrt(sum(GL.^2)) > options.solver.GradTol)
-                display('Lost optimal path, doing a reoptimization!');
-                [newY, L, GL] = reoptimizePath(y(:,iT), ind, objectiveFunction, borders, options);
-                y(:,iT) = [newY(1:ind-1); y(ind,iT); newY(ind:end)];
-                yCorrection(:,iT) = y(:,iT);
-                reOptSteps = reOptSteps + 1;
-                status = 1;
+                isBord = 0;
+                for bord = reshape(borders, [1 numel(borders)])
+                    if (abs(y(ind) - bord) < 1e-8)
+                        display('Lost optimal path at border!');
+                        isBord = 1;
+                    end
+                end
+                if ~isBord
+                    display('Lost optimal path, doing a reoptimization!');
+                    [newY, L, GL] = reoptimizePath(y(:,iT), ind, objectiveFunction, borders, options);
+                    y(:,iT) = [newY(1:ind-1); y(ind,iT); newY(ind:end)];
+                    yCorrection(:,iT) = y(:,iT);
+                    reOptSteps = reOptSteps + 1;
+                    status = 1;
+                end
             end
             
             % Write ratio and increase counter
-            R = exp(-L - logPostMax);
+            R = exp(L - logPostMax);
             intSteps = intSteps + 1;
             
             if (strcmp(options.mode, 'text'))
                 fprintf('\n  |  %11.8f | %11.7f | %7.5f |', ...
                     s*t(iT), sqrt(sum(GL.*GL)), R);
             end
-            llhHistory = [llhHistory, -L];
+            llhHistory = [llhHistory, L];
             if (R < options.R_min)
                 status = 1;
             end
@@ -457,98 +480,129 @@ end
 
 
 
-function [newY, newL, newGL] = reoptimizePath(theta, ind, objectiveFunction, borders, options)
+function [newY, newL, newGL] = reoptimizePath(theta, iPar, objectiveFunction, borders, options)
     
-    I1 = (1 : ind-1)';
-    I2 = (ind+1 : length(theta))';
+    I1 = (1 : iPar-1)';
+    I2 = (iPar+1 : length(theta))';
     I = [I1; I2];
     
-    options.profileReoptimizationOptions.Display = 'off';
-
+    % options.profileReoptimizationOptions.Display = 'off';
+    negLogPostReduced = setObjectiveWrapper(objectiveFunction, options, 'negative log-posterior', iPar, theta(iPar), true, true);
+    
+    if (~isfield(options.profileReoptimizationOptions, 'HessFcn') ...
+        || isempty(options.profileReoptimizationOptions.HessFcn))
+        % this only works for box-constraints at the moment
+        options.profileReoptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
+    end 
+        
     % Optimization
     [newY, newL, ~, ~, ~, newGL, newHL] = ...
-        fmincon(@(theta_I) objectiveWrap([theta_I(I1); theta(ind); theta_I(I2-1)], objectiveFunction, options.obj_type, options.objOutNumber, I),... % negative log-posterior function
+        fmincon(negLogPostReduced,...
         theta(I),...
         [], [],... % linear inequality constraints
         [], [],... % linear equality constraints
         borders(I,1),...   % lower bound
         borders(I,2),...   % upper bound
         [],options.profileReoptimizationOptions);    % options
+    newL = -newL;
+    newGL = -newGL;
+    newHL = -newHL;
     
     if ~strcmp(options.solver.hessian, 'user-supplied')
-        theta = [newY(1:ind-1); theta(ind); newY(ind:end)];
-        tmpHL = [newHL(1:ind-1,1:ind-1), zeros(ind-1,1), newHL(1:ind-1,ind:end);...
-            zeros(1,length(theta)); newHL(ind:end,1:ind-1), zeros(length(theta)-ind,1), newHL(ind:end,ind:end)];
-        tmpHL(ind,ind) = inf;
-        tmpGL = [newGL(1:ind-1); inf; newGL(ind:end)];
+        theta = [newY(1:iPar-1); theta(iPar); newY(iPar:end)];
+        tmpHL = [newHL(1:iPar-1,1:iPar-1), zeros(iPar-1,1), newHL(1:iPar-1,iPar:end);...
+            zeros(1,length(theta)); newHL(iPar:end,1:iPar-1), zeros(length(theta)-iPar,1), newHL(iPar:end,iPar:end)];
+        tmpHL(iPar,iPar) = inf;
+        tmpGL = [newGL(1:iPar-1); inf; newGL(iPar:end)];
         approximateHessian(theta, -tmpGL, tmpHL, options.solver.hessian, 'reinit');
     end
 end
 
 
 
-function y = doOptimizationSteps(parameters, thetaFull, objectiveFunction, borders, ind, s, options)
+function y = doOptimizationSteps(parameters, thetaFull, objectiveFunction, borders, iPar, s, options)
     
     global llhHistory;
     
     % Initialize everything
     y = [];
     theta = (thetaFull(end, :))';
-    I1 = (1 : ind-1)';
-    I2 = (ind+1 : length(theta))';
+    I1 = (1 : iPar-1)';
+    I2 = (iPar+1 : length(theta))';
     I = [I1; I2];
     stepCounter = 1;
-    dtheta = (thetaFull(end, :) - thetaFull(end-10, :))';
-    borders(ind,:) = [options.P.min(ind), options.P.max(ind)];
+    
+    % Initialize direction
+    dtheta = zeros(length(thetaFull(end, :)),1);
+    dtheta(iPar) = s * options.options_getNextPoint.guess;
+        
+    % dtheta = (thetaFull(end, :) - thetaFull(end-10, :))';
+    borders(iPar,:) = [options.P.min(iPar), options.P.max(iPar)];
     logPost = parameters.MS.logPost(options.MAP_index);
     logPost_max = parameters.MS.logPost(1);
+    negLogPost = setObjectiveWrapper(objectiveFunction, options, 'negative log-posterior', [], [], true, true);
     
     % Sequential update
-    while (options.P.min(ind) < theta(ind)) && (theta(ind) < options.P.max(ind)) && ...
+    while (options.P.min(iPar) < theta(iPar)) && (theta(iPar) < options.P.max(iPar)) && ...
             (logPost >= (log(options.R_min) + logPost_max) && ...
-            stepCounter < 4)
+            stepCounter < 5)
     
         % Proposal of next profile point
         [theta_next,~] = ...
-            getNextProfilePoint(theta,borders(:,1),borders(:,2),dtheta/abs(dtheta(ind)),...
-            abs(dtheta(ind)),options.options_getNextPoint.min,options.options_getNextPoint.max,options.options_getNextPoint.update,...
-            -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost),...
-            @(theta) objectiveWrap(theta,objectiveFunction,options.obj_type, options.objOutNumber),...
-            parameters.constraints, options.options_getNextPoint.mode,ind);
-
+            getNextProfilePoint(theta, ...
+            borders(:,1), ...
+            borders(:,2), ...
+            dtheta/abs(dtheta(iPar)), ...
+            abs(dtheta(iPar)), ...
+            options.options_getNextPoint.min, ...
+            options.options_getNextPoint.max, ...
+            options.options_getNextPoint.update, ...
+            -( log(1-options.dR_max) + options.dJ * (logPost-logPost_max) + logPost ), ...
+            negLogPost,...
+            parameters.constraints, ...
+            options.options_getNextPoint.mode, ...
+            iPar);
+        negLogPostReduced = setObjectiveWrapper(objectiveFunction, options, 'negative log-posterior', iPar, theta_next(iPar), true, true);
+        
         % Construction of reduced linear constraints
         [A,b,Aeq,beq] = getConstraints(theta, parameters, I);
         
+        if (~isfield(options.profileReoptimizationOptions, 'HessFcn') ...
+            || isempty(options.profileReoptimizationOptions.HessFcn))
+            % this only works for box-constraints at the moment
+            options.profileReoptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
+        end 
         % Optimization
         [theta_I_opt, L, ~, ~, ~, newGL, newHL] = ...
-            fmincon(@(theta_I) objectiveWrap([theta_I(I1);theta_next(ind);theta_I(I2-1)],objectiveFunction,options.obj_type,options.objOutNumber,I),... % negative log-posterior function
+            fmincon(negLogPostReduced, ...
             theta_next(I),...
             A  ,b  ,... % linear inequality constraints
             Aeq,beq,... % linear equality constraints
             parameters.min(I),...   % lower bound
             parameters.max(I),...   % upper bound
-            [],options.profileReoptimizationOptions);    % options
+            [],...
+            options.profileReoptimizationOptions);    % options
         
         % Restore full vector and determine update direction
         logPost = -L;
-        dtheta = [theta_I_opt(I1); theta_next(ind); theta_I_opt(I2-1)] - theta;
+        dtheta = [theta_I_opt(I1); theta_next(iPar); theta_I_opt(I2-1)] - theta;
         theta = theta + dtheta;
         
         llhHistory = [llhHistory, logPost];
         R = exp(-L - parameters.MS.logPost(1));
         if (strcmp(options.mode, 'text'))
             fprintf('\n  |  %11.8f | %11.7f | %7.5f |', ...
-                theta(ind), sqrt(sum(newGL.^2)), R);
+                theta(iPar), sqrt(sum(newGL.^2)), R);
         end
         y = [y, theta];
         stepCounter = stepCounter + 1;
     end
     
     if ~strcmp(options.solver.hessian, 'user-supplied')
-        tmpHL = [newHL(1:ind-1,1:ind-1), zeros(ind-1,1), newHL(1:ind-1,ind:end);...
-            zeros(1,length(theta)); newHL(ind:end,1:ind-1), zeros(length(theta)-ind,1), newHL(ind:end,ind:end)];
-        tmpHL(ind,ind) = inf;
-        tmpGL = [newGL(1:ind-1); inf; newGL(ind:end)];
+        tmpHL = [newHL(1:iPar-1,1:iPar-1), zeros(iPar-1,1), newHL(1:iPar-1,iPar:end);...
+            zeros(1,length(theta)); newHL(iPar:end,1:iPar-1), zeros(length(theta)-iPar,1), newHL(iPar:end,iPar:end)];
+        tmpHL(iPar,iPar) = inf;
+        tmpGL = [newGL(1:iPar-1); inf; newGL(iPar:end)];
         approximateHessian(theta, -tmpGL, tmpHL, options.solver.hessian, 'reinit');
     end
     y = y';
@@ -626,10 +680,10 @@ end
 % 2015/11/19 Sabrina Hross
 % 2017/02/20 Paul Stapor
 
-function [varargout] = getEndProfile(t, s, y, ind, borders, objectiveFunction, options, logPostMax)
+function [varargout] = getEndProfile(t, s, y, ind, borders, negLogPost, options, logPostMax)
 
-    L = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
-    R = -L - (log(options.R_min) + logPostMax);
+    L = negLogPost(y);
+    R = logPostMax - log(options.R_min) + L;
 
     if strcmp(options.solver.type, 'CVODE')
         if (t < borders(ind, 2)) && (t > borders(ind, 1))
@@ -665,7 +719,7 @@ end
 
 
 
-function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunction, parameterFunction, options)
+function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, negLogPost, parameterFunction, options)
     
     % set parameters
     npar = length(y);
@@ -676,10 +730,10 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
     
     switch options.solver.hessian
         case 'user-supplied'
-            [~, GL, HL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
-        case {'bfgs', 'sr1'}
-            [~, GL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
-            HL = approximateHessian(y, -GL, [], options.solver.hessian, []);
+            [~, GL, HL] = negLogPost(y);
+        case {'bfgs', 'sr1', 'dfp'}
+            [~, GL] = negLogPost(y);
+            HL = approximateHessian(y, -GL, [], options.solver.hessian, 'read');
         otherwise
             error('Unknown type of Hessian computation.');
     end
@@ -720,21 +774,23 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, objectiveFunct
     % Check, if parameter bounds are violated
     lRebuild = 0;
     for i = 1 : npar
-        if (y(i) <= borders(i, 1))
-            if(dth(i) < 0)
-                GL(i) = 0;
-                HL(i,:) = 0;
-                HL(:,i) = 0;
-                HL(i,i) = -1;
-                lRebuild = 1;
-            end
-        elseif (y(i) >= borders(i, 2))
-            if(dth(i) > 0)
-                GL(i) = 0;
-                HL(i,:) = 0;
-                HL(:,i) = 0;
-                HL(i,i) = -1;
-                lRebuild = 1;
+        if (i ~= ind)
+            if (y(i) <= borders(i, 1))
+                if(dth(i) < 0)
+                    GL(i) = 0;
+                    HL(i,:) = 0;
+                    HL(:,i) = 0;
+                    HL(i,i) = -1;
+                    lRebuild = 1;
+                end
+            elseif (y(i) >= borders(i, 2))
+                if(dth(i) > 0)
+                    GL(i) = 0;
+                    HL(i,:) = 0;
+                    HL(:,i) = 0;
+                    HL(i,i) = -1;
+                    lRebuild = 1;
+                end
             end
         end
     end
@@ -789,7 +845,7 @@ function hessian = approximateHessian(theta, grad, hess, method, flag)
             lastHess(ind,:); hess(ind+1:end,1:ind-1), lastHess(ind+1:end,ind), hess(ind+1:end,ind+1:end)];
         lastGrad = [grad(1:ind-1); lastGrad(ind); grad(ind+1:end)];
 
-    else
+    elseif strcmp(flag, 'write')
         if (theta == lastTheta)
             hessian = lastHess;
         else
@@ -806,6 +862,14 @@ function hessian = approximateHessian(theta, grad, hess, method, flag)
                     u = delGrad - lastHess * delTheta;
                     v = u * u' / (u' * delTheta);
                     hessian = lastHess + v;
+                case 'dfp'
+                    delTheta = theta - lastTheta;
+                    delGrad = grad - lastGrad;
+                    gamma = 1 / (delGrad' * delTheta);
+                    u1 = eye(length(theta)) - gamma * (delGrad * delTheta');
+                    u2 = eye(length(theta)) - gamma * (delTheta * delGrad');
+                    v = gamma * (delGrad * delGrad'); 
+                    hessian = u1 * lastHess * u2 + v;
             end
             
             % Replace old by new values for next call
@@ -813,6 +877,9 @@ function hessian = approximateHessian(theta, grad, hess, method, flag)
             lastHess = hessian;
             lastTheta = theta;
         end
+        
+    elseif strcmp(flag, 'read')
+        hessian = lastHess;
     end
     
 end
@@ -847,13 +914,13 @@ end
 % 2013/11/16 Sabrina Hock
 % 2016/02/06 Sabrina Hross
 
-function [dth, flag] = getRhsDAE(~, s, y, yp, ind, objectiveFunction, options)
+function [dth, flag] = getRhsDAE(~, s, y, yp, ind, negLogPost, options)
 
     % set parameters
     npar = length(y);
     flag = 0;
     
-    [~,GL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
+    [~,GL] = negLogPost(y);
 
     if (sum(isnan(GL)) > 0 || sum(isinf(GL)) > 0)
         disp('Warning: Undefined model output')
@@ -900,12 +967,12 @@ end
 % 2016/02/06 Sabrina Hross
 % 2016/11/21 Paul Stapor
 
-function Mt = getMassmatrixDAE(c ,s, y, ind, objectiveFunction, parameterFunction, options)
+function Mt = getMassmatrixDAE(c ,s, y, ind, negLogPost, parameterFunction)
 
     % set parameters
     npar = length(y);
     
-    [~, GL, HL] = objectiveWrap(y, objectiveFunction, options.obj_type, options.objOutNumber);
+    [~, GL, HL] = negLogPost(y);
     
     if (sum(sum(isnan(HL)))>0) || (sum(sum(isinf(HL)))>0) 
         disp('Warning: Undefined model output')
@@ -925,24 +992,6 @@ function Mt = getMassmatrixDAE(c ,s, y, ind, objectiveFunction, parameterFunctio
     if (isempty(c))
         display(['Jacobian Evaluation around theta = ' y']);
     else
-        display(['Laufachse: ' num2str(s*c) '   Optimalit�t in theta: ', num2str(sqrt(GL1' * GL1)), '    Kondition: ', num2str(rcond(A1))]);
-    end
-end
-
-function varargout = posLogPost(theta, negLogPost)
-    switch nargout
-        case 1
-            J = negLogPost(theta);
-            varargout{1} = -J;
-        case 2
-            [J,G] = negLogPost(theta);
-            varargout{1} = -J;
-            varargout{2} = -G;
-            
-        case 3
-            [J,G,H] = negLogPost(theta);
-            varargout{1} = -J;
-            varargout{2} = -G;
-            varargout{3} = -H;
+        display(['Running axis: ' num2str(s*c) '   Optimality: ', num2str(sqrt(GL1' * GL1)), '    condition number: ', num2str(rcond(A1))]);
     end
 end

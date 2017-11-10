@@ -88,8 +88,11 @@ options.sigma0              = 1e1*blkdiag([50,0;0,1],diag(ones(1,dimi)));
 % options.theta0                = [0,20,repmat(25,1,dimi)]'; 
 % options.sigma0                = 1e1*blkdiag([50,0;0,1],diag(ones(1,dimi)));
 
+optionsPesto = PestoOptions();
+optionsPesto.MCMC = options;
+
 % Perform the parameter estimation via sampling
-parameters = getParameterSamples(parameters, logP, options);
+parameters = getParameterSamples(parameters, logP, optionsPesto);
 
 % Additional visualization
 figure('Name', 'Chain analysis and theoretical vs true sampling distribution');

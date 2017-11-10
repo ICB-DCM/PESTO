@@ -1,39 +1,35 @@
-function parameters = performOptimizationDhc(parameters, objective_function, iStart, options)
-   
-    % interpret options
-    lOptions = options.localOptimizerOptions;
-    options_dhc.TolX        = lOptions.TolX;
-    options_dhc.TolFun      = lOptions.TolFun;
-    options_dhc.MaxIter     = lOptions.MaxIter;
-	options_dhc.MaxFunEvals = lOptions.MaxFunEvals;
-    if isfield(lOptions,'Mode'), options_dhc.Mode = lOptions.Mode; end
-	if (isfield(options.localOptimizerOptions,'Barrier') && ~isempty(options.localOptimizerOptions.Barrier))
-		options_dhc.Barrier		= options.localOptimizerOptions.Barrier;
-	end
+function parameters = performOptimizationDhc(parameters, negLogPost, iMS, J_0, options)
+       
+    options_dhc = options.localOptimizerOptions;
     
-    x0 = parameters.MS.par0(:,iStart);
+    x0 = parameters.MS.par0(:,iMS);
     lb = parameters.min;
     ub = parameters.max;
   
-    [x, fval, exitflag, output] = dynamicHillClimb(...
-        @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber),...
+    [theta, J_opt, exitflag, output] = dynamicHillClimb(...
+        negLogPost,...
         x0,...
         lb,...
         ub,...
         options_dhc);
     
-    %if (strcmp(options.obj_type, 'log-posterior'))
-        fval = -fval;
-   % end
-    
     % Assignment of results
-    % parameters.MS.J(1, iStart) = -J_0;
-    parameters.MS.par(:,iStart)     = x;
-    parameters.MS.logPost(iStart)   = fval;
-    parameters.MS.exitflag(iStart)  = exitflag;
-    % parameters.MS.gradient(:,iStart) = G_opt;
-    % parameters.MS.hessian(:,:,iStart) = H_opt;
-    parameters.MS.n_objfun(iStart)  = output.funcCount;
-    parameters.MS.n_iter(iStart)    = output.iterations;
-    parameters.MS.t_cpu(iStart)     = output.t_cpu;
+    parameters.MS.exitflag(iMS)   = exitflag;
+    parameters.MS.logPost0(1,iMS) = -J_0;
+    parameters.MS.logPost(iMS)    = -J_opt;
+    parameters.MS.par(:,iMS)      = theta;
+    
+    [~, G_opt, H_opt] = negLogPost(theta);
+    parameters.MS.hessian(:,:,iMS) = H_opt;
+    parameters.MS.gradient(:,iMS) = G_opt;
+
+    parameters.MS.n_objfun(iMS)  = output.funcCount;
+    parameters.MS.n_iter(iMS)    = output.iterations;
+    parameters.MS.t_cpu(iMS)     = output.t_cpu;
+    
+    parameters.MS.AIC(iMS) = 2*parameters.number + 2*J_opt;
+    if ~isempty(options.nDatapoints)
+        parameters.MS.BIC(iMS) = log(options.nDatapoints)*parameters.number + 2*J_opt;
+    end
+    
 end

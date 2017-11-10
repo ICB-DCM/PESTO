@@ -1,4 +1,4 @@
-function parameters = performOptimizationPswarm(parameters, objective_function, i, J_0, options)
+function parameters = performOptimizationPswarm(parameters, negLogPost, iMS, J_0, options)
 
     if ~exist('PSwarm', 'file')
         error('PSwarm not found. This feature requires the "PSwarm" toolbox to be installed. See http://www.norg.uminho.pt/aivaz/pswarm/ for download and installation instructions.');
@@ -11,16 +11,25 @@ function parameters = performOptimizationPswarm(parameters, objective_function, 
     problem.A = parameters.constraints.A;
     problem.b = parameters.constraints.b;
 
-    objFunHandle = @(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber);
-    [theta,J,RunData] = PSwarm(problem, struct('x', parameters.MS.par0(:,i)), options.localOptimizerOptions, objFunHandle);
+    objFunHandle = @(theta) negLogPost(theta);
+    [theta,J_opt,RunData] = PSwarm(problem, struct('x', parameters.MS.par0(:,iMS)), options.localOptimizerOptions, objFunHandle);
 
-    parameters.MS.logPost(i) = -J;
-    parameters.MS.par(:,i) = theta;
-    parameters.MS.n_objfun(i) = RunData.ObjFunCounter;
-    parameters.MS.n_iter(i) = RunData.IterCounter;
-
-    [~, G_opt, H_opt] = objectiveWrapWErrorCount(parameters.MS.par(:,i),objective_function,options.obj_type,options.objOutNumber);
-    parameters.MS.hessian(:,:,i) = -H_opt;
-    parameters.MS.gradient(:,i) = -G_opt;
-                    
+    % Assignment of results
+    parameters.MS.exitflag(iMS) = nan;
+    parameters.MS.logPost0(1,iMS) = nan;  % algorithm does not use J_0
+    parameters.MS.logPost(iMS) = -J_opt;
+    parameters.MS.par(:,iMS) = theta;
+    
+    [~, G_opt, H_opt] = negLogPost(theta);
+    parameters.MS.hessian(:,:,iMS) = H_opt;
+    parameters.MS.gradient(:,iMS) = G_opt;
+    
+    parameters.MS.n_objfun(iMS) = RunData.ObjFunCounter;
+    parameters.MS.n_iter(iMS) = RunData.IterCounter;
+    
+    parameters.MS.AIC(iMS) = 2*parameters.number + 2*J_opt;
+    if ~isempty(options.nDatapoints)
+        parameters.MS.BIC(iMS) = log(options.nDatapoints)*parameters.number + 2*J_opt;
+    end
+                        
 end

@@ -1,20 +1,27 @@
-function parameters = performOptimizationFminsearch(parameters, objective_function, i, options)
-
-    [theta,fval,parameters.MS.exitflag(i),output] = ...
-        fminsearch(@(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber),...  % negative log-likelihood function
-        parameters.MS.par0(:,i),...    % initial parameter
+function parameters = performOptimizationFminsearch(parameters, objective_function, iMS, J_0, options)
+    
+    %TODO: Implement constraints via penalty?
+    
+    [theta,J_opt,exitflag,output] = fminsearch(...
+        negLogPost,...  % negative log-likelihood function
+        parameters.MS.par0(:,iMS),...    % initial parameter
         options.localOptimizerOptions);   % options
-
-    if (strcmp(options.obj_type, 'log-posterior'))
-        fval = -fval;
-    end
     
     % Assignment of results
-    parameters.MS.logPost(i) = fval;
-    parameters.MS.par(:,i) = theta;
-    parameters.MS.n_objfun(i) = output.funcCount;
-    parameters.MS.n_iter(i) = output.iterations;
+    parameters.MS.exitflag(iMS) = exitflag;
+    parameters.MS.logPost(iMS) = -J_opt;
+    parameters.MS.par(:,iMS) = theta;
+  
+    [~, G_opt, H_opt] = negLogPost(theta);
+    parameters.MS.hessian(:,:,iMS) = H_opt;
+    parameters.MS.gradient(:,iMS) = G_opt;
     
-    %TODO: Are some sort of Gradient and Hessian needed somewhere later?
-    %TODO: Implement constraints via penalty?
+    parameters.MS.n_objfun(iMS) = output.funcCount;
+    parameters.MS.n_iter(iMS) = output.iterations;
+
+    parameters.MS.AIC(iMS) = 2*parameters.number + 2*J_opt;
+    if ~isempty(options.nDatapoints)
+        parameters.MS.BIC(iMS) = log(options.nDatapoints)*parameters.number + 2*J_opt;
+    end
+    
 end

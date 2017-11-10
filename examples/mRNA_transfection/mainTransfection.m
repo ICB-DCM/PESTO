@@ -160,7 +160,7 @@ optionsPesto           = PestoOptions();
 optionsPesto.obj_type  = 'log-posterior';
 optionsPesto.comp_type = 'sequential';
 optionsPesto.mode      = 'visual';
-optionsPesto.n_starts  = 20;
+optionsPesto.n_starts  = 15;
 optionsPesto.plot_options.group_CI_by = 'methods';
 
 % The example can also be run in parallel mode: Uncomment this, if wanted
@@ -199,14 +199,13 @@ parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 for iMode = 2 : optionsPesto.n_starts
    if (parameters.MS.logPost(iMode) > 39.5)
       if (abs(parameters.MS.par(3,iMode) - parameters.MS.par(3,1)) > 0.1)
-         index2MAP = iMode;
+         MAP_index2 = iMode;
          break;
       end
    end
 end
 
-% Create information for a second options struct
-MAP_index2 = iMode;
+% Create information for a second parameter struct
 parametersAlt = parameters;
 
 %% Visualization of fit
@@ -250,8 +249,8 @@ optionsPesto.objOutNumber = 2;
 parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
 
 % Computation for the second mode
-optionsPesto.MAP_index = MAP_index2;
 optionsPesto.fh = [];
+optionsPesto.MAP_index = MAP_index2;
 
 % Now only the profiles 3 and 4 should be recomputed, since all the other
 % profiles are identical for the second mode
@@ -269,27 +268,26 @@ optionsPesto.objOutNumber = 3;
 % distribution can be captured.
 
 % Building a struct covering all sampling options:
-optionsSampling = PestoSamplingOptions();
-optionsSampling.nIterations = 1e5;
-trainingTime = ceil(optionsSampling.nIterations / 5);
+optionsPesto.MCMC.nIterations = 1e5;
+trainingTime = ceil(optionsPesto.MCMC.nIterations / 5);
 
 % PHS specific options:
-optionsSampling.samplingAlgorithm = 'PHS';
-optionsSampling.objOutNumber      = 1;
-optionsSampling.PHS.nChains       = 2;
-optionsSampling.PHS.alpha         = 0.51;
-optionsSampling.PHS.memoryLength  = 1;
-optionsSampling.PHS.regFactor     = 1e-6;
-optionsSampling.PHS.trainingTime  = trainingTime;
+optionsPesto.MCMC.samplingAlgorithm = 'PHS';
+optionsPesto.MCMC.objOutNumber      = 1;
+optionsPesto.MCMC.PHS.nChains       = 4;
+optionsPesto.MCMC.PHS.alpha         = 0.51;
+optionsPesto.MCMC.PHS.memoryLength  = 1;
+optionsPesto.MCMC.PHS.regFactor     = 1e-6;
+optionsPesto.MCMC.PHS.trainingTime  = trainingTime;
 
 
-optionsSampling.theta0(:,1) = parameters.MS.par(:, 1);
-optionsSampling.sigma0(:,:,1) = inv(squeeze(parameters.MS.hessian(:, :, 1)));
-optionsSampling.theta0(:,2) = parameters.MS.par(:, MAP_index2);
-optionsSampling.sigma0(:,:,2) = inv(squeeze(parameters.MS.hessian(:, :, MAP_index2)));
+optionsPesto.MCMC.theta0(:,[1 3]) = parameters.MS.par(:, [1 1]);
+optionsPesto.MCMC.sigma0(:,:,[1 3]) = repmat(inv(squeeze(parameters.MS.hessian(:, :, 1))), [1 1 2]);
+optionsPesto.MCMC.theta0(:,[2 4]) = parameters.MS.par(:, [MAP_index2 MAP_index2]);
+optionsPesto.MCMC.sigma0(:,:,[2 4]) = repmat(inv(squeeze(parameters.MS.hessian(:, :, MAP_index2))), [1 1 2]);
 
 % Run the sampling
-parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
+parameters = getParameterSamples(parameters, objectiveFunction, optionsPesto);
 
 % Now, the plots for the sampling include the burn-in phase, which the
 % sampling algorithm needs to explore the posterior. Those burn-in samples

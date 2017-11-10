@@ -115,8 +115,10 @@ optionsSampling.sigma0              = 1e5*diag(ones(1,ringDimension));
 % optionsSampling.theta0                = repmat([-15*ones(ringDimension,1)],1,opt.PHS.nChains); 
 % optionsSampling.sigma0                = 1e5*diag(ones(1,ringDimension));
 
+optionsMultistart.MCMC = optionsSampling;
+
 % Perform the parameter estimation via sampling
-parameters = getParameterSamples(parameters, logP, optionsSampling);
+parameters = getParameterSamples(parameters, logP, optionsMultistart);
 
 
 %% Visualize the chain history and the theoretical disttribution

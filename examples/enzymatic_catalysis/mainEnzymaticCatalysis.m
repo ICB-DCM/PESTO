@@ -101,24 +101,23 @@ optionsPesto.plot_options.add_points.logPost = objectiveFunction(theta);
 %% Parameter Sampling
 % Covering all sampling options in one struct
 display(' Sampling without prior information...');
-optionsSampling = PestoSamplingOptions();
-optionsSampling.nIterations  = 1e4;
+optionsPesto.MCMC.nIterations  = 1e4;
 
 % PT (with only 1 chain -> AM) specific options:
-optionsSampling.samplingAlgorithm = 'PT';
-optionsSampling.PT.nTemps         = 6;
-optionsSampling.PT.exponentT      = 6;    
-optionsSampling.PT.regFactor      = 1e-8;
-optionsSampling.PT.temperatureAdaptionScheme = 'Lacki15'; %'Vousden16';
+optionsPesto.MCMC.samplingAlgorithm = 'PT';
+optionsPesto.MCMC.PT.nTemps         = 6;
+optionsPesto.MCMC.PT.exponentT      = 6;    
+optionsPesto.MCMC.PT.regFactor      = 1e-8;
+optionsPesto.MCMC.PT.temperatureAdaptionScheme = 'Lacki15'; %'Vousden16';
 
 % Initialize the chains by choosing a random initial point and a 'large'
 % covariance matrix
-optionsSampling.theta0 = lowerBound * ones(4, 1) + ...
+optionsPesto.MCMC.theta0 = lowerBound * ones(4, 1) + ...
     (upperBound * ones(4, 1) - lowerBound * ones(4, 1)) .* rand(4,1); 
-optionsSampling.sigma0 = 1e5 * eye(4);
+optionsPesto.MCMC.sigma0 = 1e5 * eye(4);
 
 % Run the sampling
-parameters = getParameterSamples(parameters, objectiveFunction, optionsSampling);
+parameters = getParameterSamples(parameters, objectiveFunction, optionsPesto);
 
 % Use a diagnosis tool to see, how plotting worked (see burn-in etc.)
 plotMCMCdiagnosis(parameters, 'parameters');
@@ -198,14 +197,14 @@ plotParameterSamples(parameters,'2D',fh,[],PlottingOptionsSampling);
 %% Perform a second Sampling, now based on Multistart Optimization
 % To compare the effect of previous multi-start optimization, we perform a
 % second sampling.
-optionsSampling.theta0 = parameters.MS.par(:,1); 
-optionsSampling.sigma0 = 0.5*inv(squeeze(parameters.MS.hessian(:,:,1)));
+optionsPesto.MCMC.theta0 = parameters.MS.par(:,1); 
+optionsPesto.MCMC.sigma0 = 0.5*inv(squeeze(parameters.MS.hessian(:,:,1)));
 
 % Run the sampling
 display(' Sampling with information from optimization...');
-optionsSampling.nIterations  = 2e3;
+optionsPesto.MCMC.nIterations  = 2e3;
 parametersNew = parameters;
-parametersNew = getParameterSamples(parametersNew, objectiveFunction, optionsSampling);
+parametersNew = getParameterSamples(parametersNew, objectiveFunction, optionsPesto);
 
 
 %% Calculate Confidence Intervals

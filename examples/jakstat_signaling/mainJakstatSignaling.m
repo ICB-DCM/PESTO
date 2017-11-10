@@ -31,10 +31,16 @@
 
 %% Preliminary
 
+<<<<<<< HEAD
 % Clean up
 clear;
 % close all;
 % clc;
+=======
+% clear all;
+% close all;
+clc;
+>>>>>>> master
 
 TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
@@ -88,8 +94,8 @@ parameters.name    = {'log_{10}(p1)','log_{10}(p2)','log_{10}(p3)','log_{10}(p4)
 
 % Initial guess for the parameters
 par0 = bsxfun(@plus,parameters.min,bsxfun(@times,parameters.max ...
-       - parameters.min, lhsdesign(1000,parameters.number,'smooth','off')'));
-parameters.guess = par0(:,1:100);
+       - parameters.min, lhsdesign(50,parameters.number,'smooth','off')'));
+parameters.guess = par0(:,1:50);
 
 % objective function
 objectiveFunction = @(theta) logLikelihoodJakstat(theta, amiData);
@@ -99,8 +105,7 @@ optionsPesto          = PestoOptions();
 optionsPesto.trace    = true;
 optionsPesto.proposal = 'user-supplied';
 optionsPesto.obj_type = 'log-posterior';
-optionsPesto.mode     = 'text';
-
+optionsPesto.mode     = 'visual';
 
 %% Perform optimization
 % A parameters optimization is performed within the bound defined in
@@ -136,14 +141,6 @@ optionsPesto.localOptimizerOptions = optimset(...
 % % Hybrid-type optimization part (requires the MEIGO toolbox)
 % % (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
 % % uncomment):
-% optionsPestoHybrid = optionsPesto.copy;
-% optionsPestoHybrid.localOptimizer = 'meigo-ess';
-% MeigoOptions = struct(...
-%     'maxeval', 10000, ...
-%     'local', struct('solver', 'fmincon', ...
-%     'finish', 'fmincon', ...
-%     'iterprint', 1) ...
-%     );
 % optionsPestoHybrid.localOptimizerOptions = MeigoOptions;
 % 
 % % Global optimization part (requires the PSwarm toolbox)
@@ -180,7 +177,7 @@ parametersMultistart = getMultiStarts(parameters, objectiveFunction, optionsPest
 % optionsPesto.profile_method = 'integration';
 
 % Profile likelihood calculation
-parameters = getParameterProfiles(parametersMultistart, objectiveFunction, optionsPesto);
+parametersMultistart = getParameterProfiles(parametersMultistart, objectiveFunction, optionsPesto);
 
 
 %% Cleaning up

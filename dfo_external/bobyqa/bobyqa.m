@@ -41,6 +41,10 @@ end
 
 %% main part
 
+if ~exist('mexbobyqa', 'file')
+    error('mexbobyqa does not exist. Please compile it first from Fortran.');
+end
+
 bobyqafun_sfbg = fun;
 
 % check for options

@@ -1,4 +1,4 @@
-function parameters = performOptimizationFmincon(parameters, objective_function, i, J_0, options)
+function parameters = performOptimizationFmincon(parameters, negLogPost, iMS, J_0, options)
 
     if isfield(parameters,'nonlcon')
         nonlcon = parameters.nonlcon;
@@ -6,9 +6,9 @@ function parameters = performOptimizationFmincon(parameters, objective_function,
         nonlcon = [];
     end
     
-    [theta,J_opt,parameters.MS.exitflag(i),results_fmincon,~,gradient_opt,hessian_opt] = ...
-        fmincon(@(theta) objectiveWrapWErrorCount(theta,objective_function,options.obj_type,options.objOutNumber),...  % negative log-likelihood function
-        parameters.MS.par0(:,i),...    % initial parameter
+    [theta,J_opt,exitflag,results_fmincon,~,gradient_opt,hessian_opt] = ...
+        fmincon(negLogPost,...  % negative log-likelihood function
+        parameters.MS.par0(:,iMS),...    % initial parameter
         parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
         parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
         parameters.min,...     % lower bound
@@ -16,19 +16,27 @@ function parameters = performOptimizationFmincon(parameters, objective_function,
         nonlcon,...            % nonlinear constraints
         options.localOptimizerOptions);   % options
 
-    % Assignment of results    
-    parameters.MS.J(1, i) = -J_0;
-    parameters.MS.logPost(i) = -J_opt;
-    parameters.MS.par(:,i) = theta;
-    parameters.MS.gradient(:,i) = gradient_opt;
+    % Assignment of results
+    parameters.MS.exitflag(iMS) = exitflag;
+    parameters.MS.logPost0(1, iMS) = -J_0;
+    parameters.MS.logPost(iMS) = -J_opt;
+    parameters.MS.par(:,iMS) = theta;
+    
+    parameters.MS.gradient(:,iMS) = gradient_opt;
     if isempty(hessian_opt)
         hessian_opt = nan(parameters.number);
     elseif max(hessian_opt(:)) == 0
         if strcmp(options.localOptimizerOptions.Hessian,'on')
-            [~,~,hessian_opt] = objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
+            [~,~,hessian_opt] = negLogPost(theta);
         end
+    end  
+    parameters.MS.hessian(:,:,iMS) = full(hessian_opt);
+    
+    parameters.MS.n_objfun(iMS) = results_fmincon.funcCount;
+    parameters.MS.n_iter(iMS) = results_fmincon.iterations;
+    
+    parameters.MS.AIC(iMS) = 2*parameters.number + 2*J_opt;
+    if ~isempty(options.nDatapoints)
+        parameters.MS.BIC(iMS) = log(options.nDatapoints)*parameters.number + 2*J_opt;
     end
-    parameters.MS.n_objfun(i) = results_fmincon.funcCount;
-    parameters.MS.n_iter(i) = results_fmincon.iterations;
-    parameters.MS.hessian(:,:,i) = full(hessian_opt);
 end
