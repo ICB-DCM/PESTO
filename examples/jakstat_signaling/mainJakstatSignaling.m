@@ -31,16 +31,9 @@
 
 %% Preliminary
 
-<<<<<<< HEAD
-% Clean up
 clear;
-% close all;
-% clc;
-=======
-% clear all;
-% close all;
+close all;
 clc;
->>>>>>> master
 
 TextSizes.DefaultAxesFontSize = 14;
 TextSizes.DefaultTextFontSize = 18;
@@ -149,7 +142,7 @@ optionsPesto.localOptimizerOptions = optimset(...
 % optionsPestoGlobal.localOptimizer = 'pswarm';
 % optionsPestoGlobal.localOptimizerOptions.MaxObj  = 10000;
 
-% The example can also be run in parallel mode: Uncomment this, if wanted
+% The example can also be run in parallel mode: Uncomment the following, if wanted
 % optionsPesto.comp_type = 'parallel'; 
 % optionsPesto.mode = 'text';
 % % optionsPesto.save = true; 
