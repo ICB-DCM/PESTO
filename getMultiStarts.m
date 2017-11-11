@@ -344,6 +344,7 @@ if strcmp(options.comp_type, 'sequential')
 end
 
 %% Multi-start local optimization -- PARALLEL
+% TODO: adapt parallel mode to sequential mode
 if strcmp(options.comp_type,'parallel')
     
     % Initialization
@@ -380,42 +381,35 @@ if strcmp(options.comp_type,'parallel')
         
         % Optimization
         startTimeLocalOptimization = cputime;
-        if (isempty(J_0) || (J_0 < -options.init_threshold))
+        if J_0 < -options.init_threshold
+            % Optimization using fmincon
+            [theta,J_opt,exitflag(iMS),results_fmincon,~,gradient_opt,hessian_opt] = ...
+                fmincon(@(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber),...  % negative log-posterior function
+                parameters.MS.par0(:,iMS),...    % initial parameter
+                parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
+                parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
+                parameters.min,...     % lower bound
+                parameters.max,...     % upper bound
+                [],options.localOptimizerOptions);   % options
             
-            %% do optimization with chosen algorithm
-            
-            switch options.localOptimizer
-                case 'fmincon'
-                    % fmincon as local optimizer
-                    parameters = performOptimizationFmincon(parameters, negLogPost, iMS, J_0, options);
-                    
-                case {'meigo-ess', 'meigo-vns'}
-                    % Use the MEIGO toolbox as local / global optimizer
-                    parameters = performOptimizationMeigo(parameters, negLogPost, iMS, J_0, options);
-                    
-                case 'pswarm'
-                    % Optimization using a swarm based global optimizer PSwarm
-                    parameters = performOptimizationPswarm(parameters, negLogPost, iMS, J_0, options);
-                    
-                case 'hctt'
-                    % Optimization using dynamic hill climbin as local optimizer
-                    parameters = performOptimizationHctt(parameters, negLogPost, iMS, J_0, options);
-                    
-                case 'cs'
-                    % Optimization using coordinate search as local optimizer
-                    parameters = performOptimizationCs(parameters, negLogPost, iMS, J_0, options);
-                    
-                case 'dhc'
-                    % Optimization using dynamic hill climbing as local optimizer
-                    parameters = performOptimizationDhc(parameters, negLogPost, iMS, J_0, options);
-                    
-                case 'bobyqa'
-                    % Optimization using bobya as local optimizer
-                    parameters = performOptimizationBobyqa(parameters, negLogPost, iMS, J_0, options);
+            % Assignment
+            logPost(iMS) = -J_opt;
+            par(:,iMS) = theta;
+            gradient(:,iMS) = gradient_opt;
+            if isempty(hessian_opt)
+                if strcmp(options.localOptimizerOptions.Hessian,'on')
+                    [~,~,hessian_opt] = objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
+                end
+            elseif max(abs(hessian_opt(:))) == 0
+                if strcmp(options.localOptimizerOptions.Hessian,'on')
+                    [~,~,hessian_opt] = objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
+                end
             end
-            
+            hessian(:,:,iMS) = full(hessian_opt);
+            n_objfun(iMS) = results_fmincon.funcCount;
+            n_iter(iMS) = results_fmincon.iterations;
         end
-        parameters.MS.t_cpu(iMS) = cputime - startTimeLocalOptimization;
+        t_cpu(iMS) = cputime - startTimeLocalOptimization;
         
         % Save
         if options.save
@@ -423,19 +417,29 @@ if strcmp(options.comp_type,'parallel')
         end
         
         % Output
-        % cannot access fh here
-        if contains (options.mode,'text')
-            fprintf('%d / %d:\t fval = %.15f, t = %.6f\n',iMS,length(options.start_index),parameters.MS.logPost(iMS),parameters.MS.t_cpu(iMS));
+        switch options.mode
+            case 'text', disp(['  ' num2str(iMS,'%d') '/' num2str(length(options.start_index),'%d')]);
+            case {'silent','visual'} % no output
         end
-        
     end
     
-    % Order
+    % Assignment
+    parameters.MS.par0 = par0;
+    parameters.MS.par = par;
+    parameters.MS.logPost0 = logPost0;
+    parameters.MS.logPost = logPost;
+    parameters.MS.gradient = gradient;
+    parameters.MS.hessian  = hessian;
+    parameters.MS.n_objfun = n_objfun;
+    parameters.MS.n_iter = n_iter;
+    parameters.MS.t_cpu = t_cpu;
+    parameters.MS.exitflag = exitflag;
     parameters = sortMultiStarts(parameters);
     
     % Output
-    if contains (options.mode,'visual')
-        fh = plotMultiStarts(parameters,fh,options.plot_options);
+    switch options.mode
+        case 'visual', fh = plotMultiStarts(parameters,fh,options.plot_options);
+        case {'text','silent'} % no output
     end
     
 end
