@@ -120,12 +120,12 @@ for j = 1 : properties.number
     optionsPesto.plot_options.add_points.prop(j) = properties.function{j}(optionsPesto.plot_options.add_points.par);
 end
 
-% The example can also be run in parallel mode: Uncomment this, if wanted
-% optionsMultistart.comp_type = 'parallel'; 
-% optionsMultistart.mode = 'text';
-% optionsMultistart.save = true; 
-% optionsMultistart.foldername = 'results';
-% n_workers = 10;
+The example can also be run in parallel mode: Uncomment this, if wanted
+optionsMultistart.comp_type = 'parallel'; 
+optionsMultistart.mode = 'text';
+optionsMultistart.save = true; 
+optionsMultistart.foldername = 'results';
+n_workers = 4;
 
 % Open parpool
 if strcmp(optionsPesto.comp_type, 'parallel') && (n_workers >= 2)
