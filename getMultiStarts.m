@@ -447,6 +447,7 @@ if strcmp(options.comp_type,'parallel')
         clear(fun.function(s_start(1):s_end(2)));
     end
     negLogPost = setObjectiveWrapper(objective_function, options, 'negative log-posterior', [], [], false, false);
+    
     % Loop: Mutli-starts
     parfor iMS = options.start_index
         
@@ -465,7 +466,6 @@ if strcmp(options.comp_type,'parallel')
         else
             J_0 = negLogPost(parameters.MS.par0(:,iMS));
         end
-        parameters.MS.logPost0(iMS) = -J_0;
         
         % Optimization
         startTimeLocalOptimization = cputime;

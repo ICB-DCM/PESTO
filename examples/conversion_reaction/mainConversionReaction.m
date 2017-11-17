@@ -120,7 +120,7 @@ for j = 1 : properties.number
     optionsPesto.plot_options.add_points.prop(j) = properties.function{j}(optionsPesto.plot_options.add_points.par);
 end
 
-The example can also be run in parallel mode: Uncomment this, if wanted
+% The example can also be run in parallel mode: Uncomment this, if wanted
 optionsMultistart.comp_type = 'parallel'; 
 optionsMultistart.mode = 'text';
 optionsMultistart.save = true; 
