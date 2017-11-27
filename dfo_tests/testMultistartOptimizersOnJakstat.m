@@ -64,19 +64,19 @@ objectiveFunction = @(theta) logLikelihoodJakstat(theta, amiData);
 % Run getMultiStarts
 fprintf('\n Perform optimization...\n');
 
-n_starts = 10;
-
-disp('fmincon:');
-parameters_fmincon = runMultiStarts(objectiveFunction, 1, n_starts, 'fmincon', nPar, lb, ub);
-printResultParameters(parameters_fmincon);
-
-disp('hctt:');
-parameters_hctt = runMultiStarts(objectiveFunction, 1, n_starts, 'hctt', nPar, lb, ub);
-printResultParameters(parameters_hctt);
-
-disp('cs:');
-parameters_cs = runMultiStarts(objectiveFunction, 1, n_starts, 'cs', nPar, lb, ub);
-printResultParameters(parameters_cs);
+n_starts = 2;
+% 
+% disp('fmincon:');
+% parameters_fmincon = runMultiStarts(objectiveFunction, 1, n_starts, 'fmincon', nPar, lb, ub);
+% printResultParameters(parameters_fmincon);
+% 
+% disp('hctt:');
+% parameters_hctt = runMultiStarts(objectiveFunction, 1, n_starts, 'hctt', nPar, lb, ub);
+% printResultParameters(parameters_hctt);
+% 
+% disp('cs:');
+% parameters_cs = runMultiStarts(objectiveFunction, 1, n_starts, 'cs', nPar, lb, ub);
+% printResultParameters(parameters_cs);
 
 disp('dhc:');
 parameters_dhc = runMultiStarts(objectiveFunction, 1, n_starts, 'dhc', nPar, lb, ub);
