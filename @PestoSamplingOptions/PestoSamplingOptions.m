@@ -64,6 +64,11 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       % Missing values will be approximated by finite differences.
       objOutNumber = 1;
       
+      % If desired, intermediate save spots are saved during the run in the
+      % following file each saveEach > 0:
+      saveFileName = '';
+      saveEach = 0;
+      
       % Parallel Tempering Options, an instance of PTOptions
       PT;
       

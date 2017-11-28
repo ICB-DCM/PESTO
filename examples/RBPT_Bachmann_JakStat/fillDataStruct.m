@@ -1,13 +1,6 @@
-function D = getOffsetScalingStd_Bachmann(varargin)
+function D = fillDataStruct(D)
 % maps the offset, scaling and variance parameters to the corresponding
 % conditions
-
-D = varargin{1};
-if nargin > 1
-    modeltype = varargin{2};
-else
-    modeltype = 'reduced';
-end
 
 for cond = 1:36
     D(cond).offset = nan(20,1);
@@ -100,13 +93,47 @@ D(cond).scaling([19,20]) = [61 62];
 D(cond).name = 'dose response 90 min';
 end
 
-if strcmp(modeltype,'reduced') 
-    for cond = 1:36
-        D(cond).offset = D(cond).offset-2;
-        D(cond).scaling = D(cond).scaling-2;
-        D(cond).std = D(cond).std-2;
-    end
+for cond = 1:36
+    D(cond).offset = D(cond).offset-2;
+    D(cond).scaling = D(cond).scaling-2;
+    D(cond).std = D(cond).std-2;
 end
-% else would be 115 parameters (SOCS3RNAEqc and CISRNAEqc not fixed to 1, and 
-% one standard deviation parameter neglected (sd_pSTAT5_socs3oe) ), 
-% corresponds to model in ./models/Bachmann_JAKSTAT_syms
+for cond = [1:6,15:numel(D)]
+    D(cond).init = @(xi,u) [10.^xi(25);0;0;0;0;0;10.^xi(26);0;10.^xi(27);zeros(16,1)];
+    D(cond).sinit = @(xi,u) [zeros(1,24),10.^xi(25)*log(10),0,0;
+        zeros(5,27);
+        zeros(1,25),10.^xi(26)*log(10),0;
+        zeros(1,27);
+        zeros(1,26),10.^xi(27)*log(10);
+        zeros(16,27)];
+end
+for cond=11:12
+    D(cond).init = @(xi,u) [10.^xi(25);0;0;0;0;0;10.^xi(26);0;10.^xi(27);zeros(15,1);u(3)*10.^(xi(15)+xi(16))];
+    D(cond).sinit = @(xi,u) [zeros(1,24),10.^xi(25)*log(10),0,0;
+        zeros(5,27);
+        zeros(1,25),10.^xi(26)*log(10),0;
+        zeros(1,27);
+        zeros(1,26),10.^xi(27)*log(10);
+        zeros(15,27)
+        zeros(1,14), u(3)*10.^(xi(15)+xi(16))*log(10),u(3)*10.^(xi(15)+xi(16))*log(10),zeros(1,11)];
+end
+for cond=7:10
+    D(cond).init = @(xi,u)   [10.^xi(25);0;0;0;0;u(2);10.^xi(26);0;10.^xi(27);zeros(8,1);u(2) * 10.^(xi(2)+xi(1)); zeros(7,1)];
+    D(cond).sinit = @(xi,u) [zeros(1,24),10.^xi(25)*log(10),0,0;
+        zeros(5,27);
+        zeros(1,25),10.^xi(26)*log(10),0;
+        zeros(1,27);
+        zeros(1,26),10.^xi(27)*log(10);
+        zeros(8,27);
+        u(2)*log(10)*10.^(xi(2)+xi(1)),u(2)*log(10)*10.^(xi(2)+xi(1)),zeros(1,25);
+        zeros(7,27)];
+end
+for cond = 13:14
+    D(cond).init = @(xi,u)  [10.^xi(25);0;0;0;0;0;10.^xi(26)*(1+(u(4)*10.^xi(14)));0;10.^xi(27);zeros(16,1)];
+    D(cond).sinit = @(xi,u) [zeros(1,24),10.^xi(25)*log(10),0,0;
+        zeros(5,27);
+        zeros(1,13),u(4)*10.^(xi(14)+xi(26))*log(10),zeros(1,11),10.^xi(26)*(1+(u(4)*10.^xi(14)))*log(10),0;
+        zeros(1,27);
+        zeros(1,26),10.^xi(27)*log(10);
+        zeros(16,27)];    
+end

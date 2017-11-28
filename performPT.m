@@ -65,6 +65,9 @@ function res = performPT( logPostHandle, par, opt )
    % Initialization
    doDebug              = opt.debug;
    
+   saveEach             = opt.saveEach;
+   saveFileName         = opt.saveFileName;   
+   
    nTemps               = opt.PT.nTemps;
    nIter                = opt.nIterations;
    theta0               = opt.theta0;
@@ -76,9 +79,10 @@ function res = performPT( logPostHandle, par, opt )
    temperatureNu        = opt.PT.temperatureNu;
    memoryLength         = opt.PT.memoryLength;
    regFactor            = opt.PT.regFactor;
-   nPar = par.number;
-%    swapsPerIter = opt.PT.swapsPerIter;
-   temperatureEta = opt.PT.temperatureEta;
+   nPar                 = par.number;
+   temperatureEta       = opt.PT.temperatureEta;
+   
+   
    
    S = zeros(1,nTemps-2);
    
@@ -152,11 +156,28 @@ function res = performPT( logPostHandle, par, opt )
    msg = '';
    timer = tic; dspTime      = toc; 
    
-   % Perform MCMC
    j = 0;
-   for i = 1:(nIter)
+   i = 1;
+   
+   % Reset Progress
+   if (saveEach ~= 0) && ~isempty(saveFileName) && ...
+         exist([saveFileName '.mat'],'file')==2
+      switch opt.mode
+         case {'visual','text'}
+            disp('Restoring aborted run...')
+      end
+      load(saveFileName);
+   end   
+   
+   % Perform MCMC
+   while i <= nIter
       
       j = j + 1; % Relative Index for each Phase
+      
+      % Save progress - nice for grid computing
+      if (saveEach ~= 0) && ~isempty(saveFileName) && mod(i,saveEach)==0
+         save(saveFileName);
+      end      
       
       % Reporting Progress
       switch opt.mode
@@ -337,6 +358,8 @@ function res = performPT( logPostHandle, par, opt )
          res.par(:,i)            = theta(:,1);
          res.logPost(i)          = logPost(1);         
       end
+      
+      i = i + 1; 
    end
    
    switch opt.mode

@@ -85,6 +85,9 @@ function res = performRBPT( logPostHandle, par, opt )
    nMaxRegions       = max(opt.RBPT.RPOpt.modeNumberCandidates);
    regionPredOpt     = opt.RBPT.RPOpt;
    
+   saveEach          = opt.saveEach;
+   saveFileName      = opt.saveFileName;
+   
      
    if doDebug
       res.par           = nan(nPar, nIter, nTemps);
@@ -165,9 +168,26 @@ function res = performRBPT( logPostHandle, par, opt )
    msg               = '';
    timer = tic; dspTime      = toc;
    
+   j = zeros(nTemps,nMaxRegions); 
+   i = 1;
+   
+   % Reset Progress
+   if (saveEach ~= 0) && ~isempty(saveFileName) && ...
+         exist([saveFileName '.mat'],'file')==2
+      switch opt.mode
+         case {'visual','text'}
+            disp('Restoring aborted run...')
+      end
+      load(saveFileName);
+   end
+   
    % Perform MCMC
-   j = zeros(nTemps,nMaxRegions);
-   for i = 1:(nIter)
+   while i <= nIter
+      
+      % Save progress - nice for grid computing
+      if (saveEach ~= 0) && ~isempty(saveFileName) && mod(i,saveEach)==0
+         save(saveFileName);
+      end
       
       % Reporting Progress
       switch opt.mode
@@ -187,12 +207,7 @@ function res = performRBPT( logPostHandle, par, opt )
       for l = 1:nTemps
          
          % Get region label of current point. Learn from posterior sample
-         if (i == nPhase) && (l == 1)
-            
-%             % ONLY TEMP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-%             test = load('forRingTesting');
-%             res.par = test.res.par(:,1:10:end);
-            
+         if (i == nPhase) && (l == 1) 
             
             % Train GMM to get label predictions for future points
             lh = nan(nTrainReplicates,length(regionPredOpt.modeNumberCandidates));
@@ -518,6 +533,9 @@ function res = performRBPT( logPostHandle, par, opt )
          res.logPost(i)          = logPost(1);
          res.newLabel(i,:)       = nL(1);
       end
+      
+      i = i + 1;
+
    end
    
    switch opt.mode
@@ -525,4 +543,5 @@ function res = performRBPT( logPostHandle, par, opt )
          fprintf(1, repmat('\b',1,numel(msg)-2)) ;
       case 'silent'
    end
+   
 end

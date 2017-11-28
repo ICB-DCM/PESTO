@@ -17,7 +17,7 @@ function [ llh ] = simulateRingLLH( par, radius, sigma, extra )
    ringPar   = par(1:end-extra);
 
    squares = ringPar.^2;
-   llh = - 0.5 * ( abs(sum(squares) - radius^2) / sigma );
+   llh = - 0.5 * ( (sqrt(sum(squares)) - radius)^2 / sigma^2 );
    
    llh = llh - 0.5 * log(2*pi)*extra - 0.5 * sum(normalPar.^2);
    
