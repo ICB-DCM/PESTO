@@ -27,8 +27,8 @@ function parameters = performOptimizationMeigo(parameters, negLogPost, iMS, J_0,
     parameters.MS.par(:,iMS) = Results.xbest;
     
     [~, G_opt, H_opt] = negLogPost(Results.xbest);
-    parameters.MS.hessian(:,:,iMS) = H_opt;
-    parameters.MS.gradient(:,iMS) = G_opt;
+    parameters.MS.hessian(:,:,iMS) = -H_opt;
+    parameters.MS.gradient(:,iMS) = -G_opt;
     
     parameters.MS.n_objfun(iMS) = Results.numeval;
     parameters.MS.n_iter(iMS) = size(Results.neval, 2);

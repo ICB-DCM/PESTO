@@ -142,22 +142,22 @@ parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
 % (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
 % uncomment:
 
-% MeigoOptions = struct(...
-%     'maxeval', 1000, ...
-%     'local', struct('solver', 'fmincon', ...
-%     'finish', 'fmincon', ...
-%     'iterprint', 0) ...
-%     );
-% 
-% optionsPesto.localOptimizer = 'meigo-ess';
-% optionsPesto.localOptimizerOptions = MeigoOptions;
-% optionsPesto.n_starts = 1;
-% parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+MeigoOptions = struct(...
+    'maxeval', 1000, ...
+    'local', struct('solver', 'fmincon', ...
+    'finish', 'fmincon', ...
+    'iterprint', 0) ...
+    );
 
-% Options for an alternative multi-start local optimization
-display(' Optimizing parameters...');
-optionsPesto.n_starts = 5;
+optionsPesto.localOptimizer = 'meigo-ess';
+optionsPesto.localOptimizerOptions = MeigoOptions;
+optionsPesto.n_starts = 3;
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+
+% % Options for an alternative multi-start local optimization
+% display(' Optimizing parameters...');
+% optionsPesto.n_starts = 5;
+% parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
 % Use a diagnosis tool to see, how optimization worked
 plotMultiStartDiagnosis(parameters);

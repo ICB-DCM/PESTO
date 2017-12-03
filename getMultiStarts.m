@@ -209,7 +209,7 @@ waitbarFields3 = {'hessian', 'par_trace'};
 if strcmp(options.comp_type, 'sequential')
     
     % Matlab parallel toolbox seems to have problems with our outfun...
-    if strcmp(options.localOptimizer, 'fmincon')
+    if (strcmp(options.localOptimizer, 'fmincon') || strcmp(options.localOptimizer, 'lsqnonlin'))
         options.localOptimizerOptions.OutputFcn = @outfun_fmincon;
     end
     
@@ -237,7 +237,7 @@ if strcmp(options.comp_type, 'sequential')
         % Test evaluation of objective function at starting point
         % Only for multi-start local, since other optimizers use a
         % different initialization
-        if (strcmp(options.localOptimizer, 'fmincon'))
+        if strcmp(options.localOptimizer, 'fmincon')
             if (strcmp(options.localOptimizerOptions.Hessian, 'on'))
                 % Depending on the algorithm, the Hessian gets called
                 % seperately (IP) or with the objective function (TR), so
@@ -253,6 +253,14 @@ if strcmp(options.comp_type, 'sequential')
                 J_0 = negLogPost(parameters.MS.par0(:,iMS));
             end
             parameters.MS.logPost0(iMS) = -J_0;
+        elseif (strcmp(options.localOptimizer, 'lsqnonlin'))
+            if (strcmp(options.localOptimizerOptions.Jacobian, 'on'))
+                [J_0,~] = negLogPost(parameters.MS.par0(:,iMS));
+            else
+                J_0 = negLogPost(parameters.MS.par0(:,iMS));
+            end
+            parameters.MS.logPost0(iMS) = -sum(J_0);
+            J_0 = sum(J_0);
         else
             J_0 = [];
         end
@@ -302,9 +310,11 @@ if strcmp(options.comp_type, 'sequential')
         end
         
         % Output
-        if contains (options.mode,'visual'), fh = plotMultiStarts(parameters,fh,options.plot_options); end
-        if contains (options.mode,'text')
-            fprintf('%d / %d:\t fval = %.15f, t = %.6f\n',iMS,length(options.start_index),parameters.MS.logPost(iMS),parameters.MS.t_cpu(iMS));
+        if strcmp(options.mode,'visual')
+            fh = plotMultiStarts(parameters, fh, options.plot_options);
+        elseif strcmp(options.mode,'text')
+            fprintf('%d / %d:\t fval = %.15f, t = %.6f\n', ...
+                iMS, length(options.start_index), parameters.MS.logPost(iMS), parameters.MS.t_cpu(iMS));
         end
         
         % Abort the calculation if the waitbar is cancelled
@@ -471,8 +481,12 @@ options.localOptimizerOptions.OutputFcn = [];
             case 'iter'
                 if(options.trace)
                     parameters.MS.par_trace(:,optimValues.iteration+1,iMS) = x;
-                    parameters.MS.fval_trace(optimValues.iteration+1,iMS) = optimValues.fval;
                     parameters.MS.time_trace(optimValues.iteration+1,iMS) = cputime - startTimeLocalOptimization;
+                    if isfield(optimValues, 'fval')
+                        parameters.MS.fval_trace(optimValues.iteration+1,iMS) = optimValues.fval;
+                    else
+                        parameters.MS.fval_trace(optimValues.iteration+1,iMS) = optimValues.resnorm;
+                    end
                 end
                 if(options.tempsave)
                     if optimValues.iteration>0
