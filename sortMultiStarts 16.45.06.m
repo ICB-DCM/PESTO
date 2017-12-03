@@ -66,6 +66,14 @@ if isfield(parameters.MS,'exitflag')
     parameters.MS.exitflag = parameters.MS.exitflag(ind);
 end
 
+if isfield(parameters.MS,'AIC')
+    parameters.MS.AIC = parameters.MS.AIC(ind);
+end
+
+if isfield(parameters.MS,'BIC')
+    parameters.MS.BIC = parameters.MS.BIC(ind);
+end
+
 %% Assignment of variables which are not always contained in the struct
 if isfield(parameters.MS,'par_trace')
     parameters.MS.par_trace = parameters.MS.par_trace(:,:,ind);

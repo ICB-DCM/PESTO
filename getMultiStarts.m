@@ -101,7 +101,7 @@ end
 parameters = parametersSanityCheck(parameters);
 
 if (strcmp(options.localOptimizer, 'fmincon') && ( ~isfield(options.localOptimizerOptions, 'MaxFunEvals') || isempty(options.localOptimizerOptions.MaxFunEvals) ) )
-    options.localOptimizerOptions.MaxFunEvals = 400*parameters.number;
+    options.localOptimizerOptions.MaxFunEvals = 200*parameters.number;
 end
 
 %% Initialization and figure generation
@@ -117,7 +117,7 @@ switch options.mode
         fprintf(' \nOptimization:\n=============\n');
     case 'silent' % no output
         % Force fmincon to be silent.
-        if strcmp(options.localOptimizer, 'fmincon')
+        if (strcmp(options.localOptimizer, 'fmincon') || strcmp(options.localOptimizer, 'lsqnonlin'))
             options.localOptimizerOptions.Display = 'off';
         end
 end
@@ -140,7 +140,7 @@ switch options.proposal
             if size(parameters.guess,2) < options.n_starts
                 error('You did not define an initial function and do not provide enough starting points in parameters.guess. Aborting.');
             else
-                par0 = [parameters.guess(:,1:options.n_starts)];
+                par0 = parameters.guess(:,1:options.n_starts);
             end
         else
             par0 = [parameters.guess,...
@@ -156,13 +156,13 @@ if or(options.save,options.tempsave)
         mkdir(fullfile(pwd,options.foldername))
     end
     % only save the init mat for the first start index, not every one if they are called seperately
-    if(and(options.save,~isempty(find(options.start_index==1))))
+    if(and(options.save,~isempty(find(options.start_index == 1, 1))))
         save([options.foldername '/init'],'parameters','-v7.3');
     end
 end
 
 %% Initialization
-if strcmp(options.localOptimizer, 'fmincon') || strcmp(options.localOptimizer, 'pswarm')
+if (strcmp(options.localOptimizer, 'fmincon') || strcmp(options.localOptimizer, 'pswarm') || strcmp(options.localOptimizer, 'lsqnonlin'))
     maxOptimSteps = options.localOptimizerOptions.MaxIter;
 elseif strcmp(options.localOptimizer, 'meigo-ess') || strcmp(options.localOptimizer, 'meigo-vns')
     maxOptimSteps = options.localOptimizerOptions.maxeval;
