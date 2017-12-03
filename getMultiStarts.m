@@ -365,26 +365,33 @@ if strcmp(options.comp_type,'parallel')
         s_end = strfind(fun.function,'(')-1;
         clear(fun.function(s_start(1):s_end(2)));
     end
+    negLogPost = setObjectiveWrapper(objective_function, options, 'negative log-posterior', [], [], false, false);
     
     % Loop: Mutli-starts
     parfor iMS = options.start_index
         
         % Evaluation of objective function at starting point
-        if (~strcmp(options.localOptimizerOptions.GradObj, 'on'))
-            J_0 = objectiveWrap(parameters.MS.par0(:,iMS),objective_function,options.obj_type,options.objOutNumber);
-        elseif (strcmp(options.localOptimizerOptions.GradObj, 'on') && ~strcmp(options.localOptimizerOptions.Hessian,'on'))
-            [J_0,grad_J_0] = objectiveWrap(parameters.MS.par0(:,iMS),objective_function,options.obj_type,options.objOutNumber);
+        if (strcmp(options.localOptimizerOptions.Hessian, 'on'))
+            % Depending on the algorithm, the Hessian gets called
+            % seperately (IP) or with the objective function (TR), so
+            % different cases have to be checked.
+            if strcmp(options.localOptimizerOptions.Algorithm, 'interior-point')
+                [J_0,~] = negLogPost(parameters.MS.par0(:,iMS));
+            else
+                [J_0,~,~] = negLogPost(parameters.MS.par0(:,iMS));
+            end
+        elseif (strcmp(options.localOptimizerOptions.GradObj, 'on'))
+            [J_0,~] = negLogPost(parameters.MS.par0(:,iMS));
         else
-            [J_0,grad_J_0,H_J_0] = objectiveWrap(parameters.MS.par0(:,iMS),objective_function,options.obj_type,options.objOutNumber);
+            J_0 = negLogPost(parameters.MS.par0(:,iMS));
         end
-        logPost0(iMS) = -J_0;
         
         % Optimization
         startTimeLocalOptimization = cputime;
         if J_0 < -options.init_threshold
             % Optimization using fmincon
             [theta,J_opt,exitflag(iMS),results_fmincon,~,gradient_opt,hessian_opt] = ...
-                fmincon(@(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber),...  % negative log-posterior function
+                fmincon(negLogPost,...  % negative log-posterior function
                 parameters.MS.par0(:,iMS),...    % initial parameter
                 parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
                 parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
