@@ -276,9 +276,9 @@ if strcmp(options.comp_type, 'sequential')
                     % Optimization using a swarm based global optimizer PSwarm
                     parameters = performOptimizationPswarm(parameters, negLogPost, iMS, J_0, options);
                     
-                case 'hctt'
+                case 'lsqnonlin'
                     % Optimization using dynamic hill climbin as local optimizer
-                    parameters = performOptimizationHctt(parameters, negLogPost, iMS, J_0, options);
+                    parameters = performOptimizationLsqnonlin(parameters, negLogPost, iMS, J_0, options);
                     
                 case 'cs'
                     % Optimization using coordinate search as local optimizer
