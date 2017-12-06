@@ -855,8 +855,8 @@ outputFcn(x,optimValues,state);
 end
 
 function f_display(display,jIter,fbst,vnorm)
-if (contains(display,'iter'))
-    if (contains(display,'detailed'))
+if (strcmp(display,'iter') || strcmp(display,'debug'))
+    if (strcmp(display,'debug'))
         show_output = true;
     else
         show_output = mod(jIter,100) == 0;

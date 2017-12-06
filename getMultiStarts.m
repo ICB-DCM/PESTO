@@ -261,8 +261,8 @@ if strcmp(options.comp_type, 'sequential')
             end
             parameters.MS.logPost0(iMS) = -sum(J_0);
             J_0 = sum(J_0);
-        else
-            J_0 = [];
+        elseif (any(strcmp(options.localOptimizer, {'dhc','cs','bobyqa'})))
+            J_0 = negLogPost(parameters.MS.par0(:,iMS));
         end
         
         % Optimization

@@ -15,7 +15,7 @@ function parameters = performOptimizationDhc(parameters, negLogPost, iMS, J_0, o
     
     % Assignment of results
     parameters.MS.exitflag(iMS)   = exitflag;
-    parameters.MS.logPost0(1,iMS) = nan; % TODO
+    parameters.MS.logPost0(1,iMS) = -J_0;
     parameters.MS.logPost(iMS)    = -J_opt;
     parameters.MS.par(:,iMS)      = theta;
     
