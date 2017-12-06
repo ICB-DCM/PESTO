@@ -58,6 +58,9 @@ if length(varargin) >= 1 && ~isempty(varargin{1})
     end
 end
 
+% Check, if parameters has all necessary fieds
+parameters = checkSanityOfStructs(parameters, 'parameters');
+
 % Open figure
 if length(varargin) >= 2 && ~isempty(varargin{2})
     fh = figure(varargin{2});
@@ -79,10 +82,7 @@ end
 % Options
 % General plot options
 if length(varargin) >= 4
-    if ~isa(varargin{4}, 'PestoPlottingOptions')
-        error('Argument 4 is not of type PestoPlottingOptions.')
-    end
-    options = varargin{4}.copy();
+    options = handlePlottingOptionArgument(varargin{4});
 else
     options = PestoPlottingOptions();
 end
@@ -94,15 +94,6 @@ end
 
 if ~isfield(parameters,'S')
     options.S.plot_type = 0;
-else
-    if isfield(parameters.S,'PT');
-        options.S.PT.plot_type = options.S.plot_type;
-        options.S.PT.ind = size(parameters.S.PT.par,3):-1:1;
-        options.S.PT.col = [linspace(0,1,size(parameters.S.PT.par,3))',...
-                            0.2*ones(size(parameters.S.PT.par,3),1),...
-                            linspace(1,0,size(parameters.S.PT.par,3))'];
-        options.S.PT.sp_col = options.S.PT.col;
-    end
 end
 
 if ~isfield(parameters,'MS')
@@ -172,6 +163,9 @@ for l = 1:length(I)
                 end
                 xl(1) = min(xl(1),min(parameters.MS.par(i,L)));
                 xl(2) = max(xl(2),max(parameters.MS.par(i,L)));
+            else
+                xl(1) = parameters.min(i);
+                xl(2) = parameters.max(i);
             end
         
             flag_plot_P = 0;
@@ -183,11 +177,6 @@ for l = 1:length(I)
                         flag_plot_P = 1;
                     end
                 end
-            end
-
-            if options.S.plot_type >= 1
-                xl(1) = min(xl(1),min(parameters.S.par(i,:)));
-                xl(2) = max(xl(2),max(parameters.S.par(i,:)));
             end
             
             if xl(1) == xl(2)
@@ -211,68 +200,44 @@ for l = 1:length(I)
     end
 
     % Plot: Visualizaion of MCMC samples of tempered posterior distribution
-    switch options.S.PT.plot_type
-        case 0
-            % no plot
-        case 1
-            % histogram
-            if isfield(parameters.S,'PT') && options.S.PT.plot_type
-                for k = options.S.PT.ind
-                    switch options.S.bins
-                        case 'optimal'
-                            h = 3.49*std(parameters.S.PT.par(i,:,k))/(length(parameters.S.PT.par(i,:,k))^(1/3));
-                            nbin = round((max(parameters.S.PT.par(i,:,k))-min(parameters.S.PT.par(i,:,k)))/h);
-                        case 'conservative'
-                            h = 2*3.49*std(parameters.S.PT.par(i,:,k))/(length(parameters.S.PT.par(i,:,k))^(1/3));
-                            nbin = round((max(parameters.S.PT.par(i,:,k))-min(parameters.S.PT.par(i,:,k)))/h);
-                        otherwise
-                            nbin = options.S.bins;
-                    end
-                    [N,X] = hist(parameters.S.PT.par(i,:,k),nbin);
-                    bar(X,N/max(N),1,'facecolor',options.S.PT.col(k,:),'edgecolor',options.S.PT.col(k,:)); hold on;
-                    % bar(X,N/max(N),1,'facecolor','none','edgecolor',options.S.PT.col(k,:)); hold on;
-                end
-            end
-        case 2
-            % kernel-density estimate
-            if isfield(parameters.S,'PT') && options.S.PT.plot_type
-                for k = options.S.PT.ind
-                    x_grid = linspace(min(parameters.S.PT.par(i,:,k)),max(parameters.S.PT.par(i,:,k)),100);
-                    [KDest] = getKernelDensityEstimate(squeeze(parameters.S.PT.par(i,:,k)),x_grid);
-                    plot(x_grid,KDest/max(KDest),'-','color',options.S.PT.col(k,:),'linewidth',options.S.PT.lw); hold on;
-                end
-            end
-        otherwise
-            error('Selected value for ''options.S.plot_type'' is not available.');
-    end
-        
-    % Plot: Visualizaion of MCMC samples of posterior distribution
     h = [];
     switch options.S.plot_type
         case 0
             % no plot
         case 1
             % histogram
-            switch options.S.bins
-                case 'optimal'
-                    b = 3.49*std(parameters.S.par(i,:))/(length(parameters.S.par(i,:))^(1/3));
-                    nbin = round((max(parameters.S.par(i,:))-min(parameters.S.par(i,:)))/b);
-                case 'conservative'
-                    b = 2*3.49*std(parameters.S.par(i,:))/(length(parameters.S.par(i,:))^(1/3));
-                    nbin = round((max(parameters.S.par(i,:))-min(parameters.S.par(i,:)))/b);
-                otherwise
-                    nbin = options.S.bins;
-            end
-            [N,X] = hist(parameters.S.par(i,:),nbin);
-            h = bar(X,N/max(N),1,'facecolor',options.S.hist_col); hold on;
+                for k = 1
+                    switch options.S.bins
+                        case 'optimal'
+                            h = 3.49*std(parameters.S.par(i,:,k))/(length(parameters.S.par(i,:,k))^(1/3));
+                            nbin = round((max(parameters.S.par(i,:,k))-min(parameters.S.par(i,:,k)))/h);
+                        case 'conservative'
+                            h = 2*3.49*std(parameters.S.par(i,:,k))/(length(parameters.S.par(i,:,k))^(1/3));
+                            nbin = round((max(parameters.S.par(i,:,k))-min(parameters.S.par(i,:,k)))/h);
+                        otherwise
+                            nbin = options.S.bins;
+                    end
+                    [N,X] = hist(parameters.S.par(i,:,k),nbin);
+                    h = bar(X,N/max(N),1,'facecolor',options.S.hist_col(k,:),'edgecolor',[0.4,0.4,0.4]);
+                    hold on;
+                    
+                    if strcmp(options.interval, 'dynamic')
+                        xl(1) = min(xl(1), min(X));
+                        xl(2) = max(xl(2), max(X));
+                    end
+                    % bar(X,N/max(N),1,'facecolor','none','edgecolor',options.S.col(k,:)); hold on;
+                end
         case 2
             % kernel-density estimate
-            x_grid = linspace(min(parameters.S.par(i,:)),max(parameters.S.par(i,:)),100);
-            [KDest] = getKernelDensityEstimate(squeeze(parameters.S.par(i,:)),x_grid);
-            h = plot(x_grid,KDest/max(KDest),'-','color',options.S.lin_col,'linewidth',options.S.lin_lw); hold on;
+             for k = options.S.ind:-1:1
+                 x_grid = linspace(min(parameters.S.par(i,:,k)),max(parameters.S.par(i,:,k)),100);
+                 [KDest] = getKernelDensityEstimate(squeeze(parameters.S.par(i,:,k)),x_grid);
+                 h = plot(x_grid,KDest/max(KDest),'-','color',options.S.sp_col(k,:),'linewidth',options.S.lw); hold on;
+             end
         otherwise
             error('Selected value for ''options.S.plot_type'' is not available.');
     end
+
     if ~isempty(h)
         legh(end+1) = h;
         legs{end+1} = options.S.name;
@@ -393,25 +358,25 @@ for l = 1:length(I)
     
     % Bounds
     if (options.P.plot_type >= 1) * flag_plot_P
-    switch options.boundary.mark
-        case 0
-            % no plot
-        case 1
-            ind = find(sum( bsxfun(@gt,parameters.min+options.boundary.eps,parameters.P(i).par)...
-                           +bsxfun(@gt,parameters.P(i).par,parameters.max-options.boundary.eps),1));
-            if ~isempty(ind)
-                switch options.P.plot_type
-                    case 1
-                        % likelihood ratio
-                        plot(parameters.P(i).par(i,ind),exp(parameters.P(i).logPost(ind) - logPost_max),'x','linewidth',options.P.lw,'color',options.P.col); hold on;    
-                    case 2
-                        % negative log-likelihood
-                        plot(parameters.P(i).par(i,ind),parameters.P(i).logPost(ind),'x','linewidth',options.P.lw,'color',options.P.col); hold on;    
+        switch options.boundary.mark
+            case 0
+                % no plot
+            case 1
+                ind = find(sum( bsxfun(@gt,parameters.min+options.boundary.eps,parameters.P(i).par)...
+                               +bsxfun(@gt,parameters.P(i).par,parameters.max-options.boundary.eps),1));
+                if ~isempty(ind)
+                    switch options.P.plot_type
+                        case 1
+                            % likelihood ratio
+                            plot(parameters.P(i).par(i,ind),exp(parameters.P(i).logPost(ind) - logPost_max),'x','linewidth',options.P.lw,'color',options.P.col); hold on;    
+                        case 2
+                            % negative log-likelihood
+                            plot(parameters.P(i).par(i,ind),parameters.P(i).logPost(ind),'x','linewidth',options.P.lw,'color',options.P.col); hold on;    
+                    end
                 end
-            end
-        otherwise
-            error('Selected value for ''options.boundary.mark'' is not available.');
-    end
+            otherwise
+                error('Selected value for ''options.boundary.mark'' is not available.');
+        end
     end
     
     % Plot: Local optima
@@ -601,38 +566,30 @@ for l2 = 1:length(I)
                     
     % Plot: MCMC samples of tempered posterior distribution
     h = [];
-    switch options.S.PT.plot_type
-        case 0
-            % no plot
-        case 1
-            % scatter plot
-            if isfield(parameters.S,'PT') && options.S.PT.plot_type
-                for k = options.S.PT.ind
-                    h = plot(parameters.S.PT.par(i1,:,k),parameters.S.PT.par(i2,:,k),options.S.PT.sp_m,...
-                        'color',options.S.PT.sp_col(k,:),'markersize',options.S.PT.sp_ms); hold on;
-                end
-            end
-        otherwise
-            error('Selected value for ''options.S.PT.plot_type'' is not available.');
-    end
-    if ~isempty(h)
-        legh(end+1) = h;
-        legs{end+1} = options.S.name;
-    end
-
-    % Plot: MCMC samples
-    h = [];
     switch options.S.plot_type
         case 0
             % no plot
         case 1
             % scatter plot
-            h = plot(parameters.S.par(i1,:),parameters.S.par(i2,:),options.S.sp_m(1),...
-                'color',options.S.sp_col(1,:),'markersize',options.S.sp_ms); hold on;
+             for k = 1:options.S.ind
+                 h = plot(parameters.S.par(i1,:,k),parameters.S.par(i2,:,k),options.S.sp_m,...
+                     'color',options.S.sp_col(k,:),'markersize',options.S.sp_ms); hold on;
+             end
+        case 2
+            % kernel-density estimate
+             for k = options.S.ind:-1:1
+                 x1_line = linspace(min(parameters.S.par(i1,:,k)),max(parameters.S.par(i1,:,k)),100);
+                 x2_line = linspace(min(parameters.S.par(i2,:,k)),max(parameters.S.par(i2,:,k)),100);
+                 [x1_grid, x2_grid] = meshgrid(x1_line, x2_line);
+                 x_grid = transpose([x1_grid(:), x2_grid(:)]);
+                 [KDest] = getKernelDensityEstimate([squeeze(parameters.S.par(i1,:,k)); squeeze(parameters.S.par(i2,:,k))], x_grid);
+                 KDest = reshape(KDest, length(x1_line), length(x2_line));
+                 [~,h] = contour(x1_line, x2_line, KDest/max(max(KDest)),'-','color',options.S.sp_col(k,:),'linewidth',options.S.lw); 
+                 hold on;
+             end
         otherwise
             error('Selected value for ''options.S.plot_type'' is not available.');
     end
-    
     if ~isempty(h)
         legh(end+1) = h;
         legs{end+1} = options.S.name;
@@ -668,8 +625,8 @@ for l2 = 1:length(I)
                         Sigma = pinv(parameters.MS.hessian([i1,i2],[i1,i2],1));
                         theta_0 = parameters.MS.par([i1,i2],1);
                         plot_appr = true;
-                    else
-                        warning('No valid values for sigma found! Not plotting approximation.');
+                    elseif isfield(parameters, 'MS')
+                        warning('No valid values for sigma found! No plotting approximation.');
                     end
                 case 'sigmaOnly'
                     if (~isfield(parameters, 'MS') || ~isfield(parameters.MS, 'par') || isempty(parameters.MS.par,3))
@@ -677,7 +634,7 @@ for l2 = 1:length(I)
                         theta_0 = parameters.MS.par([i1,i2],1);
                         plot_appr = true;
                     else
-                        warning('No valid values for theta found! Not plotting approximation.');
+                        warning('No valid values for theta found! No plotting approximation.');
                     end
                 case 'all'
                     Sigma = parameters.user.Sigma_0([i1,i2],[i1,i2]);

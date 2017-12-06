@@ -25,7 +25,8 @@ function performNewMeasurement(theta, nMeasure, nTimepoints, sigma2)
 con0 = exp(normrnd(0, 0.5, 4, nMeasure));
 
 % Create file with initial concentrations
-fid = fopen('getInitialConcentrations.m', 'w');
+[exdir, ~, ~] = fileparts(which('performNewMeasurement.m'));
+fid = fopen([exdir '/getInitialConcentrations.m'], 'w');
 fprintf(fid, 'function con0 = getInitialConcentrations()\n\n');
 fprintf(fid, ['    con0 = nan(4, ' num2str(nMeasure) ');\n']);
 
@@ -53,7 +54,7 @@ t = linspace(0, 5, nTimepoints);
 h = @(x,theta) [x(:,1), x(:,4)];
 
 % Create file with measurement data
-fid = fopen('getMeasuredData.m', 'w');
+fid = fopen([exdir '/getMeasuredData.m'], 'w');
 fprintf(fid, 'function yMeasure = getMeasuredData()\n\n');
 fprintf(fid, ['yMeasure = nan(' num2str(nMeasure) ', ' num2str(nTimepoints) ' , 2);\n']);
 

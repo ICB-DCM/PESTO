@@ -3,7 +3,6 @@ classdef ConversionReactionTest < matlab.unittest.TestCase
     properties
         oldPath
         parameters
-        options
         theta_true = [-2.5;-2];
         llh_true = 32.275546152684690;
         t = (0:10)';        % time points
@@ -14,6 +13,10 @@ classdef ConversionReactionTest < matlab.unittest.TestCase
     end
     
     methods(TestMethodSetup)
+        function initializeRng(testCase)
+            rng(0)
+        end
+        
         function setPath(testCase)
             testCase.oldPath = path();
             addpath(fullfile(fileparts(mfilename('fullpath')), '..','examples', 'conversion_reaction'));
@@ -43,6 +46,17 @@ classdef ConversionReactionTest < matlab.unittest.TestCase
         function testObjectiveFunction(testCase)
             actLLH = testCase.objectiveFunction(testCase.theta_true);
             testCase.fatalAssertEqual(actLLH, testCase.llh_true, 'AbsTol', eps, 'Likelihood function result is wrong.')
+        end
+        
+        function testGetMultiStartsOptionStruct(testCase)
+            % check autoconversion to PestoOptions
+            optionsMS.obj_type = 'log-posterior';
+            optionsMS.n_starts = 1;
+            optionsMS.comp_type = 'sequential';
+            optionsMS.mode = 'silent';
+
+            multiStartParams = getMultiStarts(testCase.parameters, testCase.objectiveFunction, optionsMS);
+            testCase.verifyMultiStartResults(multiStartParams, optionsMS);
         end
         
         function testGetMultiStartsFminconSingleStart(testCase)
@@ -89,24 +103,30 @@ classdef ConversionReactionTest < matlab.unittest.TestCase
             parametersMeigo = getMultiStarts(testCase.parameters, testCase.objectiveFunction, optionsMultistartMeigo);
             testCase.verifyMultiStartResults(parametersMeigo, optionsMultistartMeigo);
         end
-
-        function testSamplingSingleChainAM(testCase)
+        
+        function testSamplingPT(testCase)
             optionsMultistart = PestoOptions();
             optionsMultistart.obj_type = 'log-posterior';
-            optionsMultistart.n_starts = 2;
+            optionsMultistart.n_starts = 1;
             optionsMultistart.comp_type = 'sequential';
             optionsMultistart.mode = 'silent';
+            multiStartParams = getMultiStarts(testCase.parameters, testCase.objectiveFunction, optionsMultistart);
+            testCase.verifyMultiStartResults(multiStartParams, optionsMultistart);
 
-            optionsMultistart.MCMC.sampling_scheme = 'single-chain';
-            optionsMultistart.SC.proposal_scheme   = 'AM';
-            optionsMultistart.MCMC.nsimu_warmup    = 2e2;
-            optionsMultistart.MCMC.thinning        = 10;
-            optionsMultistart.MCMC.nsimu_run       = 2e3;
+            optionsSampling = PestoSamplingOptions();
+            optionsSampling.nIterations = 100;
+            optionsSampling.mode = 'silent';
             
-            testCase.parameters.user.theta_0 = testCase.theta_true;
-            testCase.parameters.user.Sigma_0 = diag([1,1]);
+            optionsSampling.samplingAlgorithm   = 'PT';
+            optionsSampling.PT.nTemps           = 3;
+            optionsSampling.PT.exponentT        = 4;
+            optionsSampling.PT.temperatureAdaptionScheme = 'Lacki15';
             
-            parameters = getParameterSamples(testCase.parameters, testCase.objectiveFunction, optionsMultistart);
+            optionsSampling.theta0 = multiStartParams.MS.par(:,1);
+            optionsSampling.sigma0 = 0.5 * inv(squeeze(multiStartParams.MS.hessian(:,:,1)));
+            
+            % Run the sampling
+            getParameterSamples(multiStartParams, testCase.objectiveFunction, optionsSampling);
         end
         
         function testConfidenceIntervals(testCase)

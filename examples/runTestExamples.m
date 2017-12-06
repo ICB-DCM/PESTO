@@ -5,7 +5,9 @@ function runTestExamples()
 mainConversionReaction;
 mainEnzymaticCatalysis;
 mainTransfection;
-runEstimation;
+mainErbBSignaling;
 mainJakstatSignaling;
+mainExampleGauss;
+mainExampleRing;
 
 end

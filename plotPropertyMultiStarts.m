@@ -28,12 +28,12 @@ else
     fh = figure('Name','plotPropertyMultiStarts');
 end
 
+% Check, if properties has all necessary fieds
+properties = checkSanityOfStructs(properties, 'properties');
+
 % Options
 if length(varargin) >= 2
-    if ~isa(varargin{2}, 'PestoPlottingOptions')
-        error('Argument 3 is not of type PestoPlottingOptions.')
-    end
-    options = varargin{2}.copy();
+    options = handlePlottingOptionArgument(varargin{2});
 else
     options = PestoPlottingOptions();
 end

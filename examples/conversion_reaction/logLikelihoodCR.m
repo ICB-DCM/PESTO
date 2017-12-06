@@ -47,14 +47,14 @@ function [logL, dlogLdtheta, FIM] = logLikelihoodCR(theta, t, Y, sigma2, scale)
 % y(t) = h(theta, x(t))
 %
 % Measurement noise:
-% We assume additive normally ditributed noise with mean 0 and standard
+% We assume additive normally distributed noise with mean 0 and standard
 % deviation 0.015 ( = sqrt(sigma2))
 %
 % Right hand side of the ODE of the system:
 % f = @(t,x,theta) [- theta(1) * x(1) + theta(2) * x(2);...
 %                   + theta(1) * x(1) - theta(2) * x(2)];
 
-% Number of states, parameters, obeservables
+% Number of states, parameters, observables
 n_x = 2;
 n_theta = 2;
 n_y = 1;

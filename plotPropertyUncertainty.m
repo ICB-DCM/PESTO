@@ -36,6 +36,9 @@ if length(varargin) >= 1 && ~isempty(varargin{1})
     end
 end
 
+% Check, if properties has all necessary fieds
+properties = checkSanityOfStructs(properties, 'properties');
+
 % Open figure
 if length(varargin) >= 2 && ~isempty(varargin{2})
     fh = figure(varargin{2});
@@ -70,10 +73,8 @@ end
 
 % Assignment of user-provided options
 if length(varargin) >= 4
-    if ~isa(varargin{4}, 'PestoPlottingOptions')
-        error('Argument 4 is not of type PestoPlottingOptions.')
-    end
-    options = setdefault(varargin{4}.copy(), defaultOptions);
+    options = handlePlottingOptionArgument(varargin{4});
+    options = setdefault(options, defaultOptions);
 else
     options = defaultOptions;
 end
