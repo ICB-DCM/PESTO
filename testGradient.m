@@ -55,7 +55,17 @@ else
 end
 
 if nargin >= 6
-    fplot = varargin{6};
+    if(~isempty(varargin{6}))
+        plist = varargin{6};
+    else
+        plist = 1:length(theta);
+    end
+else
+    plist = 1:length(theta);
+end
+
+if nargin >= 7
+    fplot = varargin{7};
 else
     fplot = false;
 end
@@ -106,6 +116,13 @@ else
     struct = fun(theta);
     eval(['g = struct.' ig ';']);
 end
+sg = size(g);
+if((numel(sg) == 2) && (sg(end) == 1))
+    g = g(plist);
+else
+    eval(['g = g(' repmat(':,',1,numel(sg)-1) 'plist);'])
+end
+
 
 % Computation of finite difference gradient
 g_fd_f = nan(size(g));
@@ -140,21 +157,20 @@ else
     eval(['l = struct.' il ';']);
 end
 
-for i = 1:length(theta)
-    i
+for i = 1:length(plist)
+    disp(['computing FD for parameter index ' num2str(plist(i))])
     % function evaluation
     if(~ischar(il))
-        eval([str_2 '_i_f] = fun(theta+[zeros(i-1,1);eps;zeros(length(theta)-i,1)]);']);
-        eval([str_2 '_i_b] = fun(theta-[zeros(i-1,1);eps;zeros(length(theta)-i,1)]);']);
+        eval([str_2 '_i_f] = fun(theta+[zeros(plist(i)-1,1);eps;zeros(length(theta)-plist(i),1)]);']);
+        eval([str_2 '_i_b] = fun(theta-[zeros(plist(i)-1,1);eps;zeros(length(theta)-plist(i),1)]);']);
     else
-        struct_i_f = fun(theta+[zeros(i-1,1);eps;zeros(length(theta)-i,1)]);
+        struct_i_f = fun(theta+[zeros(plist(i)-1,1);eps;zeros(length(theta)-plist(i),1)]);
         eval(['l_i_f = struct_i_f.' il ';']);
-        struct_i_b = fun(theta-[zeros(i-1,1);eps;zeros(length(theta)-i,1)]);
+        struct_i_b = fun(theta-[zeros(plist(i)-1,1);eps;zeros(length(theta)-plist(i),1)]);
         eval(['l_i_b = struct_i_b.' il ';']);
     end
     
-    sg = size(g);
-    if(length(theta)==1)
+    if(length(plist)==1)
         % forward differences
         eval(['g_fd_f(' repmat(':,',1,numel(size(g))) 'i) = (l_i_f-l)/eps;'])
         
@@ -185,21 +201,53 @@ end
 
 if(fplot)
    figure
-   subplot(2,2,1)
+
+   
+   subplot(2,3,1)
+   error_plot(g_fd_f(:),g_fd_b(:),g_fd_c(:))
+   legend('FDf','FDb','Location','NorthWest')
+   ylabel('FDc')
+   xlabel('derivative value')
+   title('if points do not lie on diagonal, change step-size')
+   
+   subplot(2,3,2)
    error_plot(g_fd_f(:)-g_fd_c(:),g_fd_b(:)-g_fd_c(:),g(:)-g_fd_c(:))
+   legend('FDf','FDb','Location','NorthWest')
+   xlabel('difference to FDc')
+   title('if red and blue dots do not agree, change step-size')
    
-   subplot(2,2,2)
+   subplot(2,3,3)
    error_plot(g(:),g_fd_c(:),g(:)-g_fd_c(:))
+   title('if red dots lie above diagonal, check gradient implementation')
    
-   subplot(2,2,3)
+   subplot(2,3,4)
+   ratio_plot(g_fd_f(:),g_fd_c(:),g_fd_f(:)./g_fd_c(:),g_fd_f(:)-g_fd_c(:)) 
+   legend('FDf','FDc','Location','NorthWest')
+   ylabel('ratio FDf/FDc')
+   xlabel('derivative value')
+   title('if points do not lie on horizontal line change step-size')
+   
+   subplot(2,3,5)
    ratio_plot(g_fd_f(:)-g_fd_c(:),g_fd_b(:)-g_fd_c(:),g(:)./g_fd_c(:),g_fd_f(:)-g_fd_c(:))
+   legend('FDf','FDb','Location','NorthWest')
+   xlabel('difference to FDc')
+   title('if red and blue dots do not agree, change step-size')
    
-   subplot(2,2,4)
+   
+   subplot(2,3,6)
    ratio_plot(g(:),g_fd_c(:),g(:)./g_fd_c(:),g_fd_f(:)-g_fd_c(:))
+   title('if red dots do not lie on horizontal, check gradient implementation')
 end
 end
 
 function error_plot(g1,g2,ee)
+    % Plots the differences between gradient and finite differences
+    %
+    % Parameters:
+    % g1: Gradient 
+    % g2: Finite differences
+    % ee: 
+    
     scatter(abs(g1),abs(ee),'rx')
     hold on
     scatter(abs(g2),abs(ee),'bo')
@@ -219,14 +267,22 @@ function error_plot(g1,g2,ee)
         maxe = 1e0;
     end
     plot([mine,maxe],[mine,maxe],'k:');
-    legend('Gradient','FD','Location','NorthWest')
+    legend('Gradient','FDc','Location','NorthWest')
     xlabel('derivative value')
-    ylabel('difference |Gradient-FD|')
+    ylabel('difference |Gradient-FDc|')
     axis square
     box on
 end
 
 function ratio_plot(g1,g2,rr,ee)
+    % Plots the differences between gradient and finite differences
+    %
+    % Parameters:
+    % g1: Gradient 
+    % g2: Finite differences
+    % rr: 
+    % ee: 
+    
    scatter(abs(g1),abs(rr),'rx')
    hold on
    scatter(abs(g2),abs(rr),'bo')
@@ -249,9 +305,9 @@ function ratio_plot(g1,g2,rr,ee)
        ylim([1e-1,1e1])
    end
    plot([mine,maxe],[1,1],'k:');
-   legend('Gradient','FD','Location','SouthEast')
+   legend('Gradient','FDc','Location','SouthEast')
    xlabel('derivative value')
-   ylabel('ratio Gradient/FD')
+   ylabel('ratio Gradient/FDc')
    axis square
    box on
 end
