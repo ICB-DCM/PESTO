@@ -70,42 +70,42 @@ function [parameters,fh] = getParProfilesByOptimization(parameters, objective_fu
 
 
 
-%% No check of inputs (except figure), already done in getParameterProfiles
+    %% No check of inputs (except figure), already done in getParameterProfiles
 
-% Depending on parallel computation mode, the figure will be updated
-if (nargin >= 4)
-    fh = varargin{1};
-    options.fh = fh;
-else
-    fh = [];
-end
+    % Depending on parallel computation mode, the figure will be updated
+    if (nargin >= 4)
+        fh = varargin{1};
+        options.fh = fh;
+    else
+        fh = [];
+    end
 
-%% Profile calculation
-if strcmp(options.comp_type,'sequential')
-    for iPar = options.profile_optim_index
-        % Define the negative log-posterior function
-        % (fmincon needs the neagtive log posterior for optimization)
-        % with the profile parameter fixed
-        parameters = optimizeProfileForParameterI(parameters, objective_function, iPar, options, fh);
-    end
-    
-elseif strcmp(options.comp_type,'parallel')
-    parfor iPar = options.profile_optim_index
-        % Define the negative log-posterior function
-        % (fmincon needs the neagtive log posterior for optimization)
-        % with the profile parameter fixed
-        optimizeProfileForParameterI(parameters, objective_function, iPar, options, fh);
-    end
-    
-    % Output
-    if strcmp(options.profile_method, 'optimization')
-        switch options.mode
-            case 'visual', fh = plotParameterProfiles(parameters,'1D',fh,options.parameter_index,options.plot_options);
-            case 'text' % no output
-            case 'silent' % no output
+    %% Profile calculation
+    if strcmp(options.comp_type,'sequential')
+        for iPar = options.profile_optim_index
+            % Define the negative log-posterior function
+            % (fmincon needs the neagtive log posterior for optimization)
+            % with the profile parameter fixed
+            parameters = optimizeProfileForParameterI(parameters, objective_function, iPar, options, fh);
+        end
+
+    elseif strcmp(options.comp_type,'parallel')
+        parfor iPar = options.profile_optim_index
+            % Define the negative log-posterior function
+            % (fmincon needs the neagtive log posterior for optimization)
+            % with the profile parameter fixed
+            optimizeProfileForParameterI(parameters, objective_function, iPar, options, fh);
+        end
+
+        % Output
+        if strcmp(options.profile_method, 'optimization')
+            switch options.mode
+                case 'visual', fh = plotParameterProfiles(parameters,'1D',fh,options.parameter_index,options.plot_options);
+                case 'text' % no output
+                case 'silent' % no output
+            end
         end
     end
-end
 
 % %% REOPTIMIZE PROFILE FROM THE BORDER
 % if strcmp(options.reoptimize,'true')
@@ -249,6 +249,16 @@ function [parameters] = optimizeProfileForParameterI(parameters, objective_funct
                 parameters.constraints,options.options_getNextPoint.mode,iPar);
             negLogPostReduced = setObjectiveWrapper(objective_function, options, 'negative log-posterior', iPar, theta_next(iPar), true, true);
             
+            % Check, if Hessian should be used and if a Hessian function was set,
+            % otherwise use the third output of the objective function instead
+            if (strcmp(options.profileReoptimizationOptions.Hessian, 'on'))
+                if (~isfield(options.profileReoptimizationOptions, 'HessFcn') ...
+                        || isempty(options.profileReoptimizationOptions.HessFcn))
+                    % this only works for box-constraints at the moment
+                    options.profileReoptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
+                end
+            end
+            
             % Construction of reduced linear constraints
             [A,b,Aeq,beq] = getConstraints(theta,parameters,I);
             
@@ -263,7 +273,7 @@ function [parameters] = optimizeProfileForParameterI(parameters, objective_funct
                     parameters.max(I),...   % upper bound
                     [],options.profileReoptimizationOptions);    % options
                 stepCount = stepCount + 1;
-            catch
+            catch errMsg
                 theta_I_opt = theta_next;
                 J_opt = inf;
             end

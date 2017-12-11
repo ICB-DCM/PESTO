@@ -84,7 +84,10 @@ end
 % Check and assign options
 options.P.min = parameters.min;
 options.P.max = parameters.max;
-options.profileReoptimizationOptions.MaxFunEvals = 200 * parameters.number;
+if (~isfield(options.profileReoptimizationOptions, 'MaxFunEvals') ...
+            || isempty(options.profileReoptimizationOptions.MaxFunEvals)) 
+    options.profileReoptimizationOptions.MaxFunEvals = 200 * parameters.number;
+end
 if (isempty(options.MAP_index))
     options.MAP_index = 1;
 end
