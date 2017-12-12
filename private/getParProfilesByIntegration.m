@@ -112,7 +112,7 @@ end
 
 
 
-function parameters = integrateProfileForParameterI(parameters, objectiveFunction, j, options, fh)
+function parameters = integrateProfileForParameterI(parameters, objectiveFunction, iPar, options, fh)
  
 
     % Define global variables for communication across ODE solver
@@ -125,7 +125,7 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
     lastCounter = 0;
 
     % Initial condition (used only for Profile integration)
-    t0 = parameters.MS.par(j, options.MAP_index);
+    t0 = parameters.MS.par(iPar, options.MAP_index);
     
     % Set objective function handle
     negLogPost = setObjectiveWrapper(objectiveFunction, options, 'negative log-posterior', [], [], true, true);
@@ -171,16 +171,16 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
         borders = [parameters.min, parameters.max];
         switch s
             case 1
-                T = parameters.max(j);
+                T = parameters.max(iPar);
             case -1
-                T = parameters.min(j);
+                T = parameters.min(iPar);
         end 
 
         % Starting point
         theta  = parameters.MS.par(:, options.MAP_index);
         llhHistory = parameters.MS.logPost(options.MAP_index);
         reachedEnd = 0;
-        OutputFunction = @(t, y, flag) checkOptimality(t, y, flag, s, j, ...
+        OutputFunction = @(t, y, flag) checkOptimality(t, y, flag, s, iPar, ...
             parameters.MS.logPost(1), objectiveFunction, borders, options);
 
         if ~strcmp(options.solver.hessian, 'user-supplied')
@@ -189,7 +189,7 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
         
         % Pre-Output
         if (strcmp(options.mode, 'text'))
-            fprintf('\n  |  Integrating Parameter %4i, s = %2i  |', j, s);
+            fprintf('\n  |  Integrating Parameter %4i, s = %2i  |', iPar, s);
             fprintf('\n  |======================================|');
             fprintf('\n  | Running axis |  Optimality |  Ratio  |');
             fprintf('\n  |--------------|-------------|---------|');
@@ -215,27 +215,27 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
             switch options.solver.type
                 case {'ode45', 'ode15s', 'ode113','ode23', 'ode23s', 'ode23t'}
                     odeMatlabOptions.OutputFcn = OutputFunction;
-                    odeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, j, borders, negLogPost, options, parameters.MS.logPost(1));
+                    odeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, iPar, borders, negLogPost, options, parameters.MS.logPost(1));
                     if (strcmp(options.solver.type, 'ode15s'))
-                        [~,y] = ode15s(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions); 
+                        [~,y] = ode15s(@(t,y) getRhsRed(t, s, y, iPar, borders, negLogPost, parameterFunction, options),[s*theta(iPar), s*T], theta, odeMatlabOptions); 
                     elseif (strcmp(options.solver.type, 'ode45'))
                         error('ode45 is currently not implemented for profiling.');
                         % [~,y] = ode45(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
                     elseif (strcmp(options.solver.type, 'ode113'))
-                        [~,y] = ode113(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions); 
+                        [~,y] = ode113(@(t,y) getRhsRed(t, s, y, iPar, borders, negLogPost, parameterFunction, options),[s*theta(iPar), s*T], theta, odeMatlabOptions); 
                     elseif (strcmp(options.solver.type, 'ode23s'))
-                        [~,y] = ode23s(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
+                        [~,y] = ode23s(@(t,y) getRhsRed(t, s, y, iPar, borders, negLogPost, parameterFunction, options),[s*theta(iPar), s*T], theta, odeMatlabOptions);  
                     elseif (strcmp(options.solver.type, 'ode23t'))
-                        [~,y] = ode23t(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);
+                        [~,y] = ode23t(@(t,y) getRhsRed(t, s, y, iPar, borders, negLogPost, parameterFunction, options),[s*theta(iPar), s*T], theta, odeMatlabOptions);
                     elseif (strcmp(options.solver.type, 'ode23'))
-                        [~,y] = ode23(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);
+                        [~,y] = ode23(@(t,y) getRhsRed(t, s, y, iPar, borders, negLogPost, parameterFunction, options),[s*theta(iPar), s*T], theta, odeMatlabOptions);
                     end
 
 
                     % If yCorrection is set to inf, then the ODE is too stiff, 
                     % some steps of optimization based calculation have to be done
                     if (yCorrection == inf)
-                        addY = doOptimizationSteps(parameters, y, objectiveFunction, borders, j, s, options);
+                        addY = doOptimizationSteps(parameters, y, objectiveFunction, borders, iPar, s, options);
                         y = [y; addY];
                         optSteps = optSteps + 3;
                     else
@@ -322,9 +322,9 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
 
                 case 'ode15sDAE' 
                     error('ode15sDAE is currently not implemented for profiling.');
-                    daeMatlabOptions.Mass = @(t, y) getMassmatrixDAE(t, s, y, j, negLogPost, parameterFunction);
-                    daeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, j, borders, negLogPost, options, parameters.MS.logPost(1));
-                    [~, y] = ode15s(@(t,y) getRhsDAE(t, s, y, 1, j, negLogPost, options), [s*t0, s*T], theta, daeMatlabOptions);
+                    daeMatlabOptions.Mass = @(t, y) getMassmatrixDAE(t, s, y, iPar, negLogPost, parameterFunction);
+                    daeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, iPar, borders, negLogPost, options, parameters.MS.logPost(1));
+                    [~, y] = ode15s(@(t,y) getRhsDAE(t, s, y, 1, iPar, negLogPost, options), [s*t0, s*T], theta, daeMatlabOptions);
 
                     if (s == 1)
                         theta = y';
@@ -336,22 +336,22 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
             %% Write results to the parameters struct
             switch s
                 case 1
-                    parameters.P(j).logPost = [parameters.P(j).logPost, llhHistory];
-                    parameters.P(j).R = [parameters.P(j).R, exp(llhHistory - parameters.MS.logPost(1))];
-                    parameters.P(j).par = [parameters.P(j).par, theta];
+                    parameters.P(iPar).logPost = [parameters.P(iPar).logPost, llhHistory];
+                    parameters.P(iPar).R = [parameters.P(iPar).R, exp(llhHistory - parameters.MS.logPost(1))];
+                    parameters.P(iPar).par = [parameters.P(iPar).par, theta];
 
-                    if ((parameters.P(j).R(end) <= options.R_min) ...
-                            || parameters.P(j).par(j, end) >= borders(j, 2))
+                    if ((parameters.P(iPar).R(end) <= options.R_min) ...
+                            || parameters.P(iPar).par(iPar, end) >= borders(iPar, 2))
                         reachedEnd = 1;
                     end
 
                 case -1
-                    parameters.P(j).logPost = [fliplr(llhHistory), parameters.P(j).logPost];
-                    parameters.P(j).R = [exp(fliplr(llhHistory) - parameters.MS.logPost(1)), parameters.P(j).R];
-                    parameters.P(j).par = [theta, parameters.P(j).par];
+                    parameters.P(iPar).logPost = [fliplr(llhHistory), parameters.P(iPar).logPost];
+                    parameters.P(iPar).R = [exp(fliplr(llhHistory) - parameters.MS.logPost(1)), parameters.P(iPar).R];
+                    parameters.P(iPar).par = [theta, parameters.P(iPar).par];
 
-                    if ((parameters.P(j).R(1) <= options.R_min) ...
-                            || parameters.P(j).par(j, 1) <= borders(j, 1))
+                    if ((parameters.P(iPar).R(1) <= options.R_min) ...
+                            || parameters.P(iPar).par(iPar, 1) <= borders(iPar, 1))
                         reachedEnd = 1;
                     end
             end
@@ -359,10 +359,10 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
         end
 
         % Get computation time
-        parameters.P(j).t_cpu(round((s+3)/2)) = cputime - startTimeProfile;
-        parameters.P(j).optSteps(round((s+3)/2)) = optSteps;
-        parameters.P(j).intSteps(round((s+3)/2)) = intSteps;
-        parameters.P(j).reOptSteps(round((s+3)/2)) = reOptSteps;
+        parameters.P(iPar).t_cpu(round((s+3)/2)) = cputime - startTimeProfile;
+        parameters.P(iPar).optSteps(round((s+3)/2)) = optSteps;
+        parameters.P(iPar).intSteps(round((s+3)/2)) = intSteps;
+        parameters.P(iPar).reOptSteps(round((s+3)/2)) = reOptSteps;
         
         % Final output and storage
         if (strcmp(options.mode, 'text'))
@@ -374,9 +374,9 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
 
         % Save
         if (options.save)
-            dlmwrite([options.foldername '/P' num2str(j,'%d') '__par.csv'],P_par,'delimiter',',','precision',12);
-            dlmwrite([options.foldername '/P' num2str(j,'%d') '__logPost.csv'],P_logPost,'delimiter',',','precision',12);
-            dlmwrite([options.foldername '/P' num2str(j,'%d') '__R.csv'],P_R,'delimiter',',','precision',12);
+            dlmwrite([options.foldername '/P' num2str(iPar,'%d') '__par.csv'],P_par,'delimiter',',','precision',12);
+            dlmwrite([options.foldername '/P' num2str(iPar,'%d') '__logPost.csv'],P_logPost,'delimiter',',','precision',12);
+            dlmwrite([options.foldername '/P' num2str(iPar,'%d') '__R.csv'],P_R,'delimiter',',','precision',12);
         end  
 
         % Output
