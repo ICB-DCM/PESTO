@@ -110,15 +110,15 @@ function varargout = objectiveWrap(theta, objectiveFunction, wrapperOptions, var
                 varargout = {-objSign * inf};
             case 2
                 if strcmp(optimizer, 'lsqnonlin')
-                    varargout = {-objSign * inf(size(J)), zeros(length(J), length(freeInd))};
+                    varargout = {inf(size(J)), zeros(length(J), length(freeInd))};
                 else
-                    varargout = {-objSign * inf, zeros(length(freeInd),1)};
+                    varargout = {inf, zeros(length(freeInd),1)};
                 end
             case 3
                 if strcmp(optimizer, 'lsqnonlin')
-                    varargout = {-objSign * inf(size(J)), zeros(length(J), length(freeInd)), -objSign * inf};
+                    varargout = {inf(size(J)), zeros(length(J), length(freeInd)), inf};
                 else
-                    varargout = {-objSign * inf,zeros(length(freeInd),1),zeros(length(freeInd))};
+                    varargout = {inf,zeros(length(freeInd),1),zeros(length(freeInd))};
                 end
         end
     end

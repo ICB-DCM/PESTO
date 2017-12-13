@@ -122,6 +122,9 @@ switch options.mode
         end
 end
 
+% Definition of index set of optimized parameters
+freePars = setdiff(1:parameters.number, options.fixedParameters);
+
 %% Sampling of starting points
 switch options.proposal
     case 'latin hypercube'
@@ -147,8 +150,11 @@ switch options.proposal
                 parameters.init_fun(parameters.guess,parameters.min,parameters.max,options.n_starts - size(parameters.guess,2))];
         end
 end
+% Correct for fixed parameters
+par0 = par0(freePars,:);
 parameters.MS.n_starts = options.n_starts;
-parameters.MS.par0 = par0(:,options.start_index);
+parameters.MS.par0(freePars,:) = par0(:,options.start_index);
+parameters.MS.par0(options.fixedParameters,:) = options.fixedParameterValues;
 
 %% Preparation of folder
 if or(options.save,options.tempsave)
@@ -170,8 +176,8 @@ end
 parameters.MS.par = nan(parameters.number,length(options.start_index));
 parameters.MS.logPost0 = nan(length(options.start_index),1);
 parameters.MS.logPost = nan(length(options.start_index),1);
-parameters.MS.gradient = nan(parameters.number,length(options.start_index));
-parameters.MS.hessian  = nan(parameters.number,parameters.number,length(options.start_index));
+parameters.MS.gradient = nan(length(freePars),length(options.start_index));
+parameters.MS.hessian  = nan(length(freePars),length(freePars),length(options.start_index));
 parameters.MS.n_objfun = nan(length(options.start_index),1);
 parameters.MS.n_iter = nan(length(options.start_index),1);
 parameters.MS.t_cpu = nan(length(options.start_index),1);
@@ -243,26 +249,26 @@ if strcmp(options.comp_type, 'sequential')
                 % seperately (IP) or with the objective function (TR), so
                 % different cases have to be checked.
                 if strcmp(options.localOptimizerOptions.Algorithm, 'interior-point')
-                    [J_0,~] = negLogPost(parameters.MS.par0(:,iMS));
+                    [J_0,~] = negLogPost(par0(:,iMS));
                 else
-                    [J_0,~,~] = negLogPost(parameters.MS.par0(:,iMS));
+                    [J_0,~,~] = negLogPost(par0(:,iMS));
                 end
             elseif (strcmp(options.localOptimizerOptions.GradObj, 'on'))
-                [J_0,~] = negLogPost(parameters.MS.par0(:,iMS));
+                [J_0,~] = negLogPost(par0(:,iMS));
             else
-                J_0 = negLogPost(parameters.MS.par0(:,iMS));
+                J_0 = negLogPost(par0(:,iMS));
             end
             parameters.MS.logPost0(iMS) = -J_0;
         elseif (strcmp(options.localOptimizer, 'lsqnonlin'))
             if (strcmp(options.localOptimizerOptions.Jacobian, 'on'))
-                [J_0,~] = negLogPost(parameters.MS.par0(:,iMS));
+                [J_0,~] = negLogPost(par0(:,iMS));
             else
-                J_0 = negLogPost(parameters.MS.par0(:,iMS));
+                J_0 = negLogPost(par0(:,iMS));
             end
             parameters.MS.logPost0(iMS) = -sum(J_0);
             J_0 = sum(J_0);
         elseif (any(strcmp(options.localOptimizer, {'dhc','cs','bobyqa'})))
-            J_0 = negLogPost(parameters.MS.par0(:,iMS));
+            J_0 = negLogPost(par0(:,iMS));
         end
         
         % Optimization
@@ -274,31 +280,31 @@ if strcmp(options.comp_type, 'sequential')
             switch options.localOptimizer
                 case 'fmincon'
                     % fmincon as local optimizer
-                    parameters = performOptimizationFmincon(parameters, negLogPost, iMS, J_0, options);
+                    parameters = performOptimizationFmincon(parameters, negLogPost, iMS, par0, J_0, options);
                     
                 case {'meigo-ess', 'meigo-vns'}
                     % Use the MEIGO toolbox as local / global optimizer
-                    parameters = performOptimizationMeigo(parameters, negLogPost, iMS, J_0, options);
+                    parameters = performOptimizationMeigo(parameters, negLogPost, iMS, par0, J_0, options);
                     
                 case 'pswarm'
                     % Optimization using a swarm based global optimizer PSwarm
-                    parameters = performOptimizationPswarm(parameters, negLogPost, iMS, J_0, options);
+                    parameters = performOptimizationPswarm(parameters, negLogPost, iMS, par0, J_0, options);
                     
                 case 'lsqnonlin'
                     % Optimization using dynamic hill climbin as local optimizer
-                    parameters = performOptimizationLsqnonlin(parameters, negLogPost, iMS, J_0, options);
+                    parameters = performOptimizationLsqnonlin(parameters, negLogPost, iMS, par0, J_0, options);
                     
                 case 'cs'
                     % Optimization using coordinate search as local optimizer
-                    parameters = performOptimizationCs(parameters, negLogPost, iMS, J_0, options);
+                    parameters = performOptimizationCs(parameters, negLogPost, iMS, par0, J_0, options);
                     
                 case 'dhc'
                     % Optimization using dynamic hill climbing as local optimizer
-                    parameters = performOptimizationDhc(parameters, negLogPost, iMS, J_0, options);
+                    parameters = performOptimizationDhc(parameters, negLogPost, iMS, par0, J_0, options);
                     
                 case 'bobyqa'
                     % Optimization using bobya as local optimizer
-                    parameters = performOptimizationBobyqa(parameters, negLogPost, iMS, J_0, options);
+                    parameters = performOptimizationBobyqa(parameters, negLogPost, iMS, par0, J_0, options);
             end
             
         end
@@ -441,7 +447,6 @@ if strcmp(options.comp_type,'parallel')
     end
     
     % Assignment
-    parameters.MS.par0 = par0;
     parameters.MS.par = par;
     parameters.MS.logPost0 = logPost0;
     parameters.MS.logPost = logPost;
