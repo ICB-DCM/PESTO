@@ -11,10 +11,20 @@ function parameters = performOptimizationFmincon(parameters, negLogPost, iMS, pa
     end
     
     % Adapt constraints according to fixed paraemters
-    freeCon.A = parameters.constraints.A(:,freePars);
-    freeCon.b = parameters.constraints.b - parameters.constraints.A(:,options.fixedParameters) * options.fixedParameterValues;
-    freeCon.Aeq = parameters.constraints.Aeq(:,freePars);
-    freeCon.beq = parameters.constraints.beq - parameters.constraints.Aeq(:,options.fixedParameters) * options.fixedParameterValues;
+    if ~isempty(parameters.constraints.A)
+        freeCon.A = parameters.constraints.A(:,freePars);
+        freeCon.b = parameters.constraints.b - parameters.constraints.A(:,options.fixedParameters) * options.fixedParameterValues;
+    else
+        freeCon.A = [];
+        freeCon.b = [];
+    end
+    if ~isempty(parameters.constraints.Aeq)
+        freeCon.Aeq = parameters.constraints.Aeq(:,freePars);
+        freeCon.beq = parameters.constraints.beq - parameters.constraints.Aeq(:,options.fixedParameters) * options.fixedParameterValues;
+    else
+        freeCon.Aeq = [];
+        freeCon.beq = [];
+    end
     
     [theta,J_opt,exitflag,results_fmincon,~,gradient_opt,hessian_opt] = ...
         fmincon(negLogPost, ...  % negative log-likelihood function
@@ -34,7 +44,7 @@ function parameters = performOptimizationFmincon(parameters, negLogPost, iMS, pa
     parameters.MS.par(options.fixedParameters,iMS) = options.fixedParameterValues;
     
     parameters.MS.gradient(freePars,iMS) = gradient_opt;
-    parameters.MS.par(options.fixedParameters,iMS) = nan;
+    parameters.MS.gradient(options.fixedParameters,iMS) = nan;
     
     if isempty(hessian_opt)
         hessian_opt = nan(parameters.number);
