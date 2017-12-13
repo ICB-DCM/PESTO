@@ -32,9 +32,9 @@ function parameters = performOptimizationLsqnonlin(parameters, negLogPost, iMS, 
     parameters.MS.n_iter(iMS) = results_lsqnonlin.iterations;
     
     % Assignment of AIC and BIC
-    parameters.MS.AIC(iMS) = 2*length(freePars) + 2*J_opt;
+    parameters.MS.AIC(iMS) = 2*length(freePars) + 2*finalNegLogPost;
     if ~isempty(options.nDatapoints)
-        parameters.MS.BIC(iMS) = log(options.nDatapoints)*length(freePars) + 2*J_opt;
+        parameters.MS.BIC(iMS) = log(options.nDatapoints)*length(freePars) + 2*finalNegLogPost;
     end
 
 end
