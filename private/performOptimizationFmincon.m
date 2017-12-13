@@ -10,14 +10,20 @@ function parameters = performOptimizationFmincon(parameters, negLogPost, iMS, pa
         nonlcon = [];
     end
     
+    % Adapt constraints according to fixed paraemters
+    freeCon.A = parameters.constraints.A(:,freePars);
+    freeCon.b = parameters.constraints.b - parameters.constraints.A(:,options.fixedParameters) * options.fixedParameterValues;
+    freeCon.Aeq = parameters.constraints.Aeq(:,freePars);
+    freeCon.beq = parameters.constraints.beq - parameters.constraints.Aeq(:,options.fixedParameters) * options.fixedParameterValues;
+    
     [theta,J_opt,exitflag,results_fmincon,~,gradient_opt,hessian_opt] = ...
-        fmincon(negLogPost,...  % negative log-likelihood function
-        par0(:,iMS),...    % initial parameter
-        parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
-        parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
-        parameters.min,...     % lower bound
-        parameters.max,...     % upper bound
-        nonlcon,...            % nonlinear constraints
+        fmincon(negLogPost, ...  % negative log-likelihood function
+        par0(:,iMS), ...    % initial parameter
+        freeCon.A, freeCon.b, ... % linear inequality constraints
+        freeCon.Aeq, freeCon.beq, ... % linear equality constraints
+        parameters.min(freePars), ...     % lower bound
+        parameters.max(freePars), ...     % upper bound
+        nonlcon, ...            % nonlinear constraints
         options.localOptimizerOptions);   % options
 
     % Assignment of results
