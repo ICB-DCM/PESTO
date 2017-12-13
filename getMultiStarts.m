@@ -284,11 +284,11 @@ if strcmp(options.comp_type, 'sequential')
                     
                 case {'meigo-ess', 'meigo-vns'}
                     % Use the MEIGO toolbox as local / global optimizer
-                    parameters = performOptimizationMeigo(parameters, negLogPost, iMS, par0, J_0, options);
+                    parameters = performOptimizationMeigo(parameters, negLogPost, iMS, options);
                     
                 case 'pswarm'
                     % Optimization using a swarm based global optimizer PSwarm
-                    parameters = performOptimizationPswarm(parameters, negLogPost, iMS, par0, J_0, options);
+                    parameters = performOptimizationPswarm(parameters, negLogPost, iMS, options);
                     
                 case 'lsqnonlin'
                     % Optimization using dynamic hill climbin as local optimizer

@@ -43,9 +43,9 @@ function parameters = performOptimizationFmincon(parameters, negLogPost, iMS, pa
     parameters.MS.par(freePars,iMS) = theta;
     parameters.MS.par(options.fixedParameters,iMS) = options.fixedParameterValues;
     
+    % Assignment of gradient and Hessian
     parameters.MS.gradient(freePars,iMS) = gradient_opt;
     parameters.MS.gradient(options.fixedParameters,iMS) = nan;
-    
     if isempty(hessian_opt)
         hessian_opt = nan(parameters.number);
     elseif max(hessian_opt(:)) == 0
@@ -56,6 +56,7 @@ function parameters = performOptimizationFmincon(parameters, negLogPost, iMS, pa
     parameters.MS.hessian(freePars,freePars,iMS) = full(hessian_opt);
     parameters.MS.hessian(options.fixedParameters,options.fixedParameters,iMS) = nan;
     
+    % Assignment of disgnosis
     parameters.MS.n_objfun(iMS) = results_fmincon.funcCount;
     parameters.MS.n_iter(iMS) = results_fmincon.iterations;
     

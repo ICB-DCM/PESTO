@@ -1,26 +1,40 @@
-function parameters = performOptimizationLsqnonlin(parameters, negLogPost, i, J_0, options)
+function parameters = performOptimizationLsqnonlin(parameters, negLogPost, iMS, par0, J_0, options)
 
+    % Definition of index set of optimized parameters
+    freePars = setdiff(1:parameters.number, options.fixedParameters);
     options.localOptimizerOptions.Algorithm = 'trust-region-reflective';
     
-    [theta, ~, ~, parameters.MS.exitflag(i), results_lsqnonlin, ~, jacobian_opt] = lsqnonlin(...
+    % Run lsqnonlin
+    [theta, ~, ~, parameters.MS.exitflag(iMS), results_lsqnonlin, ~, jacobian_opt] = lsqnonlin(...
         negLogPost,...
-        parameters.MS.par0(:,i), ...
-        parameters.min, ...
-        parameters.max, ...
+        par0(:,iMS), ...
+        parameters.min(freePars), ...
+        parameters.max(freePars), ...
         options.localOptimizerOptions);
     
     % Assignment of results
-    parameters.MS.J(1, i) = -J_0;
-    [~, ~, finalNegLogPost] = negLogPost(theta);
-    parameters.MS.logPost(i) = -finalNegLogPost;
-    parameters.MS.par(:,i) = theta;
+    parameters.MS.J(1, iMS)         = -J_0;
+    [~, ~, finalNegLogPost]         = negLogPost(theta);
+    parameters.MS.logPost(iMS)      = -finalNegLogPost;
+    parameters.MS.par(freePars,iMS) = theta;
+    parameters.MS.par(options.fixedParameters,iMS) = options.fixedParameterValues;
+    
+    % Assigment of Hessian (gradient is not computed)
     if ~isempty(jacobian_opt)
-        parameters.MS.gradient(:,i) = sum(full(jacobian_opt),1);
         hessian_sqrt = full(jacobian_opt);
         hessian_opt = hessian_sqrt' * hessian_sqrt;
-        parameters.MS.hessian(:,:,i) = full(hessian_opt);
+        parameters.MS.hessian(freePars,freePars,iMS) = full(hessian_opt);
+        parameters.MS.hessian(options.fixedParameters,options.fixedParameters,iMS) = nan;
     end
-    parameters.MS.n_objfun(i) = results_lsqnonlin.funcCount;
-    parameters.MS.n_iter(i) = results_lsqnonlin.iterations;
+    
+    % Assignment of diagnosis
+    parameters.MS.n_objfun(iMS) = results_lsqnonlin.funcCount;
+    parameters.MS.n_iter(iMS) = results_lsqnonlin.iterations;
+    
+    % Assignment of AIC and BIC
+    parameters.MS.AIC(iMS) = 2*length(freePars) + 2*J_opt;
+    if ~isempty(options.nDatapoints)
+        parameters.MS.BIC(iMS) = log(options.nDatapoints)*length(freePars) + 2*J_opt;
+    end
 
 end
