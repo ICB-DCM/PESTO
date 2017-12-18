@@ -326,7 +326,7 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
             if nargin > 0 
                 
                 % Deal with the case where the first input to the
-                % constructor is a amioptions/struct object.
+                % constructor is a PestoOptions/struct object.
                 if isa(varargin{1},'PestoOptions')
                     if strcmp(class(varargin{1}),class(obj))
                         obj = varargin{1};

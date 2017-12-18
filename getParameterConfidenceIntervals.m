@@ -68,9 +68,17 @@ for k = 1:length(alpha)
     % Loop: Parameters
     for i = options.parameter_index
         if isfield(parameters,'MS')
+            % Inversion of Hessian
+            if isempty(options.fixedParameters)
+                Sigma = pinv(parameters.MS.hessian(:,:,iMAP));
+            else
+                Sigma = nan(parameters.number);
+                ind = setdiff(1:parameters.number,options.fixedParameters);
+                Sigma(ind,ind) = pinv(parameters.MS.hessian(ind,ind,iMAP));
+            end
+            
             % Confidence intervals computed using local approximation and a
             % threshold (-> similar to PL-based confidence intervals)
-            Sigma = pinv(parameters.MS.hessian(:,:,iMAP));
             parameters.CI.local_PL(i,1,k) = parameters.MS.par(i,iMAP) - sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
             parameters.CI.local_PL(i,2,k) = parameters.MS.par(i,iMAP) + sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
 

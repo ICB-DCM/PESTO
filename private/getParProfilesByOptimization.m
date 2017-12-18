@@ -68,8 +68,6 @@ function [parameters,fh] = getParProfilesByOptimization(parameters, objective_fu
 % * 2016/10/04 Daniel Weindl
 % * 2016/10/12 Paul Stapor
 
-
-
     %% No check of inputs (except figure), already done in getParameterProfiles
 
     % Depending on parallel computation mode, the figure will be updated
@@ -78,6 +76,11 @@ function [parameters,fh] = getParProfilesByOptimization(parameters, objective_fu
         options.fh = fh;
     else
         fh = [];
+    end
+    
+    %% Check for fixed parameters
+    if ~isempty(options.fixedParameters)
+        error('Fixed parameters are currently not supported by getParProfilesByOptimization.');
     end
 
     %% Profile calculation

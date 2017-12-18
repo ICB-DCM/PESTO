@@ -10,7 +10,7 @@ function parameters = performOptimizationFmincon(parameters, negLogPost, iMS, pa
         nonlcon = [];
     end
     
-    % Adapt constraints according to fixed paraemters
+    % Adapt constraints according to fixed parameters
     if ~isempty(parameters.constraints.A)
         freeCon.A = parameters.constraints.A(:,freePars);
         freeCon.b = parameters.constraints.b - parameters.constraints.A(:,options.fixedParameters) * options.fixedParameterValues;
