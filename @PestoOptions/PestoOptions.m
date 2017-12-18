@@ -1,4 +1,4 @@
-classdef PestoOptions < matlab.mixin.SetGet
+classdef PestoOptions < matlab.mixin.CustomDisplay
     % PestoOptions provides an option container to pass options to various
     % PESTO functions. Not all options are used by all functions, consult the respective function documentation for details.
     %
@@ -326,7 +326,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             if nargin > 0 
                 
                 % Deal with the case where the first input to the
-                % constructor is a amioptions/struct object.
+                % constructor is a PestoOptions/struct object.
                 if isa(varargin{1},'PestoOptions')
                     if strcmp(class(varargin{1}),class(obj))
                         obj = varargin{1};
