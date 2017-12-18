@@ -68,14 +68,17 @@ function [parameters, fh] = getParProfilesByIntegration(parameters, objective_fu
 % 2016/11/21 Paul Stapor
 % 2017/02/02 Paul Stapor - PESTO version of the code
 
-
-
     %% CHECK AND ASSIGN INPUTS
     if (nargin >= 4)
         fh = varargin{1};
         options.fh = fh;
     else
         fh = [];
+    end
+    
+    %% Check for fixed parameters
+    if ~isempty(options.fixedParameters)
+        error('Fixed parameters are currently not supported by getParProfilesByIntegration.');
     end
     
     %% Preperation of folder

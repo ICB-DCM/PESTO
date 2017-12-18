@@ -122,7 +122,7 @@ switch options.mode
         end
 end
 
-% Definition of index set of optimized parameters
+%% Definition of index set of optimized parameters
 freePars = setdiff(1:parameters.number, options.fixedParameters);
 
 %% Sampling of starting points
