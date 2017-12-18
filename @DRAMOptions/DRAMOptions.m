@@ -1,4 +1,4 @@
-classdef DRAMOptions < matlab.mixin.SetGet
+classdef DRAMOptions < matlab.mixin.CustomDisplay
    % DRAMOptions provides an option container to pass options 
    % into the PestoSamplingOptions class for Delayed Rejection Adaption Metropolis (DRAM).
    % The DRAM algorithm uses a delayed rejection scheme for better mixing.
@@ -149,7 +149,7 @@ classdef DRAMOptions < matlab.mixin.SetGet
       end
       
       %% Part for checking the correct setting of options
-      function set.regFactor(this, value)
+      function this = set.regFactor(this, value)
          if(isnumeric(value) && value > 0)
             this.regFactor = lower(value);
          else
@@ -159,7 +159,7 @@ classdef DRAMOptions < matlab.mixin.SetGet
          end
       end
       
-      function set.nTry(this, value)
+      function this = set.nTry(this, value)
          if(isnumeric(value) && value > 0)
             this.nTry = lower(value);
          else
@@ -168,7 +168,7 @@ classdef DRAMOptions < matlab.mixin.SetGet
          end
       end     
       
-      function set.verbosityMode(this, value)
+      function this = set.verbosityMode(this, value)
          if (strcmp(value, 'text') || strcmp(value, 'silent') || strcmp(value, 'debug'))
             this.verbosityMode = lower(value);
          else
@@ -177,7 +177,7 @@ classdef DRAMOptions < matlab.mixin.SetGet
          end
       end           
  
-      function set.adaptionInterval(this, value)
+      function this = set.adaptionInterval(this, value)
          if(isnumeric(value) && value > 0)
             this.adaptionInterval = lower(value);
          else
@@ -188,28 +188,3 @@ classdef DRAMOptions < matlab.mixin.SetGet
       
    end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-classdef PTOptions < matlab.mixin.SetGet
+classdef PTOptions < matlab.mixin.CustomDisplay
    % PTOptions provides an option container to specify parallel tempering (PT) options 
    % in PestoSamplingOptions.PT.
    %
@@ -165,7 +165,7 @@ classdef PTOptions < matlab.mixin.SetGet
       end
       
       %% Part for checking the correct setting of options
-      function set.regFactor(this, value)
+      function this = set.regFactor(this, value)
          if(isnumeric(value) && value > 0)
             this.regFactor = lower(value);
          else
@@ -175,7 +175,7 @@ classdef PTOptions < matlab.mixin.SetGet
          end
       end
       
-      function set.nTemps(this, value)
+      function this = set.nTemps(this, value)
          if(value == floor(value) && value > 0)
             this.nTemps = lower(value);
          else
@@ -183,7 +183,7 @@ classdef PTOptions < matlab.mixin.SetGet
          end
       end    
       
-      function set.exponentT(this, value)
+      function this = set.exponentT(this, value)
          if(isnumeric(value) && value > 0)
             this.exponentT = lower(value);
          else
@@ -192,7 +192,7 @@ classdef PTOptions < matlab.mixin.SetGet
          end
       end          
 
-      function set.alpha(this, value)
+      function this = set.alpha(this, value)
          if(isnumeric(value) && value > 0.5 && value < 1)
             this.alpha = lower(value);
          else
@@ -200,7 +200,7 @@ classdef PTOptions < matlab.mixin.SetGet
          end
       end  
       
-      function set.temperatureAlpha(this, value)
+      function this = set.temperatureAlpha(this, value)
          if(isnumeric(value) && value > 0.5 && value < 1)
             this.temperatureAlpha = lower(value);
          else
@@ -209,7 +209,7 @@ classdef PTOptions < matlab.mixin.SetGet
          end
       end   
       
-      function set.memoryLength(this, value)
+      function this = set.memoryLength(this, value)
          if(value == floor(value) && value > 0)
             this.memoryLength = lower(value);
          else
@@ -218,7 +218,7 @@ classdef PTOptions < matlab.mixin.SetGet
          end
       end   
       
-      function set.temperatureAdaptionScheme(this, value)
+      function this = set.temperatureAdaptionScheme(this, value)
          if (strcmp(value, 'Vousden16') || strcmp(value, 'Lacki15'))
             this.temperatureAdaptionScheme = value;
          else
@@ -229,28 +229,3 @@ classdef PTOptions < matlab.mixin.SetGet
             
    end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -2,7 +2,7 @@
 % @brief A class for checking and holding information on optimization
 % parameters
 
-classdef PestoPlottingOptions < matlab.mixin.SetGet
+classdef PestoPlottingOptions < matlab.mixin.CustomDisplay
     % PestoPlottingOptions is a class for checking and holding information on optimization
     % parameters
     %
@@ -388,7 +388,7 @@ classdef PestoPlottingOptions < matlab.mixin.SetGet
 
         %% Part for checking the correct setting of options
         
-        function set.MCMC(this, value)
+        function this = set.MCMC(this, value)
             if (strcmp(value, 'multistart') || strcmp(value, 'user-provided'))
                 this.MCMC = value;
             else
@@ -396,7 +396,7 @@ classdef PestoPlottingOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.interval(this, value)
+        function this = set.interval(this, value)
             if (strcmp(value, 'dynamic') || strcmp(value, 'static'))
                 this.interval = value;
             else
@@ -404,7 +404,7 @@ classdef PestoPlottingOptions < matlab.mixin.SetGet
             end
         end
 
-        function set.group_CI_by(this, value)
+        function this = set.group_CI_by(this, value)
             if (strcmp(value, 'parprop') || strcmp(value, 'methods') || strcmp(value, 'all'))
                 this.group_CI_by = value;
             else
@@ -412,7 +412,7 @@ classdef PestoPlottingOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.n_max(this, value)
+        function this = set.n_max(this, value)
             if(isnumeric(value) && value > 0)
                 this.n_max = value;
             else
@@ -420,7 +420,7 @@ classdef PestoPlottingOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.title(this, value)
+        function this = set.title(this, value)
             if islogical(value)
                 this.title = value;
             else
@@ -428,7 +428,7 @@ classdef PestoPlottingOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.draw_bounds(this, value)
+        function this = set.draw_bounds(this, value)
             if islogical(value)
                 this.draw_bounds = value;
             else
@@ -436,7 +436,7 @@ classdef PestoPlottingOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.mark_constraint(this, value)
+        function this = set.mark_constraint(this, value)
             if islogical(value)
                 this.mark_constraint = value;
             else
@@ -444,7 +444,7 @@ classdef PestoPlottingOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.hold_on(this, value)
+        function this = set.hold_on(this, value)
             if islogical(value)
                 this.hold_on = value;
             else

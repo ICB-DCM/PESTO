@@ -1,4 +1,4 @@
-classdef PestoOptions < matlab.mixin.SetGet
+classdef PestoOptions < matlab.mixin.CustomDisplay
     % PestoOptions provides an option container to pass options to various
     % PESTO functions. Not all options are used by all functions, consult the respective function documentation for details.
     %
@@ -425,14 +425,14 @@ classdef PestoOptions < matlab.mixin.SetGet
             new = feval(class(this));
             
             p = properties(this);
-            for i = 1:length(p)
-                new.(p{i}) = this.(p{i});
+            for iProp = 1:length(p)
+                new.(p{iProp}) = this.(p{iProp});
             end
         end
 
         % Part for checking the correct setting of options
         
-        function set.obj_type(this, value)
+        function this = set.obj_type(this, value)
             if(strcmpi(value, 'log-posterior') || strcmpi(value, 'negative log-posterior'))
                 this.obj_type = lower(value);
             else
@@ -440,7 +440,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.comp_type(this, value)
+        function this = set.comp_type(this, value)
             if(strcmpi(value, 'sequential') || strcmpi(value, 'parallel'))
                 this.comp_type = lower(value);
             else
@@ -448,7 +448,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
 
-        function set.n_starts(this, value)
+        function this = set.n_starts(this, value)
             if(isnumeric(value) && floor(value) == value && value > 0)
                 this.n_starts = value;
                 this.start_index = [];
@@ -457,16 +457,16 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.mode(this, value)
+        function this = set.mode(this, value)
             this.mode = value;
-%             if (strcmp(value, 'visual') || strcmp(value, 'text') || strcmp(value, 'silent') || strcmp(value, 'debug'))
-%                 this.mode = value;
-%             else
-%                 error('PestoOptions.mode must be set to either "visual", "text", "silent" or "debug".');
-%             end
+            if (strcmp(value, 'visual') || strcmp(value, 'text') || strcmp(value, 'silent') || strcmp(value, 'debug'))
+                this.mode = value;
+            else
+                error('PestoOptions.mode must be set to either "visual", "text", "silent" or "debug".');
+            end
         end
         
-        function set.proposal(this, value)
+        function this = set.proposal(this, value)
             if (strcmp(value, 'latin hypercube') || strcmp(value, 'uniform') || strcmp(value, 'user-supplied'))
                 this.proposal = value;
             else
@@ -474,7 +474,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.save(this, value)
+        function this = set.save(this, value)
             if islogical(value)
                 this.save = value;
             else
@@ -482,7 +482,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.tempsave(this, value)
+        function this = set.tempsave(this, value)
             if islogical(value)
                 this.tempsave = value;
             else
@@ -490,7 +490,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.trace(this, value)
+        function this = set.trace(this, value)
             if islogical(value)
                 this.trace = value;
             else
@@ -498,7 +498,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
 
-        function set.calc_profiles(this, value)
+        function this = set.calc_profiles(this, value)
             if islogical(value)
                 this.calc_profiles = value;
             else
@@ -506,7 +506,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.resetobjective(this, value)
+        function this = set.resetobjective(this, value)
             if islogical(value)
                 this.resetobjective = value;
             else
@@ -514,7 +514,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.start_index(this, value)
+        function this = set.start_index(this, value)
             if isvector(value) || isempty(value)
                 this.start_index = value;
             else
@@ -522,7 +522,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.parameter_index(this, value)
+        function this = set.parameter_index(this, value)
             if isvector(value) || isempty(value)
                 this.parameter_index = value;
             else
@@ -530,7 +530,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.property_index(this, value)
+        function this = set.property_index(this, value)
             if isvector(value) || isempty(value)
                 this.property_index = value;
             else
@@ -538,7 +538,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.MAP_index(this, value)
+        function this = set.MAP_index(this, value)
             if(isempty(value) || isnumeric(value) && floor(value) == value && value > 0)
                 this.MAP_index = value;
             else
@@ -546,7 +546,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.dR_max(this, value)
+        function this = set.dR_max(this, value)
             if(isnumeric(value) && value >= 0 && value <= 1)
                 this.dR_max = value;
             else
@@ -554,7 +554,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
 
-        function set.R_min(this, value)
+        function this = set.R_min(this, value)
             if(isnumeric(value) && value >= 0 && value <= 1)
                 this.R_min = value;
             else
@@ -562,7 +562,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.localOptimizer(this, value)
+        function this = set.localOptimizer(this, value)
             switch(value)
                 case {'fmincon', 'meigo-ess', 'meigo-vns', 'pswarm', 'lsqnonlin', 'cs', 'dhc', 'bobyqa'}
                     this.localOptimizer = value;
