@@ -80,36 +80,36 @@ function [g, g_fd_f, g_fd_b, g_fd_c] = testGradient(varargin)
         end
         
         str_1 = '[';
-        i = 1;
+        ip = 1;
         while true
             if(~ischar(il))
-                if(i==ig)
+                if(ip==ig)
                     str_1 = [str_1 'g'];
-                elseif(i==il)
+                elseif(ip==il)
                     str_1 = [str_1 'l'];
                 else
                     str_1 = [str_1 '~'];
                 end
-                if i == max(ig,il);
+                if ip == max(ig,il);
                     eval([str_1 '] = fun(theta);']);
                     break;
                 else
                     str_1 = [str_1 ','];
                 end
-                i=i+1;
+                ip=ip+1;
             else
-                if(i==ig)
+                if(ip==ig)
                     str_1 = [str_1 'g'];
                 else
                     str_1 = [str_1 '~'];
                 end
-                if i == max(ig);
+                if ip == max(ig);
                     eval([str_1 '] = fun(theta);']);
                     break;
                 else
                     str_1 = [str_1 ','];
                 end
-                i=i+1;
+                ip=ip+1;
             end
         end
     else
@@ -138,64 +138,64 @@ function [g, g_fd_f, g_fd_b, g_fd_c] = testGradient(varargin)
         end
         str_2 = '[';
         % Evaluation of function and gradient
-        i = 1;
+        ip = 1;
         while true
-            if(i==il)
+            if(ip==il)
                 str_2 = [str_2 'l'];
             else
                 str_2 = [str_2 '~'];
             end
-            if i == max(il);
+            if ip == max(il);
                 break;
             else
                 str_2 = [str_2 ','];
             end
-            i=i+1;
+            ip=ip+1;
         end
     else
         struct = fun(theta);
         eval(['l = struct.' il ';']);
     end
     
-    for i = 1:length(plist)
-        disp(['computing FD for parameter index ' num2str(plist(i))])
+    for ip = 1:length(plist)
+        disp(['computing FD for parameter index ' num2str(plist(ip))])
         % function evaluation
         if(~ischar(il))
-            eval([str_2 '_i_f] = fun(theta+[zeros(plist(i)-1,1);eps;zeros(length(theta)-plist(i),1)]);']);
-            eval([str_2 '_i_b] = fun(theta-[zeros(plist(i)-1,1);eps;zeros(length(theta)-plist(i),1)]);']);
+            eval([str_2 '_i_f] = fun(theta+[zeros(plist(ip)-1,1);eps;zeros(length(theta)-plist(ip),1)]);']);
+            eval([str_2 '_i_b] = fun(theta-[zeros(plist(ip)-1,1);eps;zeros(length(theta)-plist(ip),1)]);']);
         else
-            struct_i_f = fun(theta+[zeros(plist(i)-1,1);eps;zeros(length(theta)-plist(i),1)]);
+            struct_i_f = fun(theta+[zeros(plist(ip)-1,1);eps;zeros(length(theta)-plist(ip),1)]);
             eval(['l_i_f = struct_i_f.' il ';']);
-            struct_i_b = fun(theta-[zeros(plist(i)-1,1);eps;zeros(length(theta)-plist(i),1)]);
+            struct_i_b = fun(theta-[zeros(plist(ip)-1,1);eps;zeros(length(theta)-plist(ip),1)]);
             eval(['l_i_b = struct_i_b.' il ';']);
         end
         
         if(length(plist)==1)
             % forward differences
-            eval(['g_fd_f(' repmat(':,',1,numel(size(g))) 'i) = (l_i_f-l)/eps;'])
+            eval(['g_fd_f(' repmat(':,',1,numel(size(g))) 'ip) = (l_i_f-l)/eps;'])
             
             % backward differences
-            eval(['g_fd_b(' repmat(':,',1,numel(size(g))) 'i) = -(l_i_b-l)/eps;'])
+            eval(['g_fd_b(' repmat(':,',1,numel(size(g))) 'ip) = -(l_i_b-l)/eps;'])
             
             % central differences
-            eval(['g_fd_c(' repmat(':,',1,numel(size(g))) 'i) = (l_i_f-l_i_b)/(2*eps);'])
+            eval(['g_fd_c(' repmat(':,',1,numel(size(g))) 'ip) = (l_i_f-l_i_b)/(2*eps);'])
         elseif(sg(end)==1)
-            eval(['g_fd_f(' repmat(':,',1,numel(size(g))-2) 'i) = (l_i_f-l)/eps;'])
+            eval(['g_fd_f(' repmat(':,',1,numel(size(g))-2) 'ip) = (l_i_f-l)/eps;'])
             
             % backward differences
-            eval(['g_fd_b(' repmat(':,',1,numel(size(g))-2) 'i) = -(l_i_b-l)/eps;'])
+            eval(['g_fd_b(' repmat(':,',1,numel(size(g))-2) 'ip) = -(l_i_b-l)/eps;'])
             
             % central differences
-            eval(['g_fd_c(' repmat(':,',1,numel(size(g))-2) 'i) = (l_i_f-l_i_b)/(2*eps);'])
+            eval(['g_fd_c(' repmat(':,',1,numel(size(g))-2) 'ip) = (l_i_f-l_i_b)/(2*eps);'])
         else
             % forward differences
-            eval(['g_fd_f(' repmat(':,',1,numel(size(g))-1) 'i) = (l_i_f-l)/eps;'])
+            eval(['g_fd_f(' repmat(':,',1,numel(size(g))-1) 'ip) = (l_i_f-l)/eps;'])
             
             % backward differences
-            eval(['g_fd_b(' repmat(':,',1,numel(size(g))-1) 'i) = -(l_i_b-l)/eps;'])
+            eval(['g_fd_b(' repmat(':,',1,numel(size(g))-1) 'ip) = -(l_i_b-l)/eps;'])
             
             % central differences
-            eval(['g_fd_c(' repmat(':,',1,numel(size(g))-1) 'i) = (l_i_f-l_i_b)/(2*eps);'])
+            eval(['g_fd_c(' repmat(':,',1,numel(size(g))-1) 'ip) = (l_i_f-l_i_b)/(2*eps);'])
         end
     end
     
