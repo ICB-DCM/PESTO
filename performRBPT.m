@@ -178,7 +178,11 @@ function res = performRBPT( logPostHandle, par, opt )
          case {'visual','text'}
             disp('Restoring aborted run...')
       end
-      load(saveFileName);
+      try
+         load(saveFileName);
+      catch
+         disp('File corrupt.');
+      end
    end
    
    % Perform MCMC
