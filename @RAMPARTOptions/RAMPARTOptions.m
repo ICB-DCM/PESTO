@@ -1,6 +1,6 @@
-classdef RBPTOptions < matlab.mixin.SetGet
-   % RBPTOptions provides an option container to specify region based parallel tempering (RBPT) options
-   % in PestoSamplingOptions.RBPT.
+classdef RAMPARTOptions < matlab.mixin.SetGet
+   % RAMPARTOptions provides an option container to specify region based parallel tempering (RAMPART) options
+   % in PestoSamplingOptions.RAMPART.
    %
    % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
    
@@ -51,22 +51,22 @@ classdef RBPTOptions < matlab.mixin.SetGet
    end
    
    methods
-      function obj = RBPTOptions(varargin)
-         % RBPTOptions Construct a new RBPTOptions object
+      function obj = RAMPARTOptions(varargin)
+         % RAMPARTOptions Construct a new RAMPARTOptions object
          %
-         %   OPTS = RBPTOptions() creates a set of options with
+         %   OPTS = RAMPARTOptions() creates a set of options with
          %   each option set to itsdefault value.
          %
-         %   OPTS = RBPTOptions(PARAM, VAL, ...) creates a set
+         %   OPTS = RAMPARTOptions(PARAM, VAL, ...) creates a set
          %   of options with the named parameters altered with the
          %   specified values.
          %
-         %   OPTS = RBPTOptions(OLDOPTS, PARAM, VAL, ...)
+         %   OPTS = RAMPARTOptions(OLDOPTS, PARAM, VAL, ...)
          %   creates a copy of OLDOPTS with the named parameters altered
          %   with the specified value
          %
          %   Note to see the parameters, check the
-         %   documentation page for RBPTOptions
+         %   documentation page for RAMPARTOptions
          %
          % Parameters:
          %  varargin:
@@ -77,7 +77,7 @@ classdef RBPTOptions < matlab.mixin.SetGet
             
             % Deal with the case where the first input to the
             % constructor is a amioptions/struct object.
-            if isa(varargin{1},'RBPTOptions')
+            if isa(varargin{1},'RAMPARTOptions')
                if strcmp(class(varargin{1}),class(obj))
                   obj = varargin{1};
                else
@@ -167,7 +167,7 @@ classdef RBPTOptions < matlab.mixin.SetGet
       end
       
       function new = copy(this)
-         % Creates a copy of the passed RBPTOptions instance
+         % Creates a copy of the passed RAMPARTOptions instance
          new = feval(class(this));
          
          p = properties(this);
@@ -218,7 +218,7 @@ classdef RBPTOptions < matlab.mixin.SetGet
          if(isnumeric(value) && value > 0.5 && value < 1)
             this.alpha = lower(value);
          else
-            error(['Please use an adaption decay constant between 0.5 and 1.0, e.g. PestoSamplingOptions.RBPT.alpha = 0.51']);
+            error(['Please use an adaption decay constant between 0.5 and 1.0, e.g. PestoSamplingOptions.RAMPART.alpha = 0.51']);
          end
       end
       
@@ -226,7 +226,7 @@ classdef RBPTOptions < matlab.mixin.SetGet
          if(isnumeric(value) && value >= 0.0 && value <= 1)
             this.trainPhaseFrac = lower(value);
          else
-            error(['The PestoSamplingOptions.RBPT.trainPhaseFrac should be a value between 0 and 1.']);
+            error(['The PestoSamplingOptions.RAMPART.trainPhaseFrac should be a value between 0 and 1.']);
          end
       end      
       

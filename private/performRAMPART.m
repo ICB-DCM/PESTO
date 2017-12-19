@@ -1,6 +1,6 @@
-function res = performRBPT( logPostHandle, par, opt )
+function res = performRAMPART( logPostHandle, par, opt )
    
-   % performPT.m uses an Region Based adaptive Parallel Tempering algorithm to sample
+   % performRAMPART.m uses an Region Based adaptive Parallel Tempering algorithm to sample
    % from an objective function
    % 'logPostHandle'. The tempered chains are getting swapped using an equi
    % energy scheme. The temperatures are getting adapted as well as the
@@ -18,22 +18,22 @@ function res = performRBPT( logPostHandle, par, opt )
    %                               area are getting rejected
    % par.number                  : Number of parameters
    % opt.nIterations             : Number of desired sampling iterations
-   % opt.RBPT.nTemps               : Number of tempered chains
-   % opt.RBPT.exponentT            : The exponent of the power law for initial
+   % opt.RAMPART.nTemps               : Number of tempered chains
+   % opt.RAMPART.exponentT            : The exponent of the power law for initial
    %                               temperatures. Higher Values lead to more
    %                               separated initial temperatures.
-   % opt.RBPT.alpha                : Control parameter for adaption decay.
+   % opt.RAMPART.alpha                : Control parameter for adaption decay.
    %                               Needs values between 0 and 1. Higher values
    %                               lead to faster decays, meaning that new
    %                               iterations influence the single-chain
    %                               proposal adaption only very weakly very
    %                               quickly.
-   % opt.RBPT.temperatureNu        : Control parameter for adaption decay of the
+   % opt.RAMPART.temperatureNu        : Control parameter for adaption decay of the
    %                               temperature adaption. Sample properties as
-   %                               described for opt.RBPT.alpha.
-   % opt.RBPT.memoryLength         : Control parameter for adaption. Higher
+   %                               described for opt.RAMPART.alpha.
+   % opt.RAMPART.memoryLength         : Control parameter for adaption. Higher
    %                               values suppress strong early adaption.
-   % opt.RBPT.regFactor            : This factor is used for regularization in
+   % opt.RAMPART.regFactor            : This factor is used for regularization in
    %                               cases where the single-chain proposal
    %                               covariance matrices are ill conditioned.
    %                               Larger values equal stronger
@@ -61,29 +61,29 @@ function res = performRBPT( logPostHandle, par, opt )
    % Initialization
    doDebug           = opt.debug;
    
-   nTemps            = opt.RBPT.nTemps;
+   nTemps            = opt.RAMPART.nTemps;
    nIter             = opt.nIterations;
    theta0            = opt.theta0;
    sigma0            = opt.sigma0;
    thetaMin          = par.min;
    thetaMax          = par.max;
-   exponentT         = opt.RBPT.exponentT;
-   alpha             = opt.RBPT.alpha;
-   temperatureNu     = opt.RBPT.temperatureNu;
-   memoryLength      = opt.RBPT.memoryLength;
-   regFactor         = opt.RBPT.regFactor;
+   exponentT         = opt.RAMPART.exponentT;
+   alpha             = opt.RAMPART.alpha;
+   temperatureNu     = opt.RAMPART.temperatureNu;
+   memoryLength      = opt.RAMPART.memoryLength;
+   regFactor         = opt.RAMPART.regFactor;
    nPar              = par.number;
-   temperatureEta    = opt.RBPT.temperatureEta;
+   temperatureEta    = opt.RAMPART.temperatureEta;
    useSmallWorld     = true;
    
-   nTrainReplicates  = opt.RBPT.nTrainReplicates;
+   nTrainReplicates  = opt.RAMPART.nTrainReplicates;
    
-   trainPhaseFrac    = opt.RBPT.trainPhaseFrac;
+   trainPhaseFrac    = opt.RAMPART.trainPhaseFrac;
    nPhase            = floor(trainPhaseFrac * nIter);
    
-   nRegionNumbers    = length(opt.RBPT.RPOpt.modeNumberCandidates);
-   nMaxRegions       = max(opt.RBPT.RPOpt.modeNumberCandidates);
-   regionPredOpt     = opt.RBPT.RPOpt;
+   nRegionNumbers    = length(opt.RAMPART.RPOpt.modeNumberCandidates);
+   nMaxRegions       = max(opt.RAMPART.RPOpt.modeNumberCandidates);
+   regionPredOpt     = opt.RAMPART.RPOpt;
    
    saveEach          = opt.saveEach;
    saveFileName      = opt.saveFileName;
@@ -104,7 +104,7 @@ function res = performRBPT( logPostHandle, par, opt )
       res.newLabel      = nan(nIter, 1);      
    end
    
-   maxT              = opt.RBPT.maxT;
+   maxT              = opt.RAMPART.maxT;
    T                 = linspace(1,maxT^(1/exponentT),nTemps).^exponentT;
    beta              = 1./T;
    

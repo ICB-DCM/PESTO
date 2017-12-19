@@ -83,8 +83,9 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       % DRAMOptions
       DRAM;     
       
-      % Region Based Parallel Tempering Options, an instance of RBPTOptions
-      RBPT;      
+      % Region Based Parallel Tempering Options, an instance of RAMPARTOptions
+      RAMPART;  
+      
    end
       
    methods
@@ -246,7 +247,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
             error('Please specify the algorithm which should be used, e.g. opt.samplingAlgorithm = ''PT''');
          end
          if (strcmp(value, 'MALA') || strcmp(value, 'DRAM') || strcmp(value, 'PT') || strcmp(value, 'PHS') ...
-               || strcmp(value, 'RBPT'))
+               || strcmp(value, 'RAMPART'))
             this.samplingAlgorithm = value;
             switch value
                case 'MALA'
@@ -254,31 +255,31 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                   this.DRAM = struct;
                   this.PT   = struct;
                   this.PHS  = struct;
-                  this.RBPT  = struct;
+                  this.RAMPART  = struct;
                case 'DRAM'
                   this.MALA = struct;
                   this.DRAM = DRAMOptions();
                   this.PT   = struct;
                   this.PHS  = struct;
-                  this.RBPT  = struct;                  
+                  this.RAMPART  = struct;                  
                case 'PT'
                   this.MALA = struct;
                   this.DRAM = struct;
                   this.PT   = PTOptions();
                   this.PHS  = struct;
-                  this.RBPT  = struct;                  
+                  this.RAMPART  = struct;                  
                case 'PHS'
                   this.MALA = struct;
                   this.DRAM = struct;
                   this.PT   = struct;
                   this.PHS  = PHSOptions();
-                  this.RBPT  = struct;
-               case 'RBPT'
+                  this.RAMPART  = struct;
+               case 'RAMPART'
                   this.MALA = struct;
                   this.DRAM = struct;
                   this.PT   = struct;
                   this.PHS  = struct;
-                  this.RBPT  = RBPTOptions();                  
+                  this.RAMPART  = RAMPARTOptions();                  
             end
          else
             error('You have entered an sampling algorithm which does not exist.')
@@ -323,10 +324,10 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                         (size(this.theta0,2) ~= this.PHS.nChains && size(this.theta0,2) ~= 1)
                      error('Please make sure opt.theta0, the par.number and opt.PHS.nChains are consistent.')
                   end
-               case 'RBPT'
+               case 'RAMPART'
                   if size(this.theta0,1) ~= par.number || ...
-                        (size(this.theta0,2) ~= this.RBPT.nTemps && size(this.theta0,2) ~= 1)
-                     error('Please make sure opt.theta0, the par.number and opt.RBPT.nTemps are consistent.')
+                        (size(this.theta0,2) ~= this.RAMPART.nTemps && size(this.theta0,2) ~= 1)
+                     error('Please make sure opt.theta0, the par.number and opt.RAMPART.nTemps are consistent.')
                   end                  
             end
             
@@ -342,9 +343,9 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                case 'PHS'
                   this.theta0 = bsxfun(@plus, par.min', ...
                      bsxfun(@times, par.max' - par.min', rand(par.number,this.PHS.nChains)))';
-               case 'RBPT'
+               case 'RAMPART'
                   this.theta0 = bsxfun(@plus, par.min', ...
-                     bsxfun(@times, par.max' - par.min', rand(par.number,this.RBPT.nTemps)))';                  
+                     bsxfun(@times, par.max' - par.min', rand(par.number,this.RAMPART.nTemps)))';                  
             end
          end
          if ~isempty(this.sigma0)
@@ -366,11 +367,11 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                         (size(this.sigma0,3) ~= this.PHS.nChains && size(this.sigma0,3) ~= 1)
                      error('Please make sure opt.sigma0, the par.number and opt.PHS.nChains are consistent.')
                   end
-               case 'RBPT'
+               case 'RAMPART'
                   if size(this.sigma0,1) ~= par.number || ...
                         size(this.sigma0,2) ~= par.number || ...
-                        (size(this.sigma0,3) ~= this.RBPT.nTemps && size(this.sigma0,3) ~= 1)
-                     error('Please make sure opt.sigma0, the par.number and opt.RBPT.nTemps are consistent.')
+                        (size(this.sigma0,3) ~= this.RAMPART.nTemps && size(this.sigma0,3) ~= 1)
+                     error('Please make sure opt.sigma0, the par.number and opt.RAMPART.nTemps are consistent.')
                   end                  
             end
          else
@@ -382,7 +383,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                   this.sigma0 = 1e4 * diag(ones(1,par.number));
                case 'PHS'
                   this.sigma0 = 1e4 * diag(ones(1,par.number));
-               case 'RBPT'
+               case 'RAMPART'
                   this.sigma0 = 1e4 * diag(ones(1,par.number));                  
             end
          end
