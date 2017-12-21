@@ -1,8 +1,14 @@
 function res = performPT( logPostHandle, par, opt )
-   % performPT.m uses an adaptive Parallel Tempering algorithm to sample from an objective function
+   
+   % performPT.m uses an Parallel Tempering algorithm to sample
+   % from an objective function
    % 'logPostHandle'. The tempered chains are getting swapped using an equi
    % energy scheme. The temperatures are getting adapted as well as the
-   % proposal density covariance matrix. The options 'opt' cover:
+   % proposal density covariance matrix. The proposal adaptation is done
+   % for each region separately to increase locale mixing.
+   %
+   %
+   % The options 'opt' cover:
    % opt.theta0                  : The initial parameter points for each of the
    %                               tempered chains
    % opt.sigma0                  : The initial proposal covariance matrix of
@@ -22,7 +28,7 @@ function res = performPT( logPostHandle, par, opt )
    %                               iterations influence the single-chain
    %                               proposal adaption only very weakly very
    %                               quickly.
-   % opt.PT.temperatureAlpha     : Control parameter for adaption decay of the
+   % opt.PT.temperatureNu     : Control parameter for adaption decay of the
    %                               temperature adaption. Sample properties as
    %                               described for opt.PT.alpha.
    % opt.PT.memoryLength         : Control parameter for adaption. Higher
@@ -34,6 +40,8 @@ function res = performPT( logPostHandle, par, opt )
    %                               regularization.
    % opt.PT.temperatureAdaptionScheme: Defines the temperature adaption scheme.
    %                               Either 'Vousden16' or 'Lacki15'.
+   % opt.PT.swapsPerIter         : Number of swaps between temperatures
+   %                               per iteration.
    %
    %
    % It returns a struct 'res' covering:
@@ -55,35 +63,54 @@ function res = performPT( logPostHandle, par, opt )
    
    
    % Initialization
-   nTemps = opt.PT.nTemps;
-   nIter = opt.nIterations;
-   theta0 = opt.theta0;
-   sigma0 = opt.sigma0;
-   thetaMin = par.min;
-   thetaMax = par.max;
-   exponentT = opt.PT.exponentT;
-   alpha = opt.PT.alpha;
-   temperatureAlpha = opt.PT.temperatureAlpha;
-   memoryLength = opt.PT.memoryLength;
-   regFactor = opt.PT.regFactor;
-   temperatureAdaptionScheme = opt.PT.temperatureAdaptionScheme;
-   nPar = par.number;
+   doDebug              = opt.debug;
    
-   res.par = nan(nPar, nIter, nTemps);
-   res.logPost = nan(nIter, nTemps);
-   res.acc = nan(nIter, nTemps);
-   res.accSwap = nan(nIter, nTemps, nTemps);
-   res.sigmaScale = nan(nIter, nTemps);
-   res.temperatures = nan(nIter, nTemps);
+   saveEach             = opt.saveEach;
+   saveFileName         = opt.saveFileName;   
    
-   beta = linspace(1,1/nTemps,nTemps).^exponentT;
-   if strcmp(temperatureAdaptionScheme,'Vousden16') && nTemps > 1
-      beta(end) = 0;
+   nTemps               = opt.PT.nTemps;
+   nIter                = opt.nIterations;
+   theta0               = opt.theta0;
+   sigma0               = opt.sigma0;
+   thetaMin             = par.min;
+   thetaMax             = par.max;
+   exponentT            = opt.PT.exponentT;
+   alpha                = opt.PT.alpha;
+   temperatureNu        = opt.PT.temperatureNu;
+   memoryLength         = opt.PT.memoryLength;
+   regFactor            = opt.PT.regFactor;
+   nPar                 = par.number;
+   temperatureEta       = opt.PT.temperatureEta;
+   
+   
+   
+   S = zeros(1,nTemps-2);
+   
+   if doDebug     
+      res.par              = nan(nPar, nIter, nTemps);
+      res.logPost          = nan(nIter, nTemps);
+      res.acc              = nan(nIter, nTemps);
+      res.accSwap          = nan(nIter, nTemps, nTemps);
+      res.sigmaScale       = nan(nIter, nTemps);
+      res.temperatures     = nan(nIter, nTemps);
+   else
+      res.par              = nan(nPar, nIter);
+      res.logPost          = nan(nIter, 1);      
    end
-   T = ones(1,nTemps);
+   
+   maxT = opt.PT.maxT;
+   T = linspace(1,maxT^(1/exponentT),nTemps).^exponentT;
+   beta = 1./T;
+   
+   % Special case of AM: necessary due to linspace behavior
+   if nTemps == 1
+      T    = 1;
+      beta = 1;
+   end
+   
    acc = zeros(1,nTemps);
-   accSwap = zeros(nTemps);
-   propSwap = zeros(nTemps);
+   accSwap = zeros(1,nTemps-1);
+   propSwap = zeros(1,nTemps-1);
    sigmaScale = ones(1,nTemps);
    switch size(theta0,2)
       case 1
@@ -94,6 +121,8 @@ function res = performPT( logPostHandle, par, opt )
          error('Dimension of options.theta0 is incorrect.');
    end
    muHist = theta;
+   
+%    S = zeros(1,nTemps-2);
    
    % Regularization sigma0
    for l = 1:size(sigma0,3)
@@ -117,9 +146,6 @@ function res = performPT( logPostHandle, par, opt )
       otherwise
          error('Dimension of options.Sigma0 is incorrect.');
    end
-   oldS = log(1./beta(2:end)-1./beta(1:end-1));
-   newS = log(1./beta(2:end)-1./beta(1:end-1));
-   sigmaProp = nan(nPar,nPar,nTemps);
    logPost = nan(nTemps,1);
    logPostProp = nan(nTemps,1);
    for l = 1:nTemps
@@ -128,32 +154,68 @@ function res = performPT( logPostHandle, par, opt )
    sigma = sigmaHist;
    
    msg = '';
-   tic; dspTime = toc;
+   timer = tic; dspTime      = toc; 
+   
+   j = 0;
+   i = 1;
+   
+   % Reset Progress
+   if (saveEach ~= 0) && ~isempty(saveFileName) && ...
+         exist([saveFileName '.mat'],'file')==2
+      switch opt.mode
+         case {'visual','text'}
+            disp('Restoring aborted run...')
+      end
+      try
+         load(saveFileName);
+      catch
+         disp('File corrupt.');
+      end
+   end   
    
    % Perform MCMC
-   j = 0;
-   for i = 1:(nIter)
+   while i <= nIter
       
       j = j + 1; % Relative Index for each Phase
+      
+      % Save progress - nice for grid computing
+      if (saveEach ~= 0) && ~isempty(saveFileName) && mod(i,saveEach)==0
+         save(saveFileName);
+      end      
       
       % Reporting Progress
       switch opt.mode
          case {'visual','text'}
-            if toc-dspTime > 0.5
+            if toc(timer)-dspTime > 0.5 
                fprintf(1, repmat('\b',1,numel(msg)-2)) ;
                msg = ['Progress: ' num2str(i/(nIter)*100,'%2.2f') ' %%\n'];
                fprintf(1,msg);
-               dspTime = toc;
+               dspTime = toc(timer); 
             end
          case 'silent'
       end
-
+      
       
       % Do MCMC step for each temperature
       for l = 1:nTemps
          
          % Propose
          thetaProp(:,l) = mvnrnd(theta(:,l),sigma(:,:,l))';
+%          if l == nTemps
+% %             pause(1)
+%             xlims = [thetaMin(1),thetaMax(1)];
+%             ylims = [thetaMin(1),thetaMax(1)];
+%             if j > 1
+%                delete(h)
+%                set(gca,'xlim',xlims);
+%                set(gca,'ylim',ylims);
+%             else
+%                xlims = xlim;
+%                ylims = ylim;
+%             end
+%             h=plot_gaussian_ellipsoid(theta(1:2,20), squeeze(sigma(1:2,1:2,20)));
+%             drawnow;
+%          end
          
          % Check for Bounds
          if (sum(thetaProp(:,l) < thetaMin) + sum(thetaProp(:,l) > thetaMax)) == 0
@@ -161,32 +223,22 @@ function res = performPT( logPostHandle, par, opt )
             inbounds = 1;
             
             % Proposed posterior value
-            logPostProp(l) = logPostHandle(thetaProp(:,l));
-            
-            % New sigma
-            sigmaProp(:,:,l) = sigmaScale(l)^2 * sigmaHist(:,:,l);
-            
-            % Regularization of proposed sigma
-            [~,p] = cholcov(sigmaProp(:,:,l),0);
-            if p ~= 0
-               sigmaProp(:,:,l) = sigmaProp(:,:,l) + regFactor*eye(nPar);
-               sigmaProp(:,:,l) = (sigmaProp(:,:,l)+sigmaProp(:,:,l)')/2;
-               [~,p] = cholcov(sigmaProp(:,:,l),0);
-               if p ~= 0
-                  sigmaProp(:,:,l) = sigmaProp(:,:,l) + max(max(sigmaProp(:,:,l)))/1000*eye(nPar);
-                  sigmaProp(:,:,l) = (sigmaProp(:,:,l)+sigmaProp(:,:,l)')/2;
-               end
-            end
+            logPostProp(l) = logPostHandle(thetaProp(:,l)); 
             
          else
             inbounds = 0;
          end
          
-         % Transition and Acceptance Probabilities
-         if (inbounds == 1) && (logPostProp(l) > -inf)
+         % Transition and Acceptance Probabilities      
+         if (inbounds == 1) && (logPostProp(l) > -inf) && (logPostProp(l) < inf)
             logTransFor(l) = 1;
             logTransBack(l) = 1;
-            pAcc(l) = min(0, beta(l)*(logPostProp(l)-logPost(l)) + logTransBack(l) - logTransFor(l));
+            pAcc(l) = beta(l)*(logPostProp(l)-logPost(l)) + logTransBack(l) - logTransFor(l);
+            if isnan(pAcc(l))       % May happen if the objective function has numerical problems
+               pAcc(l) = -inf;
+            elseif pAcc(l) > 0       % Do not use min, due to NaN behavior in Matlab
+               pAcc(l) = 0;
+            end
          else
             pAcc(l) = -inf;
          end
@@ -227,90 +279,96 @@ function res = performPT( logPostHandle, par, opt )
          
       end
       
-      % Swaps between tempered chains using an equi-energy strategy
+      % Swaps between all adjacent chains as in Vousden16
       if nTemps > 1
-         
-         % Propose swap indices based on tempered posterior values and get
-         % swapping probabilities. Note: For EE Swaps, the forward and
-         % backward probability is always equal and canceled out
-         [k2,k1] = meshgrid(1:nTemps,1:nTemps);
-         swapProbForward = PTEESwapProbability(logPost);
-         iSwap = find(cumsum(swapProbForward(:)) > rand(), 1, 'first');
-         k1 = k1(iSwap);
-         k2 = k2(iSwap);
-         %       logPostBackward = logPost;
-         %       logPostBackward([k1,k2]) = logPost([k2,k1]);
-         %       swapProbBackward = PTEESwapProbability(logPostBackward);
-         swapProbBackward = swapProbForward;
-         
-         % Swap acceptance probability
-         % (Note that for the swap strategy used here we obtain
-         % swapProbBackward(k1,k2)/swapProbForward(k1,k2) = 1. This is the reason
-         % for the commented lines above)
-         pAccSwap = swapProbBackward(k1,k2)/swapProbForward(k1,k2) ...
-            * exp((beta(k2)-beta(k1))*(logPost(k1)-logPost(k2)));
-         
-         % Update chain states and run statistics
-         propSwap(k1,k2) = propSwap(k1,k2) + 1;
-         if rand <= pAccSwap
-            accSwap(k1,k2)   = accSwap(k1,k2) + 1;
-            theta(:,[k1,k2]) = theta(:,[k2,k1]);
-            logPost([k1,k2]) = logPost([k2,k1]);
+         dBeta = beta(1:end-1) - beta(2:end);
+         for l = nTemps:-1:2
+            pAccSwap(l-1) = dBeta(l-1) .* (logPost(l)-logPost(l-1))';
+            A(l-1) = log(rand) < pAccSwap(l-1);
+            propSwap(l-1) = propSwap(l-1) + 1;
+            accSwap(l-1) = accSwap(l-1) + A(l-1);
+            % As usually implemented when using PT
+            if A(l-1)
+               theta(:,[l,l-1]) = theta(:,[l-1,l]);
+               logPost([l,l-1]) = logPost([l-1,l]);
+            end
+            % Regular swaps can lead to insufficcient explorations of the
+            % hot chains. Performing "swaps" only in the direction from hot
+            % to cold, leaves the hotter chain non-influenced by the colder
+            % one. This can lead to better exploration.
+%             if A(l-1)
+%                theta(:,l-1) = theta(:,l);
+%                logPost(l-1) = logPost(l);
+%             end
          end
       end
       
-      if strcmp(temperatureAdaptionScheme,'Lacki15')
-         % Adaptation of the temperature values (Lacki 2015)
-         if (nTemps > 1)
-            oldT = 1./beta;
-            newT = 1./beta;
-            newT(1) = 1;
-            xi = zeros(1,nTemps-1);
-            for k = 1:(nTemps-1)
-               xi(k) = min(1, exp((beta(k+1)-beta(k))*(logPost(k)-logPost(k+1))));
-               newT(k+1) = newT(k) + (oldT(k+1)-oldT(k)) * ...
-                  exp((xi(k)-0.234)/(max(j,memoryLength)+1)^temperatureAlpha);
+      if nTemps > 1
+         dBeta = beta(1:end-1) - beta(2:end);
+         for l = nTemps:-1:2
+            pAccSwap(l-1) = dBeta(l-1) .* (logPost(l)-logPost(l-1))';
+            A(l-1) = log(rand) < pAccSwap(l-1);
+            propSwap(l-1) = propSwap(l-1) + 1;
+            accSwap(l-1) = accSwap(l-1) + A(l-1);
+            % As usually implemented when using PT
+            if A(l-1)
+               theta(:,[l,l-1]) = theta(:,[l-1,l]);
+               logPost([l,l-1]) = logPost([l-1,l]);
             end
-            beta = 1./newT;
+            % Regular swaps can lead to insufficcient explorations of the
+            % hot chains. Performing "swaps" only in the direction from hot
+            % to cold, leaves the hotter chain non-influenced by the colder
+            % one. This can lead to better exploration.
+%             if A(l-1)
+%                theta(:,l-1) = theta(:,l);
+%                logPost(l-1) = logPost(l);
+%             end
          end
-      elseif strcmp(temperatureAdaptionScheme,'Vousden16')
-         % Adaptation of the temperature values (Vousden 2016)
-         if (nTemps > 1)
-            T(1) = 1;
-            T(end) = inf;
-            for k = 2:(nTemps-1)
-               if temperatureAlpha > 0
-                  kappa = (max(j,memoryLength)+1)^temperatureAlpha;
-               else
-                  kappa = 1;
-               end
-               swapAccRatios = (accSwap(:,:)+accSwap(:,:)')./(propSwap(:,:)+propSwap(:,:)'+1);
-               newS(k-1) = oldS(k-1) + (swapAccRatios(k-1,k)-swapAccRatios(k,k+1)) / kappa;
-               oldS(k-1) = newS(k-1);
-            end
-            for k = 2:(nTemps-1)
-               T(k) = T(k-1) + exp(newS(k-1));
-            end
-            beta = 1./T;
-         end
-      else
-         error('Please specify correct T-adaption-scheme.')
+      end
+      
+      % Adaptation of the temperature values (Vousden 2016)
+      if nTemps > 1
+         
+         % Vousden python Code & Paper
+         kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
+         dS = kappa*(A(1:end-1)-A(2:end)); 
+         dT = diff(1./beta(1:end-1));
+         dT = dT .* exp(dS);
+         beta(1:end-1) = 1./cumsum([1,dT]);
+         
+         % My interpretation
+%          kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
+%          dS = kappa*(A(1:end-1)-A(2:end));
+%          T = 1./beta(2:end-1) .* exp(dS);
+%          T(2:end) = max(T(2:end),T(1:end-1)); % Ensure monotone temperature latter         
+%          T = min(maxT,T);
+%          beta(2:end-1) = 1./T;
+         
+         
       end
       
       % Store iteration
-      res.par(:,i,:) = theta;
-      res.logPost(i,:) = logPost;
-      res.acc(i,:) = 100*acc/j;
-      res.accSwap(i,:,:) = 100*(accSwap(:,:)+accSwap(:,:)')./(propSwap(:,:)+propSwap(:,:)');
-      res.propSwap = propSwap;
-      res.sigmaScale(i,:) = sigmaScale;
-      res.sigmaHist = sigmaHist;
-      res.temperatures(i,:) = 1./beta;
+      if doDebug     
+         res.par(:,i,:)          = theta;
+         res.logPost(i,:)        = logPost;
+         res.acc(i,:)            = 100*acc/j;
+         res.propSwap            = propSwap;
+         res.accSwap             = accSwap;
+         res.ratioSwap           = accSwap ./ propSwap;
+         res.sigmaScale(i,:)     = sigmaScale;
+         res.sigmaHist           = sigmaHist;
+         res.temperatures(i,:)   = 1./beta;
+      else
+         res.par(:,i)            = theta(:,1);
+         res.logPost(i)          = logPost(1);         
+      end
+      
+      i = i + 1; 
    end
    
-    switch opt.mode
-        case {'visual','text'}
-               fprintf(1, repmat('\b',1,numel(msg)-2)) ;
-        case 'silent'
-    end
+   switch opt.mode
+      case {'visual','text'}
+         fprintf(1, repmat('\b',1,numel(msg)-2)) ;
+      case 'silent'
+   end
 end
