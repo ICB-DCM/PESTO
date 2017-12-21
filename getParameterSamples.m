@@ -62,11 +62,11 @@ function parameters = getParameterSamples(parameters, objFkt, options)
          
       % PHS
       case 'PHS'
-         parameters.S = performPHS( wrappedObjFkt, parameters, opt );
+         parameters.S = performPHS( logPosterior, parameters, options.MCMC );
          
       % RBPT
       case 'RAMPART'
-         parameters.S = performRAMPART( wrappedObjFkt, parameters, opt );
+         parameters.S = performRAMPART( logPosterior, parameters, options.MCMC );
    end
    
    %% Output
