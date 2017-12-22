@@ -17,7 +17,7 @@ addpath([pwd filesep 'mRNA_Transfection']);
 addpath('C:\Users\benjamin\Home\GEYAW_Tools\AMICI')
 
 % Add results folder for SAVE files
-if exist([pwd filesep 'results'],'dir')~=2
+if exist([pwd filesep 'results'],'dir')~=7
     mkdir([pwd filesep 'results'])
 end
 
