@@ -47,6 +47,15 @@ classdef PestoOptions < matlab.mixin.SetGet
         % information and without the Pesto FD routine.
         objOutNumber = 3;
         
+        % Parameter inidices to be fixed, if any
+        fixedParameters = [];
+        
+        % Values of fixed parameters, same sorting as indices, if any
+        fixedParameterValues = [];
+        
+        % Number of data points used for parameter estimation, which should 
+        % be used to compute the BIC (optional)
+        nDatapoints = [];
         
         
         % <!-- Options concerning the output -->
@@ -250,9 +259,10 @@ classdef PestoOptions < matlab.mixin.SetGet
         % *         = 'bfgs' ... BFGS approximation to Hessian
         % *         = 'sr1' ... symmetric-rank 1 approximation to Hessian
         % *     .gradient ... is a gradient provided?        
-        % *     .MaxStep ... minimum step size of the solver
+        % *     .MinStep ... minimum step size of the solver
         % *     .MaxStep ... maximum step size of the solver
         % *     .MaxNumSteps ... maximum steps to be taken
+        % *     .GradTol ... maximum remaining gradient to be tolerated
         % *     .RelTol ... maximum relative integration error
         % *     .AbsTol ... maximum absolute integration error
         solver = struct('type', 'ode113', ...
@@ -265,10 +275,11 @@ classdef PestoOptions < matlab.mixin.SetGet
             'hessian', 'user-supplied', ... 
             'gradient', true, ...
             'MaxStep', 0.1, ...
-            'MinStep', 1e-4, ...
+            'MinStep', 1e-5, ...
             'MaxNumSteps', 1e5, ...
-            'RelTol', 1e-5, ...
-            'AbsTol', 1e-8 ...
+            'GradTol', 1, ...
+            'RelTol', 1e-4, ...
+            'AbsTol', 1e-6 ...
             );
         
 

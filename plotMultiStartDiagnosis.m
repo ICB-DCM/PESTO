@@ -196,13 +196,14 @@ end
 function getLinePlot(y,group)
     nmaxiter = size(y,1);
     l1 = plot(1:nmaxiter,y(:,group),'k-');
-    hold on
-    l2 = plot(1:nmaxiter,y(:,not(group)),'r-');
     if(any(any(~isnan(y(:,not(group))))))
+        hold on
+        l2 = plot(transpose(1:nmaxiter),y(:,not(group)),'r-');
         legend([l1(1),l2(1)],{'finished start','unfinished start'},'Location','best')
+        setLineTransparency(l2,0.2);
     end
     setLineTransparency(l1,0.4);
-    setLineTransparency(l2,0.2);
+
 end
 
 function setLineTransparency(lines,trans)

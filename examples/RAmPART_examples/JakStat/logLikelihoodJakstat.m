@@ -1,27 +1,27 @@
 function varargout = logLikelihoodJakstat(theta, amiData)
 % Objective function for examples/jakstat_signaling
 %
-% logLikelihoodJakstat.m provides the log-likelihood, its gradient and an 
+% logLikelihoodJakstat.m provides the log-likelihood, its gradient and an
 % the Hessian matrix for the model for the JakStat signaling pathway as
 % defined in jakstat_pesto_syms.m
-% 
+%
 % USAGE:
 % [llh] = getParameterProfiles(theta, amiData)
 % [llh, sllh] = getParameterProfiles(theta, amiData)
 % [llh, sllh, s2llh] = getParameterProfiles(theta, amiData)
 %
 % Parameters:
-%  theta: Model parameters 
+%  theta: Model parameters
 %  amiData: an amidata object for the AMICI solver
 %
 % Return values:
 %   varargout:
-%     llh: Log-Likelihood, only the LogLikelihood will be returned, no 
+%     llh: Log-Likelihood, only the LogLikelihood will be returned, no
 %         sensitivity analysis is performed
-%     sllh: Gradient of llh, The LogLikelihood and its gradient will be 
+%     sllh: Gradient of llh, The LogLikelihood and its gradient will be
 %         returned, first order adjoint sensitivity analysis is performed
-%     s2llh: Hessian of llh, The LogLikelihood, its gradient and the 
-%         Hessian matrix will be returned, second order adjoint sensitivity 
+%     s2llh: Hessian of llh, The LogLikelihood, its gradient and the
+%         Hessian matrix will be returned, second order adjoint sensitivity
 %         analysis is performed
 
 
@@ -45,30 +45,18 @@ amiOptions.sensi_meth = 'adjoint';
 if (nargout == 1)
     amiOptions.sensi = 0;
     sol = simulate_jakstat_pesto([], theta, amiData.condition, amiData, amiOptions);
-%     if sol.status < 0
-%        sol.llh = nan;
-%     end
-    varargout{1} = sol.llh;  
+    varargout{1} = sol.llh;
 elseif (nargout == 2)
     amiOptions.sensi = 1;
     sol = simulate_jakstat_pesto([], theta, amiData.condition, amiData, amiOptions);
-%     if sol.status < 0
-%        sol.llh = nan;
-%        sol.sllh = nan(size(sol.sllh));
-%     end    
     varargout{1} = sol.llh;
     varargout{2} = sol.sllh;
 elseif (nargout == 3)
     amiOptions.sensi = 2;
     sol = simulate_jakstat_pesto([], theta, amiData.condition, amiData, amiOptions);
-%     if sol.status < 0
-%        sol.llh = nan;
-%        sol.sllh = nan(size(sol.sllh));
-%        sol.s2llh = nan(size(sol.s2llh));
-%     end       
     varargout{1} = sol.llh;
     varargout{2} = sol.sllh;
     varargout{3} = sol.s2llh;
 end
-    
+
 end

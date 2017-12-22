@@ -1,4 +1,4 @@
-function parameters = getParameterSamples(parameters, objFkt, opt)
+function parameters = getParameterSamples(parameters, objFkt, options)
    % getParameterSamples.m performs MCMC sampling of the posterior
    %   distribution. 
    %
@@ -13,7 +13,7 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
    %               optimization, profiles and sampling. Optimization results
    %               can be used for initialization.
    %   objFkt: Objective function which measures the difference of model output and data
-   %   opt:    An options object holding various options for the
+   %   options:   An options object holding various options for the
    %              sampling. Depending on the algorithm and particular flavor,
    %              different options must be set: For details, please visit
    %              PestoSamplingOptions.m
@@ -40,37 +40,37 @@ function parameters = getParameterSamples(parameters, objFkt, opt)
    
    
    %% Check and assign inputs, note that theta0 and sigma0 are always set manually outside this function
-   opt = opt.checkDependentDefaults(parameters);
+   options.MCMC = options.MCMC.checkDependentDefaults(parameters);
    
    %% Wrap objective function
-   wrappedObjFkt = @(theta) objectiveWrap( theta, @(x)deal(-objFkt(x)), opt.obj_type, opt.objOutNumber );
+   logPosterior = setObjectiveWrapper(objFkt, options, 'log-posterior', [], [], false, true);
    
    %% Selection of sampling procedure
-   switch opt.samplingAlgorithm
+   switch options.MCMC.samplingAlgorithm
       
       % DRAM
       case 'DRAM'
-         parameters.S = performDRAM( wrappedObjFkt, parameters, opt );
+         parameters.S = performDRAM( logPosterior, parameters, options.MCMC );
          
       % MALA
       case 'MALA'
-         parameters.S = performMALA( wrappedObjFkt, parameters, opt );
+         parameters.S = performMALA( logPosterior, parameters, options.MCMC );
          
       % MH, AM and PT
       case 'PT'
-         parameters.S = performPT( wrappedObjFkt, parameters, opt );
+         parameters.S = performPT( logPosterior, parameters, options.MCMC );
          
       % PHS
       case 'PHS'
-         parameters.S = performPHS( wrappedObjFkt, parameters, opt );
+         parameters.S = performPHS( logPosterior, parameters, options.MCMC );
          
       % RBPT
       case 'RAMPART'
-         parameters.S = performRAMPART( wrappedObjFkt, parameters, opt );
+         parameters.S = performRAMPART( logPosterior, parameters, options.MCMC );
    end
    
    %% Output
-  	switch opt.mode
+  	switch options.mode
         case 'visual'
             samplingPlottingOpt = PestoPlottingOptions();
             samplingPlottingOpt.S.plot_type = 1;

@@ -16,6 +16,11 @@ addpath([pwd filesep 'mRNA_Transfection']);
 % Add you AMICI path here (necessary for some of the examples)
 addpath('C:\Users\benjamin\Home\GEYAW_Tools\AMICI')
 
+% Add results folder for SAVE files
+if exist([pwd filesep 'results'],'dir')~=7
+    mkdir([pwd filesep 'results'])
+end
+
 %% Run RAmPART in RING example
 % The results are getting stored in '/results'. For detailed options, see
 % selectRun.m

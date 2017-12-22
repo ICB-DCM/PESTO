@@ -30,6 +30,10 @@ function [fh] = plotMCMCdiagnosis(parameters, varargin)
 % * 2016/10/10 Daniel Weindl
 
 %% Check and assign inputs
+
+% Check, if parameters has all necessary fieds
+parameters = checkSanityOfStructs(parameters, 'parameters');
+
 % Plot type
 type = 'parameters';
 if nargin >= 2 && ~isempty(varargin{1})
