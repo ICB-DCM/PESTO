@@ -56,14 +56,22 @@ function varargout = getReducedObjectiveFunction(freeTheta, objectiveFunction, f
     % Evaluation of objective function
     switch nargout
         case {0,1}
-            varargout{1} = objectiveFunction(theta);
+            J = objectiveFunction(theta);
 
         case 2
-            [varargout{1},varargout{2}] = objectiveFunction(theta);
+            [J,G] = objectiveFunction(theta);
 
         case 3
-            [varargout{1},varargout{2},varargout{3}] = objectiveFunction(theta);
-
+            [J,G,H] = objectiveFunction(theta);
+    end
+    
+    % Assignment of output
+    varargout{1} = J;
+    if nargout >= 2
+        varargout{2} = G(freePars);
+    end
+    if nargout >= 3
+        varargout{3} = H(freePars,freePars);
     end
 end
     
