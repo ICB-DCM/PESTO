@@ -62,11 +62,25 @@ end
 % Initialization
 parameters.CI.alpha_levels = alpha;
 
+% Set default values for parameter profile 
+if isfield(parameters,'P')
+    for iPar = 1:parameters.number
+        if iPar > length(parameters.P)
+            parameters.P(iPar).par = [];
+            parameters.P(iPar).logPost = [];
+            parameters.P(iPar).R = [];
+            parameters.P(iPar).t_cpu = [];
+            parameters.P(iPar).optSteps = [];
+            parameters.P(iPar).intSteps = [];
+            parameters.P(iPar).reOptSteps = [];
+        end
+    end
+end
 
 % Loop: alpha levels
 for k = 1:length(alpha)
     % Loop: Parameters
-    for i = options.parameter_index
+    for iPar = options.parameter_index
         if isfield(parameters,'MS')
             % Inversion of Hessian
             if isempty(options.fixedParameters)
@@ -79,44 +93,46 @@ for k = 1:length(alpha)
             
             % Confidence intervals computed using local approximation and a
             % threshold (-> similar to PL-based confidence intervals)
-            parameters.CI.local_PL(i,1,k) = parameters.MS.par(i,iMAP) - sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
-            parameters.CI.local_PL(i,2,k) = parameters.MS.par(i,iMAP) + sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
+            parameters.CI.local_PL(iPar,1,k) = parameters.MS.par(iPar,iMAP) - sqrt(icdf('chi2',alpha(k),1)*Sigma(iPar,iPar));
+            parameters.CI.local_PL(iPar,2,k) = parameters.MS.par(iPar,iMAP) + sqrt(icdf('chi2',alpha(k),1)*Sigma(iPar,iPar));
 
             % Confidence intervals computed using local approximation and the
             % probability mass (-> similar to Bayesian confidence intervals)
-            parameters.CI.local_B(i,1,k)  = icdf('norm',  (1-alpha(k))/2,parameters.MS.par(i,iMAP),sqrt(Sigma(i,i)));
-            parameters.CI.local_B(i,2,k)  = icdf('norm',1-(1-alpha(k))/2,parameters.MS.par(i,iMAP),sqrt(Sigma(i,i)));
+            parameters.CI.local_B(iPar,1,k)  = icdf('norm',  (1-alpha(k))/2,parameters.MS.par(iPar,iMAP),sqrt(Sigma(iPar,iPar)));
+            parameters.CI.local_B(iPar,2,k)  = icdf('norm',1-(1-alpha(k))/2,parameters.MS.par(iPar,iMAP),sqrt(Sigma(iPar,iPar)));
         end
         
         % Confidence intervals computed using profile likelihood
         if isfield(parameters,'P')
-            if i <= length(parameters.P)
-                if ~isempty(parameters.P(i).par)
+            for iPar = 1:length(parameters.P)
+                if ~isempty(parameters.P(iPar).par)
                     % left bound
-                    ind  = find(parameters.P(i).par(i,:) <= parameters.MS.par(i,iMAP));
-                    j = find(parameters.P(i).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'last');
+                    ind  = find(parameters.P(iPar).par(iPar,:) <= parameters.MS.par(iPar,iMAP));
+                    j = find(parameters.P(iPar).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'last');
                     if ~isempty(j)
-                        parameters.CI.PL(i,1,k) = interp1(parameters.P(i).R(ind([j,j+1])),...
-                            parameters.P(i).par(i,ind([j,j+1])),exp(-icdf('chi2',alpha(k),1)/2));
+                        parameters.CI.PL(iPar,1,k) = interp1(parameters.P(iPar).R(ind([j,j+1])),...
+                            parameters.P(iPar).par(iPar,ind([j,j+1])),exp(-icdf('chi2',alpha(k),1)/2));
                     else
-                        parameters.CI.PL(i,1,k) = -inf;
+                        parameters.CI.PL(iPar,1,k) = -inf;
                     end
                     % right bound
-                    ind  = find(parameters.P(i).par(i,:) >= parameters.MS.par(i,iMAP));
-                    j = find(parameters.P(i).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'first');
+                    ind  = find(parameters.P(iPar).par(iPar,:) >= parameters.MS.par(iPar,iMAP));
+                    j = find(parameters.P(iPar).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'first');
                     if ~isempty(j)
-                        parameters.CI.PL(i,2,k) = interp1(parameters.P(i).R(ind([j-1,j])),...
-                            parameters.P(i).par(i,ind([j-1,j])),exp(-icdf('chi2',alpha(k),1)/2));
+                        parameters.CI.PL(iPar,2,k) = interp1(parameters.P(iPar).R(ind([j-1,j])),...
+                            parameters.P(iPar).par(iPar,ind([j-1,j])),exp(-icdf('chi2',alpha(k),1)/2));
                     else
-                        parameters.CI.PL(i,2,k) = inf;
+                        parameters.CI.PL(iPar,2,k) = inf;
                     end
+                else
+                    parameters.CI.PL(iPar,[1,2],k) = nan(1,2);
                 end
             end
         end
         
         % Confidence intervals computed using sample
         if isfield(parameters,'S')
-            parameters.CI.S(i,:,k) = prctile(parameters.S.par(i,:,1),50 + 100*[-alpha(k)/2, alpha(k)/2]);
+            parameters.CI.S(iPar,:,k) = prctile(parameters.S.par(iPar,:,1),50 + 100*[-alpha(k)/2, alpha(k)/2]);
         end
     end
 end

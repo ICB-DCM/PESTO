@@ -41,6 +41,7 @@ function fh = plotConfidenceIntervals(pStruct, alpha, varargin)
 %
 % History:
 % * 2016/11/14 Paul Stapor
+% * 2017/12/27 Jan Hasenauer
 
 %% Check and assign input
 
@@ -71,7 +72,7 @@ else
     options = PestoPlottingOptions();
 end
 
-%% Check what exaclty should be plotted
+%% Check what exactly should be plotted
 
 if isfield(pStruct, 'function')
     type = 'Properties';
@@ -147,15 +148,19 @@ switch options.group_CI_by
 
             for j = 1 : numConf
                 CI = pStruct.CI.(methods.type{j});
-                for k = methods.numLevels : -1 : 1;
-                    h = methods.bars(k);
-                    if (CI(indexSet(iP),1,k) == -inf)
-                        CI(indexSet(iP),1,k) = pStruct.min(indexSet(iP));
+                if (j == 1) && isnan(CI(indexSet(iP),1,1))
+                    % text(pStruct.MS.par(indexSet(iP),1),j,'$\emptyset$','Interpreter','latex','HorizontalAlignment','center','VerticalAlignment','middle')
+                else
+                    for k = methods.numLevels : -1 : 1
+                        h = methods.bars(k);
+                        if (CI(indexSet(iP),1,k) == -inf)
+                            CI(indexSet(iP),1,k) = pStruct.min(indexSet(iP));
+                        end
+                        if ((CI(indexSet(iP),2,k)) == inf)
+                            CI(indexSet(iP),2,k) = pStruct.max(indexSet(iP));
+                        end
+                        patch([CI(indexSet(iP),1,k), CI(indexSet(iP),2,k), CI(indexSet(iP),2,k), CI(indexSet(iP),1,k)], [j-h, j-h, j+h, j+h], 'k', 'FaceColor', methods.colors(j,:,k), 'EdgeColor', 'k');
                     end
-                    if ((CI(indexSet(iP),2,k)) == inf)
-                        CI(indexSet(iP),2,k) = pStruct.max(indexSet(iP));
-                    end
-                    patch([CI(indexSet(iP),1,k), CI(indexSet(iP),2,k), CI(indexSet(iP),2,k), CI(indexSet(iP),1,k)], [j-h, j-h, j+h, j+h], 'k', 'FaceColor', methods.colors(j,:,k), 'EdgeColor', 'k');
                 end
                 if isfield(pStruct, 'MS')
                     if (strcmp(type, 'Parameters'))

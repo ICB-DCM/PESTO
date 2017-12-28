@@ -27,9 +27,13 @@ function [parameters,properties] = getFullStructs(parameters,reducedParameters,p
         % Default values or results stored in parameters.P
         for iPar = 1:parameters.number
             flag_asign_default = true;
-            if isfield(parameters.P(iPar),'par')
-                if ~isempty(parameters.P(iPar).par)
-                    flag_asign_default = false;
+            if isfield(parameters,'P')
+                if length(parameters.P) >= iPar
+                    if isfield(parameters.P(iPar),'par')
+                        if ~isempty(parameters.P(iPar).par)
+                            flag_asign_default = false;
+                        end
+                    end
                 end
             end
             if flag_asign_default
@@ -47,7 +51,7 @@ function [parameters,properties] = getFullStructs(parameters,reducedParameters,p
             % Determine index of parameter in full parameter struct
             iPar = freePars(iPar_reduced);
             % Assign profile
-            if isempty(reducedParameters.P(iPar_reduced).par)
+            if ~isempty(reducedParameters.P(iPar_reduced).par)
                 % Results contained in reducedParameters.P
                 parameters.P(iPar) = reducedParameters.P(iPar_reduced);
                 % Extended parameter vector
@@ -75,9 +79,13 @@ function [parameters,properties] = getFullStructs(parameters,reducedParameters,p
             if isempty(reducedProperties.P(iProp).par)
                 % Default values or results contained in properties.P
                 flag_asign_default = true;
-                if isfield(properties.P(iProp),'par')
-                    if ~isempty(properties.P(iProp).par)
-                        flag_asign_default = false;
+                if isfield(properties,'P')
+                    if length(properties.P) >= iProp
+                        if isfield(properties.P(iProp),'par')
+                            if ~isempty(properties.P(iProp).par)
+                                flag_asign_default = false;
+                            end
+                        end
                     end
                 end
                 if flag_asign_default
