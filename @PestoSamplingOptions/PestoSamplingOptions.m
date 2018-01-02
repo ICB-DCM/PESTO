@@ -54,7 +54,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       
       % Some of the methods decide if debug mode should be on. This option
       % can be used in cases, where RAM is a critical resource
-      debug = true;
+      debug = false;
       
       % Maximum number of outputs, the objective function can provide:
       % * 1 ... only objective value
@@ -204,16 +204,6 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
             % Add required subclasses
             obj.PT = PTOptions;
             
-         end
-      end
-      
-      function new = copy(this)
-        % Creates a copy of the passed PestoSamplingOptions instance
-         new = feval(class(this));
-         
-         p = properties(this);
-         for i = 1:length(p)
-            new.(p{i}) = this.(p{i});
          end
       end
       
@@ -375,7 +365,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                   end                  
             end
          else
-            warning('No user-provided initial covariance sigma0 found. Setting to diagonal matrix with small entries.')
+            warning('No user-provided initial covariance sigma0 found. Setting to default diagonal matrix.')
             switch this.samplingAlgorithm
                case {'DRAM','MALA'}
                   this.sigma0 = 1e4 * diag(ones(1,par.number));

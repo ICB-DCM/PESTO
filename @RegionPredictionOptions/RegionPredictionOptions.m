@@ -176,16 +176,6 @@ classdef RegionPredictionOptions < matlab.mixin.SetGet
          end
       end
       
-      function new = copy(this)
-         % Creates a copy of the passed RegionPredictionOptions instance
-         new = feval(class(this));
-         
-         p = properties(this);
-         for i = 1:length(p)
-            new.(p{i}) = this.(p{i});
-         end
-      end
-      
       %% Part for checking the correct setting of options
       
       % TODO: Add checks

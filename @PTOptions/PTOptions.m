@@ -159,16 +159,6 @@ classdef PTOptions < matlab.mixin.SetGet
          end
       end
       
-      function new = copy(this)
-          % Creates a copy of the passed PTOptions instance
-         new = feval(class(this));
-         
-         p = properties(this);
-         for i = 1:length(p)
-            new.(p{i}) = this.(p{i});
-         end
-      end
-      
       %% Part for checking the correct setting of options
       function set.regFactor(this, value)
          if(isnumeric(value) && value > 0)

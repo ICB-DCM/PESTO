@@ -3,7 +3,6 @@
 % getting stored in [pwd filesep 'results'].
 
 % Add pathes of PESTO and the examples
-path(pathdef)
 addpath(['..' filesep '..']);
 addpath([pwd filesep 'Banana']);
 addpath([pwd filesep 'Ring']);
@@ -14,7 +13,9 @@ addpath([pwd filesep 'RafMekErk']);
 addpath([pwd filesep 'mRNA_Transfection']);
 
 % Add you AMICI path here (necessary for some of the examples)
-addpath('C:\Users\benjamin\Home\GEYAW_Tools\AMICI')
+if exist('amiwrap.m')~=2
+    error('Please add the AMICI toolbox to your path environment.')
+end
 
 % Add results folder for SAVE files
 if exist([pwd filesep 'results'],'dir')~=7

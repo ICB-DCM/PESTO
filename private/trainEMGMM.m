@@ -93,7 +93,6 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
          switch displayMode
             case {'visual'}
                if toc-dspTime > 0.01 || i==nSample
-                  pause(0.3)
                   fprintf(1, repmat('\b',1,numel(msg)-2)) ;
                   msg = ['Progress: ' num2str(i/(maxEMiterations)*100,'%2.2f') ' %%\n'];
                   fprintf(1,msg);
@@ -169,8 +168,8 @@ function [likelihoodOfTestSet, res] = trainEMGMM(sample, opt)
          end
          
          %% Break if terminiation condition was reached before i == nAlg
-         if logical(max(max(abs(muOld-mu))) < tolMu) & ...
-               logical(max(max(max(abs((sigmaOld-sigma))))) < tolSigma)
+         if logical(max(abs(muOld(:)-mu(:))) < tolMu) & ...
+               logical(max(abs((sigmaOld(:)-sigma(:)))) < tolSigma)
             disp('Terminated because movement tolerances were reached.')
             break
          end
