@@ -1,4 +1,5 @@
 function res = performMALA( logPostHandle, par, opt )
+   
    % performPT.m uses single-chain MALA to sample from the posterior given by
    % 'logPostHandle' as a function of the parameters. MALA uses gradients and hessian to improve
    % the convergence rate. 'logPostHandle' must return the cost function

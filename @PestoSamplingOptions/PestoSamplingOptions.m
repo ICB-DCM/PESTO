@@ -52,6 +52,10 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       % 'debug'. Default: visual
       mode = 'visual';
       
+      % Some of the methods decide if debug mode should be on. This option
+      % can be used in cases, where RAM is a critical resource
+      debug = false;
+      
       % Maximum number of outputs, the objective function can provide:
       % * 1 ... only objective value
       % * 2 ... objective value with gradient
@@ -59,6 +63,11 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       %
       % Missing values will be approximated by finite differences.
       objOutNumber = 1;
+      
+      % If desired, intermediate save spots are saved during the run in the
+      % following file each saveEach > 0:
+      saveFileName = '';
+      saveEach = 0;
       
       % Parallel Tempering Options, an instance of PTOptions
       PT;
@@ -72,7 +81,11 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       
       % Delayed Rejection Adaptive Metropolis options, an instance of
       % DRAMOptions
-      DRAM;      
+      DRAM;     
+      
+      % Region Based Parallel Tempering Options, an instance of RAMPARTOptions
+      RAMPART;  
+      
    end
       
    methods
@@ -194,16 +207,6 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
          end
       end
       
-      function new = copy(this)
-        % Creates a copy of the passed PestoSamplingOptions instance
-         new = feval(class(this));
-         
-         p = properties(this);
-         for i = 1:length(p)
-            new.(p{i}) = this.(p{i});
-         end
-      end
-      
       %% Part for checking the correct setting of options
       function set.obj_type(this, value)
          if(strcmpi(value, 'log-posterior') || strcmpi(value, 'negative log-posterior'))
@@ -233,7 +236,8 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
          if ~isstr(value) || isempty(value)
             error('Please specify the algorithm which should be used, e.g. opt.samplingAlgorithm = ''PT''');
          end
-         if (strcmp(value, 'MALA') || strcmp(value, 'DRAM') || strcmp(value, 'PT') || strcmp(value, 'PHS'))
+         if (strcmp(value, 'MALA') || strcmp(value, 'DRAM') || strcmp(value, 'PT') || strcmp(value, 'PHS') ...
+               || strcmp(value, 'RAMPART'))
             this.samplingAlgorithm = value;
             switch value
                case 'MALA'
@@ -241,21 +245,31 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                   this.DRAM = struct;
                   this.PT   = struct;
                   this.PHS  = struct;
+                  this.RAMPART  = struct;
                case 'DRAM'
                   this.MALA = struct;
                   this.DRAM = DRAMOptions();
                   this.PT   = struct;
                   this.PHS  = struct;
+                  this.RAMPART  = struct;                  
                case 'PT'
                   this.MALA = struct;
                   this.DRAM = struct;
                   this.PT   = PTOptions();
                   this.PHS  = struct;
+                  this.RAMPART  = struct;                  
                case 'PHS'
                   this.MALA = struct;
                   this.DRAM = struct;
                   this.PT   = struct;
                   this.PHS  = PHSOptions();
+                  this.RAMPART  = struct;
+               case 'RAMPART'
+                  this.MALA = struct;
+                  this.DRAM = struct;
+                  this.PT   = struct;
+                  this.PHS  = struct;
+                  this.RAMPART  = RAMPARTOptions();                  
             end
          else
             error('You have entered an sampling algorithm which does not exist.')
@@ -300,6 +314,11 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                         (size(this.theta0,2) ~= this.PHS.nChains && size(this.theta0,2) ~= 1)
                      error('Please make sure opt.theta0, the par.number and opt.PHS.nChains are consistent.')
                   end
+               case 'RAMPART'
+                  if size(this.theta0,1) ~= par.number || ...
+                        (size(this.theta0,2) ~= this.RAMPART.nTemps && size(this.theta0,2) ~= 1)
+                     error('Please make sure opt.theta0, the par.number and opt.RAMPART.nTemps are consistent.')
+                  end                  
             end
             
          else
@@ -314,6 +333,9 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                case 'PHS'
                   this.theta0 = bsxfun(@plus, par.min', ...
                      bsxfun(@times, par.max' - par.min', rand(par.number,this.PHS.nChains)))';
+               case 'RAMPART'
+                  this.theta0 = bsxfun(@plus, par.min', ...
+                     bsxfun(@times, par.max' - par.min', rand(par.number,this.RAMPART.nTemps)))';                  
             end
          end
          if ~isempty(this.sigma0)
@@ -335,16 +357,24 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
                         (size(this.sigma0,3) ~= this.PHS.nChains && size(this.sigma0,3) ~= 1)
                      error('Please make sure opt.sigma0, the par.number and opt.PHS.nChains are consistent.')
                   end
+               case 'RAMPART'
+                  if size(this.sigma0,1) ~= par.number || ...
+                        size(this.sigma0,2) ~= par.number || ...
+                        (size(this.sigma0,3) ~= this.RAMPART.nTemps && size(this.sigma0,3) ~= 1)
+                     error('Please make sure opt.sigma0, the par.number and opt.RAMPART.nTemps are consistent.')
+                  end                  
             end
          else
-            warning('No user-provided initial covariance sigma0 found. Setting to diagonal matrix with small entries.')
+            warning('No user-provided initial covariance sigma0 found. Setting to default diagonal matrix.')
             switch this.samplingAlgorithm
                case {'DRAM','MALA'}
-                  this.sigma0 = 1e4 * diag(ones(1,5));
+                  this.sigma0 = 1e4 * diag(ones(1,par.number));
                case 'PT'
-                  this.sigma0 = 1e4 * diag(ones(1,5));
+                  this.sigma0 = 1e4 * diag(ones(1,par.number));
                case 'PHS'
-                  this.sigma0 = 1e4 * diag(ones(1,5));
+                  this.sigma0 = 1e4 * diag(ones(1,par.number));
+               case 'RAMPART'
+                  this.sigma0 = 1e4 * diag(ones(1,par.number));                  
             end
          end
       end

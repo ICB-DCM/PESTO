@@ -638,5 +638,8 @@ function saveResults(parameters,options,i)
         dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__fval_trace.csv']),parameters.MS.fval_trace(:,i),'delimiter',',','precision',12);
         dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__time_trace.csv']),parameters.MS.time_trace(:,i),'delimiter',',','precision',12);
     end
+    
+    % Commented out due to long saving times in case of large models
+%     save([options.foldername '/init'],'parameters','-v7.3');
 
 end

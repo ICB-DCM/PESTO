@@ -7,7 +7,5 @@ mainEnzymaticCatalysis;
 mainTransfection;
 mainErbBSignaling;
 mainJakstatSignaling;
-mainExampleGauss;
-mainExampleRing;
 
 end
