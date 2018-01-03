@@ -2,8 +2,8 @@ function res = performPT( logPostHandle, par, opt )
    
    % performPT.m uses an Parallel Tempering algorithm to sample
    % from an objective function
-   % 'logPostHandle'. The tempered chains are getting swapped using an equi
-   % energy scheme. The temperatures are getting adapted as well as the
+   % 'logPostHandle'. The tempered chains are getting swapped. 
+   % The temperatures are getting adapted as well as the
    % proposal density covariance matrix. The proposal adaptation is done
    % for each region separately to increase locale mixing.
    %
@@ -121,9 +121,7 @@ function res = performPT( logPostHandle, par, opt )
          error('Dimension of options.theta0 is incorrect.');
    end
    muHist = theta;
-   
-%    S = zeros(1,nTemps-2);
-   
+      
    % Regularization sigma0
    for l = 1:size(sigma0,3)
       [~,p] = cholcov(sigma0(:,:,l),0);
@@ -201,21 +199,6 @@ function res = performPT( logPostHandle, par, opt )
          
          % Propose
          thetaProp(:,l) = mvnrnd(theta(:,l),sigma(:,:,l))';
-%          if l == nTemps
-% %             pause(1)
-%             xlims = [thetaMin(1),thetaMax(1)];
-%             ylims = [thetaMin(1),thetaMax(1)];
-%             if j > 1
-%                delete(h)
-%                set(gca,'xlim',xlims);
-%                set(gca,'ylim',ylims);
-%             else
-%                xlims = xlim;
-%                ylims = ylim;
-%             end
-%             h=plot_gaussian_ellipsoid(theta(1:2,20), squeeze(sigma(1:2,1:2,20)));
-%             drawnow;
-%          end
          
          % Check for Bounds
          if (sum(thetaProp(:,l) < thetaMin) + sum(thetaProp(:,l) > thetaMax)) == 0
@@ -292,14 +275,6 @@ function res = performPT( logPostHandle, par, opt )
                theta(:,[l,l-1]) = theta(:,[l-1,l]);
                logPost([l,l-1]) = logPost([l-1,l]);
             end
-            % Regular swaps can lead to insufficcient explorations of the
-            % hot chains. Performing "swaps" only in the direction from hot
-            % to cold, leaves the hotter chain non-influenced by the colder
-            % one. This can lead to better exploration.
-%             if A(l-1)
-%                theta(:,l-1) = theta(:,l);
-%                logPost(l-1) = logPost(l);
-%             end
          end
       end
       
@@ -315,14 +290,6 @@ function res = performPT( logPostHandle, par, opt )
                theta(:,[l,l-1]) = theta(:,[l-1,l]);
                logPost([l,l-1]) = logPost([l-1,l]);
             end
-            % Regular swaps can lead to insufficcient explorations of the
-            % hot chains. Performing "swaps" only in the direction from hot
-            % to cold, leaves the hotter chain non-influenced by the colder
-            % one. This can lead to better exploration.
-%             if A(l-1)
-%                theta(:,l-1) = theta(:,l);
-%                logPost(l-1) = logPost(l);
-%             end
          end
       end
       
@@ -334,17 +301,7 @@ function res = performPT( logPostHandle, par, opt )
          dS = kappa*(A(1:end-1)-A(2:end)); 
          dT = diff(1./beta(1:end-1));
          dT = dT .* exp(dS);
-         beta(1:end-1) = 1./cumsum([1,dT]);
-         
-         % My interpretation
-%          kappa = temperatureNu / ( j + 1 + temperatureNu ) / temperatureEta;
-%          dS = kappa*(A(1:end-1)-A(2:end));
-%          T = 1./beta(2:end-1) .* exp(dS);
-%          T(2:end) = max(T(2:end),T(1:end-1)); % Ensure monotone temperature latter         
-%          T = min(maxT,T);
-%          beta(2:end-1) = 1./T;
-         
-         
+         beta(1:end-1) = 1./cumsum([1,dT]); 
       end
       
       % Store iteration

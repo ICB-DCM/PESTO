@@ -1,9 +1,9 @@
 function res = performRAMPART( logPostHandle, par, opt )
    
-   % performRAMPART.m uses an Region Based adaptive Parallel Tempering algorithm to sample
+   % performRAMPART.m uses an Region-based adaptive PARallel Tempering algorithm to sample
    % from an objective function
-   % 'logPostHandle'. The tempered chains are getting swapped using an equi
-   % energy scheme. The temperatures are getting adapted as well as the
+   % 'logPostHandle'. The tempered chains are getting swapped. 
+   % The temperatures are getting adapted as well as the
    % proposal density covariance matrix. The proposal adaptation is done
    % for each region separately to increase locale mixing.
    %
@@ -18,22 +18,22 @@ function res = performRAMPART( logPostHandle, par, opt )
    %                               area are getting rejected
    % par.number                  : Number of parameters
    % opt.nIterations             : Number of desired sampling iterations
-   % opt.RAMPART.nTemps               : Number of tempered chains
-   % opt.RAMPART.exponentT            : The exponent of the power law for initial
+   % opt.RAMPART.nTemps          : Number of tempered chains
+   % opt.RAMPART.exponentT       : The exponent of the power law for initial
    %                               temperatures. Higher Values lead to more
    %                               separated initial temperatures.
-   % opt.RAMPART.alpha                : Control parameter for adaption decay.
+   % opt.RAMPART.alpha           : Control parameter for adaption decay.
    %                               Needs values between 0 and 1. Higher values
    %                               lead to faster decays, meaning that new
    %                               iterations influence the single-chain
    %                               proposal adaption only very weakly very
    %                               quickly.
-   % opt.RAMPART.temperatureNu        : Control parameter for adaption decay of the
+   % opt.RAMPART.temperatureNu   : Control parameter for adaption decay of the
    %                               temperature adaption. Sample properties as
    %                               described for opt.RAMPART.alpha.
-   % opt.RAMPART.memoryLength         : Control parameter for adaption. Higher
+   % opt.RAMPART.memoryLength    : Control parameter for adaption. Higher
    %                               values suppress strong early adaption.
-   % opt.RAMPART.regFactor            : This factor is used for regularization in
+   % opt.RAMPART.regFactor       : This factor is used for regularization in
    %                               cases where the single-chain proposal
    %                               covariance matrices are ill conditioned.
    %                               Larger values equal stronger
