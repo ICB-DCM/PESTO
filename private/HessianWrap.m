@@ -8,5 +8,9 @@ function Hessian = HessianWrap(negLogPost, varargin)
         theta = varargin{1}{1};
     end
     
-    [~, ~, Hessian] = negLogPost(theta);
+    [llh, ~, Hessian] = negLogPost(theta);
+    
+    if ~isfinite(llh)
+        Hessian = inf(size(Hessian));
+    end
 end
