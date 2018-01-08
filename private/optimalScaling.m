@@ -12,7 +12,8 @@ function [varargout] = optimalScaling(varargin)
 %  for the other inputs see loglikelihoodHierarchical.m
 %
 % Return values:
-%   s: the optimal scaling parameter for observable i
+%   s: (1 x # observables x max # replicates x # experiments/conditions)
+%       the optimal scaling parameter for observable i
 %   ds: (1 x 1 x n_theta x n_r) matrix with the derivatives of the scaling parameters
 
 iy = varargin{1};
@@ -54,18 +55,13 @@ n_r = size(D(1).my,3); %number of replicates
 if nargout > 1
     n_theta = size(simulation(1).sy,3); %number of parameters
 end
-%% COMPUTATION OF s AND ds
-s = zeros(1,1,n_r); %scaling parameters
-if nargout > 1
-    ds = zeros(1,1,n_theta,n_r); %derivatives of the scaling parameters
-end
-
+%% COMPUTATION OF SCALING PARAMETER AND ITS GRADIENT
 try
     switch scaling
         case 'absolute'
             s = ones(1,1,n_r);
             if nargout > 1
-                ds = zeros(1,1,n_theta,n_r);
+                ds = zeros(1,1,n_theta,options.max_repl);
             end
         case 'multiple'
             switch options.distribution
@@ -114,10 +110,10 @@ try
                         if isempty(candidates)
                             s(1,1,ir) = nan;
                         else
-                            [candidates,I] = sort(candidates); %candidates for c_ir, should be n_e*n_y*n_t
+                            [candidates,I] = sort(candidates); 
                             middle = (candidates(1:end-1,:,:)+candidates(2:end,:,:))/2;
                             dJds = zeros(size(middle));
-                            for cand = 1:size(dJds,1) %calculating for all candidates (sigma*) derivative of J with respect to c_ir
+                            for cand = 1:size(dJds,1) 
                                 for j = 1:n_e
                                     for iiy = 1:numel(iy)
                                         for it = 1:size(D(j).my,1)
@@ -260,8 +256,8 @@ try
                             if nargout > 1
                                 grad_candidates = grad_candidates(I,:);
                                 ds_i = s(1,1,1)*squeeze(grad_candidates(s_opt,:,:));
-                                for r = 1:n_r
-                                    ds(1,1,:,r) = ds_i';
+                                for ir = 1:n_r
+                                    ds(1,1,:,ir) = ds_i';
                                 end
                             end
                         end
@@ -286,6 +282,4 @@ end
 
 % Note: If for all j there are Nans in D(j).my(:,i,r)
 % sir and sigma2ir are NaN as well.
-
-end
 

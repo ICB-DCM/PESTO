@@ -37,6 +37,7 @@ options.llh = HOOptions();
 options.llh.distribution = distribution;
 options.llh.n_obs = 20;
 options.llh.n_exp = 36;
+options.llh.max_repl = 4;
 
 if strcmp(approach,'hierarchical')
         for i = [1:10,18:20]
@@ -59,7 +60,6 @@ if strcmp(approach,'hierarchical')
         options.llh.obsgroups_noise = {[1,2],[3,19,20],4,[5,6],7,8,9,10,11,[12,13,14,15,16,17],18};
         options.llh.expgroups_scaling = {1,2,3,[4,5],6,[7,8],[9,10],[11,12],[13,14],...
             [15:19],[20:25],[26:31],[32:36]};
-        
 end
 
 options.MS = PestoOptions();

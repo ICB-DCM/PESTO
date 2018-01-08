@@ -1,74 +1,7 @@
 function parameters = loadBachmannParameters(approach)
 % loadBachmannParameters() provides the parameter names.
 
-switch approach
-    case 'hierarchical'
-        
-        parameters.name = {...
-            'CISEqc'
-            'CISEqcOE'
-            'CISInh'
-            'CISRNADelay'
-            'CISRNATurn'
-            'CISTurn'
-            'EpoRActJAK2'
-            'EpoRCISInh'
-            'EpoRCISRemove'
-            'JAK2ActEpo'
-            'JAK2EpoRDeaSHP1'
-            'SHP1ActEpoR'
-            'SHP1Dea'
-            'SHP1ProOE'
-            'SOCS3Eqc'
-            'SOCS3EqcOE'
-            'SOCS3Inh'
-            'SOCS3RNADelay'
-            'SOCS3RNATurn'
-            'SOCS3Turn'
-            'STAT5ActEpoR'
-            'STAT5ActJAK2'
-            'STAT5Exp'
-            'STAT5Imp'
-            'init_EpoRJAK2'
-            'init_SHP1'
-            'init_STAT5'
-            'offset_CIS_actd'
-            'offset_CIS_cisoe'
-            'offset_CIS_long'
-            'offset_CIS_shp1oe'
-            'offset_CIS_socs3oe'
-            'offset_SOCS3_cisoe'
-            'offset_SOCS3_long'
-            'offset_SOCS3_socs3oe'
-            'offset_pEpoR_actd'
-            'offset_pEpoR_cisoe'
-            'offset_pEpoR_cisoe_pepor'
-            'offset_pEpoR_dr30'
-            'offset_pEpoR_dr7'
-            'offset_pEpoR_fine'
-            'offset_pEpoR_long'
-            'offset_pEpoR_shp1oe'
-            'offset_pEpoR_socs3oe'
-            'offset_pJAK2_actd'
-            'offset_pJAK2_cisoe'
-            'offset_pJAK2_dr30'
-            'offset_pJAK2_dr7'
-            'offset_pJAK2_fine'
-            'offset_pJAK2_long'
-            'offset_pJAK2_shp1oe'
-            'offset_pJAK2_socs3oe'
-            'offset_pSTAT5_actd'
-            'offset_pSTAT5_cisoe'
-            'offset_pSTAT5_conc'
-            'offset_pSTAT5_long'
-            'offset_pSTAT5_shp1oe'
-            'offset_pSTAT5_socs3oe'%;
-            %'sd_pSTAT5_socs3oe'
-            };
-        
-    case 'standard'
-        
-        parameters.name = {...
+parameters.name = {...
             'CISEqc'
             'CISEqcOE'
             'CISInh'
@@ -180,8 +113,10 @@ switch approach
             'sd_SOCS3_au'
             'sd_STAT5_abs'
             'sd_STAT5_au'
-            'sd_pSTAT5_rel'%;
-            %'sd_pSTAT5_socs3oe'
+            'sd_pSTAT5_rel'
             };
         
+if strcmp(approach,'hierarchical')
+        parameters.name = parameters.name{1:58};
+end
 end

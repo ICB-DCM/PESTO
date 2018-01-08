@@ -3,9 +3,9 @@
 % the RAF/MEK/ERK model in the standard case of optimization.
 %
 % USAGE:
-% * [logL] = logLikelihood__RafMekErk_standard()
-% * [logL,dlogL] = logLikelihood_RafMekErk_standard()
-% * [] = logLikelihood_RafMekErk_standard(xi,D,options)
+% * [logL] = logLikelihood_RafMekErk_standard(...)
+% * [logL,dlogL] = logLikelihood_RafMekErk_standard(...)
+% * [...] = logLikelihood_RafMekErk_standard(xi,D,options)
 
 % Parameters
 %  xi: parameter for which log-likelihood is evaluated

@@ -2,6 +2,8 @@ function D = getOffsetScalingStd_Bachmann(D)
 % getOffsetScalingStd_Bachmann() maps the offset, scaling and variance 
 % parameters to the corresponding conditions
 
+
+
 for cond = 1:36
     D(cond).offset = nan(20,1);
     D(cond).scaling = nan(20,1);

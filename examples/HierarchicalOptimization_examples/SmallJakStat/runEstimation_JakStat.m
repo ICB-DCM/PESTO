@@ -29,6 +29,7 @@ if nargin > 2
 else
     options.MS.foldername = ['results_SmallJakStat_' approach '_' distribution];
 end
+options.llh.foldername = options.MS.foldername;
 
 parameters = getMultiStarts(parameters,@(xi) ...
     logLikelihood_JakStat(xi,D,options,approach),options.MS);

@@ -20,7 +20,7 @@ function [varargout] = logLikelihoodHierarchical(simulation,D,options)
 %            for a theta in which the values nlLH, gradnlLH, FIMnlLH will be computed
 %   D: (1 x #experiments) struct containing data with two fields
 %       * t: time points
-%       * my: number time points x number observables x number replicates
+%       * my: # time points x # observables x # replicates
 %   options: HOOptions object holding the options for the
 %         definition of scaling and noise parameters
 %
@@ -33,8 +33,7 @@ function [varargout] = logLikelihoodHierarchical(simulation,D,options)
 %
 % Note: all observables/experiments that share a scaling parameter
 %       need to also share the noise parameter!
-%%% INITIALIZATION
-
+%% INITIALIZATION
 n_e = size(D,2); %number of experiments
 n_y = size(D(1).my,2); %number of observables
 n_r = size(D(1).my,3); %number of replicates
@@ -73,66 +72,60 @@ if nargout > 1
     end
 end
 
-% Initialization for for scaling and noise parameters
-s = zeros(1,n_y,n_r,n_e); % vector including scaling factors
-noise = zeros(1,n_y,n_r,n_e); % vector including noises
-
-if nargout > 1
-    ds = zeros(1,n_y,n_theta,n_r,n_e);
+try
+    for j = 1:n_e
+        assert(size(D(j).my,3) <= options.max_repl)
+    end
+catch
+    error('check maximal number of replicates in options.max_repl')
 end
 
-% if ~checkValidityOptions(D,options)
-%     error(['options not valid, all oberservables/experiments that share a' ...
-%         'scaling parameter need to also share the noise parameter'])
-% end
 
-%% OPTIMAL VALUES FOR THE scaling FACTORS
+% Initialization for for scaling and noise parameters
+s = zeros(1,n_y,options.max_repl,n_e); % vector including scaling factors
+noise = zeros(1,n_y,options.max_repl,n_e); % vector including noises
+
+if nargout > 1
+    ds = zeros(1,n_y,n_theta,pptions.max_repl,n_e);
+end
+
+
+%% optimal values for the scaling parameters
 for ie = 1:numel(options.expgroups_scaling)
     ind_e = options.expgroups_scaling{ie};
-    n_r = size(D(ind_e(1)).my,3);
     for iy = 1:numel(options.obsgroups_scaling)
         scale = options.scale(options.obsgroups_scaling{iy}(1));
         ind_y = options.obsgroups_scaling{iy};
-        
-        switch options.distribution
-            case {'normal'}
-                temps = optimalScaling(ind_y,simulation(ind_e),D(ind_e),options,scale);
-                for ir = 1:n_r
-                    s(:,ind_y,ir,ind_e) = temps(:,:,ir);
-                end
-            case {'laplace'}
-                if nargout > 1
-                    [temps,tempds] = ...
-                        optimalScaling(ind_y,simulation(ind_e),D(ind_e),options,scale);
-                    for ir = 1:n_r
-                        s(:,ind_y,ir,ind_e) = temps(:,:,ir);
-                        for iiy = 1:numel(ind_y)
-                            for iie = 1:numel(ind_e)
-                                ds(:,ind_y(iiy),:,ir,ind_e(iie)) = tempds(:,:,:,ir);
-                            end
-                        end
-                    end
-                else
-                    temps = optimalScaling(ind_y,simulation(ind_e),D(ind_e),options,scale);
-                    for ir = 1:n_r
-                        s(:,ind_y,ir,ind_e) = temps(:,:,ir);
+        if strcmp(options.distribution,'normal') || nargout <= 1
+            temps = optimalScaling(ind_y,simulation(ind_e),D(ind_e),options,scale);
+            for ir = 1:size(temps,3)
+                s(:,ind_y,ir,ind_e) = temps(:,:,ir);
+            end
+        else
+            [temps,tempds] = ...
+                optimalScaling(ind_y,simulation(ind_e),D(ind_e),options,scale);
+            for ir = 1:size(temps,3)
+                s(:,ind_y,ir,ind_e) = temps(:,:,ir);
+                for iiy = 1:numel(ind_y)
+                    for iie = 1:numel(ind_e)
+                        ds(:,ind_y(iiy),:,ir,ind_e(iie)) = tempds(:,:,:,ir);
                     end
                 end
+            end
         end
     end
 end
 
-%% OPTIMAL VALUES FOR THE noiseS
+%% optimal values for the noise parameters
 for ie = 1:numel(options.expgroups_noise)
     ind_e = options.expgroups_noise{ie};
-    n_r = size(D(ind_e(1)).my,3);
     for iy = 1:numel(options.obsgroups_noise)
         scale = options.scale((options.obsgroups_noise{iy}(1)));
         ind_y = options.obsgroups_noise{iy};
         ind_e = options.expgroups_noise{ie};
         [tempnoise] = ...
             optimalNoise(ind_y,simulation(ind_e),D(ind_e),options,s(:,:,:,ind_e),scale);
-        for ir = 1:n_r
+        for ir = 1:size(tempnoise,3)
             noise(:,ind_y,ir,ind_e)=tempnoise(:,:,ir);
         end
         
@@ -140,55 +133,95 @@ for ie = 1:numel(options.expgroups_noise)
 end
 
 %% save scaling and noise parameters
+% s and noise have dimensions: 
+% (1 x # observables x max # replicates x # experiments/conditions) 
 if options.save
-    save('analytical_results.mat','s','noise');
+    save([options.foldername '/analytical_results.mat'],'s','noise');
 end
 
-%% COMPUTING lLH, gradlLH, HessianlLH
-switch options.distribution
-    case 'normal'
-        for j = 1:n_e
-            n_r = size(D(j).my,3);
-            y_sh = nan(size(D(j).my));
-            if nargout > 1
-                dy_sh= nan(size(D(j).my,1),size(D(j).my,2),size(D(j).my,3),n_theta);
-            end
-            noise_j = noise(:,:,:,j);
-            s_j = s(:,:,:,j);
-            if ~isempty(ind_lin)
-                y_sh(:,ind_lin,:) = bsxfun(@minus,D(j).my(:,ind_lin,:),...
-                    bsxfun(@times,s_j(:,ind_lin,1:n_r),simulation(j).y(:,ind_lin)));
-                if nargout > 1
+%% computing loglikelihood, gradient and approximation Hessian
+for j = 1:n_e
+    n_r = size(D(j).my,3);
+    y_sh = nan(size(D(j).my));
+    if nargout > 1
+        dy_sh= nan(size(D(j).my,1),size(D(j).my,2),size(D(j).my,3),n_theta);
+    end
+    noise_j = noise(:,:,1:size(D(j).my,3),j);
+    s_j = s(:,:,1:size(D(j).my,3),j);
+    if strcmp(options.distribution,'laplace') && nargout > 1
+        ds_j = ds(:,:,:,:,j);
+    end
+    if ~isempty(ind_lin)
+        y_sh(:,ind_lin,:) = bsxfun(@minus,D(j).my(:,ind_lin,:),...
+            bsxfun(@times,s_j(:,ind_lin,1:n_r),simulation(j).y(:,ind_lin)));
+        if nargout > 1
+            switch options.distribution
+                case 'normal'
+                    % derivatives with respect to noise and s neglected
+                    % because they are 0
                     dy_sh(:,ind_lin,:,:) = -bsxfun(@times,s_j(:,ind_lin,1:n_r),...
                         permute(repmat(simulation(j).sy(:,ind_lin,:),[1,1,1,n_r]),[1,2,4,3]));
-                end
+                case 'laplace'
+                    % derivatives with respect to noise neglected
+                    dy_sh(:,ind_lin,:,:) = bsxfun(@times,permute(ds_j(:,ind_lin,:,1:n_r),[1,2,4,3]),simulation(j).y(:,ind_lin)) +...
+                        bsxfun(@times,s_j(:,ind_lin,1:n_r),permute(repmat(simulation(j).sy(:,ind_lin,:),[1,1,1,n_r]),[1,2,4,3]));
             end
-            if ~isempty(ind_log)
-                y_sh(:,ind_log,:) = bsxfun(@minus,log(D(j).my(:,ind_log,:)),...
-                    log(bsxfun(@times,s_j(:,ind_log,1:n_r),simulation(j).y(:,ind_log))));
-                if nargout > 1
+        end
+    end
+    
+    if ~isempty(ind_log)
+        y_sh(:,ind_log,:) = bsxfun(@minus,log(D(j).my(:,ind_log,:)),...
+            log(bsxfun(@times,s_j(:,ind_log,1:n_r),simulation(j).y(:,ind_log))));
+        if nargout > 1
+            switch options.distribution
+                case 'normal'
                     dy_sh(:,ind_log,:,:) = -bsxfun(@ldivide,simulation(j).y(:,ind_log),...
                         permute(repmat(simulation(j).sy(:,ind_log,:),[1,1,1,n_r]),[1,2,4,3]));
-                end
+                case 'laplace'
+                    dy_sh(:,ind_log,:,:) = permute(bsxfun(@ldivide,bsxfun(@times,s_j(:,ind_log,:),simulation(j).y(:,ind_log)),...
+                        permute(bsxfun(@plus,bsxfun(@times,permute(ds_j(:,ind_log,:,1:n_r),[1,2,4,3]),simulation(j).y(:,ind_log)),...
+                        bsxfun(@times,permute(s_j(:,ind_lin,1:n_r),[1,2,4,3]),...
+                        simulation(j).sy(:,ind_lin,:))),[1,2,4,3])),[1,2,4,3]);
             end
-            if ~isempty(ind_log10)
-                y_sh(:,ind_log10,:) = bsxfun(@minus,log10(D(j).my(:,ind_log10,:)),...
-                    log10(bsxfun(@times,s_j(:,ind_log10,1:n_r),simulation(j).y(:,ind_log10))));
-                if nargout > 1
+        end
+    end
+    
+    if ~isempty(ind_log10)
+        y_sh(:,ind_log10,:) = bsxfun(@minus,log10(D(j).my(:,ind_log10,:)),...
+            log10(bsxfun(@times,s_j(:,ind_log10,1:n_r),simulation(j).y(:,ind_log10))));
+        if nargout > 1
+            switch options.distribution
+                case 'normal'
                     dy_sh(:,ind_log10,:,:) = -bsxfun(@ldivide,simulation(j).y(:,ind_log10)*log(10),...
                         permute(repmat(simulation(j).sy(:,ind_log10,:),[1,1,1,n_r]),[1,2,4,3]));
-                end
+                case 'laplace'
+                    dy_sh(:,ind_log10,:,:) = 1/log(10)*bsxfun(@ldivide,...
+                        bsxfun(@times,s_j(:,ind_log10,1:n_r),simulation(j).y(:,ind_log10)),...
+                        bsxfun(@plus,bsxfun(@times,permute(ds_j(:,ind_log10,:,1:n_r),[1,2,4,3]),...
+                        simulation(j).y(:,ind_log10)),...
+                        bsxfun(@times,s_j(:,ind_log10,1:n_r),...
+                        permute(repmat(simulation(j).sy(:,ind_log10,:),[1,1,1,n_r]),...
+                        [1,2,4,3]))));nd
             end
-            lLH = lLH - 0.5*sum(sum(nansum(bsxfun(@times,~isnan(D(j).my),log(2*pi*noise_j))+...
-                bsxfun(@rdivide,bsxfun(@power,y_sh,2),noise_j),1),3),2);
+        end
+    end
+    switch options.distribution
+        case 'normal'
+            temparg = 0.5*(bsxfun(@times,~isnan(D(j).my),log(2*pi*noise_j))+...
+                bsxfun(@rdivide,bsxfun(@power,y_sh,2),noise_j));
+        case 'laplace'
+            temparg = bsxfun(@times,~isnan(D(j).my),log(2*noise_j))+...
+                bsxfun(@rdivide,abs(y_sh),noise_j);
             
-            if nargout > 1
-                %value of the gradient of the negloglikelihood function
+    end
+    lLH = lLH - sum(sum(nansum(temparg,1),3),2);
+    
+    if nargout > 1
+        switch options.distribution
+            case 'normal'
                 gradlLH = gradlLH - squeeze(sum(sum(nansum(...
-                    bsxfun(@times,...
-                    bsxfun(@rdivide,y_sh,noise_j),...
+                    bsxfun(@times,bsxfun(@rdivide,y_sh,noise_j),...
                     dy_sh),1),2),3));
-                
                 if nargout > 2
                     % approximated Hessian
                     for i1 = 1:n_theta
@@ -199,63 +232,13 @@ switch options.distribution
                         end
                     end
                 end
-            end
-        end
-    case {'laplace'}
-        for j = 1:n_e
-            n_r = size(D(j).my,3);
-            y_sh = nan(size(D(j).my));
-            if nargout > 1
-                dy_sh= nan(size(D(j).my,1),size(D(j).my,2),size(D(j).my,3),n_theta);
-            end
-            noise_j = noise(:,:,:,j);
-            s_j = s(:,:,:,j);
-            if nargout > 1
-                ds_j = ds(:,:,:,:,j);
-            end
-            
-            if ~isempty(ind_lin)
-                y_sh(:,ind_lin,:) = bsxfun(@minus,D(j).my(:,ind_lin,1:n_r),...
-                    bsxfun(@times,s_j(:,ind_lin,1:n_r),simulation(j).y(:,ind_lin)));
-                if nargout > 1
-                    dy_sh(:,ind_lin,:,:) = bsxfun(@times,permute(ds_j(:,ind_lin,:,1:n_r),[1,2,4,3]),simulation(j).y(:,ind_lin)) +...
-                        bsxfun(@times,s_j(:,ind_lin,1:n_r),permute(repmat(simulation(j).sy(:,ind_lin,:),[1,1,1,n_r]),[1,2,4,3]));
-                end
-            end
-            if ~isempty(ind_log)
-                y_sh(:,ind_log,:) = bsxfun(@minus,log(D(j).my(:,ind_log,:)),...
-                    log(bsxfun(@times,s_j(:,ind_log,:),simulation(j).y(:,ind_log))));
-                if nargout > 1
-                    dy_sh(:,ind_log,:,:) = permute(bsxfun(@ldivide,bsxfun(@times,s_j(:,ind_log,:),simulation(j).y(:,ind_log)),...
-                        permute(bsxfun(@plus,bsxfun(@times,permute(ds_j(:,ind_log,:,1:n_r),[1,2,4,3]),simulation(j).y(:,ind_log)),...
-                        bsxfun(@times,permute(s_j(:,ind_lin,1:n_r),[1,2,4,3]),...
-                        simulation(j).sy(:,ind_lin,:))),[1,2,4,3])),[1,2,4,3]);
-                end
-            end
-            if ~isempty(ind_log10)
-                y_sh(:,ind_log10,:) = bsxfun(@minus,log10(D(j).my(:,ind_log10,:)),...
-                    log10(bsxfun(@times,s_j(:,ind_log10,1:n_r),simulation(j).y(:,ind_log10))));
-                if nargout > 1
-                    dy_sh(:,ind_log10,:,:) = 1/log(10)*bsxfun(@ldivide,...
-                        bsxfun(@times,s_j(:,ind_log10,1:n_r),simulation(j).y(:,ind_log10)),...
-                        bsxfun(@plus,bsxfun(@times,permute(ds_j(:,ind_log10,:,1:n_r),[1,2,4,3]),...
-                        simulation(j).y(:,ind_log10)),...
-                        bsxfun(@times,s_j(:,ind_log10,1:n_r),...
-                        permute(repmat(simulation(j).sy(:,ind_log10,:),[1,1,1,n_r]),...
-                        [1,2,4,3]))));
-                end
-            end
-            lLH = lLH - sum(sum(nansum(bsxfun(@times,~isnan(D(j).my),log(2*noise_j))+...
-                bsxfun(@rdivide,abs(y_sh),noise_j),1),3),2);
-            if nargout > 1
+            case 'laplace'
                 gradlLH = gradlLH + squeeze(sum(sum(nansum(...
-                    bsxfun(@times,bsxfun(@rdivide,...
-                    sign(y_sh),noise_j),dy_sh)...
-                    ,1),2),3));
-            end
+                    bsxfun(@times,bsxfun(@rdivide,sign(y_sh),noise_j),...
+                    dy_sh),1),2),3));
         end
+    end
 end
-
 switch nargout
     case{0,1}
         varargout{1} = lLH;

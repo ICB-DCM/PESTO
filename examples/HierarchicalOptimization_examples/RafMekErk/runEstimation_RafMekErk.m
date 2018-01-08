@@ -19,8 +19,9 @@ end
 
 [parameters,options] = getParameterOptions_RafMekErk(approach);
 
+options.llh.distribution = distribution;
 options.MS.foldername = ['results_RafMekErk_' approach '_' distribution];
-
+options.ll.foldername = options.MS.foldername;
 
 switch approach
     case 'hierarchical'

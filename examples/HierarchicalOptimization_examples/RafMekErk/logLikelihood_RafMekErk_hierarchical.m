@@ -3,15 +3,15 @@ function [varargout] = logLikelihood_RafMekErk_hierarchical(xi,D,options)
 % the RAF/MEK/ERK model in the hierarchical case of optimization.
 %
 % USAGE:
-% * [lLH] = logLikelihood_RafMekErk_hierarchical()
-% * [lLH,gradlLH] = logLikelihood_RafMekErk_hierarchical()
-% * [] = logLikelihood_RafMekErk_hierarchical(xi,D,options)
+% * [lLH] = logLikelihood_RafMekErk_hierarchical(...)
+% * [lLH,gradlLH] = logLikelihood_RafMekErk_hierarchical(...)
+% * [...] = logLikelihood_RafMekErk_hierarchical(xi,D,options)
 
 % Parameters
 %  xi: parameter for which log-likelihood is evaluated
 %  D: data (see logLikelihoodHierarchical.m for the definition of the
 %  data)
-%  options:A HOOptions object holding various options for the algorithm
+%  options: A HOOptions object holding various options for the algorithm
 %
 % Return values:
 %   varargout:

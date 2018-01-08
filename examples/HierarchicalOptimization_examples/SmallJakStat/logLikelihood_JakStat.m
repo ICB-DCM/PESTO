@@ -3,8 +3,9 @@ function [varargout] = logLikelihood_JakStat(xi,D,options,approach)
 % the JAK-STAT model by Swameye et al. and Schelker et al.
 %
 % USAGE:
-% * [lLH] = logLikelihood_JakStat(xi,D,options,approach)
-% * [lLH,gradlLH] = logLikelihood_JakStat(xi,D,options,approach)
+% * [lLH] = logLikelihood_JakStat(...)
+% * [lLH,gradlLH] = logLikelihood_JakStat(...)
+% * [...] = logLikelihood_JakStat(xi,D,options,approach)
 %
 % Parameters
 %  xi: parameter for which log-likelihood is evaluated
@@ -55,7 +56,6 @@ try
                 dmydxi = sol.sy;
             end
             %% LOGLIKELIHOOD, GRAD
-            % initialize logL, grad,fish
             logL = 0;
             if nargout>1
                 grad = zeros(length(xi),1);
@@ -126,15 +126,9 @@ try
                     end
             end
     end
+    assert(sol.status>=0)
 catch error_thrown
     warning(['Evaluation of likelihood failed. ',error_thrown.message]);
-    lLH = nan;
-    gradlLH = nan(length(xi),1);
-    logL = nan;
-    grad = nan(length(xi),1);
-end
-if sol.status < 0
-    warning('Failed to integrate ODE.')
     lLH = nan;
     gradlLH = nan(length(xi),1);
     logL = nan;

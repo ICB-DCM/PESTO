@@ -1,21 +1,12 @@
 function [model] = RafMekErk_syms()
 
-%% CVODES OPTIONS
-% % absolute tolerance
-% model.atol = 1e-8;
-% % relative tolerance
-% model.rtol = 1e-8;
-% % maximal number of steps
-% model.maxsteps = 1e4;
-
 % paramterisation
-%model.param = 'lin';
 model.param = 'log10';
 
 %% STATES
-syms pRaf pMek pErk %int_pErk
+syms pRaf pMek pErk 
 
-x = [pRaf pMek pErk]; %int_pErk];
+x = [pRaf pMek pErk]; 
 
 %% TIME
 syms t
@@ -34,10 +25,6 @@ p = [kdf_Raf kp_Raf kdp_pMek kp_pRaf_Mek kdp_pErk kp_pMek_Erk K_pErk_inh ...
          scale_pErk_20140430_gel2 scale_pMek_20140505_gel1 scale_pErk_20140505_gel1...
          scale_pMek_20140505_gel2 scale_pErk_20140505_gel2]; % Sora UO];
      
-% %% INPUT 
-% % Define input as symbolic variable
-% u = sym.empty(0,0);
-
 %% DOSERESPONSE
 syms Sora UO
 k = [Sora UO];
@@ -68,7 +55,6 @@ y = [scale_pMek_20140430_gel1*x(2);...
 
 %% SYSTEM STRUCT
 model.sym.x = x;
-%model.sym.u = u;
 model.sym.k = k;
 model.sym.xdot = xdot;
 model.sym.p = p;
