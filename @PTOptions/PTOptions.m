@@ -170,32 +170,71 @@ classdef PTOptions < matlab.mixin.SetGet
          end
       end
       
-       
+      function set.nTemps(this, value)
+         if(value == floor(value) && value > 0)
+            this.nTemps = lower(value);
+         else
+            error(['Please enter a positive integer for the number of temperatures, e.g. PestoSamplingOptions.nTemps = 10.']);
+         end
+      end    
+      
+      function set.exponentT(this, value)
+         if(isnumeric(value) && value > 0)
+            this.exponentT = lower(value);
+         else
+            error(['Please enter a positive double for the exponent of inital temperature heuristic' ...
+               ', e.g. PestoSamplingOptions.PT.exponentT = 4.']);
+         end
+      end          
+
+      function set.alpha(this, value)
+         if(isnumeric(value) && value > 0.5 && value < 1)
+            this.alpha = lower(value);
+         else
+            error(['Please an adaption decay constant between 0.5 and 1.0, e.g. PestoSamplingOptions.PT.alpha = 0.51']);
+         end
+      end  
+      
+      function set.temperatureNu(this, value)
+         if(isnumeric(value) && value > 0.0)
+            this.temperatureNu = lower(value);
+         else
+            error(['Please an temperature adaption decay constant greater 0']);
+         end
+      end   
+      
+      function set.memoryLength(this, value)
+         if(value == floor(value) && value > 0)
+            this.memoryLength = lower(value);
+         else
+            error(['Please enter a positive interger memoryLength constant, '...
+               'e.g. PestoSamplingOptions.PT.memoryLength = 1']);
+         end
+      end   
+      
+      function set.swapsPerIter(this, value)
+         if(value == floor(value) && value > 0)
+            this.swapsPerIter = lower(value);
+         else
+            error(['Please enter a positive integer for the swaps per iteration.']);
+         end
+      end 
+      
+      function set.temperatureEta(this, value)
+         if(value == floor(value) && value > 0)
+            this.temperatureEta = lower(value);
+         else
+            error(['Please enter a positive integer for the scaling factor temperatureEta.']);
+         end
+      end  
+      
+      function set.maxT(this, value)
+         if(value > 0)
+            this.maxT = lower(value);
+         else
+            error(['Please enter the maximum temperature. May be inf.']);
+         end
+      end        
             
    end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
