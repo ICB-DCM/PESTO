@@ -45,9 +45,9 @@ try
     %% LOG-LIKELIHOOD, GRADIENT
     % observable 1
     if nargout > 1
-        [lLH, gradlLH] = logLikelihoodHierarchical(simulation,D,options.llh);        
+        [lLH, gradlLH] = logLikelihoodHierarchical(simulation,D,options.MS.HO);        
     else
-        lLH = logLikelihoodHierarchical(simulation,D,options.llh);        
+        lLH = logLikelihoodHierarchical(simulation,D,options.MS.HO);        
     end
     
 catch error_thrown

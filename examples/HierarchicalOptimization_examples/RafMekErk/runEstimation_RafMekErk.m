@@ -30,6 +30,6 @@ switch approach
         parameters = getMultiStarts(parameters,@(xi) ...
             logLikelihood_RafMekErk_standard(xi,D,options),options.MS);
 end
-save(options.MS.foldername,'parameters','D','options')
+save(options.MS.foldername,'parameters','D','options','approach')
 end
 

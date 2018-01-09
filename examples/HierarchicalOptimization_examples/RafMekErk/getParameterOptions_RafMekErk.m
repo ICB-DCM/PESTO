@@ -29,6 +29,7 @@ options.MS.mode = 'text';
 options.MS.save = false;
 options.MS.HO.n_obs = 2;
 options.MS.HO.n_exp = 3;
+options.MS.HO.max_repl = 4;
 
 load parameter_guesses_RafMekErk par0
 
