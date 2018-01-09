@@ -11,7 +11,7 @@ function varargout = logLikelihood_BachmannJakStat(xi,D,options,approach)
 %  xi: parameter for which log-likelihood is evaluated
 %  D: data (see logLikelihoodHierarchical.m for the definition of the
 %  data)
-%  options:  A HOOptions object holding various options for the algorithm
+%  options.MS.HO:  A HOOptions object holding various options for the algorithm
 %  approach: 'hierarchical' or 'standard' approach for the optimization
 %
 % Return values:
@@ -57,9 +57,9 @@ switch approach
     case 'hierarchical'
         sol = getSimulation_BachmannJakStat_offsetscaling(xi,sol,D,approach);
         if nderiv == 0
-            logL = logLikelihoodHierarchical(sol,D,options.llh);
+            logL = logLikelihoodHierarchical(sol,D,options.MS.HO);
         else
-            [logL,dlogL] = logLikelihoodHierarchical(sol,D,options.llh);
+            [logL,dlogL] = logLikelihoodHierarchical(sol,D,options.MS.HO);
         end
     case 'standard'
         logL = 0;
@@ -90,7 +90,7 @@ switch approach
             else
                 y_ch = bsxfun(@minus,log10(D(cond).my),log10(sol(cond).y));
             end
-            switch options.llh.distribution
+            switch options.MS.HO.distribution
                 case 'normal'
                     logL = logL - 0.5*(sum(sum(nansum(bsxfun(@times,~isnan(D(cond).my),...
                         log(2*pi*sigma2))+bsxfun(@rdivide,bsxfun(@power,y_ch,2),sigma2),1),3),2));

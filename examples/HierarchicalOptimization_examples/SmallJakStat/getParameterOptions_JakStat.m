@@ -17,6 +17,8 @@ options.MS = PestoOptions();
 options.MS.n_starts = 100; 
 options.MS.mode = 'text';
 options.MS.localOptimizer = optimizer;
+options.MS.HO.n_obs = 3;
+options.MS.HO.n_exp = 1;
 
 switch optimizer
     case 'fmincon'
@@ -33,20 +35,16 @@ end
 
 load parameter_guesses_JakStat par0
 
-options.llh = HOOptions();
-options.llh.n_obs = 3;
-options.llh.n_exp = 1;
-
 switch approach
     case 'hierarchical'
         parameters.name = {'log_{10}(p1)','log_{10}(p2)','log_{10}(p3)','log_{10}(p4)',...
             'log_{10}(sp1)','log_{10}(sp2)','log_{10}(sp3)','log_{10}(sp4)','log_{10}(sp5)',...
             'log_{10}(offset_{tSTAT})','log_{10}(offset_{pSTAT})'};
         parameters.guess = par0(1:length(parameters.name),1:options.MS.n_starts);
-        options.llh.noise = {'multiple','multiple','multiple'};
-        options.llh.scaling = {'multiple','multiple','absolute'};
-        options.llh.obsgroups_noise = {1,2,3};
-        options.llh.obsgroups_scaling = {1,2,3};
+        options.MS.HO.noise = {'multiple','multiple','multiple'};
+        options.MS.HO.scaling = {'multiple','multiple','absolute'};
+        options.MS.HO.obsgroups_noise = {1,2,3};
+        options.MS.HO.obsgroups_scaling = {1,2,3};
         
     case 'standard'
         

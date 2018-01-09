@@ -27,11 +27,11 @@ options.MS.localOptimizerOptions = optimset('algorithm','interior-point',...
 options.MS.n_starts = 100;
 options.MS.mode = 'text';
 options.MS.save = false;
+options.MS.HO.n_obs = 2;
+options.MS.HO.n_exp = 3;
 
 load parameter_guesses_RafMekErk par0
-options.llh = HOOptions();
-options.llh.n_obs = 2;
-options.llh.n_exp = 3;
+
 
 switch approach
     case 'hierarchical'
@@ -40,11 +40,11 @@ switch approach
             'log_{10}(K_pErk_inh)','log_{10}(sust_Ras_0)','log_{10}(ts_sust_Ras)',...
             'log_{10}(ts_trans_Ras)','log_{10}(K_Sora)','log_{10}(K_UO)'};
         parameters.guess = par0(1:length(parameters.name),1:options.MS.n_starts);
-        options.llh.noise = {'multiple','multiple'};
-        options.llh.scaling = {'multiple','multiple'};
+        options.MS.HO.noise = {'multiple','multiple'};
+        options.MS.HO.scaling = {'multiple','multiple'};
         
-        options.llh.obsgroups_scaling = {1,2};
-        options.llh.obsgroups_noise = {1,2};
+        options.MS.HO.obsgroups_scaling = {1,2};
+        options.MS.HO.obsgroups_noise = {1,2};
         
     case 'standard'
         parameters.name = {'log_{10}(kdf_Raf)','log_{10}(kp_Raf)','log_{10}(kdp_pMek)',...

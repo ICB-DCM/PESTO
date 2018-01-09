@@ -86,7 +86,7 @@ s = zeros(1,n_y,options.max_repl,n_e); % vector including scaling factors
 noise = zeros(1,n_y,options.max_repl,n_e); % vector including noises
 
 if nargout > 1
-    ds = zeros(1,n_y,n_theta,pptions.max_repl,n_e);
+    ds = zeros(1,n_y,n_theta,options.max_repl,n_e);
 end
 
 
@@ -201,7 +201,7 @@ for j = 1:n_e
                         simulation(j).y(:,ind_log10)),...
                         bsxfun(@times,s_j(:,ind_log10,1:n_r),...
                         permute(repmat(simulation(j).sy(:,ind_log10,:),[1,1,1,n_r]),...
-                        [1,2,4,3]))));nd
+                        [1,2,4,3]))));
             end
         end
     end

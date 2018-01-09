@@ -19,15 +19,13 @@ end
 
 [parameters,options] = getParameterOptions_RafMekErk(approach);
 
-options.llh.distribution = distribution;
+options.MS.HO.distribution = distribution;
 options.MS.foldername = ['results_RafMekErk_' approach '_' distribution];
-options.ll.foldername = options.MS.foldername;
 
 switch approach
     case 'hierarchical'
         parameters = getMultiStarts(parameters,@(xi) ...
-            logLikelihood_RafMekErk_hierarchical(xi,D,options),...
-            options.MS);
+            logLikelihood_RafMekErk_hierarchical(xi,D,options),options.MS);
     case 'standard'
         parameters = getMultiStarts(parameters,@(xi) ...
             logLikelihood_RafMekErk_standard(xi,D,options),options.MS);

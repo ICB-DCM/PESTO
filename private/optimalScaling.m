@@ -211,6 +211,9 @@ try
                     end
                     if isempty(candidates)
                         s = nan(1,1,n_r);
+                        if nargout > 1
+                            ds = nan(1,1,n_theta,n_r);
+                        end
                     else
                         [candidates,I] = sort(candidates); %candidates for c_ir, should be n_e*n_y*n_t
                         middle = (candidates(1:end-1,:,:)+candidates(2:end,:,:))/2;

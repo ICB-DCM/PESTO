@@ -11,7 +11,7 @@ function [varargout] = logLikelihood_RafMekErk_hierarchical(xi,D,options)
 %  xi: parameter for which log-likelihood is evaluated
 %  D: data (see logLikelihoodHierarchical.m for the definition of the
 %  data)
-%  options: A HOOptions object holding various options for the algorithm
+%  options.MS.HO: A HOOptions object holding various options for the algorithm
 %
 % Return values:
 %   varargout:

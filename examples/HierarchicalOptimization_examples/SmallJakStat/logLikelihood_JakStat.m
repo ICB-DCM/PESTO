@@ -11,7 +11,7 @@ function [varargout] = logLikelihood_JakStat(xi,D,options,approach)
 %  xi: parameter for which log-likelihood is evaluated
 %  D: data (see logLikelihoodHierarchical.m for the definition of the
 %  data in the hierarchical case)
-%  options:  A HOOptions object holding various options for the algorithm
+%  options.MS.HO:  A HOOptions object holding various options for the algorithm
 %  approach: 'hierarchical' or 'standard' approach for the optimization
 %
 % Return values:
@@ -43,11 +43,11 @@ try
             end
             %% LOG-LIKELIHOOD, GRADIENT
             if nargout == 2
-                [lLH, gradlLH] = logLikelihoodHierarchical(simulation,D,options.llh);
+                [lLH, gradlLH] = logLikelihoodHierarchical(simulation,D,options.MS.HO);
             elseif nargout > 2
-                [lLH, gradlLH,HlLH] = logLikelihoodHierarchical(simulation,D,options.llh);
+                [lLH, gradlLH,HlLH] = logLikelihoodHierarchical(simulation,D,options.MS.HO);
             else
-                lLH = logLikelihoodHierarchical(simulation,D,options.llh);
+                lLH = logLikelihoodHierarchical(simulation,D,options.MS.HO);
             end
         case 'standard'
             sol = simulate_JakStat(D.t,xi,kappa,[],options.ami);
@@ -75,7 +75,7 @@ try
             D.sigma_my = repmat(sigma',[nt,1]);
             resmy = reshape((my-D.my)./(D.sigma_my),nt*no,1);
             
-            switch options.llh.distribution
+            switch options.MS.HO.distribution
                 case 'normal'
                     if nargout>1
                         sresmy = reshape(bsxfun(@times,dmydxi,1./(D.sigma_my)),nt*no,np);

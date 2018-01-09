@@ -33,35 +33,6 @@ for cond = 1:numel(D)
 end
 D(3).my = D(3).my - 1;
 
-options.llh = HOOptions();
-options.llh.distribution = distribution;
-options.llh.n_obs = 20;
-options.llh.n_exp = 36;
-options.llh.max_repl = 4;
-
-if strcmp(approach,'hierarchical')
-        for i = [1:10,18:20]
-            options.llh.scale{i} = 'log10';
-        end
-        for i = [11:17]
-            options.llh.scale{i}  = 'lin';
-        end
-        for i = [1:6,12:20]
-            options.llh.scaling{i} = 'single';
-            options.llh.noise{i} = 'single';
-        end
-        for i = 7:11
-            options.llh.scaling{i} = 'absolute';
-            options.llh.noise{i} = 'single';
-        end
-        for i = 1:20
-            options.llh.obsgroups_scaling{i} = i;
-        end
-        options.llh.obsgroups_noise = {[1,2],[3,19,20],4,[5,6],7,8,9,10,11,[12,13,14,15,16,17],18};
-        options.llh.expgroups_scaling = {1,2,3,[4,5],6,[7,8],[9,10],[11,12],[13,14],...
-            [15:19],[20:25],[26:31],[32:36]};
-end
-
 options.MS = PestoOptions();
 options.MS.localOptimizerOptions = optimset('algorithm','interior-point',...
     'display','iter',...
@@ -76,14 +47,45 @@ options.MS.comp_type = 'sequential';
 options.MS.n_starts = 200;
 options.MS.save = false;
 options.MS.foldername = ['results_BachmannJakStat_' approach '_' distribution];
+options.MS.HO.distribution = distribution;
+options.MS.HO.n_obs = 20;
+options.MS.HO.n_exp = 36;
+options.MS.HO.max_repl = 4;
+
+if strcmp(approach,'hierarchical')
+        for i = [1:10,18:20]
+            options.MS.HO.scale{i} = 'log10';
+        end
+        for i = [11:17]
+            options.MS.HO.scale{i}  = 'lin';
+        end
+        for i = [1:6,12:20]
+            options.MS.HO.scaling{i} = 'single';
+            options.MS.HO.noise{i} = 'single';
+        end
+        for i = 7:11
+            options.MS.HO.scaling{i} = 'absolute';
+            options.MS.HO.noise{i} = 'single';
+        end
+        for i = 1:20
+            options.MS.HO.obsgroups_scaling{i} = i;
+        end
+        options.MS.HO.obsgroups_noise = {[1,2],[3,19,20],4,[5,6],7,8,9,10,11,[12,13,14,15,16,17],18};
+        options.MS.HO.expgroups_scaling = {1,2,3,[4,5],6,[7,8],[9,10],[11,12],[13,14],...
+            [15:19],[20:25],[26:31],[32:36]};
+end
+
 
 load parameter_guesses_Bachmann par0
 parameters.guess = par0(1:parameters.number,1:options.MS.n_starts);
+
 % xi = parameters.guess(:,1)
-% [g,g_fd_f,g_fd_b,g_fd_c] = testGradient(xi,@(xi) logLikelihood_BachmannJakStat(xi,D,options,approach),1e-5);
+% [g,g_fd_f,g_fd_b,g_fd_c] = testGradient(xi,@(xi) ...
+%     logLikelihood_BachmannJakStat(xi,D,options,approach),1e-5);
 % [g,g_fd_f,g_fd_b,g_fd_c]
 
-parameters = getMultiStarts(parameters,@(xi) logLikelihood_BachmannJakStat(xi,D,options,approach),options.MS);
+parameters = getMultiStarts(parameters,@(xi) ...
+    logLikelihood_BachmannJakStat(xi,D,options,approach),options.MS);
 
 save(options.MS.foldername,'D','options','parameters','approach')
 

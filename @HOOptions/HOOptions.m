@@ -21,8 +21,11 @@ classdef HOOptions < matlab.mixin.SetGet
         % Number of observables.
         n_obs = 1;
         
-        % For the following options, that all parameters are shared
-        % between observables and experiments.
+        % Maximal number of replicates.
+        max_repl = 1;
+        
+        % For the following options, the default is that all parameters
+        % are shared between observables and experiments.
         
         % Array containing the indices of the experiments
         % that share a noise parameter.
@@ -57,13 +60,18 @@ classdef HOOptions < matlab.mixin.SetGet
         % use "" for default as specified in the model (fallback: 'single')
         scaling = strings(1);
         
+        
+        % Name of the folder in which results are stored. If no folder is
+        % provided, a random foldername is generated.
+        
     end
     
     properties (Hidden)
+        foldername;
     end
     
     methods
-        function obj = PestoOptions(varargin)
+        function obj = HOOptions(varargin)
             %HOOOptions Construct a new HOOOptions object
             %
             %   OPTS = HOOptions() creates a set of options with each option set to its
@@ -81,13 +89,11 @@ classdef HOOptions < matlab.mixin.SetGet
             % Parameters:
             %   varargin:
             
-            % adapted from SolverOptions
-            
             if nargin > 0
                 
                 % Deal with the case where the first input to the
                 % constructor is a amioptions/struct object.
-                if isa(varargin{1},'PestoOptions')
+                if isa(varargin{1},'HOOptions')
                     if strcmp(class(varargin{1}),class(obj))
                         obj = varargin{1};
                     else
@@ -174,20 +180,6 @@ classdef HOOptions < matlab.mixin.SetGet
                     end
                 end
             end
-            
-            % Add required subclasses
-            obj.HOObservables = HOObservablesOptions();
-            
-        end
-        
-        function new = copy(this)
-            % Creates a copy of the passed PestoOptions instance
-            new = feval(class(this));
-            
-            p = properties(this);
-            for i = 1:length(p)
-                new.(p{i}) = this.(p{i});
-            end
         end
         
         % Part for checking the correct setting of options
@@ -197,6 +189,14 @@ classdef HOOptions < matlab.mixin.SetGet
                 this.save = value;
             else
                 error('HOOptions.save must be a logical value.');
+            end
+        end
+        
+        function set.max_repl(this, value)
+            if isscalar(value)
+                this.max_repl = value;
+            else
+                error('HOOptions.save must be a scalar.');
             end
         end
         
@@ -272,8 +272,8 @@ classdef HOOptions < matlab.mixin.SetGet
         end
         
         function set.scale(this, value)
-            if ~isequal(this.n_obs,length(value))
-                error('HOOptions.scale must have the dimension 1xn_obs');
+            if (~isequal(this.n_obs,length(value)) || ~isequal(max(size(value)),length(value)))
+                error('HOOptions.scale must have the dimension length n_obs');
             end
             for i = 1:length(value)
                 if strcmp(value(i),'')
@@ -288,8 +288,8 @@ classdef HOOptions < matlab.mixin.SetGet
         end
         
         function set.noise(this, value)
-            if ~isequal(this.n_obs,length(value))
-                error('HOOptions.scaling must have the dimension 1xn_obs');
+            if (~isequal(this.n_obs,length(value)) || ~isequal(max(size(value)),length(value)))
+                error('HOOptions.scaling must have the dimension length n_obs');
             end
             for i = 1:length(value)
                 if strcmp(value(i),'')
@@ -303,8 +303,8 @@ classdef HOOptions < matlab.mixin.SetGet
         end
         
         function set.scaling(this, value)
-            if ~isequal(this.n_obs,length(value))
-                error('HOOptions.scaling must have the dimension 1xn_obs');
+            if (~isequal(this.n_obs,length(value)) || ~isequal(max(size(value)),length(value)))
+                error('HOOptions.scaling must have the dimension length n_obs');
             end
             for i = 1:length(value)
                 if strcmp(value(i),'')

@@ -23,13 +23,12 @@ end
 load('data_JakStat.mat')
 [parameters,options] = getParameterOptions_JakStat(approach,optimizer);
 
-options.llh.distribution = distribution;
+options.MS.HO.distribution = distribution;
 if nargin > 2
     options.MS.foldername = ['results_SmallJakStat_' approach '_' distribution '_' optimizer];
 else
     options.MS.foldername = ['results_SmallJakStat_' approach '_' distribution];
 end
-options.llh.foldername = options.MS.foldername;
 
 parameters = getMultiStarts(parameters,@(xi) ...
     logLikelihood_JakStat(xi,D,options,approach),options.MS);

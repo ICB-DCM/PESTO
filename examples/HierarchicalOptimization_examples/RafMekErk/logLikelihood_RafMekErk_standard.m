@@ -10,7 +10,7 @@
 % Parameters
 %  xi: parameter for which log-likelihood is evaluated
 %  D: data with field measurement
-%  options: A HOOptions object holding various options for the algorithm
+%  options.MS.HO: A HOOptions object holding various options for the algorithm
 %
 % Return values:
 %   varargout:
@@ -70,7 +70,7 @@ try
 
         %% Objective function (J)
         if nargout>1
-            switch options.llh.distribution
+            switch options.MS.HO.distribution
                 case 'normal'
                     [J_i,grad_J] = J_normal(D.measurement{i}(:),y,sigma2(:),dyxi_ik_t,dsigmadtheta);
                 case 'laplace'
@@ -79,7 +79,7 @@ try
             J = J + J_i;
             dJdtheta = dJdtheta + grad_J;
         else
-            switch options.llh.distribution
+            switch options.MS.HO.distribution
                 case 'normal'
                     J_i = J_normal(D.measurement{i}(:),y,sigma2(:),[],[]);
                 case 'laplace'
