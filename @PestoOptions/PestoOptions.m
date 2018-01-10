@@ -4,24 +4,24 @@ classdef PestoOptions < matlab.mixin.SetGet
     %
     % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
     
-    properties        
+    properties
         % <!-- General options -->
         
         % Perform calculations sequentially (''sequential'', default), or
         % in parallel (''parallel''). Parallel mode will speed-up the
-        % calculations on multi-core systems, but requires the 
-        % [MATLAB Parallel Computing Toolbox](https://mathworks.com/products/parallel-computing/) 
+        % calculations on multi-core systems, but requires the
+        % [MATLAB Parallel Computing Toolbox](https://mathworks.com/products/parallel-computing/)
         % to be installed.
         comp_type = 'sequential';
-                
+        
         % Determine whether results are saved or not.
         % * false: results are not saved
         % * true: results are stored to an extra folder
         save = false;
         
-        % Name of the folder in which results are stored. If no folder is 
+        % Name of the folder in which results are stored. If no folder is
         % provided, a random foldername is generated.
-        foldername = strrep(datestr(now,31),' ','__'); 
+        foldername = strrep(datestr(now,31),' ','__');
         
         
         
@@ -43,7 +43,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         % Don't confuse this with the number of outputs from the objective
         % function that Pesto really calls! objOutNumber just tells Pesto,
         % with how many outputs it can call the objective function. Also,
-        % optimization is still possible to be done without gradient 
+        % optimization is still possible to be done without gradient
         % information and without the Pesto FD routine.
         objOutNumber = 3;
         
@@ -53,14 +53,14 @@ classdef PestoOptions < matlab.mixin.SetGet
         % Values of fixed parameters, same sorting as indices, if any
         fixedParameterValues = [];
         
-        % Number of data points used for parameter estimation, which should 
+        % Number of data points used for parameter estimation, which should
         % be used to compute the BIC (optional)
         nDatapoints = [];
         
         
         % <!-- Options concerning the output -->
         
-        % Output mode of algorithm: 
+        % Output mode of algorithm:
         % * 'visual': plots showing the progress are generated
         % * 'text': optimization results for multi-start are printed on screen
         % * 'silent': no output during the multi-start local optimization
@@ -68,7 +68,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         % certain functions
         mode = 'visual';
         
-        % Figure handle in which results are printed. If no handle is 
+        % Figure handle in which results are printed. If no handle is
         % provided, a new figure is used. TODO: move to plot options
         fh = [];
         
@@ -78,15 +78,15 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         
         % <!-- Options for getMultiStarts -->
-
+        
         % Number of local optimizations.
         n_starts = 20;
         
         % vector of indices which starts should be performed.
         % default is 1:n_starts
         start_index = [];
-
-        % log-likelihood / log-posterior threshold for initialization of 
+        
+        % log-likelihood / log-posterior threshold for initialization of
         % optimization.
         init_threshold = -inf;
         
@@ -94,13 +94,13 @@ classdef PestoOptions < matlab.mixin.SetGet
         % Current options: ['fmincon', 'meigo-ess', 'meigo-vns', 'pswarm']
         %
         % For 'meigo-ess' or 'meigo-vns', MEIGO
-        % (http://gingproc.iim.csic.es/meigom.html) has to be installed 
+        % (http://gingproc.iim.csic.es/meigom.html) has to be installed
         % separately.
         %
         % For 'pswarm' PSwarm (http://www.norg.uminho.pt/aivaz/pswarm/) has
         % to be installed separately
         localOptimizer = 'fmincon';
-               
+        
         % Options for the chosen local optimizer. Setting fmincon options as default local optimizer. See *help('fmincon')*
         %
         % MaxIter: fmincon default, necessary to be set for tracing
@@ -118,7 +118,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         % * 'latin hypercube': latin hypercube sampling
         % * 'uniform': uniform random sampling
         % * 'user-supplied': user supplied function PestoOptions.init_fun
-        proposal = 'latin hypercube'; 
+        proposal = 'latin hypercube';
         
         % determine whether objective function, parameter values and
         % computation time are stored over iterations
@@ -131,11 +131,11 @@ classdef PestoOptions < matlab.mixin.SetGet
         % * false: not saved
         % * true: results are stored to an extra folder
         tempsave = false;
-                         
+        
         % clears the objective function before every multi-start.
         % * false: persistent variables are preserved.
         % * true: remove all temporary/persistent variables.
-        % 
+        %
         % WHEN TRUE THIS OPTION REMOVES ALL OBJECTIVE FUNCTION BREAK POINTS
         resetobjective = false;
         
@@ -155,7 +155,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         % * .P.max ... lower bound for profiling parameters, having same
         %   dimension as the parameter vector (default = parameters.max).
         P = {};
-                
+        
         % index MAP - parameter vector starting from which the
         %       profile is calculated. This option is helpful if local
         %       optima are present.
@@ -164,22 +164,22 @@ classdef PestoOptions < matlab.mixin.SetGet
         % Minimal ratio down to which the profile is calculated
         R_min = 0.03;
         
-        % Indices of the parameters for which the profile is calculated. 
+        % Indices of the parameters for which the profile is calculated.
         %
         % Default: profile_optim_index will be set to 1:parameters.number
         % if left empty
         parameter_index = [];
         
-        % Indices of the parameters for which the profile is calculated by 
-        % reoptimization. 
+        % Indices of the parameters for which the profile is calculated by
+        % reoptimization.
         profile_optim_index = [];
         
-        % Indices of the parameters for which the profile is calculated by 
-        % integration. 
+        % Indices of the parameters for which the profile is calculated by
+        % integration.
         profile_integ_index = [];
         
-        % How should profiles be computed (if no more precise options are 
-        % set like profile_optim_index or profile_integ_index)? 
+        % How should profiles be computed (if no more precise options are
+        % set like profile_optim_index or profile_integ_index)?
         % Possibilities: {'optimization' (default), 'integration', 'mixed'}
         profile_method = 'default';
         
@@ -189,7 +189,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         % Optimizer options for profile likelihood
         % *     .algorithm ... choice of algorithm
-        % *         = 'interior-point' (default) 
+        % *         = 'interior-point' (default)
         % *         = 'trust-region-reflective'
         % *         = 'active-set'
         % *     .display ... output of optimization process
@@ -208,7 +208,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             'TolCon', 1e-6 ...
             );
         
-        % Maximal relative decrease of ratio allowed for two adjacent 
+        % Maximal relative decrease of ratio allowed for two adjacent
         % points in the profile (default = 0.10) if options.dJ = 0;
         dR_max = 0.10;
         
@@ -236,7 +236,7 @@ classdef PestoOptions < matlab.mixin.SetGet
         
         % <!-- Detailed options for profile integration -->
         
-        % Options for profile integration 
+        % Options for profile integration
         % *     .type ... choice of ODE integrator
         % *         = 'ode113' (default) ... Adams-Bashf.-Solver by Matlab
         % *         = 'ode15s' ... BDF-Solver by Matlab
@@ -253,12 +253,12 @@ classdef PestoOptions < matlab.mixin.SetGet
         % *         = 'Band' ... solver for bigger problems
         % *     .gamma ... Retraction factor
         % *     .eps ... regularization for poorly conditioned Hessian
-        % *     .minCond ... Minimum condition number, when regularization is to be used 
+        % *     .minCond ... Minimum condition number, when regularization is to be used
         % *     .hessian ... how is the Hessian Matrix provided?
-        % *         = 'user-supplied' (default) ... Hessian is 3rd output of ObjFun 
+        % *         = 'user-supplied' (default) ... Hessian is 3rd output of ObjFun
         % *         = 'bfgs' ... BFGS approximation to Hessian
         % *         = 'sr1' ... symmetric-rank 1 approximation to Hessian
-        % *     .gradient ... is a gradient provided?        
+        % *     .gradient ... is a gradient provided?
         % *     .MinStep ... minimum step size of the solver
         % *     .MaxStep ... maximum step size of the solver
         % *     .MaxNumSteps ... maximum steps to be taken
@@ -272,7 +272,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             'gamma', 0, ...
             'eps', 1e-8, ...
             'minCond', 1e-10, ...
-            'hessian', 'user-supplied', ... 
+            'hessian', 'user-supplied', ...
             'gradient', true, ...
             'MaxStep', 0.1, ...
             'MinStep', 1e-5, ...
@@ -282,21 +282,24 @@ classdef PestoOptions < matlab.mixin.SetGet
             'AbsTol', 1e-6 ...
             );
         
-
+        
         
         % <!-- Options for getPropertyProfiles -->
         
-        % Tolance for the maximal distance of the list point 
+        % Tolance for the maximal distance of the list point
         % the lower and upper bounds for the properties.
         boundary_tol = 1e-5;
         
-        % Indices of the properties for which the profile is to be  
-        % calculated (default = 1:properties.number, reoptimization only). 
-        property_index = [];         
-
+        % Indices of the properties for which the profile is to be
+        % calculated (default = 1:properties.number, reoptimization only).
+        property_index = [];
+        
         % Set MCMC options by calling an PestoSamplingOptions Class object
         MCMC;
-
+        
+        % Set Hierarchical Optimization options by calling an HOOptions Class object
+        HO;
+        
     end
     
     properties (Hidden)
@@ -322,8 +325,8 @@ classdef PestoOptions < matlab.mixin.SetGet
             %   varargin:
             
             % adapted from SolverOptions
-                        
-            if nargin > 0 
+            
+            if nargin > 0
                 
                 % Deal with the case where the first input to the
                 % constructor is a amioptions/struct object.
@@ -413,10 +416,12 @@ classdef PestoOptions < matlab.mixin.SetGet
                         obj.(optionSet{1}) = ip.Results.(optionSet{1});
                     end
                 end
-            end      
+            end
             
             % Add required subclasses
             obj.MCMC = PestoSamplingOptions();
+            obj.HO = HOOptions();
+            obj.HO.foldername = obj.foldername;
             
         end
         
@@ -429,7 +434,7 @@ classdef PestoOptions < matlab.mixin.SetGet
                 new.(p{i}) = this.(p{i});
             end
         end
-
+        
         % Part for checking the correct setting of options
         
         function set.obj_type(this, value)
@@ -447,7 +452,7 @@ classdef PestoOptions < matlab.mixin.SetGet
                 error('PestoOptions.comp_type must be ''sequential'' or ''parallel''.');
             end
         end
-
+        
         function set.n_starts(this, value)
             if(isnumeric(value) && floor(value) == value && value > 0)
                 this.n_starts = value;
@@ -496,7 +501,7 @@ classdef PestoOptions < matlab.mixin.SetGet
                 error('PestoOptions.trace must ba a logical value.');
             end
         end
-
+        
         function set.calc_profiles(this, value)
             if islogical(value)
                 this.calc_profiles = value;
@@ -552,13 +557,18 @@ classdef PestoOptions < matlab.mixin.SetGet
                 error('PestoOptions.dR_max positive numeric value between 0 and 1.');
             end
         end
-
+        
         function set.R_min(this, value)
             if(isnumeric(value) && value >= 0 && value <= 1)
                 this.R_min = value;
             else
                 error('PestoOptions.R_min positive numeric value between 0 and 1.');
             end
+        end
+        
+        function set.foldername(this, value)
+            this.foldername = value;
+            this.HO.foldername = value;
         end
         
         function set.localOptimizer(this, value)
@@ -573,6 +583,6 @@ classdef PestoOptions < matlab.mixin.SetGet
                 error('PestoOptions.localOptimizer only supports the following choices: fmincon, meigo-ess, meigo-vns, pswarm.');
             end
         end
-
+        
     end
 end
