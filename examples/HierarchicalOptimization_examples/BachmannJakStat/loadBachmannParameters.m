@@ -117,10 +117,6 @@ parameters.name = {...
     };
 
 if strcmp(approach,'hierarchical')
-    parameters_temp = parameters;
-    clear parameters;
-    for i = 1:58
-        parameters.name{i} = parameters_temp.name{i};
-    end
+    parameters.name = parameters.name(1:58);
 end
 end

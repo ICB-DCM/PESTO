@@ -272,7 +272,7 @@ classdef HOOptions < matlab.mixin.SetGet
         end
         
         function set.scale(this, value)
-            if (~isequal(this.n_obs,length(value)) || ~isequal(max(size(value)),length(value)))
+            if ~isequal(this.n_obs,numel(value))
                 error('HOOptions.scale must have the dimension length n_obs');
             end
             for i = 1:length(value)
@@ -288,7 +288,7 @@ classdef HOOptions < matlab.mixin.SetGet
         end
         
         function set.noise(this, value)
-            if (~isequal(this.n_obs,length(value)) || ~isequal(max(size(value)),length(value)))
+            if ~isequal(this.n_obs,numel(value))
                 error('HOOptions.scaling must have the dimension length n_obs');
             end
             for i = 1:length(value)
@@ -303,7 +303,7 @@ classdef HOOptions < matlab.mixin.SetGet
         end
         
         function set.scaling(this, value)
-            if (~isequal(this.n_obs,length(value)) || ~isequal(max(size(value)),length(value)))
+            if ~isequal(this.n_obs,numel(value))
                 error('HOOptions.scaling must have the dimension length n_obs');
             end
             for i = 1:length(value)
