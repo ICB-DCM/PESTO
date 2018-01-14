@@ -100,7 +100,7 @@ switch approach
                     logL = logL - sum(sum(nansum(bsxfun(@times,~isnan(D(cond).my),...
                         log(2*sigma2))+bsxfun(@rdivide,abs(y_sh),sigma2),1),3),2);
             end
-            % compuate gradient
+            % compute gradient
             if nargout > 1
                 switch options.MS.HO.distribution
                     case 'normal'
