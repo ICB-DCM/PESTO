@@ -44,7 +44,7 @@ options.MS.localOptimizerOptions = optimset('algorithm','interior-point',...
     'PrecondBandWidth', inf);
 
 options.MS.comp_type = 'sequential';
-options.MS.n_starts = 200;
+options.MS.n_starts = 100;
 options.MS.save = false;
 options.MS.foldername = ['results_BachmannJakStat_' approach '_' distribution];
 options.MS.HO.distribution = distribution;

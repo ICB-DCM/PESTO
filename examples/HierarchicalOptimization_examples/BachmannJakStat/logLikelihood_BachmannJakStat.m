@@ -100,7 +100,6 @@ switch approach
                     logL = logL - sum(sum(nansum(bsxfun(@times,~isnan(D(cond).my),...
                         log(2*sigma2))+bsxfun(@rdivide,abs(y_sh),sigma2),1),3),2);
             end
-            
             % compuate gradient
             if nargout > 1
                 switch options.MS.HO.distribution
@@ -119,8 +118,7 @@ switch approach
                             iy = 11;
                             temparg2 =  bsxfun(@times,permute(bsxfun(@rdivide,(1-bsxfun(@rdivide,...
                                 bsxfun(@power,y_sh(:,iy,:),2),sigma2(:,iy,:))),sigma2(:,iy,:)),[1,2,4,3]),dsigma2(:,iy,:,:)) -...
-                                bsxfun(@times,1/log(10)*permute(2*bsxfun(@rdivide,y_sh(:,iy,:),sigma2(:,iy,:)),[1,2,4,3]),...
-                                bsxfun(@rdivide,sol(cond).sy(:,iy,:),sol(cond).y(:,iy)));
+                                bsxfun(@times,permute(2*bsxfun(@rdivide,y_sh(:,iy,:),sigma2(:,iy,:)),[1,2,4,3]),sol(cond).sy(:,iy,:));
                             dlogL = dlogL - 0.5*(permute(sum(sum(nansum(temparg2,1),4),2),[3,2,1]));
                         else % compared at a log10 scale
                             temparg = bsxfun(@times,permute(bsxfun(@rdivide,(1-bsxfun(@rdivide,...
