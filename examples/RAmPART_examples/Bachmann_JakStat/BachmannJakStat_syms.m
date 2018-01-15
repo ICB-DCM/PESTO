@@ -1,4 +1,4 @@
-function model = Bachmann_JAKSTAT_D2D_syms()
+function model = BachmannJakStat_syms()
 
 syms t
 model.param = 'log10';
@@ -78,8 +78,6 @@ SOCS3nRNA5;
 SOCS3RNA;
 SOCS3];    
 
-
-
 model.sym.xdot = [EpoRpJAK2*(JAK2EpoRDeaSHP1 / init_SHP1)*SHP1Act + (JAK2EpoRDeaSHP1 / init_SHP1)*SHP1Act*p12EpoRpJAK2 + (JAK2EpoRDeaSHP1 / init_SHP1)*SHP1Act*p1EpoRpJAK2 + (JAK2EpoRDeaSHP1 / init_SHP1)*SHP1Act*p2EpoRpJAK2 - (Epo*EpoRJAK2*JAK2ActEpo)/(SOCS3*(SOCS3Inh / SOCS3Eqc) + 1) ;
  (Epo*EpoRJAK2*JAK2ActEpo)/(SOCS3*(SOCS3Inh / SOCS3Eqc) + 1) - (EpoRpJAK2*EpoRActJAK2)/(SOCS3*(SOCS3Inh / SOCS3Eqc) + 1) - (3*EpoRpJAK2*EpoRActJAK2)/((EpoRCISInh*EpoRJAK2_CIS + 1)*(SOCS3*(SOCS3Inh / SOCS3Eqc) + 1)) - EpoRpJAK2*(JAK2EpoRDeaSHP1 / init_SHP1)*SHP1Act ;
  (EpoRpJAK2*EpoRActJAK2)/(SOCS3*(SOCS3Inh / SOCS3Eqc) + 1) - (JAK2EpoRDeaSHP1 / init_SHP1)*SHP1Act*p1EpoRpJAK2 - (3*EpoRActJAK2*p1EpoRpJAK2)/((EpoRCISInh*EpoRJAK2_CIS + 1)*(SOCS3*(SOCS3Inh / SOCS3Eqc) + 1)) ;
@@ -112,28 +110,6 @@ model.sym.x0(7) = init_SHP1;
 model.sym.x0(9) = init_STAT5;
 
 %% OBSERVABLES
-% 
-% model.sym.y = [1 / init_EpoRJAK2 *  2 * (EpoRpJAK2 + p1EpoRpJAK2 + p2EpoRpJAK2 + p12EpoRpJAK2);
-%  1 / init_EpoRJAK2 *  16 * (p1EpoRpJAK2 + p2EpoRpJAK2 + p12EpoRpJAK2);
-%  1 / CISEqc / init_STAT5 * CIS;
-%  1 / SOCS3Eqc / init_STAT5 * SOCS3;
-%  1 / init_STAT5 * (STAT5+pSTAT5);
-%  1 / init_STAT5 * pSTAT5;
-%  STAT5;
-%  SHP1 + SHP1Act;
-%  CIS;
-%  SOCS3;
-%  100*pSTAT5/(pSTAT5+STAT5);
-%  1 / init_STAT5 * SOCS3RNA;
-%  1 / init_STAT5 * SOCS3RNA;
-%  1 / init_STAT5 * SOCS3RNA;
-%  1 / init_STAT5 * CISRNA;
-%  1 / init_STAT5 * CISRNA;
-%  1 / init_STAT5 * CISRNA;
-%  1 / init_SHP1 * (SHP1 + SHP1Act) * (1 + (SHP1oe * SHP1ProOE));
-%  1 / CISEqc / init_STAT5 * CIS;
-%  1 / CISEqc / init_STAT5 * CIS];
-
 model.sym.y = [1 / init_EpoRJAK2 *  2 * (EpoRpJAK2 + p1EpoRpJAK2 + p2EpoRpJAK2 + p12EpoRpJAK2);
  1 / init_EpoRJAK2 *  16 * (p1EpoRpJAK2 + p2EpoRpJAK2 + p12EpoRpJAK2);
  1 / CISEqc * CIS;
@@ -154,5 +130,6 @@ model.sym.y = [1 / init_EpoRJAK2 *  2 * (EpoRpJAK2 + p1EpoRpJAK2 + p2EpoRpJAK2 +
  1 / init_SHP1 * (SHP1 + SHP1Act) * (1 + (SHP1oe * SHP1ProOE));
  1 / CISEqc * CIS;
  1 / CISEqc * CIS];
+
 %% SIGMA
 model.sym.sigma_y = sym(ones(20,1));
