@@ -69,8 +69,8 @@ theta       = [1.1770; -2.3714; -0.4827; -5.5387]; % True parameter values
 % Creation of data
 % Once the two files getMeasuredData.m and getInitialConcentrations.m are
 % written, the two following lines can be commented
-% display(' Write new measurement data...');
-% performNewMeasurement(theta, nMeasure, nTimepoints, sigma2);
+display(' Write new measurement data...');
+performNewMeasurement(theta, nMeasure, nTimepoints, sigma2);
 
 % The measurement data is read out from the files where it is saved
 yMeasured = getMeasuredData();
@@ -108,7 +108,6 @@ optionsPesto.MCMC.samplingAlgorithm = 'PT';
 optionsPesto.MCMC.PT.nTemps         = 6;
 optionsPesto.MCMC.PT.exponentT      = 6;    
 optionsPesto.MCMC.PT.regFactor      = 1e-8;
-optionsPesto.MCMC.PT.temperatureAdaptionScheme = 'Lacki15'; %'Vousden16';
 
 % Initialize the chains by choosing a random initial point and a 'large'
 % covariance matrix

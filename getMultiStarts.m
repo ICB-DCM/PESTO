@@ -269,6 +269,8 @@ if strcmp(options.comp_type, 'sequential')
             J_0 = sum(J_0);
         elseif (any(strcmp(options.localOptimizer, {'dhc','cs','bobyqa'})))
             J_0 = negLogPost(par0(:,iMS));
+        else
+            J_0 = [];
         end
         
         % Optimization
@@ -563,54 +565,31 @@ end
 
 
 %% Saving results
-function saveResults(parameters,options,i)
-<<<<<<< HEAD
-% saveResults saves Multi-start results to disk
-%
-% Parameters:
-%  parameters: Parameter struct passed to getMultiStarts
-%  options: getMultiStarts options
-%  i: multi-start index
-dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost.csv']),parameters.MS.logPost(i),'delimiter',',','precision',12);
-dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost0.csv']),parameters.MS.logPost0(i),'delimiter',',','precision',12);
-dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__par.csv']),parameters.MS.par(:,i),'delimiter',',','precision',12);
-dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__par0.csv']),parameters.MS.par0(:,i),'delimiter',',','precision',12);
-dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__gradient.csv']),parameters.MS.gradient(:,i),'delimiter',',','precision',12);
-dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__hessian.csv']),parameters.MS.hessian(:,:,i),'delimiter',',','precision',12);
-dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__t_cpu.csv']),parameters.MS.t_cpu(i),'delimiter',',','precision',12);
-dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__n_objfun.csv']),parameters.MS.n_objfun(i),'delimiter',',','precision',12);
-dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__n_iter.csv']),parameters.MS.n_iter(i),'delimiter',',','precision',12);
-dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__exitflag.csv']),parameters.MS.exitflag(i),'delimiter',',','precision',12);
-if(options.trace)
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__par_trace.csv']),parameters.MS.par_trace(:,:,i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__fval_trace.csv']),parameters.MS.fval_trace(:,i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__time_trace.csv']),parameters.MS.time_trace(:,i),'delimiter',',','precision',12);
-end
-=======
+function saveResults(parameters,options,iMS)
+
     % saveResults saves Multi-start results to disk
     %
     % Parameters:
     %  parameters: Parameter struct passed to getMultiStarts
     %  options: getMultiStarts options
     %  i: multi-start index
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost.csv']),parameters.MS.logPost(i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost0.csv']),parameters.MS.logPost0(i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__par.csv']),parameters.MS.par(:,i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__par0.csv']),parameters.MS.par0(:,i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__gradient.csv']),parameters.MS.gradient(:,i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__hessian.csv']),parameters.MS.hessian(:,:,i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__t_cpu.csv']),parameters.MS.t_cpu(i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__n_objfun.csv']),parameters.MS.n_objfun(i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__n_iter.csv']),parameters.MS.n_iter(i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__exitflag.csv']),parameters.MS.exitflag(i),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__logPost.csv']),parameters.MS.logPost(iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__logPost0.csv']),parameters.MS.logPost0(iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__par.csv']),parameters.MS.par(:,iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__par0.csv']),parameters.MS.par0(:,iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__gradient.csv']),parameters.MS.gradient(:,iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__hessian.csv']),parameters.MS.hessian(:,:,iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__t_cpu.csv']),parameters.MS.t_cpu(iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__n_objfun.csv']),parameters.MS.n_objfun(iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__n_iter.csv']),parameters.MS.n_iter(iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__exitflag.csv']),parameters.MS.exitflag(iMS),'delimiter',',','precision',12);
     if(options.trace)
-        dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__par_trace.csv']),parameters.MS.par_trace(:,:,i),'delimiter',',','precision',12);
-        dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__fval_trace.csv']),parameters.MS.fval_trace(:,i),'delimiter',',','precision',12);
-        dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__time_trace.csv']),parameters.MS.time_trace(:,i),'delimiter',',','precision',12);
+        dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__par_trace.csv']),parameters.MS.par_trace(:,:,iMS),'delimiter',',','precision',12);
+        dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__fval_trace.csv']),parameters.MS.fval_trace(:,iMS),'delimiter',',','precision',12);
+        dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__time_trace.csv']),parameters.MS.time_trace(:,iMS),'delimiter',',','precision',12);
     end
     
     % Commented out due to long saving times in case of large models
 %     save([options.foldername '/init'],'parameters','-v7.3');
->>>>>>> master
 
 end

@@ -1,10 +1,20 @@
 % Hab ein bisschen auskommentiert, was genau wichtig ist
 
 % RafMekErk example
-clear akk
+clear all
 close all
 clc
 rng(0);
+
+
+% Wrap model, if necessary
+[exdir,~,~]=fileparts(which('rafmekerk_pesto_syms.m'));
+try
+    amiwrap('rafmekerk_pesto','rafmekerk_pesto_syms',exdir,1);
+catch ME
+    warning('This example uses the additional toolbox AMICI for ODE simulation (freely available at https://github.com/ICB-DCM/AMICI). It seems that AMICI is not or not proeperly installed, since using it resulted in an error. The original error message was:');
+    rethrow(ME);
+end
 
 % Load data
 load('./data.mat');
@@ -24,10 +34,6 @@ end
 amiD(1) = amidata(amiData(1));
 amiD(2) = amidata(amiData(2));
 amiD(3) = amidata(amiData(3));
-
-% Wrap model, if necessary
-[exdir,~,~]=fileparts(which('rafmekerk_pesto_syms.m'));
-% amiwrap('rafmekerk_pesto','rafmekerk_pesto_syms',exdir,1);
 
 % 12 dynamic parameters, 8 scaling parameters, 8 sigma parameters
 parameters.min = -5 * ones(28,1);
@@ -55,10 +61,10 @@ parameters.name = {'log_{10}(kdf_Raf)','log_{10}(kp_Raf)','log_{10}(kdp_pMek)',.
 
 objectiveFunction = @(theta) logLikelihoodRME(theta, amiD);
 
-%% Wichtiger Teil für Meigo und DHC
+%% Running an optimization with fmincon and Hessians
 
 optionsPesto = PestoOptions();
-optionsPesto.n_starts = 100; 
+optionsPesto.n_starts = 10; 
 optionsPesto.mode = 'visual';
 optionsPesto.proposal = 'latin hypercube';
 optionsPesto.trace = false;
@@ -70,9 +76,8 @@ optionsPesto.localOptimizerOptions.TolX = 1e-10;
 optionsPesto.localOptimizerOptions.TolFun = 1e-8;
 optionsPesto.localOptimizerOptions.Display = 'iter';
 optionsPesto.localOptimizerOptions.GradObj = 'on';
-% optionsPesto.localOptimizerOptions.Jacobian = 'on';
 optionsPesto.localOptimizerOptions.Hessian = 'on';
-optionsPesto.localOptimizerOptions.MaxFunEvals = 1000;
+optionsPesto.localOptimizerOptions.MaxFunEvals = 10000;
 optionsPesto.localOptimizerOptions.MaxIter = 1000;
 
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);

@@ -298,7 +298,7 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         MCMC = PestoSamplingOptions();
         
         % Set Hierarchical Optimization options by calling an HOOptions Class object
-        HO;;
+        HO = HOOptions();
         
     end
     
@@ -573,7 +573,7 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         end
         
         function this = set.localOptimizer(this, value)
-            if any(strcmp(this.funstr, {'fmincon', 'meigo-ess', 'meigo-vns', 'pswarm', 'lsqnonlin', 'cs', 'dhc', 'bobyqa'}))
+            if any(strcmp(value, {'fmincon', 'meigo-ess', 'meigo-vns', 'pswarm', 'lsqnonlin', 'cs', 'dhc', 'bobyqa'}))
                 this.localOptimizer = value;
                 
                 if strcmp(value, 'pswarm')
