@@ -23,7 +23,9 @@
 %
 % 2012/07/12 Jan Hasenauer
 
-function [theta,J] = getNextProfilePoint(theta,theta_min,theta_max,dtheta,c,c_min,c_max,c_update,J_target,obj,constraints,update_mode,j)
+function [theta,J] = getNextProfilePoint(...
+    theta, theta_min, theta_max, dtheta, c, c_min, c_max, c_update, ...
+    J_target, objFun, constraints, update_mode, j, optimizer)
 
     % Initialization
     % 1) modification of dtheta
@@ -33,6 +35,8 @@ function [theta,J] = getNextProfilePoint(theta,theta_min,theta_max,dtheta,c,c_mi
         case 'one-dimensional'
             dtheta([1:j-1,j+1:end]) = 0;
     end
+    % 2) Settinf the ojective function
+    obj = @(theta) objWrap(theta, objFun, optimizer);
 
     % 1) line search
     if dtheta(j) > 0 % increasing
@@ -109,4 +113,15 @@ function [theta,J] = getNextProfilePoint(theta,theta_min,theta_max,dtheta,c,c_mi
         end
     end
 
+end
+
+function J = objWrap(theta, objFun, optimizer)
+
+    if strcmp(optimizer, 'fmincon')
+        J = objFun(theta);
+    elseif strcmp(optimizer, 'lsqnonlin')
+        [~, ~, J] = objFun(theta);
+    else
+        error('Unknown optimzer forprofile calculation!');
+    end
 end

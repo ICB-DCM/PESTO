@@ -418,7 +418,7 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
         
     else
         yCorrection = nan(size(y));
-       logPost = setObjectiveWrapper(objectiveFunction, options, 'log-posterior', [], [], true, true);
+        logPost = setObjectiveWrapper(objectiveFunction, options, 'log-posterior', [], [], true, true);
         
         for iT = 1 : length(t)
             % Check if Minimum step size was violated
@@ -440,6 +440,9 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
             % Check, if first optimality is violated, reoptimize if necessary
             [L, GL] = logPost(y(:,iT));
             GL(ind) = 0;
+            violateBounds = (y(:,iT) <= (borders(:,1) + options.solver.AbsTol)) ...
+                + (y(:,iT) >= (borders(:,2) - options.solver.AbsTol));
+            GL(logical(violateBounds)) = 0;
             
             % Update Hessian, if approximation method ist used
             if (~strcmp(options.solver.hessian, 'user-supplied'))
@@ -564,7 +567,8 @@ function y = doOptimizationSteps(parameters, thetaFull, objectiveFunction, borde
             negLogPost,...
             parameters.constraints, ...
             options.options_getNextPoint.mode, ...
-            iPar);
+            iPar, ...
+            options.localOptimizer);
         negLogPostReduced = setObjectiveWrapper(objectiveFunction, options, 'negative log-posterior', iPar, theta_next(iPar), true, true);
         
         % Construction of reduced linear constraints
@@ -725,7 +729,7 @@ end
 function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, negLogPost, parameterFunction, options)
     
     % set parameters
-    npar = length(y);
+    nPar = length(y);
     flag = 0;
     
     global ObjFuncCounter;
@@ -755,9 +759,9 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, negLogPost, pa
     % right handside of ODE
     try    
         % Reduce linear system by implicit funtion theorem
-        A1 = [HL(1 : ind-1, :); HL(ind+1 : npar, :); s*GG'];
+        A1 = [HL(1 : ind-1, :); HL(ind+1 : nPar, :); s*GG'];
         b1 = [-GL(1 : ind-1) * options.solver.gamma; ...
-             -GL(ind+1 : npar) * options.solver.gamma; ...
+             -GL(ind+1 : nPar) * options.solver.gamma; ...
              1];
         A2 = [A1(1:end-1, 1:ind-1), A1(1:end-1, ind+1:end)];
         b2 = b1(1:end-1) - s * A1(1:end-1, ind);
@@ -770,29 +774,33 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, negLogPost, pa
         end
         dth = [dth1(1:ind-1); s; dth1(ind:end)];
     catch
-        dth = zeros(npar + 1, 1);
+        dth = zeros(nPar + 1, 1);
         dth(ind) = s;
     end
     
     % Check, if parameter bounds are violated
     lRebuild = 0;
-    for i = 1 : npar
-        if (i ~= ind)
-            if (y(i) <= borders(i, 1))
-                if(dth(i) < 0)
-                    GL(i) = 0;
-                    HL(i,:) = 0;
-                    HL(:,i) = 0;
-                    HL(i,i) = -1;
+    parDown = [];
+    parUp = [];
+    for iPar = 1 : nPar
+        if (iPar ~= ind)
+            if (y(iPar) <= borders(iPar, 1) + options.solver.RelTol)
+                if(dth(iPar) < 0)
+                    GL(iPar) = 0;
+                    HL(iPar,:) = 0;
+                    HL(:,iPar) = 0;
+                    HL(iPar,iPar) = -1;
                     lRebuild = 1;
+                    parUp = [parUp, iPar];
                 end
-            elseif (y(i) >= borders(i, 2))
-                if(dth(i) > 0)
-                    GL(i) = 0;
-                    HL(i,:) = 0;
-                    HL(:,i) = 0;
-                    HL(i,i) = -1;
+            elseif (y(iPar) >= borders(iPar, 2) - options.solver.RelTol)
+                if(dth(iPar) > 0)
+                    GL(iPar) = 0;
+                    HL(iPar,:) = 0;
+                    HL(:,iPar) = 0;
+                    HL(iPar,iPar) = -1;
                     lRebuild = 1;
+                    parDown = [parDown, iPar];
                 end
             end
         end
@@ -801,9 +809,9 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, negLogPost, pa
     if (lRebuild == 1)
         try    
             % Reduce linear system by implicit funtion theorem
-            A1 = [HL(1 : ind-1, :); HL(ind+1 : npar, :); s*GG'];
+            A1 = [HL(1 : ind-1, :); HL(ind+1 : nPar, :); s*GG'];
             b1 = [-GL(1 : ind-1) * options.solver.gamma; ...
-                 -GL(ind+1 : npar) * options.solver.gamma; ...
+                 -GL(ind+1 : nPar) * options.solver.gamma; ...
                  1];
             A2 = [A1(1:end-1, 1:ind-1), A1(1:end-1, ind+1:end)];
             b2 = b1(1:end-1) - s * A1(1:end-1, ind);
@@ -816,11 +824,12 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, negLogPost, pa
             end
             dth = [dth1(1:ind-1); s; dth1(ind:end)];
         catch
-            dth = zeros(npar + 1, 1);
+            dth = zeros(nPar + 1, 1);
             dth(ind) = s;
         end
     end
-   
+%     dth(parDown) = -0.1;
+%     dth(parUp) = 0.1;
     new_Data = [];
 end
 

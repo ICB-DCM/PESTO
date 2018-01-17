@@ -249,7 +249,7 @@ function [parameters] = optimizeProfileForParameterI(parameters, objective_funct
                 getNextProfilePoint(theta,theta_min,theta_max,dtheta/abs(dtheta(iPar)),...
                 abs(dtheta(iPar)),options.options_getNextPoint.min,options.options_getNextPoint.max,options.options_getNextPoint.update,...
                 -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost),negLogPost,...
-                parameters.constraints,options.options_getNextPoint.mode,iPar);
+                parameters.constraints,options.options_getNextPoint.mode,iPar, options.localOptimizer);
             negLogPostReduced = setObjectiveWrapper(objective_function, options, 'negative log-posterior', iPar, theta_next(iPar), true, true);
             
             % Check, if Hessian should be used and if a Hessian function was set,
@@ -267,14 +267,24 @@ function [parameters] = optimizeProfileForParameterI(parameters, objective_funct
             
             % Optimization
             try
-                [theta_I_opt,J_opt] = ...
-                    fmincon(negLogPostReduced,... % negative log-posterior function
-                    theta_next(I),...
-                    A  ,b  ,... % linear inequality constraints
-                    Aeq,beq,... % linear equality constraints
-                    parameters.min(I),...   % lower bound
-                    parameters.max(I),...   % upper bound
-                    [],options.profileReoptimizationOptions);    % options
+                switch options.localOptimizer
+                    case 'fmincon'
+                        [theta_I_opt,J_opt] = ...
+                            fmincon(negLogPostReduced,... % negative log-posterior function
+                            theta_next(I),...
+                            A  ,b  ,... % linear inequality constraints
+                            Aeq,beq,... % linear equality constraints
+                            parameters.min(I),...   % lower bound
+                            parameters.max(I),...   % upper bound
+                            [],options.profileReoptimizationOptions);    % options
+                    case 'lsqnonlin'
+                        [theta_I_opt] = lsqnonlin(negLogPostReduced,...
+                            theta_next(I), ...
+                            parameters.min(I),...   % lower bound
+                            parameters.max(I),...   % upper bound
+                            options.profileReoptimizationOptions);
+                        [~, ~, J_opt] = negLogPostReduced(theta_I_opt);
+                end
                 stepCount = stepCount + 1;
             catch errMsg
                 theta_I_opt = theta_next;

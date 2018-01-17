@@ -276,35 +276,37 @@ if strcmp(options.comp_type, 'sequential')
         if (isempty(J_0) || (J_0 < -options.init_threshold))
             
             %% do optimization with chosen algorithm
-            
-            switch options.localOptimizer
-                case 'fmincon'
-                    % fmincon as local optimizer
-                    parameters = performOptimizationFmincon(parameters, negLogPost, iMS, par0, J_0, options);
-                    
-                case {'meigo-ess', 'meigo-vns'}
-                    % Use the MEIGO toolbox as local / global optimizer
-                    parameters = performOptimizationMeigo(parameters, negLogPost, iMS, options);
-                    
-                case 'pswarm'
-                    % Optimization using a swarm based global optimizer PSwarm
-                    parameters = performOptimizationPswarm(parameters, negLogPost, iMS, options);
-                    
-                case 'lsqnonlin'
-                    % Optimization using dynamic hill climbin as local optimizer
-                    parameters = performOptimizationLsqnonlin(parameters, negLogPost, iMS, par0, J_0, options);
-                    
-                case 'cs'
-                    % Optimization using coordinate search as local optimizer
-                    parameters = performOptimizationCs(parameters, negLogPost, iMS, par0, J_0, options);
-                    
-                case 'dhc'
-                    % Optimization using dynamic hill climbing as local optimizer
-                    parameters = performOptimizationDhc(parameters, negLogPost, iMS, par0, J_0, options);
-                    
-                case 'bobyqa'
-                    % Optimization using bobya as local optimizer
-                    parameters = performOptimizationBobyqa(parameters, negLogPost, iMS, par0, J_0, options);
+            try
+                switch options.localOptimizer
+                    case 'fmincon'
+                        % fmincon as local optimizer
+                        parameters = performOptimizationFmincon(parameters, negLogPost, iMS, par0, J_0, options);
+
+                    case {'meigo-ess', 'meigo-vns'}
+                        % Use the MEIGO toolbox as local / global optimizer
+                        parameters = performOptimizationMeigo(parameters, negLogPost, iMS, options);
+
+                    case 'pswarm'
+                        % Optimization using a swarm based global optimizer PSwarm
+                        parameters = performOptimizationPswarm(parameters, negLogPost, iMS, options);
+
+                    case 'lsqnonlin'
+                        % Optimization using dynamic hill climbin as local optimizer
+                        parameters = performOptimizationLsqnonlin(parameters, negLogPost, iMS, par0, J_0, options);
+
+                    case 'cs'
+                        % Optimization using coordinate search as local optimizer
+                        parameters = performOptimizationCs(parameters, negLogPost, iMS, par0, J_0, options);
+
+                    case 'dhc'
+                        % Optimization using dynamic hill climbing as local optimizer
+                        parameters = performOptimizationDhc(parameters, negLogPost, iMS, par0, J_0, options);
+
+                    case 'bobyqa'
+                        % Optimization using bobya as local optimizer
+                        parameters = performOptimizationBobyqa(parameters, negLogPost, iMS, par0, J_0, options);
+                end
+            catch
             end
             
         end
