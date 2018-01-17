@@ -299,7 +299,7 @@ function selectRun( b, targetDir )
       amiData           = amidata(amiData);     % calling the AMICI routine
       
       % objective function
-      logP = @(theta) logLikelihoodJakstat(theta, amiData);
+      logP = @(theta) logLikelihoodJakstat_rampart(theta, amiData);
       
       % Set required sampling options.MCMC for Parallel Tempering
       par.min     = -5 * ones(17,1);
@@ -347,7 +347,7 @@ function selectRun( b, targetDir )
       amiData           = amidata(amiData);     % calling the AMICI routine
       
       % objective function
-      logP = @(theta) logLikelihoodJakstat(theta, amiData);
+      logP = @(theta) logLikelihoodJakstat_rampart(theta, amiData);
       
       % Set required sampling options.MCMC for Parallel Tempering
       par.min     = -5 * ones(17,1);
@@ -404,7 +404,7 @@ function selectRun( b, targetDir )
       
       % Objective
       setData_mRNA();
-      logP = @(theta) logLikelihoodT(theta, t, ym);
+      logP = @(theta) logLikelihoodT_rampart(theta, t, ym);
 
       % Parameters
       par.min    = [-2; -5; -5; -5; -2];
@@ -436,7 +436,7 @@ function selectRun( b, targetDir )
       
       % Objective
       setData_mRNA();
-      logP = @(theta) logLikelihoodT(theta, t, ym);
+      logP = @(theta) logLikelihoodT_rampart(theta, t, ym);
 
       % Parameters
       par.min    = [-2; -5; -5; -5; -2];
@@ -533,7 +533,7 @@ function selectRun( b, targetDir )
                          };      
       
       % objective Function
-      logP = @(theta) logLikelihoodRafMekErk(theta, amiD, amiO);
+      logP = @(theta) logLikelihoodRafMekErk_rampart(theta, amiD, amiO);
    
       % Using PT
       options.MCMC.samplingAlgorithm   = 'PT';
@@ -608,7 +608,7 @@ function selectRun( b, targetDir )
                          };      
       
       % objective Function
-      logP = @(theta) logLikelihoodRafMekErk(theta, amiD, amiO);
+      logP = @(theta) logLikelihoodRafMekErk_rampart(theta, amiD, amiO);
    
       % Using RAMPART
       options.MCMC.samplingAlgorithm     = 'RAMPART';
@@ -654,7 +654,7 @@ function selectRun( b, targetDir )
       
       % Objective
       load('mRNA_data_exp');
-      logP = @(theta) logLikelihoodT(theta, t, ym);
+      logP = @(theta) logLikelihoodT_rampart(theta, t, ym);
 
       % Parameters
       par.min    = [-2; -5; -5; -5; -2];
@@ -686,7 +686,7 @@ function selectRun( b, targetDir )
       
       % Objective
       load('mRNA_data_exp');
-      logP = @(theta) logLikelihoodT(theta, t, ym);
+      logP = @(theta) logLikelihoodT_rampart(theta, t, ym);
 
       % Parameters
       par.min    = [-2; -5; -5; -5; -2];
@@ -846,7 +846,7 @@ function selectRun( b, targetDir )
       amiData           = amidata(amiData);     % calling the AMICI routine
       
       % objective function
-      logP = @(theta) logLikelihoodJakstat(theta, amiData);
+      logP = @(theta) logLikelihoodJakstat_rampart(theta, amiData);
       
       % Set required sampling options.MCMC for Parallel Tempering
       par.min     = -5 * ones(17,1);
@@ -903,7 +903,7 @@ function selectRun( b, targetDir )
       
       % Objective
       load('mRNA_data_exp');
-      logP = @(theta) logLikelihoodT(theta, t, ym);
+      logP = @(theta) logLikelihoodT_rampart(theta, t, ym);
 
       % Parameters
       par.min    = [-2; -5; -5; -5; -2];
@@ -960,7 +960,7 @@ function selectRun( b, targetDir )
          D(cond).my(:,[1:10,12:end],:) = 10.^D(cond).my(:,[1:10,12:end],:);
       end
       D(3).my = D(3).my - 1; %instead of having observable 1 + scaling*...
-      logP = @(xi) logLikelihood_Bachmann(xi,D,objoptions.MCMC);
+      logP = @(xi) logLikelihood_Bachmann_rampart(xi,D,objoptions.MCMC);
 
       % Parameters
       par.name = {'CISEqc' 'CISEqcOE' 'CISInh' 'CISRNADelay' 'CISRNATurn' 'CISTurn' 'EpoRActJAK2' 'EpoRCISInh' 'EpoRCISRemove' 'JAK2ActEpo' 'JAK2EpoRDeaSHP1' 'SHP1ActEpoR' 'SHP1Dea' 'SHP1ProOE' 'SOCS3Eqc' 'SOCS3EqcOE' 'SOCS3Inh' 'SOCS3RNADelay' 'SOCS3RNATurn' 'SOCS3Turn' 'STAT5ActEpoR' 'STAT5ActJAK2' 'STAT5Exp' 'STAT5Imp' 'init_EpoRJAK2' 'init_SHP1' 'init_STAT5' 'offset_CIS_actd' 'offset_CIS_cisoe' 'offset_CIS_long' 'offset_CIS_shp1oe' 'offset_CIS_socs3oe' 'offset_SOCS3_cisoe' 'offset_SOCS3_long' 'offset_SOCS3_socs3oe' 'offset_pEpoR_actd' 'offset_pEpoR_cisoe' 'offset_pEpoR_cisoe_pepor' 'offset_pEpoR_dr30' 'offset_pEpoR_dr7' 'offset_pEpoR_fine' 'offset_pEpoR_long' 'offset_pEpoR_shp1oe' 'offset_pEpoR_socs3oe' 'offset_pJAK2_actd' 'offset_pJAK2_cisoe' 'offset_pJAK2_dr30' 'offset_pJAK2_dr7' 'offset_pJAK2_fine' 'offset_pJAK2_long' 'offset_pJAK2_shp1oe' 'offset_pJAK2_socs3oe' 'offset_pSTAT5_actd' 'offset_pSTAT5_cisoe' 'offset_pSTAT5_conc' 'offset_pSTAT5_long' 'offset_pSTAT5_shp1oe' 'offset_pSTAT5_socs3oe' 'scale1_CIS_dr90' 'scale2_CIS_dr90' 'scale_CISRNA_foldA' 'scale_CISRNA_foldB' 'scale_CISRNA_foldC' 'scale_CIS_actd' 'scale_CIS_cisoe' 'scale_CIS_long' 'scale_CIS_shp1oe' 'scale_CIS_socs3oe' 'scale_SHP1_shp1oe' 'scale_SOCS3RNA_foldA' 'scale_SOCS3RNA_foldB' 'scale_SOCS3RNA_foldC' 'scale_SOCS3_cisoe' 'scale_SOCS3_long' 'scale_SOCS3_socs3oe' 'scale_pEpoR_actd' 'scale_pEpoR_cisoe' 'scale_pEpoR_cisoe_pepor' 'scale_pEpoR_dr30' 'scale_pEpoR_dr7' 'scale_pEpoR_fine' 'scale_pEpoR_long' 'scale_pEpoR_shp1oe' 'scale_pEpoR_socs3oe' 'scale_pJAK2_actd' 'scale_pJAK2_cisoe' 'scale_pJAK2_dr30' 'scale_pJAK2_dr7' 'scale_pJAK2_fine' 'scale_pJAK2_long' 'scale_pJAK2_shp1oe' 'scale_pJAK2_socs3oe' 'scale_pSTAT5_actd' 'scale_pSTAT5_cisoe' 'scale_pSTAT5_dr10' 'scale_pSTAT5_long' 'scale_pSTAT5_shp1oe' 'scale_pSTAT5_socs3oe' 'scale_tSTAT5_actd' 'scale_tSTAT5_long' 'scale_tSTAT5_shp1oe' 'sd_CIS_abs' 'sd_CIS_au' 'sd_JAK2EpoR_au' 'sd_RNA_fold' 'sd_SHP1_abs' 'sd_SHP1_au' 'sd_SOCS3_abs' 'sd_SOCS3_au' 'sd_STAT5_abs' 'sd_STAT5_au' 'sd_pSTAT5_rel'}';
@@ -1008,7 +1008,7 @@ function selectRun( b, targetDir )
          D(cond).my(:,[1:10,12:end],:) = 10.^D(cond).my(:,[1:10,12:end],:);
       end
       D(3).my = D(3).my - 1; %instead of having observable 1 + scaling*...
-      logP = @(xi) logLikelihood_Bachmann(xi,D,objoptions.MCMC);
+      logP = @(xi) logLikelihood_Bachmann_rampart(xi,D,objoptions.MCMC);
 
       % Parameters
       par.name = {'CISEqc' 'CISEqcOE' 'CISInh' 'CISRNADelay' 'CISRNATurn' 'CISTurn' 'EpoRActJAK2' 'EpoRCISInh' 'EpoRCISRemove' 'JAK2ActEpo' 'JAK2EpoRDeaSHP1' 'SHP1ActEpoR' 'SHP1Dea' 'SHP1ProOE' 'SOCS3Eqc' 'SOCS3EqcOE' 'SOCS3Inh' 'SOCS3RNADelay' 'SOCS3RNATurn' 'SOCS3Turn' 'STAT5ActEpoR' 'STAT5ActJAK2' 'STAT5Exp' 'STAT5Imp' 'init_EpoRJAK2' 'init_SHP1' 'init_STAT5' 'offset_CIS_actd' 'offset_CIS_cisoe' 'offset_CIS_long' 'offset_CIS_shp1oe' 'offset_CIS_socs3oe' 'offset_SOCS3_cisoe' 'offset_SOCS3_long' 'offset_SOCS3_socs3oe' 'offset_pEpoR_actd' 'offset_pEpoR_cisoe' 'offset_pEpoR_cisoe_pepor' 'offset_pEpoR_dr30' 'offset_pEpoR_dr7' 'offset_pEpoR_fine' 'offset_pEpoR_long' 'offset_pEpoR_shp1oe' 'offset_pEpoR_socs3oe' 'offset_pJAK2_actd' 'offset_pJAK2_cisoe' 'offset_pJAK2_dr30' 'offset_pJAK2_dr7' 'offset_pJAK2_fine' 'offset_pJAK2_long' 'offset_pJAK2_shp1oe' 'offset_pJAK2_socs3oe' 'offset_pSTAT5_actd' 'offset_pSTAT5_cisoe' 'offset_pSTAT5_conc' 'offset_pSTAT5_long' 'offset_pSTAT5_shp1oe' 'offset_pSTAT5_socs3oe' 'scale1_CIS_dr90' 'scale2_CIS_dr90' 'scale_CISRNA_foldA' 'scale_CISRNA_foldB' 'scale_CISRNA_foldC' 'scale_CIS_actd' 'scale_CIS_cisoe' 'scale_CIS_long' 'scale_CIS_shp1oe' 'scale_CIS_socs3oe' 'scale_SHP1_shp1oe' 'scale_SOCS3RNA_foldA' 'scale_SOCS3RNA_foldB' 'scale_SOCS3RNA_foldC' 'scale_SOCS3_cisoe' 'scale_SOCS3_long' 'scale_SOCS3_socs3oe' 'scale_pEpoR_actd' 'scale_pEpoR_cisoe' 'scale_pEpoR_cisoe_pepor' 'scale_pEpoR_dr30' 'scale_pEpoR_dr7' 'scale_pEpoR_fine' 'scale_pEpoR_long' 'scale_pEpoR_shp1oe' 'scale_pEpoR_socs3oe' 'scale_pJAK2_actd' 'scale_pJAK2_cisoe' 'scale_pJAK2_dr30' 'scale_pJAK2_dr7' 'scale_pJAK2_fine' 'scale_pJAK2_long' 'scale_pJAK2_shp1oe' 'scale_pJAK2_socs3oe' 'scale_pSTAT5_actd' 'scale_pSTAT5_cisoe' 'scale_pSTAT5_dr10' 'scale_pSTAT5_long' 'scale_pSTAT5_shp1oe' 'scale_pSTAT5_socs3oe' 'scale_tSTAT5_actd' 'scale_tSTAT5_long' 'scale_tSTAT5_shp1oe' 'sd_CIS_abs' 'sd_CIS_au' 'sd_JAK2EpoR_au' 'sd_RNA_fold' 'sd_SHP1_abs' 'sd_SHP1_au' 'sd_SOCS3_abs' 'sd_SOCS3_au' 'sd_STAT5_abs' 'sd_STAT5_au' 'sd_pSTAT5_rel'}';
@@ -1070,7 +1070,7 @@ function selectRun( b, targetDir )
          D(cond).my(:,[1:10,12:end],:) = 10.^D(cond).my(:,[1:10,12:end],:);
       end
       D(3).my = D(3).my - 1; %instead of having observable 1 + scaling*...
-      logP = @(xi) logLikelihood_Bachmann(xi,D,objoptions.MCMC);
+      logP = @(xi) logLikelihood_Bachmann_rampart(xi,D,objoptions.MCMC);
 
       % Parameters
       par.name = {'CISEqc' 'CISEqcOE' 'CISInh' 'CISRNADelay' 'CISRNATurn' 'CISTurn' 'EpoRActJAK2' 'EpoRCISInh' 'EpoRCISRemove' 'JAK2ActEpo' 'JAK2EpoRDeaSHP1' 'SHP1ActEpoR' 'SHP1Dea' 'SHP1ProOE' 'SOCS3Eqc' 'SOCS3EqcOE' 'SOCS3Inh' 'SOCS3RNADelay' 'SOCS3RNATurn' 'SOCS3Turn' 'STAT5ActEpoR' 'STAT5ActJAK2' 'STAT5Exp' 'STAT5Imp' 'init_EpoRJAK2' 'init_SHP1' 'init_STAT5' 'offset_CIS_actd' 'offset_CIS_cisoe' 'offset_CIS_long' 'offset_CIS_shp1oe' 'offset_CIS_socs3oe' 'offset_SOCS3_cisoe' 'offset_SOCS3_long' 'offset_SOCS3_socs3oe' 'offset_pEpoR_actd' 'offset_pEpoR_cisoe' 'offset_pEpoR_cisoe_pepor' 'offset_pEpoR_dr30' 'offset_pEpoR_dr7' 'offset_pEpoR_fine' 'offset_pEpoR_long' 'offset_pEpoR_shp1oe' 'offset_pEpoR_socs3oe' 'offset_pJAK2_actd' 'offset_pJAK2_cisoe' 'offset_pJAK2_dr30' 'offset_pJAK2_dr7' 'offset_pJAK2_fine' 'offset_pJAK2_long' 'offset_pJAK2_shp1oe' 'offset_pJAK2_socs3oe' 'offset_pSTAT5_actd' 'offset_pSTAT5_cisoe' 'offset_pSTAT5_conc' 'offset_pSTAT5_long' 'offset_pSTAT5_shp1oe' 'offset_pSTAT5_socs3oe' 'scale1_CIS_dr90' 'scale2_CIS_dr90' 'scale_CISRNA_foldA' 'scale_CISRNA_foldB' 'scale_CISRNA_foldC' 'scale_CIS_actd' 'scale_CIS_cisoe' 'scale_CIS_long' 'scale_CIS_shp1oe' 'scale_CIS_socs3oe' 'scale_SHP1_shp1oe' 'scale_SOCS3RNA_foldA' 'scale_SOCS3RNA_foldB' 'scale_SOCS3RNA_foldC' 'scale_SOCS3_cisoe' 'scale_SOCS3_long' 'scale_SOCS3_socs3oe' 'scale_pEpoR_actd' 'scale_pEpoR_cisoe' 'scale_pEpoR_cisoe_pepor' 'scale_pEpoR_dr30' 'scale_pEpoR_dr7' 'scale_pEpoR_fine' 'scale_pEpoR_long' 'scale_pEpoR_shp1oe' 'scale_pEpoR_socs3oe' 'scale_pJAK2_actd' 'scale_pJAK2_cisoe' 'scale_pJAK2_dr30' 'scale_pJAK2_dr7' 'scale_pJAK2_fine' 'scale_pJAK2_long' 'scale_pJAK2_shp1oe' 'scale_pJAK2_socs3oe' 'scale_pSTAT5_actd' 'scale_pSTAT5_cisoe' 'scale_pSTAT5_dr10' 'scale_pSTAT5_long' 'scale_pSTAT5_shp1oe' 'scale_pSTAT5_socs3oe' 'scale_tSTAT5_actd' 'scale_tSTAT5_long' 'scale_tSTAT5_shp1oe' 'sd_CIS_abs' 'sd_CIS_au' 'sd_JAK2EpoR_au' 'sd_RNA_fold' 'sd_SHP1_abs' 'sd_SHP1_au' 'sd_SOCS3_abs' 'sd_SOCS3_au' 'sd_STAT5_abs' 'sd_STAT5_au' 'sd_pSTAT5_rel'}';

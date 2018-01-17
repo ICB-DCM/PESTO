@@ -166,7 +166,7 @@ function res = performRAMPART( logPostHandle, par, opt )
    sigmaGlobal       = sigmaHistGlobal;
    
    msg               = '';
-   timer = tic; dspTime      = toc;
+   timer = tic; dspTime      = toc(timer);
    
    j = zeros(nTemps,nMaxRegions); 
    i = 1;
