@@ -323,19 +323,25 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
             
          else
             warning('No user-provided initial point found. Setting Initial points randomly.')
+            if size(par.min,1)==1
+                par.min = par.min';
+            end
+            if size(par.max,1)==1
+                par.max = par.max';
+            end            
             switch this.samplingAlgorithm
                case {'DRAM','MALA'}
-                  this.theta0 = bsxfun(@plus, par.min', ...
-                     bsxfun(@times, par.max' - par.min', rand(par.number,1)))';
+                  this.theta0 = bsxfun(@plus, par.min, ...
+                     bsxfun(@times, par.max - par.min, rand(par.number,1)));
                case 'PT'
-                  this.theta0 = bsxfun(@plus, par.min', ...
-                     bsxfun(@times, par.max' - par.min', rand(par.number,this.PT.nTemps)))';
+                  this.theta0 = bsxfun(@plus, par.min, ...
+                     bsxfun(@times, par.max - par.min, rand(par.number,this.PT.nTemps)));
                case 'PHS'
-                  this.theta0 = bsxfun(@plus, par.min', ...
-                     bsxfun(@times, par.max' - par.min', rand(par.number,this.PHS.nChains)))';
+                  this.theta0 = bsxfun(@plus, par.min, ...
+                     bsxfun(@times, par.max - par.min, rand(par.number,this.PHS.nChains)));
                case 'RAMPART'
-                  this.theta0 = bsxfun(@plus, par.min', ...
-                     bsxfun(@times, par.max' - par.min', rand(par.number,this.RAMPART.nTemps)))';                  
+                  this.theta0 = bsxfun(@plus, par.min, ...
+                     bsxfun(@times, par.max - par.min, rand(par.number,this.RAMPART.nTemps)));                  
             end
          end
          if ~isempty(this.sigma0)
