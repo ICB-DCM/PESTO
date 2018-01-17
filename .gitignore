@@ -1,6 +1,7 @@
 *~
 *.fig
 *.mexa64
+*.mexw64
 *.mexmaci64
 *.mexw64
 *.mexw32
@@ -13,4 +14,5 @@ doc/config/latexextras.sty
 doc/config/mtocpp_filter.sh
 DRAMToolbox
 *.asv
+examples\RAmPART_examples\results
 

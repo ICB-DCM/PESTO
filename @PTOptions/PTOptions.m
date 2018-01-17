@@ -19,8 +19,8 @@ classdef PTOptions < matlab.mixin.CustomDisplay
       alpha = 0.51;
 
       % Parameter which controlls the adaption degeneration velocity of
-      % the temperature adaption. Value between 0 and 1. No effect for value = 0.
-      temperatureAlpha = 0.51;
+      % the temperature adaption.
+      temperatureNu = 1e3;
       
       % The higher the value the more it lowers the impact of early adaption steps.
       memoryLength = 1;
@@ -32,9 +32,14 @@ classdef PTOptions < matlab.mixin.CustomDisplay
       % the covariance matrix with elements regFactor.
       regFactor = 1e-6;
       
-      % Follows the temperature adaption scheme from 'Vousden16' or 'Lacki15'. Can be set to
-      % 'none' for no temperature adaption.
-      temperatureAdaptionScheme  = 'Vousden16';
+      % The number of swaps between tempered chains per iterations.
+      swapsPerIter = 1;
+      
+      % Scaling factor for temperature adaptation
+      temperatureEta = 100;
+      
+      % Maximum T - may be infinity
+      maxT = inf;
 
    end
    
@@ -154,16 +159,6 @@ classdef PTOptions < matlab.mixin.CustomDisplay
          end
       end
       
-      function new = copy(this)
-          % Creates a copy of the passed PTOptions instance
-         new = feval(class(this));
-         
-         p = properties(this);
-         for i = 1:length(p)
-            new.(p{i}) = this.(p{i});
-         end
-      end
-      
       %% Part for checking the correct setting of options
       function this = set.regFactor(this, value)
          if(isnumeric(value) && value > 0)
@@ -196,16 +191,15 @@ classdef PTOptions < matlab.mixin.CustomDisplay
          if(isnumeric(value) && value > 0.5 && value < 1)
             this.alpha = lower(value);
          else
-            error(['Please an adaption decay constant between 0.5 and 1.0, e.g. PestoSamplingOptions.PT.alpha = 0.51']);
+            error('Please an adaption decay constant between 0.5 and 1.0, e.g. PestoSamplingOptions.PT.alpha = 0.51');
          end
       end  
       
-      function this = set.temperatureAlpha(this, value)
-         if(isnumeric(value) && value > 0.5 && value < 1)
-            this.temperatureAlpha = lower(value);
+      function this = set.temperatureNu(this, value)
+         if(isnumeric(value) && value > 0.0)
+            this.temperatureNu = lower(value);
          else
-            error(['Please an temperature adaption decay constant between 0.5 and 1.0, '...
-               'e.g. PestoSamplingOptions.PT.temperatureAlpha = 0.51']);
+            error('Please an temperature adaption decay constant greater 0');
          end
       end   
       
@@ -218,14 +212,30 @@ classdef PTOptions < matlab.mixin.CustomDisplay
          end
       end   
       
-      function this = set.temperatureAdaptionScheme(this, value)
-         if (strcmp(value, 'Vousden16') || strcmp(value, 'Lacki15'))
-            this.temperatureAdaptionScheme = value;
+
+      function this = set.swapsPerIter(this, value)
+         if(value == floor(value) && value > 0)
+            this.swapsPerIter = lower(value);
          else
-            error(['Please enter the temperature adaption scheme, e.g. '...
-               'PestoSamplingOptions.PT.temperatureAdaptionScheme = ''Vousden16''']);
+            error(['Please enter a positive integer for the swaps per iteration.']);
          end
-      end      
+      end 
+      
+      function this = set.temperatureEta(this, value)
+         if(value == floor(value) && value > 0)
+            this.temperatureEta = lower(value);
+         else
+            error(['Please enter a positive integer for the scaling factor temperatureEta.']);
+         end
+      end  
+      
+      function set.maxT(this, value)
+         if(value > 0)
+            this.maxT = lower(value);
+         else
+            error(['Please enter the maximum temperature. May be inf.']);
+         end
+      end        
             
    end
 end
