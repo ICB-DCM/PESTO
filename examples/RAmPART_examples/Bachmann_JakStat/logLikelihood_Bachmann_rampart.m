@@ -12,7 +12,11 @@ try
         if options.ami.sensi
             options.ami.sx0 = D(cond).sinit(xi,D(cond).u);
         end
-        sol(cond) = simulate_Bachmann_JAKSTAT(D(cond).t,xi(1:27),D(cond).u,[],options.ami);
+        if cond == 13 || cond == 14
+            sol(cond) = simulate_BachmannJakStat_SHP1oe(D(cond).t,xi(1:27),D(cond).u,[],options.ami);
+        else
+            sol(cond) = simulate_BachmannJakStat(D(cond).t,xi(1:27),D(cond).u,[],options.ami);
+        end
         temp_status(cond) = sol(cond).status;
     end
 catch
