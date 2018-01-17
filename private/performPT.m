@@ -152,7 +152,8 @@ function res = performPT( logPostHandle, par, opt )
    sigma = sigmaHist;
    
    msg = '';
-   timer = tic; dspTime      = toc; 
+   tic;
+   timer = tic; dspTime = toc; 
    
    j = 0;
    i = 1;

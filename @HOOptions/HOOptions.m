@@ -1,4 +1,4 @@
-classdef HOOptions < matlab.mixin.SetGet
+classdef HOOptions < matlab.mixin.CustomDisplay
     % HOOptions provides an option container to pass options to
     % the HierarchicalOptimization likelihood function.
     %

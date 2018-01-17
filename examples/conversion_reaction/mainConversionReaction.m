@@ -210,7 +210,6 @@ optionsPesto.MCMC.mode = optionsPesto.mode;
 % PT specific options:
 optionsPesto.MCMC.samplingAlgorithm   = 'PT';
 optionsPesto.MCMC.PT.nTemps           = 1;
-optionsPesto.MCMC.PT.temperatureAdaptionScheme = 'Lacki15'; %'Vousden16'; 
 
 % Initialize the chains by making use of the preceeding multi-start local
 % optimization, all of them starting from the same point
@@ -235,7 +234,7 @@ parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
 % The values of the properties are evaluated at the end points of the
 % multi-start optimization runs by getPropertyMultiStarts.
 
-optionsProperties = optionsPesto.copy();
+optionsProperties = optionsPesto;
 optionsProperties.fh = [];
 properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
 

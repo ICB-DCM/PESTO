@@ -419,9 +419,9 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
             end
             
             % Add required subclasses
-            obj.MCMC = PestoSamplingOptions();
-            obj.HO = HOOptions;
-            obj.HO.foldername = obj.foldername;
+%             obj.MCMC = PestoSamplingOptions();
+%             obj.HO = HOOptions;
+%             obj.HO.foldername = obj.foldername;
             
         end
         

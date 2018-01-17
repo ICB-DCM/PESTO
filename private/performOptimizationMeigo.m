@@ -33,11 +33,18 @@ function parameters = performOptimizationMeigo(parameters, negLogPost, iMS, opti
     parameters.MS.par(:,iMS) = Results.xbest;
     
     % Assignment of gradient and Hessian
-    [~, G_opt, H_opt] = negLogPost(Results.xbest);
-    parameters.MS.hessian(freePars,freePars,iMS) = -H_opt;
-    parameters.MS.hessian(options.fixedParameters,options.fixedParameters,iMS) = nan;
-    parameters.MS.gradient(freePars,iMS) = -G_opt;
-    parameters.MS.gradient(options.fixedParameters,iMS) = nan;
+    try
+        [~, G_opt, H_opt] = negLogPost(Results.xbest);
+        parameters.MS.hessian(freePars,freePars,iMS) = -H_opt;
+        parameters.MS.hessian(options.fixedParameters,options.fixedParameters,iMS) = nan;
+        parameters.MS.gradient(freePars,iMS) = -G_opt;
+        parameters.MS.gradient(options.fixedParameters,iMS) = nan;
+    catch
+        warning('Could not compute Hessian and gradient at optimum after optimization.');
+        if (options.objOutNumber == 3)
+            warning('options.objOutNumber set to 3, but your objective function can not provide 3 outputs. Please set objOutBuner accordingly!');
+        end
+    end
     
     % Assignment of diagnosis
     parameters.MS.n_objfun(iMS) = Results.numeval;
