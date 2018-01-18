@@ -46,7 +46,7 @@ ind_lin = [];
 ind_log10 = [];
 ind_log = [];
 for iy = 1:n_y
-    switch options.scale(iy)
+    switch options.scale{iy}
         case 'lin'
             ind_lin = [ind_lin,iy];
         case 'log'
@@ -94,7 +94,7 @@ end
 for ie = 1:numel(options.expgroups_scaling)
     ind_e = options.expgroups_scaling{ie};
     for iy = 1:numel(options.obsgroups_scaling)
-        scale = options.scale(options.obsgroups_scaling{iy}(1));
+        scale = options.scale{options.obsgroups_scaling{iy}(1)};
         ind_y = options.obsgroups_scaling{iy};
         if strcmp(options.distribution,'normal') || nargout <= 1
             temps = optimalScaling(ind_y,simulation(ind_e),D(ind_e),options,scale);
@@ -120,7 +120,7 @@ end
 for ie = 1:numel(options.expgroups_noise)
     ind_e = options.expgroups_noise{ie};
     for iy = 1:numel(options.obsgroups_noise)
-        scale = options.scale((options.obsgroups_noise{iy}(1)));
+        scale = options.scale{(options.obsgroups_noise{iy}(1))};
         ind_y = options.obsgroups_noise{iy};
         ind_e = options.expgroups_noise{ie};
         [tempnoise] = ...
