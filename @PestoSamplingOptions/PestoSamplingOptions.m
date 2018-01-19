@@ -69,8 +69,10 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       saveFileName = '';
       saveEach = 0;
       
-      % Parallel Tempering Options, an instance of PTOptions
-      PT;
+      % Parallel Tempering Options, an instance of PTOptions - this
+      % instance is also used for initalization in case no algorithm was
+      % specified
+      PT = PTOptions(); 
       
       % Parallel Hierarchical Sampling options, an instance of PHSOptions
       PHS;
