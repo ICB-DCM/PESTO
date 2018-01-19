@@ -322,13 +322,9 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
             end
             
          else
-            warning('No user-provided initial point found. Setting Initial points randomly.')
-            if size(par.min,1)==1
-                par.min = par.min';
-            end
-            if size(par.max,1)==1
-                par.max = par.max';
-            end            
+            warning('No user-provided initial point found. Setting Initial points randomly.')    
+            par.min = par.min(:);
+            par.max = par.max(:);
             switch this.samplingAlgorithm
                case {'DRAM','MALA'}
                   this.theta0 = bsxfun(@plus, par.min, ...
