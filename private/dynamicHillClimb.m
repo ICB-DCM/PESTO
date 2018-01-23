@@ -12,7 +12,6 @@ function [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options)
 %   TolX              : tolerance of parameter
 %   TolFun            : tolerance of objective function
 %   MaxFunEvals       : maximum number of evaluations of fun
-%   MaxIter           : maximum number of iterations
 %   OutputFcn         : for visual output after each iteration
 %   InitialStepSize   : rel. to 1 (default 0.1)
 %   ExpandFactor      : factor of expansion upon success (default 2)
@@ -26,8 +25,7 @@ function [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options)
 % fval: objective function at the solution, generally fval=fun(x)
 % exitflag:
 %   1 : The function converged to a solution x
-%   0 : Number of iterations exceeded options.MaxIter or number of function
-%       evaluations exceeded options.MaxFunEvals.
+%   0 : Number of function evaluations exceeded options.MaxFunEvals.
 %   -1: The algorithm was terminated inappropriately
 % output : struct with meta information:
 %   iterations  : number of iterations
@@ -42,7 +40,7 @@ function [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options)
 dim  = length(x0); % number of variables
 
 % interpret options
-[tolX,tolFun,maxFunEvals,maxIter,outputFcn,...
+[tolX,tolFun,maxFunEvals,outputFcn,...
     initialStepSize,expandFactor,contractFactor,stuckSearchFactor,barrier,...
     display]...
     = f_extractOptions(options,dim);
@@ -64,7 +62,7 @@ tolY    = tolX / norm(ub-lb);
 vmax = initialStepSize * ones(dim,1);
 
 % wrap function to consider boundaries
-fun = @(y,jIter) f_wrap_fun(denormalize(y),fun,lb,ub,barrier,jIter,maxIter);
+fun = @(y,funEvals) f_wrap_fun(denormalize(y),fun,lb,ub,barrier,funEvals,maxFunEvals);
 
 % init run variables
 smax   = [vmax;-1];        % array of max step sizes, extra value for extra vector
@@ -82,24 +80,21 @@ nVec   = 2*dim + 2;            % maximum index in step matrix
 opp_j  = @(j) f_opp_j(j,nVec); % short for opposite index in step matrix
 
 % init meta variables
-jIter     = 0;         % number of iterations, should be <= maxIter
 exitflag  = -1;        % flag indicating exit reason
 starttime = cputime;   % to measure time difference
-funEvals  = 0;         % function evaluations
+funEvals  = 0;         % function evaluations, should be <= maxFunEvals
 
 % init x, fval
 ybst      = y0;
-fbst      = fun(ybst,jIter);
+fbst      = fun(ybst,funEvals);
 funEvals  = funEvals + 1;
 
 if (visual)
-    f_output(denormalize(ybst),fbst,jIter,'init',outputFcn); % create new figure and initialize
-    f_output(denormalize(ybst),fbst,jIter,'iter',outputFcn); % first iteration with start point and jIter = 0
+    f_output(denormalize(ybst),fbst,funEvals,'init',outputFcn); % create new figure and initialize
+    f_output(denormalize(ybst),fbst,funEvals,'iter',outputFcn); % first iteration with start point and jIter = 0
 end
 
 while (~done)
-    % increase counter
-    jIter = jIter + 1;
     
     if (stuck)
         % choose the smallest step, if any is smaller than the maximum size
@@ -109,13 +104,13 @@ while (~done)
         [v,j] = f_max(step,norms);
     end
     
-    f_display(display,jIter,fbst,norm(v));
+    f_display(display,funEvals,fbst,norm(v));
     
     % j == -1 indicates minimum found
-    if ( j ~= -1 && jIter <= maxIter && funEvals <= maxFunEvals )
+    if ( j ~= -1 && funEvals <= maxFunEvals )
         % compute next x, fval
         ycur = ybst + v;
-        fcur = fun(ycur,jIter);
+        fcur = fun(ycur,funEvals);
         funEvals = funEvals + 1;
         
         % is better estimate?
@@ -186,12 +181,12 @@ while (~done)
         
         % update output
         if (visual)
-            f_output(denormalize(ybst),fbst,jIter,'iter',outputFcn);
+            f_output(denormalize(ybst),fbst,funEvals,'iter',outputFcn);
         end
         
     else % somehow done
         done = true;
-        if (jIter <= maxIter && funEvals <= maxFunEvals)
+        if (funEvals <= maxFunEvals)
             % found a local minimum
             exitflag = 1;
         else
@@ -206,13 +201,13 @@ end
 x                   = denormalize(ybst);
 fval                = fbst;
 output.funcCount    = funEvals;
-output.iterations   = jIter;
+output.iterations   = funEvals;
 output.algorithm    = 'Dynamic Hill Climb';
 output.t_cpu        = cputime - starttime;
 
 % finalize output
 if (visual)
-    f_output(denormalize(ybst),fbst,jIter,'done',outputFcn);
+    f_output(denormalize(ybst),fbst,funEvals,'done',outputFcn);
 end
 
 end % function
@@ -239,12 +234,12 @@ j_opp = nVec - (j-1);
 
 end
 
-function fval = f_wrap_fun(x,fun,lb,ub,barrier,jIter,maxIter)
+function fval = f_wrap_fun(x,fun,lb,ub,barrier,funEvals,maxFunEvals)
 
 % set fun to inf whenever conditions not fulfilled
 if (~isequal(barrier,''))
     fval = fun(x);
-    fval = barrierFunction(fval, [], x, [lb, ub], jIter, maxIter, barrier);
+    fval = barrierFunction(fval, [], x, [lb, ub], funEvals, maxFunEvals, barrier);
 else
     % extreme barrier
     if (any(x>ub) || any(x<lb))
@@ -303,7 +298,7 @@ end
 
 end
 
-function [tolX,tolFun,maxFunEvals,maxIter,outputFcn,...
+function [tolX,tolFun,maxFunEvals,outputFcn,...
     initialStepSize,expandFactor,contractFactor,stuckSearchFactor,barrier,...
     display]...
     = f_extractOptions(options,dim)
@@ -326,12 +321,6 @@ if (isfield(options,'MaxFunEvals') && ~isempty(options.MaxFunEvals))
     maxFunEvals = options.MaxFunEvals;
 else
     maxFunEvals = 1000*dim;
-end
-
-if (isfield(options,'MaxIter') && ~isempty(options.MaxIter))
-    maxIter = options.MaxIter;
-else
-    maxIter = 1000*dim;
 end
 
 if (isfield(options,'OutputFcn') && ~isempty(options.OutputFcn))
@@ -387,15 +376,15 @@ optimValues.iteration = iter;
 outputFcn(x,optimValues,state);
 end
 
-function f_display(display,jIter,fbst,vnorm)
+function f_display(display,funEvals,fbst,vnorm)
 if (strcmp(display,'iter') || strcmp(display,'debug'))
     if (strcmp(display,'debug'))
         show_output = true;
     else
-        show_output = mod(jIter,100) == 0;
+        show_output = mod(funEvals,100) == 0;
     end
     
-    if (show_output), fprintf(strcat('%d\t|\t%.15f\t|\t%.15f\n'),jIter,fbst,vnorm); end
+    if (show_output), fprintf(strcat('%d\t|\t%.15f\t|\t%.15f\n'),funEvals,fbst,vnorm); end
 end
 
 end
