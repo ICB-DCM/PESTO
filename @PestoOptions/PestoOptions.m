@@ -1,4 +1,4 @@
-classdef PestoOptions < matlab.mixin.SetGet
+classdef PestoOptions < matlab.mixin.CustomDisplay
     % PestoOptions provides an option container to pass options to various
     % PESTO functions. Not all options are used by all functions, consult the respective function documentation for details.
     %
@@ -295,10 +295,10 @@ classdef PestoOptions < matlab.mixin.SetGet
         property_index = [];
         
         % Set MCMC options by calling an PestoSamplingOptions Class object
-        MCMC;
+        MCMC = PestoSamplingOptions();
         
         % Set Hierarchical Optimization options by calling an HOOptions Class object
-        HO;
+        HO = HOOptions();
         
     end
     
@@ -329,7 +329,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             if nargin > 0
                 
                 % Deal with the case where the first input to the
-                % constructor is a amioptions/struct object.
+                % constructor is a PestoOptions/struct object.
                 if isa(varargin{1},'PestoOptions')
                     if strcmp(class(varargin{1}),class(obj))
                         obj = varargin{1};
@@ -420,7 +420,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             
             % Add required subclasses
             obj.MCMC = PestoSamplingOptions();
-            obj.HO = HOOptions();
+            obj.HO = HOOptions;
             obj.HO.foldername = obj.foldername;
             
         end
@@ -430,14 +430,14 @@ classdef PestoOptions < matlab.mixin.SetGet
             new = feval(class(this));
             
             p = properties(this);
-            for i = 1:length(p)
-                new.(p{i}) = this.(p{i});
+            for iProp = 1:length(p)
+                new.(p{iProp}) = this.(p{iProp});
             end
         end
         
         % Part for checking the correct setting of options
         
-        function set.obj_type(this, value)
+        function this = set.obj_type(this, value)
             if(strcmpi(value, 'log-posterior') || strcmpi(value, 'negative log-posterior'))
                 this.obj_type = lower(value);
             else
@@ -445,15 +445,15 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.comp_type(this, value)
+        function this = set.comp_type(this, value)
             if(strcmpi(value, 'sequential') || strcmpi(value, 'parallel'))
                 this.comp_type = lower(value);
             else
                 error('PestoOptions.comp_type must be ''sequential'' or ''parallel''.');
             end
         end
-        
-        function set.n_starts(this, value)
+
+        function this = set.n_starts(this, value)
             if(isnumeric(value) && floor(value) == value && value > 0)
                 this.n_starts = value;
                 this.start_index = [];
@@ -462,7 +462,8 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.mode(this, value)
+        function this = set.mode(this, value)
+            this.mode = value;
             if (strcmp(value, 'visual') || strcmp(value, 'text') || strcmp(value, 'silent') || strcmp(value, 'debug'))
                 this.mode = value;
             else
@@ -470,7 +471,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.proposal(this, value)
+        function this = set.proposal(this, value)
             if (strcmp(value, 'latin hypercube') || strcmp(value, 'uniform') || strcmp(value, 'user-supplied'))
                 this.proposal = value;
             else
@@ -478,7 +479,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.save(this, value)
+        function this = set.save(this, value)
             if islogical(value)
                 this.save = value;
             else
@@ -486,7 +487,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.tempsave(this, value)
+        function this = set.tempsave(this, value)
             if islogical(value)
                 this.tempsave = value;
             else
@@ -494,15 +495,15 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.trace(this, value)
+        function this = set.trace(this, value)
             if islogical(value)
                 this.trace = value;
             else
                 error('PestoOptions.trace must ba a logical value.');
             end
         end
-        
-        function set.calc_profiles(this, value)
+
+        function this = set.calc_profiles(this, value)
             if islogical(value)
                 this.calc_profiles = value;
             else
@@ -510,7 +511,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.resetobjective(this, value)
+        function this = set.resetobjective(this, value)
             if islogical(value)
                 this.resetobjective = value;
             else
@@ -518,7 +519,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.start_index(this, value)
+        function this = set.start_index(this, value)
             if isvector(value) || isempty(value)
                 this.start_index = value;
             else
@@ -526,7 +527,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.parameter_index(this, value)
+        function this = set.parameter_index(this, value)
             if isvector(value) || isempty(value)
                 this.parameter_index = value;
             else
@@ -534,7 +535,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.property_index(this, value)
+        function this = set.property_index(this, value)
             if isvector(value) || isempty(value)
                 this.property_index = value;
             else
@@ -542,7 +543,7 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.MAP_index(this, value)
+        function this = set.MAP_index(this, value)
             if(isempty(value) || isnumeric(value) && floor(value) == value && value > 0)
                 this.MAP_index = value;
             else
@@ -550,15 +551,15 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.dR_max(this, value)
+        function this = set.dR_max(this, value)
             if(isnumeric(value) && value >= 0 && value <= 1)
                 this.dR_max = value;
             else
                 error('PestoOptions.dR_max positive numeric value between 0 and 1.');
             end
         end
-        
-        function set.R_min(this, value)
+
+        function this = set.R_min(this, value)
             if(isnumeric(value) && value >= 0 && value <= 1)
                 this.R_min = value;
             else
@@ -566,21 +567,20 @@ classdef PestoOptions < matlab.mixin.SetGet
             end
         end
         
-        function set.foldername(this, value)
+        function this = set.foldername(this, value)
             this.foldername = value;
             this.HO.foldername = value;
         end
         
-        function set.localOptimizer(this, value)
-            if (strcmp(value, 'fmincon') || strcmp(value, 'meigo-ess') || ...
-                    strcmp(value, 'meigo-vns') || strcmp(value, 'pswarm'))
+        function this = set.localOptimizer(this, value)
+            if any(strcmp(value, {'fmincon', 'meigo-ess', 'meigo-vns', 'pswarm', 'lsqnonlin', 'cs', 'dhc', 'bobyqa'}))
                 this.localOptimizer = value;
                 
                 if strcmp(value, 'pswarm')
                     this.localOptimizerOptions = PSwarm('defaults');
                 end
             else
-                error('PestoOptions.localOptimizer only supports the following choices: fmincon, meigo-ess, meigo-vns, pswarm.');
+                error('PestoOptions.localOptimizer only supports the following choices: fmincon, meigo-ess, meigo-vns, pswarm, lsqnonlin, cs, dhc, bobyqa.');
             end
         end
         
