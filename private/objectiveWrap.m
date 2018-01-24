@@ -97,11 +97,11 @@ function varargout = objectiveWrap(theta, objectiveFunction, wrapperOptions, var
         % Derive output
         switch nargout
             case {0,1}
-                varargout = {-objSign * inf};
+                varargout = {inf};
             case 2
-                varargout = {-objSign * inf,zeros(length(freeInd),1)};
+                varargout = {inf,zeros(length(freeInd),1)};
             case 3
-                varargout = {-objSign * inf,zeros(length(freeInd),1),zeros(length(freeInd))};
+                varargout = {inf,zeros(length(freeInd),1),zeros(length(freeInd))};
         end
     end
 
