@@ -69,8 +69,10 @@ classdef PestoSamplingOptions < matlab.mixin.CustomDisplay
       saveFileName = '';
       saveEach = 0;
       
-      % Parallel Tempering Options, an instance of PTOptions
-      PT;
+      % Parallel Tempering Options, an instance of PTOptions - this
+      % instance is also used for initalization in case no algorithm was
+      % specified
+      PT = PTOptions(); 
       
       % Parallel Hierarchical Sampling options, an instance of PHSOptions
       PHS;
@@ -322,20 +324,22 @@ classdef PestoSamplingOptions < matlab.mixin.CustomDisplay
             end
             
          else
-            warning('No user-provided initial point found. Setting Initial points randomly.')
+            warning('No user-provided initial point found. Setting Initial points randomly.')    
+            par.min = par.min(:);
+            par.max = par.max(:);
             switch this.samplingAlgorithm
                case {'DRAM','MALA'}
-                  this.theta0 = bsxfun(@plus, par.min', ...
-                     bsxfun(@times, par.max' - par.min', rand(par.number,1)))';
+                  this.theta0 = bsxfun(@plus, par.min, ...
+                     bsxfun(@times, par.max - par.min, rand(par.number,1)));
                case 'PT'
-                  this.theta0 = bsxfun(@plus, par.min', ...
-                     bsxfun(@times, par.max' - par.min', rand(par.number,this.PT.nTemps)))';
+                  this.theta0 = bsxfun(@plus, par.min, ...
+                     bsxfun(@times, par.max - par.min, rand(par.number,this.PT.nTemps)));
                case 'PHS'
-                  this.theta0 = bsxfun(@plus, par.min', ...
-                     bsxfun(@times, par.max' - par.min', rand(par.number,this.PHS.nChains)))';
+                  this.theta0 = bsxfun(@plus, par.min, ...
+                     bsxfun(@times, par.max - par.min, rand(par.number,this.PHS.nChains)));
                case 'RAMPART'
-                  this.theta0 = bsxfun(@plus, par.min', ...
-                     bsxfun(@times, par.max' - par.min', rand(par.number,this.RAMPART.nTemps)))';                  
+                  this.theta0 = bsxfun(@plus, par.min, ...
+                     bsxfun(@times, par.max - par.min, rand(par.number,this.RAMPART.nTemps)));                  
             end
          end
          if ~isempty(this.sigma0)

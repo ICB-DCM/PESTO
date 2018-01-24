@@ -36,7 +36,7 @@ function [ llh ] = simulateGaussLLH( par, mu, sigma )
    % distributed
    m = length(par);
    for i = p+1:m
-      llh = llh + log(normpdf(par(i),25,1));
+      llh = llh - log(1*sqrt(2*pi)) - 0.5 * ((par(i)-25)/1)^2; 
    end
    
 end
