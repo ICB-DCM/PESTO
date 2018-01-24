@@ -98,7 +98,7 @@ options.P.max = parameters.max;
 options.MAP_index = 1;
 
 % Warning if objective function gradient is not available
-if ~strcmp(options.profileReoptimizationOptions.GradObj, 'on')
+if ~strcmp(options.profileOptimizationOptions.GradObj, 'on')
     warning('For efficient and reliable optimization, getPropertyProfiles.m requires gradient information.')
 end
 
@@ -115,7 +115,7 @@ switch options.mode
         fprintf(' \nProfile likelihood caculation:\n===============================\n');
     case 'silent' % no output
         % Force fmincon to be silent.
-        options.profileReoptimizationOptions.Display = 'off';
+        options.profileOptimizationOptions.Display = 'off';
 end
 
 % Check, if MultiStart was launched before
@@ -133,10 +133,10 @@ if (isempty(options.MAP_index))
     options.MAP_index = 1;
 end
 
-options.profileReoptimizationOptions.algorithm = 'interior-point';
-options.profileReoptimizationOptions.MaxIter = 400;
-options.profileReoptimizationOptions.TolCon = 1e-4;
-options.profileReoptimizationOptions.MaxFunEvals = 200*parameters.number;
+options.profileOptimizationOptions.algorithm = 'interior-point';
+options.profileOptimizationOptions.MaxIter = 400;
+options.profileOptimizationOptions.TolCon = 1e-4;
+options.profileOptimizationOptions.MaxFunEvals = 200*parameters.number;
 
 %% Initialization of property struct
 for i = options.property_index
@@ -199,7 +199,7 @@ if strcmp(options.comp_type,'sequential') && options.calc_profiles
                                         parameters.min,...   % lower bound
                                         parameters.max,...   % upper bound
                                         @(theta) obj_con(theta,objective_function,-J_exp,options.obj_type),...
-                                        options.profileReoptimizationOptions);    % options
+                                        options.profileOptimizationOptions);    % options
 
                 % Adaptation of signs                    
                 if s == +1
@@ -216,7 +216,7 @@ if strcmp(options.comp_type,'sequential') && options.calc_profiles
                                             parameters.min,...   % lower bound
                                             parameters.max,...   % upper bound
                                             @(theta) prop_con_fun(theta,properties.function{i},properties.min(i),properties.max(i),s),...
-                                            options.profileReoptimizationOptions);    % options
+                                            options.profileOptimizationOptions);    % options
                 else
                     J_opt = obj(theta,objective_function,options.obj_type);
                 end
@@ -321,7 +321,7 @@ elseif strcmp(options.comp_type,'parallel') && options.calc_profiles
                     parameters.min,...   % lower bound
                     parameters.max,...   % upper bound
                     @(theta) obj_con(theta,objective_function,-J_exp,options.obj_type),...
-                    options.profileReoptimizationOptions);    % options
+                    options.profileOptimizationOptions);    % options
                 
                 % Adaptation of signs
                 if s == +1
@@ -338,7 +338,7 @@ elseif strcmp(options.comp_type,'parallel') && options.calc_profiles
                         parameters.min,...   % lower bound
                         parameters.max,...   % upper bound
                         @(theta) prop_con_fun(theta,properties.function{i},properties.min(i),properties.max(i),s),...
-                        options.profileReoptimizationOptions);    % options
+                        options.profileOptimizationOptions);    % options
                 else
                     J_opt = obj(theta,objective_function,options.obj_type);
                 end
