@@ -98,6 +98,9 @@ options.P.max = parameters.max;
 options.MAP_index = 1;
 
 % Warning if objective function gradient is not available
+if isempty(options.profileOptimizationOptions)
+    options.profileOptimizationOptions = options.localOptimizerOptions;
+end
 if ~strcmp(options.profileOptimizationOptions.GradObj, 'on')
     warning('For efficient and reliable optimization, getPropertyProfiles.m requires gradient information.')
 end
