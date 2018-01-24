@@ -759,22 +759,21 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, negLogPost, pa
     % right handside of ODE
     try    
         % Reduce linear system by implicit funtion theorem
-        A1 = [HL(1 : ind-1, :); HL(ind+1 : nPar, :); s*GG'];
-        b1 = [-GL(1 : ind-1) * options.solver.gamma; ...
-             -GL(ind+1 : nPar) * options.solver.gamma; ...
-             1];
-        A2 = [A1(1:end-1, 1:ind-1), A1(1:end-1, ind+1:end)];
-        b2 = b1(1:end-1) - s * A1(1:end-1, ind);
+        A = HL;
+        A(:,ind) = [];
+        A(ind,:) = [];
+        b = -s * HL(:,ind) - options.solver.gamma * GL;
+        b(ind) = [];
         
         % Check for invertibility of the RHS
-        if (rcond(A2) < options.solver.minCond) || isnan(rcond(A2))
-            dth1 = pinv(A2, options.solver.eps) * b2;
+        if (rcond(A) < options.solver.minCond) || isnan(rcond(A))
+            dth = pinv(A, options.solver.eps) * b;
         else
-            dth1 = A2 \ b2;
+            dth = A \ b;
         end
-        dth = [dth1(1:ind-1); s; dth1(ind:end)];
+        dth = [dth(1:ind-1); s; dth(ind:end)];
     catch
-        dth = zeros(nPar + 1, 1);
+        dth = zeros(nPar, 1);
         dth(ind) = s;
     end
     
@@ -809,22 +808,21 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, negLogPost, pa
     if (lRebuild == 1)
         try    
             % Reduce linear system by implicit funtion theorem
-            A1 = [HL(1 : ind-1, :); HL(ind+1 : nPar, :); s*GG'];
-            b1 = [-GL(1 : ind-1) * options.solver.gamma; ...
-                 -GL(ind+1 : nPar) * options.solver.gamma; ...
-                 1];
-            A2 = [A1(1:end-1, 1:ind-1), A1(1:end-1, ind+1:end)];
-            b2 = b1(1:end-1) - s * A1(1:end-1, ind);
+            A = HL;
+            A(:,ind) = [];
+            A(ind,:) = [];
+            b = -s * HL(:,ind) - options.solver.gamma * GL;
+            b(ind) = [];
 
             % Check for invertibility of the RHS
-            if (rcond(A2) < options.solver.minCond) || isnan(rcond(A2))
-                dth1 = pinv(A2, options.solver.eps) * b2;
+            if (rcond(A) < options.solver.minCond) || isnan(rcond(A))
+                dth = pinv(A, options.solver.eps) * b;
             else
-                dth1 = A2 \ b2;
+                dth = A \ b;
             end
-            dth = [dth1(1:ind-1); s; dth1(ind:end)];
-        catch
-            dth = zeros(nPar + 1, 1);
+            dth = [dth(1:ind-1); s; dth(ind:end)];
+        catch ME
+            dth = zeros(nPar, 1);
             dth(ind) = s;
         end
     end
