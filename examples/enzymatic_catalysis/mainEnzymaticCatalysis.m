@@ -158,8 +158,8 @@ parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 % optionsPesto.n_starts = 5;
 % parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
-% Use a diagnosis tool to see, how optimization worked
-plotMultiStartDiagnosis(parameters);
+% Use a diagnosis tool to see, how optimization worked (only works with fmincon)
+% plotMultiStartDiagnosis(parameters);
 
 
 %% Calculate Confidence Intervals

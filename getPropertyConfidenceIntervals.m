@@ -47,52 +47,54 @@ end
 % Initialization
 properties.CI.alpha_levels = alpha;
 
+if isempty(options.property_index)
+    options.property_index = 1 : properties.number;
+end
+
 % Loop: alpha levels
 for k = 1:length(alpha)
     % Loop: properties
-    for i = 1:properties.number
+    for iProp = options.property_index
         % Hessian
         Sigma = properties.MS.prop_Sigma(:,:,1);
         
         % Confidence intervals computed using local approximation and a
         % threshold (-> similar to PL-based confidence intervals)
-        properties.CI.local_PL(i,1,k) = properties.MS.prop(i) - sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
-        properties.CI.local_PL(i,2,k) = properties.MS.prop(i) + sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
+        properties.CI.local_PL(iProp,1,k) = properties.MS.prop(iProp) - sqrt(icdf('chi2',alpha(k),1)*Sigma(iProp,iProp));
+        properties.CI.local_PL(iProp,2,k) = properties.MS.prop(iProp) + sqrt(icdf('chi2',alpha(k),1)*Sigma(iProp,iProp));
 
         % Confidence intervals computed using local approximation and the
         % probability mass (-> similar to Bayesian confidence intervals)
-        properties.CI.local_B(i,1,k)  = icdf('norm',  (1-alpha(k))/2,properties.MS.prop(i),sqrt(Sigma(i,i)));
-        properties.CI.local_B(i,2,k)  = icdf('norm',1-(1-alpha(k))/2,properties.MS.prop(i),sqrt(Sigma(i,i)));
+        properties.CI.local_B(iProp,1,k)  = icdf('norm',  (1-alpha(k))/2,properties.MS.prop(iProp),sqrt(Sigma(iProp,iProp)));
+        properties.CI.local_B(iProp,2,k)  = icdf('norm',1-(1-alpha(k))/2,properties.MS.prop(iProp),sqrt(Sigma(iProp,iProp)));
 
         % Confidence intervals computed using profile likelihood
         if isfield(properties,'P')
-            if i <= length(properties.P)
-                if ~isempty(properties.P(i).prop)
-                    % left bound
-                    ind  = find(properties.P(i).prop <= properties.MS.prop(i,1));
-                    j = find(properties.P(i).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'last');
-                    if ~isempty(j)
-                        properties.CI.PL(i,1,k) = interp1(properties.P(i).R(ind([j,j+1])),...
-                            properties.P(i).prop(ind([j,j+1])),exp(-icdf('chi2',alpha(k),1)/2));
-                    else
-                        properties.CI.PL(i,1,k) = -inf;
-                    end
-                    % right bound
-                    ind  = find(properties.P(i).prop >= properties.MS.prop(i,1));
-                    j = find(properties.P(i).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'first');
-                    if ~isempty(j)
-                        properties.CI.PL(i,2,k) = interp1(properties.P(i).R(ind([j-1,j])),...
-                            properties.P(i).prop(ind([j-1,j])),exp(-icdf('chi2',alpha(k),1)/2));
-                    else
-                        properties.CI.PL(i,2,k) = inf;
-                    end
+            if ~isempty(properties.P(iProp).prop)
+                % left bound
+                ind  = find(properties.P(iProp).prop <= properties.MS.prop(iProp,1));
+                j = find(properties.P(iProp).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'last');
+                if ~isempty(j)
+                    properties.CI.PL(iProp,1,k) = interp1(properties.P(iProp).R(ind([j,j+1])),...
+                        properties.P(iProp).prop(ind([j,j+1])),exp(-icdf('chi2',alpha(k),1)/2));
+                else
+                    properties.CI.PL(iProp,1,k) = -inf;
+                end
+                % right bound
+                ind  = find(properties.P(iProp).prop >= properties.MS.prop(iProp,1));
+                j = find(properties.P(iProp).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'first');
+                if ~isempty(j)
+                    properties.CI.PL(iProp,2,k) = interp1(properties.P(iProp).R(ind([j-1,j])),...
+                        properties.P(iProp).prop(ind([j-1,j])),exp(-icdf('chi2',alpha(k),1)/2));
+                else
+                    properties.CI.PL(iProp,2,k) = inf;
                 end
             end
         end
         
         % Confidence intervals computed using sample
         if isfield(properties,'S')
-            properties.CI.S(i,:,k) = prctile(properties.S.prop(i,:),50 + 100*[-alpha(k)/2, alpha(k)/2]);
+            properties.CI.S(iProp,:,k) = prctile(properties.S.prop(iProp,:),50 + 100*[-alpha(k)/2, alpha(k)/2]);
         end
     end
 end

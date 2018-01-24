@@ -104,29 +104,27 @@ for k = 1:length(alpha)
         
         % Confidence intervals computed using profile likelihood
         if isfield(parameters,'P')
-            for iPar = 1:length(parameters.P)
-                if ~isempty(parameters.P(iPar).par)
-                    % left bound
-                    ind  = find(parameters.P(iPar).par(iPar,:) <= parameters.MS.par(iPar,iMAP));
-                    j = find(parameters.P(iPar).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'last');
-                    if ~isempty(j)
-                        parameters.CI.PL(iPar,1,k) = interp1(parameters.P(iPar).R(ind([j,j+1])),...
-                            parameters.P(iPar).par(iPar,ind([j,j+1])),exp(-icdf('chi2',alpha(k),1)/2));
-                    else
-                        parameters.CI.PL(iPar,1,k) = -inf;
-                    end
-                    % right bound
-                    ind  = find(parameters.P(iPar).par(iPar,:) >= parameters.MS.par(iPar,iMAP));
-                    j = find(parameters.P(iPar).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'first');
-                    if ~isempty(j)
-                        parameters.CI.PL(iPar,2,k) = interp1(parameters.P(iPar).R(ind([j-1,j])),...
-                            parameters.P(iPar).par(iPar,ind([j-1,j])),exp(-icdf('chi2',alpha(k),1)/2));
-                    else
-                        parameters.CI.PL(iPar,2,k) = inf;
-                    end
+            if ~isempty(parameters.P(iPar).par)
+                % left bound
+                ind  = find(parameters.P(iPar).par(iPar,:) <= parameters.MS.par(iPar,iMAP));
+                j = find(parameters.P(iPar).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'last');
+                if ~isempty(j)
+                    parameters.CI.PL(iPar,1,k) = interp1(parameters.P(iPar).R(ind([j,j+1])),...
+                        parameters.P(iPar).par(iPar,ind([j,j+1])),exp(-icdf('chi2',alpha(k),1)/2));
                 else
-                    parameters.CI.PL(iPar,[1,2],k) = nan(1,2);
+                    parameters.CI.PL(iPar,1,k) = -inf;
                 end
+                % right bound
+                ind  = find(parameters.P(iPar).par(iPar,:) >= parameters.MS.par(iPar,iMAP));
+                j = find(parameters.P(iPar).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'first');
+                if ~isempty(j)
+                    parameters.CI.PL(iPar,2,k) = interp1(parameters.P(iPar).R(ind([j-1,j])),...
+                        parameters.P(iPar).par(iPar,ind([j-1,j])),exp(-icdf('chi2',alpha(k),1)/2));
+                else
+                    parameters.CI.PL(iPar,2,k) = inf;
+                end
+            else
+                parameters.CI.PL(iPar,[1,2],k) = nan(1,2);
             end
         end
         

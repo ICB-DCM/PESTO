@@ -21,7 +21,7 @@ function [parameters, fh] = getParProfilesByIntegration(parameters, objective_fu
 %  * PestoOptions::options_getNextPoint .guess .min .max .update .mode
 %  * PestoOptions::parameter_index
 %  * PestoOptions::profile_method
-%  * PestoOptions::profileReoptimizationOptions
+%  * PestoOptions::profileOptimizationOptions
 %  * PestoOptions::plot_options
 %  * PestoOptions::R_min
 %  * PestoOptions::save
@@ -492,13 +492,13 @@ function [newY, newL, newGL] = reoptimizePath(theta, iPar, objectiveFunction, bo
     I2 = (iPar+1 : length(theta))';
     I = [I1; I2];
     
-    % options.profileReoptimizationOptions.Display = 'off';
+    % options.profileOptimizationOptions.Display = 'off';
     negLogPostReduced = setObjectiveWrapper(objectiveFunction, options, 'negative log-posterior', iPar, theta(iPar), true, true);
     
-    if (~isfield(options.profileReoptimizationOptions, 'HessFcn') ...
-        || isempty(options.profileReoptimizationOptions.HessFcn))
+    if (~isfield(options.profileOptimizationOptions, 'HessFcn') ...
+        || isempty(options.profileOptimizationOptions.HessFcn))
         % this only works for box-constraints at the moment
-        options.profileReoptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
+        options.profileOptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
     end 
         
     % Optimization
@@ -509,7 +509,7 @@ function [newY, newL, newGL] = reoptimizePath(theta, iPar, objectiveFunction, bo
         [], [],... % linear equality constraints
         borders(I,1),...   % lower bound
         borders(I,2),...   % upper bound
-        [],options.profileReoptimizationOptions);    % options
+        [],options.profileOptimizationOptions);    % options
     newL = -newL;
     newGL = -newGL;
     newHL = -newHL;
@@ -574,10 +574,10 @@ function y = doOptimizationSteps(parameters, thetaFull, objectiveFunction, borde
         % Construction of reduced linear constraints
         [A,b,Aeq,beq] = getConstraints(theta, parameters, I);
         
-        if (~isfield(options.profileReoptimizationOptions, 'HessFcn') ...
-            || isempty(options.profileReoptimizationOptions.HessFcn))
+        if (~isfield(options.profileOptimizationOptions, 'HessFcn') ...
+            || isempty(options.profileOptimizationOptions.HessFcn))
             % this only works for box-constraints at the moment
-            options.profileReoptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
+            options.profileOptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
         end 
         % Optimization
         [theta_I_opt, L, ~, ~, ~, newGL, newHL] = ...
@@ -588,7 +588,7 @@ function y = doOptimizationSteps(parameters, thetaFull, objectiveFunction, borde
             parameters.min(I),...   % lower bound
             parameters.max(I),...   % upper bound
             [],...
-            options.profileReoptimizationOptions);    % options
+            options.profileOptimizationOptions);    % options
         
         % Restore full vector and determine update direction
         logPost = -L;

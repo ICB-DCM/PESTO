@@ -76,7 +76,7 @@ options.property_index = 1:properties.number;
 fh = [];
 switch options.mode
     case 'visual'
-        if isempty(options.fh)
+        if (isempty(options.fh) || ~isvalid(options.fh))
             fh = figure('Name','getPropertySamples');
         else
             fh = figure(options.fh);

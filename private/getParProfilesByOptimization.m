@@ -26,7 +26,7 @@ function [parameters,fh] = getParProfilesByOptimization(parameters, objective_fu
 %  * PestoOptions::options_getNextPoint .guess .min .max .update .mode
 %  * PestoOptions::parameter_index
 %  * PestoOptions::profile_method
-%  * PestoOptions::profileReoptimizationOptions
+%  * PestoOptions::profileOptimizationOptions
 %  * PestoOptions::plot_options
 %  * PestoOptions::R_min
 %  * PestoOptions::save
@@ -254,11 +254,11 @@ function [parameters] = optimizeProfileForParameterI(parameters, objective_funct
             
             % Check, if Hessian should be used and if a Hessian function was set,
             % otherwise use the third output of the objective function instead
-            if (strcmp(options.profileReoptimizationOptions.Hessian, 'on'))
-                if (~isfield(options.profileReoptimizationOptions, 'HessFcn') ...
-                        || isempty(options.profileReoptimizationOptions.HessFcn))
+            if (strcmp(options.profileOptimizationOptions.Hessian, 'on'))
+                if (~isfield(options.profileOptimizationOptions, 'HessFcn') ...
+                        || isempty(options.profileOptimizationOptions.HessFcn))
                     % this only works for box-constraints at the moment
-                    options.profileReoptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
+                    options.profileOptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
                 end
             end
             
@@ -276,13 +276,13 @@ function [parameters] = optimizeProfileForParameterI(parameters, objective_funct
                             Aeq,beq,... % linear equality constraints
                             parameters.min(I),...   % lower bound
                             parameters.max(I),...   % upper bound
-                            [],options.profileReoptimizationOptions);    % options
+                            [],options.profileOptimizationOptions);    % options
                     case 'lsqnonlin'
                         [theta_I_opt] = lsqnonlin(negLogPostReduced,...
                             theta_next(I), ...
                             parameters.min(I),...   % lower bound
                             parameters.max(I),...   % upper bound
-                            options.profileReoptimizationOptions);
+                            options.profileOptimizationOptions);
                         [~, ~, J_opt] = negLogPostReduced(theta_I_opt);
                 end
                 stepCount = stepCount + 1;

@@ -106,7 +106,7 @@ end
 fh = [];
 switch options.mode
     case 'visual'
-        if isempty(options.fh)
+        if (isempty(options.fh) || ~isvalid(options.fh))
             fh = figure('Name','getPropertyProfiles');
         else
             fh = figure(options.fh);

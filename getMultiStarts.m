@@ -108,7 +108,7 @@ end
 fh = [];
 switch options.mode
     case 'visual'
-        if isempty(options.fh)
+        if (isempty(options.fh) || ~isvalid(options.fh))
             fh = figure('Name', 'getMultiStarts');
         else
             fh = figure(options.fh);
@@ -153,6 +153,7 @@ end
 % Correct for fixed parameters
 par0 = par0(freePars,:);
 parameters.MS.n_starts = options.n_starts;
+parameters.MS.par0 = nan(parameters.number,max(options.start_index));
 parameters.MS.par0(freePars,:) = par0(:,options.start_index);
 parameters.MS.par0(options.fixedParameters,:) = options.fixedParameterValues;
 
@@ -385,7 +386,7 @@ if strcmp(options.comp_type,'parallel')
         s_end = strfind(fun.function,'(')-1;
         clear(fun.function(s_start(1):s_end(2)));
     end
-    negLogPost = setObjectiveWrapper(objective_function, options, 'negative log-posterior', [], [], false, false);
+    negLogPost = setObjectiveWrapper(objective_function, options, 'negative log-posterior', [], [], false, true);
     
     % Loop: Mutli-starts
     parfor iMS = options.start_index

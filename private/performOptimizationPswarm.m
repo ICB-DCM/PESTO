@@ -28,10 +28,10 @@ function parameters = performOptimizationPswarm(parameters, negLogPost, iMS, opt
     
     % Assignment of gradient and Hessian
     try
-        [~, G_opt, H_opt] = negLogPost(Results.xbest);
-        parameters.MS.hessian(freePars,freePars,iMS) = -H_opt;
+        [~, G_opt, H_opt] = negLogPost(theta);
+        parameters.MS.hessian(freePars,freePars,iMS) = H_opt;
         parameters.MS.hessian(options.fixedParameters,options.fixedParameters,iMS) = nan;
-        parameters.MS.gradient(freePars,iMS) = -G_opt;
+        parameters.MS.gradient(freePars,iMS) = G_opt;
         parameters.MS.gradient(options.fixedParameters,iMS) = nan;
     catch
         warning('Could not compute Hessian and gradient at optimum after optimization.');

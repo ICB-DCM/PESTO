@@ -61,6 +61,7 @@ parameters.name = {'log_{10}(kdf_Raf)','log_{10}(kp_Raf)','log_{10}(kdp_pMek)',.
 
 objectiveFunction = @(theta) logLikelihoodRME(theta, amiD);
 
+
 %% Running an optimization with fmincon and Hessians
 
 optionsPesto = PestoOptions();
@@ -69,7 +70,6 @@ optionsPesto.mode = 'visual';
 optionsPesto.proposal = 'latin hypercube';
 optionsPesto.trace = false;
 optionsPesto.obj_type = 'log-posterior';
-% optionsPesto.localOptimizer = 'lsqnonlin';
 optionsPesto.localOptimizer = 'fmincon';
 optionsPesto.localOptimizerOptions.Algorithm = 'interior-point';
 optionsPesto.localOptimizerOptions.TolX = 1e-10;
@@ -79,5 +79,13 @@ optionsPesto.localOptimizerOptions.GradObj = 'on';
 optionsPesto.localOptimizerOptions.Hessian = 'on';
 optionsPesto.localOptimizerOptions.MaxFunEvals = 10000;
 optionsPesto.localOptimizerOptions.MaxIter = 1000;
+
+% This example can be run using lsqnonlin as local optimizer
+objectiveFunction = @(theta) logLikelihoodRMELsqnonlin(theta, amiD);
+optionsPesto.localOptimizer = 'lsqnonlin';
+optionsPesto.localOptimizerOptions.Algorithm = 'trust-region-reflective';
+optionsPesto.localOptimizerOptions.GradObj = 'on';
+optionsPesto.localOptimizerOptions.Hessian = 'off';
+optionsPesto.localOptimizerOptions.Jacobian = 'on';
 
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);

@@ -33,13 +33,14 @@
             if (sol.status ~= 0)
                 error('Integration of ODE failed!');
             end
-            
+
             thisRes = (sol.y(:) - amiData(iData).Y(:)) ./ sol.sigmay(:);
-            thisRes_sigma = sqrt(log(2*pi*sol.sigmay(:).^2 - log(eps)));
+            thisRes_sigma = sqrt(log(2*pi*sol.sigmay(:).^2) - log(2*pi*10^(-5)^2));
             nanIndex = isnan(amiData(iData).Y(:));
             thisRes(nanIndex) = 0;
-            thisRes_sigma(nanIndex) = 0;
-            res = res + [thisRes; thisRes_sigma];
+            thisRes_sigma_tmp = thisRes_sigma;
+            thisRes_sigma_tmp(nanIndex) = 0;
+            res = [res; thisRes; thisRes_sigma_tmp];
             
             if (nargout == 2)
                 sres1 = ((1 ./ sol.sigmay(:)) * ones(1,28)) .* reshape(sol.sy, 56, 28);
@@ -47,7 +48,7 @@
                 sres3 = ((1 ./ (thisRes_sigma .* sol.sigmay(:))) * ones(1,28)) .* reshape(sol.ssigmay, 56, 28);
                 thisSRes = [sres1 - sres2; sres3];
                 thisSRes([nanIndex; nanIndex], :) = 0;
-                sres = sres + thisSRes;
+                sres = [sres; thisSRes];
             elseif (nargout == 3)
                 llh = llh + sol.llh;
             end

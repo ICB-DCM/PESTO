@@ -27,7 +27,7 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
 %  * PestoOptions::parameter_index
 %  * PestoOptions::parameter_method_index
 %  * PestoOptions::profile_method
-%  * PestoOptions::profileReoptimizationOptions
+%  * PestoOptions::profileOptimizationOptions
 %  * PestoOptions::plot_options
 %  * PestoOptions::R_min
 %  * PestoOptions::save
@@ -84,9 +84,12 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
     % Check and assign options
     options.P.min = parameters.min;
     options.P.max = parameters.max;
-    if (~isfield(options.profileReoptimizationOptions, 'MaxFunEvals') ...
-                || isempty(options.profileReoptimizationOptions.MaxFunEvals)) 
-        options.profileReoptimizationOptions.MaxFunEvals = 200 * parameters.number;
+    if isempty(options.profileOptimizationOptions)
+        options.profileOptimizationOptions = options.localOptimizerOptions;
+    end
+    if (~isfield(options.profileOptimizationOptions, 'MaxFunEvals') ...
+                || isempty(options.profileOptimizationOptions.MaxFunEvals)) 
+        options.profileOptimizationOptions.MaxFunEvals = 200 * parameters.number;
     end
     if (isempty(options.MAP_index))
         options.MAP_index = 1;
@@ -180,7 +183,7 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
     fh = [];
     switch options.mode
         case 'visual'
-            if isempty(options.fh)
+            if (isempty(options.fh) || ~isvalid(options.fh))
                 fh = figure('Name','getParameterProfiles');
             else
                 fh = figure(options.fh);
@@ -189,7 +192,7 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
             fprintf(' \nProfile likelihood caculation:\n===============================\n');
         case 'silent' % no output
             % Force fmincon to be silent.
-            options.profileReoptimizationOptions.display = 'off';
+            options.profileOptimizationOptions.display = 'off';
     end
 
     %% Initialization of parameter struct

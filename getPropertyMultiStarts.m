@@ -56,7 +56,7 @@ properties = propertySanityCheck(properties);
 fh = [];
 switch options.mode
     case 'visual'
-        if isempty(options.fh)
+        if (isempty(options.fh) || ~isvalid(options.fh))
             fh = figure('Name','getPropertyMultiStarts');
         else
             fh = figure(options.fh);
