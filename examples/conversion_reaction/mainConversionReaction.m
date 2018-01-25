@@ -210,7 +210,6 @@ optionsPesto.MCMC.mode = optionsPesto.mode;
 % PT specific options:
 optionsPesto.MCMC.samplingAlgorithm   = 'PT';
 optionsPesto.MCMC.PT.nTemps           = 1;
-optionsPesto.MCMC.PT.temperatureAdaptionScheme = 'Lacki15'; %'Vousden16'; 
 
 % Initialize the chains by making use of the preceeding multi-start local
 % optimization, all of them starting from the same point

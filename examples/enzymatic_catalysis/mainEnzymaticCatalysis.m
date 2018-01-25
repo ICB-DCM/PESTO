@@ -108,7 +108,6 @@ optionsPesto.MCMC.samplingAlgorithm = 'PT';
 optionsPesto.MCMC.PT.nTemps         = 6;
 optionsPesto.MCMC.PT.exponentT      = 6;    
 optionsPesto.MCMC.PT.regFactor      = 1e-8;
-optionsPesto.MCMC.PT.temperatureAdaptionScheme = 'Lacki15'; %'Vousden16';
 
 % Initialize the chains by choosing a random initial point and a 'large'
 % covariance matrix
