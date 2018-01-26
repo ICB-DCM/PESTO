@@ -1,4 +1,4 @@
-function parameters = performOptimizationCs(parameters, negLogPost, iMS, par0, J_0, options)
+function parameters = performOptimizationCoordinateSearch(parameters, negLogPost, iMS, par0, J_0, options)
 
 
     % Definition of index set of optimized parameters

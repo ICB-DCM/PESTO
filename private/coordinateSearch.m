@@ -1,5 +1,5 @@
 function [ x, fval, exitflag, output ] = coordinateSearch( fun, x0, lb, ub, options )
-% performs a simple coordinate search with random update of search
+% Performs a simple coordinate search with random update of search
 % directions after a failure in improving the current value.
 %
 % Input:
@@ -93,7 +93,6 @@ function [ x, fval, exitflag, output ] = coordinateSearch( fun, x0, lb, ub, opti
             fcur = fun(ycur,jIter);
             funcCount = funcCount + 1;
             % simulate finite differences
-%            surroundingValues = zeros(2*dim,1);
             if (fcur < fbst)
                 ybst = ycur;
                 fbst = fcur;
@@ -106,8 +105,6 @@ function [ x, fval, exitflag, output ] = coordinateSearch( fun, x0, lb, ub, opti
                 break;
             end
             
-%            surroundingValues(jSpinner,1) = fcur;
-            
             % update coordinate index
             if jSpinner == 2*dim
                 jSpinner = 1;
@@ -115,25 +112,6 @@ function [ x, fval, exitflag, output ] = coordinateSearch( fun, x0, lb, ub, opti
                 jSpinner = jSpinner + 1;
             end
         end
-        
-        % apparently bad effects
-%         if (~iterSuccessful)
-%             finiteDifferences = zeros(dim,1);
-%             for j=1:dim
-%                 finiteDifferences(j) = (surroundingValues(j)-surroundingValues(dim+j))/(2*delta);
-%             end
-%             U = step(:,1:dim);
-%             finiteDifferences = transpose(transpose(finiteDifferences)/U);
-%             ycur = ybst - delta*finiteDifferences/norm(finiteDifferences);
-%             fcur = fun(ycur);
-%             funcCount = funcCount + 1;
-%             if (fcur < fbst)
-%                 ybst = ycur;
-%                 fbst = fcur;
-%                 
-%                 %iterSuccessful = true;
-%             end
-%         end
         
         if (~iterSuccessful)
             delta = contractFactor * delta;
