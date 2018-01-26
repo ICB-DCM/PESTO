@@ -42,7 +42,8 @@ end
 %% main part
 
 if ~exist('mexbobyqa', 'file')
-    error('mexbobyqa does not exist. Please compile it first from Fortran.');
+    error(sprintf(['The mexbobyqa file does not exist. Please compile it first\n',...
+		'by running the file compile_mexbobyqa.m in the bobyqa directory.']));
 end
 
 bobyqafun_sfbg = fun;
