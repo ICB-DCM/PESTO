@@ -1,0 +1,41 @@
+MINQ8 bound constrained quadratic optimization
+
+minq8.m         main program
+
+minq8.m calls the following subprograms (directly or indirectly):
+fixbounds.m
+freebounds.m
+minq9fun.m
+qls.m
+redinact.m
+reductionstep.m
+submatrix.m
+subspacestep.m
+
+Test functions from the CUTEr test set:
+biggsb1.m
+chenhark.m
+cvxbqp1.m
+dixon3dq.m
+dqdrtic.m
+harkerp2.m
+ncvxbqp1.m
+ncvxbqp2.m
+ncvxbqp3.m
+pentdi.m
+qudlin.m
+tointqor.m
+tridia.m
+
+runminq8.m      interface to use MINQ8 
+                generates new data and solves the problem, loads from
+                data file or takes one of the above CUTEr functions
+
+minq8sep.m function to solve a separable quadratic program by solving
+its dual program with MINQ8
+
+runminq8sep.m   interface to (generate and) solve a separable quadratic
+                program with minq8sep.m
+feasprob.m      interface to (generate and) solve a feasibility problem
+                special case of separable quadratig  progam
+
