@@ -1,21 +1,28 @@
-function parameters = performOptimizationDhc(parameters, negLogPost, iMS, par0, J_0, options)
-       
+function parameters = performOptimizationRcs(parameters, negLogPost, iMS, par0, J_0, options)
+
+
     % Definition of index set of optimized parameters
     freePars = setdiff(1:parameters.number, options.fixedParameters);
-    optionsDHC = options.localOptimizerOptions;
+    optionsCS.TolX        = options.localOptimizerOptions.TolX;
+    optionsCS.TolFun      = options.localOptimizerOptions.TolFun;
+    optionsCS.MaxIter     = options.localOptimizerOptions.MaxIter;
+	optionsCS.MaxFunEvals = options.localOptimizerOptions.MaxFunEvals;
+	if (isfield(options.localOptimizerOptions,'Barrier') && ~isempty(options.localOptimizerOptions.Barrier))
+		optionsCS.Barrier = options.localOptimizerOptions.Barrier;
+    end
     
     % Set bounds
     x0 = par0(:,iMS);
     lowerBounds = parameters.min;
     upperBounds = parameters.max;
   
-    % run DHC
-    [theta, J_opt, exitflag, output] = optim.dhc.dhc(...
+    % Run CS
+    [theta, J_opt, exitflag, output] = optim.rcs.rcs(...
         negLogPost,...
         x0,...
         lowerBounds(freePars),...
         upperBounds(freePars),...
-        optionsDHC);
+        optionsCS);
     
     % Assignment of results
     parameters.MS.exitflag(iMS)     = exitflag;
@@ -37,6 +44,7 @@ function parameters = performOptimizationDhc(parameters, negLogPost, iMS, par0, 
             warning('options.objOutNumber set to 3, but your objective function can not provide 3 outputs. Please set objOutBuner accordingly!');
         end
     end
+    
     % Assignment of diagnosis
     parameters.MS.n_objfun(iMS)  = output.funcCount;
     parameters.MS.n_iter(iMS)    = output.iterations;

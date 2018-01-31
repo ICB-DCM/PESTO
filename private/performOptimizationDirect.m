@@ -1,29 +1,27 @@
-function parameters = performOptimizationPswarm(parameters, negLogPost, iMS, options)
-
-    % Check if PSwarm is implemented
-    if ~exist('PSwarm', 'file')
-        error('PSwarm not found. This feature requires the "PSwarm" toolbox to be installed. See http://www.norg.uminho.pt/aivaz/pswarm/ for download and installation instructions.');
-    end
+function parameters = performOptimizationDirect(parameters, negLogPost, iMS, options)
     
     % Definition of index set of optimized parameters
     freePars = setdiff(1:parameters.number, options.fixedParameters);
     
-    % Define PSwarm problem
-    problem = struct();
-    problem.ObjFunction= 'funHandleFileNameWrap';
-    problem.LB = parameters.min;
-    problem.UB = parameters.max;
-    problem.A = parameters.constraints.A;
-    problem.b = parameters.constraints.b;
-
-    % Run PSwarm
     objFunHandle = @(theta) negLogPost(theta);
-    [theta,J_opt,RunData] = PSwarm(problem, struct('x', parameters.MS.par0(:,iMS)), options.localOptimizerOptions, objFunHandle);
+    
+    optionsDirect = options.localOptimizerOptions;
+    
+    % Define problem
+    problem = struct();
+    problem.f = objFunHandle;
+    
+    bounds = zeros(parameters.number,2);
+    bounds(:,1) = parameters.min(:);
+    bounds(:,2) = parameters.max(:);
+
+    % Run Direct
+    [J_Opt,theta,history] = optim.direct.direct(problem,bounds,optionsDirect);
 
     % Assignment of results
     parameters.MS.exitflag(iMS) = nan;
     parameters.MS.logPost0(iMS) = nan;      % algorithm does not use J_0
-    parameters.MS.logPost(iMS) = -J_opt;
+    parameters.MS.logPost(iMS) = -J_Opt;
     parameters.MS.par(:,iMS) = theta;
     
     % Assignment of gradient and Hessian
@@ -41,13 +39,13 @@ function parameters = performOptimizationPswarm(parameters, negLogPost, iMS, opt
     end
     
     % Assignment of diagnosis
-    parameters.MS.n_objfun(iMS) = RunData.ObjFunCounter;
-    parameters.MS.n_iter(iMS) = RunData.IterCounter;
+    parameters.MS.n_objfun(iMS) = size(history,1);
+    parameters.MS.n_iter(iMS) = history(end,2);
     
     % Assignment of AIC and BIC
-    parameters.MS.AIC(iMS) = 2*length(freePars) + 2*J_opt;
+    parameters.MS.AIC(iMS) = 2*length(freePars) + 2*J_Opt;
     if ~isempty(options.nDatapoints)
-        parameters.MS.BIC(iMS) = log(options.nDatapoints)*length(freePars) + 2*J_opt;
+        parameters.MS.BIC(iMS) = log(options.nDatapoints)*length(freePars) + 2*J_Opt;
     end
                         
 end

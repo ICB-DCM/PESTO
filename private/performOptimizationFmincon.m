@@ -56,7 +56,7 @@ function parameters = performOptimizationFmincon(parameters, negLogPost, iMS, pa
     parameters.MS.hessian(freePars,freePars,iMS) = full(hessian_opt);
     parameters.MS.hessian(options.fixedParameters,options.fixedParameters,iMS) = nan;
     
-    % Assignment of disgnosis
+    % Assignment of diagnosis
     parameters.MS.n_objfun(iMS) = results_fmincon.funcCount;
     parameters.MS.n_iter(iMS) = results_fmincon.iterations;
     

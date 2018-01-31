@@ -9,7 +9,7 @@ function parameters = performOptimizationMeigo(parameters, negLogPost, iMS, opti
     freePars = setdiff(1:parameters.number, options.fixedParameters);
     
     % Define MEIGO problem
-    problem.f = 'meigoDummy';
+    problem.f = 'funHandleFileNameWrap';
     problem.x_L = parameters.min;
     problem.x_U = parameters.max;
     problem.x_0 = parameters.MS.par0(:,iMS);

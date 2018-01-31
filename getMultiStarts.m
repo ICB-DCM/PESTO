@@ -294,22 +294,37 @@ if strcmp(options.comp_type, 'sequential')
                         parameters = performOptimizationPswarm(parameters, negLogPost, iMS, options);
 
                     case 'lsqnonlin'
-                        % Optimization using dynamic hill climbin as local optimizer
+                        % Use lsqnonlin as local optimizer
                         parameters = performOptimizationLsqnonlin(parameters, negLogPost, iMS, par0, J_0, options);
 
-                    case 'cs'
-                        % Optimization using randomized coordinate search as local optimizer
-                        parameters = performOptimizationCoordinateSearch(parameters, negLogPost, iMS, par0, J_0, options);
+                    case 'rcs'
+                        % Use randomized coordinate search as local
+                        % optimizer
+                        parameters = performOptimizationRcs(parameters, negLogPost, iMS, par0, J_0, options);
 
                     case 'dhc'
-                        % Optimization using dynamic hill climbing as local optimizer
+                        % Use dynamic hill climbing as local optimizer
                         parameters = performOptimizationDhc(parameters, negLogPost, iMS, par0, J_0, options);
 
                     case 'bobyqa'
-                        % Optimization using bobya as local optimizer
+                        % Use bobyqa as local optimizer
                         parameters = performOptimizationBobyqa(parameters, negLogPost, iMS, par0, J_0, options);
+                        
+                    case 'mcs'
+                        % Perform a multivariate coordinate search
+                        parameters = performOptimizationMcs(parameters, negLogPost, iMS, options);
+                        
+                    case 'cmaes'
+                        % Perform a covariance-matrix adaptation
+                        % evolutionary search
+                        parameters = performOptimizationCmaes(parameters, negLogPost, iMS, par0, J_0, options);
+                        
+                    case 'direct'
+                        % Perform optimization using dividing rectangles
+                        parameters = performOptimizationDirect(parameters, negLogPost, iMS, options);
+                        
                 end
-            catch
+            catch 
             end
             
         end

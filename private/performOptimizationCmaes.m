@@ -1,44 +1,34 @@
-function parameters = performOptimizationMcs(parameters, negLogPost, iMS, options)
-
-    if ~exist('mcs.m','file')
-        error('mcs.m must be installed and added to the matlab path');
-    end
+function parameters = performOptimizationCmaes(parameters, negLogPost, iMS, par0, J_0, options)
 
     % Definition of index set of optimized parameters
     freePars = setdiff(1:parameters.number, options.fixedParameters);
     
-    optionsMcs = options.localOptimizerOptions;
+    optionsCmaes = options.localOptimizerOptions;
     
-	fcn = 'mcsFunHandleWrap';
-	
-    if isfield(optionsMcs,'printLevel')
-        printLevel = optionsMcs.printLevel;
-    else
-        printLevel = 0;
-    end
-    if isfield(optionsMcs,'smax')
-        smax = optionsMcs.smax;
-    else
-        smax = 5*parameters.number+10;
-    end
-    if isfield(optionsMcs,'maxFunEvals')
-        maxFunEvals = optionMcs.maxFunEvals;
-    elseif isfield(optionsMcs,'MaxFunEvals')
-        maxFunEvals = optionsMcs.MaxFunEvals;
-    else
-        maxFunEvals = 50*parameters.number^2;
-    end
-    
+	funName = 'funHandleFileNameWrap';
+    x0 = par0(:,iMS);
     objfun = @(x) negLogPost(x');
+    
+    if ~isfield(optionsCmaes,'LBounds')
+        optionsCmaes.LBounds = parameters.min;
+    end
+    if ~isfield(optionsCmaes,'UBounds')
+        optionsCmaes.UBounds = parameters.max;
+    end
+    if isfield(optionsCmaes,'insigma')
+        insigma = optionsCmaes.insigma;
+    else
+        insigma = [];
+    end
 
-	[x,fval,~,~,ncall,~,flag] = mcs(fcn,objfun,parameters.min,parameters.max,printLevel,smax,maxFunEvals);
+	[x,fval,counteval,stopflag] = optim.cmaes.cmaes(funName,x0,insigma,optionsCmaes,objfun);
 	
     %TODO
     % parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
     % parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
 
-    parameters.MS.exitflag(iMS) = flag;
-    parameters.MS.logPost0(iMS) = nan;      % algorithm does not use J_0
+    parameters.MS.exitflag(iMS) = stopflag;
+    parameters.MS.logPost0(iMS) = -J_0;      % algorithm does not use J_0
     parameters.MS.logPost(iMS) = -fval;
     parameters.MS.par(:,iMS) = x;
     
@@ -57,15 +47,13 @@ function parameters = performOptimizationMcs(parameters, negLogPost, iMS, option
     end
     
     % Assignment of diagnosis
-    parameters.MS.n_objfun(iMS) = ncall;
-    parameters.MS.n_iter(iMS) = ncall;
+    parameters.MS.n_objfun(iMS) = counteval;
+    parameters.MS.n_iter(iMS) = counteval;
     
     % Assignment of AIC and BIC
     parameters.MS.AIC(iMS) = 2*length(freePars) + 2*fval;
     if ~isempty(options.nDatapoints)
         parameters.MS.BIC(iMS) = log(options.nDatapoints)*length(freePars) + 2*fval;
     end
-
-
 
 end
