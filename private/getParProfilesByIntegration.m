@@ -726,10 +726,10 @@ end
 
 
 
-function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, negLogPost, parameterFunction, options)
+function [dPar_dc, flag, new_Data] = getRhsRed(~, direction, par, ind, borders, negLogPost, ~, options)
     
     % set parameters
-    nPar = length(y);
+    nPar = length(par);
     flag = 0;
     
     global ObjFuncCounter;
@@ -737,97 +737,92 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, negLogPost, pa
     
     switch options.solver.hessian
         case 'user-supplied'
-            [~, GL, HL] = negLogPost(y);
+            [~, gradLLH, hessLLH] = negLogPost(par);
         case {'bfgs', 'sr1', 'dfp'}
-            [~, GL] = negLogPost(y);
-            HL = approximateHessian(y, -GL, [], options.solver.hessian, 'read');
+            [~, gradLLH] = negLogPost(par);
+            hessLLH = approximateHessian(par, -gradLLH, [], options.solver.hessian, 'read');
         otherwise
             error('Unknown type of Hessian computation.');
     end
     
-    if (sum(sum(isnan(HL)))>0) || sum(isnan(GL))>0 || (sum(sum(isinf(HL)))>0) || sum(isinf(GL))>0
+    if (sum(sum(isnan(hessLLH)))>0) || sum(isnan(gradLLH))>0 || (sum(sum(isinf(hessLLH)))>0) || sum(isinf(gradLLH))>0
         disp('Warning: Undefined model output')
         flag = -1;
-        dth = nan(size(y));
+        dPar_dc = nan(size(par));
         new_Data = [];
         return;
     end
 
-    % calculate hessian of parameter function
-    [~, GG, ~] = parameterFunction(y, ind);
-
     % right handside of ODE
     try    
         % Reduce linear system by implicit funtion theorem
-        A = HL;
-        A(:,ind) = [];
-        A(ind,:) = [];
-        b = -s * HL(:,ind) - options.solver.gamma * GL;
-        b(ind) = [];
+        lhsMatrix = hessLLH;
+        lhsMatrix(:,ind) = [];
+        lhsMatrix(ind,:) = [];
+        rhsVector = -direction * hessLLH(:,ind) - options.solver.gamma * gradLLH;
+        rhsVector(ind) = [];
         
         % Check for invertibility of the RHS
-        if (rcond(A) < options.solver.minCond) || isnan(rcond(A))
-            dth = pinv(A, options.solver.eps) * b;
+        if (rcond(lhsMatrix) < options.solver.minCond) || isnan(rcond(lhsMatrix))
+            dPar_dc = pinv(lhsMatrix, options.solver.eps) * rhsVector;
         else
-            dth = A \ b;
+            dPar_dc = lhsMatrix \ rhsVector;
         end
-        dth = [dth(1:ind-1); s; dth(ind:end)];
+        dPar_dc = [dPar_dc(1:ind-1); direction; dPar_dc(ind:end)];
     catch
-        dth = zeros(nPar, 1);
-        dth(ind) = s;
+        dPar_dc = zeros(nPar, 1);
+        dPar_dc(ind) = direction;
     end
     
     % Check, if parameter bounds are violated
-    lRebuild = 0;
+    rebuildSystem = 0;
     parDown = [];
     parUp = [];
     for iPar = 1 : nPar
         if (iPar ~= ind)
-            if (y(iPar) <= borders(iPar, 1) + options.solver.RelTol)
-                if(dth(iPar) < 0)
-                    GL(iPar) = 0;
-                    HL(iPar,:) = 0;
-                    HL(:,iPar) = 0;
-                    HL(iPar,iPar) = -1;
-                    lRebuild = 1;
+            if (par(iPar) <= borders(iPar, 1) + options.solver.RelTol)
+                if(dPar_dc(iPar) < 0)
+                    gradLLH(iPar) = 0;
+                    hessLLH(iPar,:) = 0;
+                    hessLLH(:,iPar) = 0;
+                    hessLLH(iPar,iPar) = -1;
+                    rebuildSystem = 1;
                     parUp = [parUp, iPar];
                 end
-            elseif (y(iPar) >= borders(iPar, 2) - options.solver.RelTol)
-                if(dth(iPar) > 0)
-                    GL(iPar) = 0;
-                    HL(iPar,:) = 0;
-                    HL(:,iPar) = 0;
-                    HL(iPar,iPar) = -1;
-                    lRebuild = 1;
+            elseif (par(iPar) >= borders(iPar, 2) - options.solver.RelTol)
+                if(dPar_dc(iPar) > 0)
+                    gradLLH(iPar) = 0;
+                    hessLLH(iPar,:) = 0;
+                    hessLLH(:,iPar) = 0;
+                    hessLLH(iPar,iPar) = -1;
+                    rebuildSystem = 1;
                     parDown = [parDown, iPar];
                 end
             end
         end
     end
     
-    if (lRebuild == 1)
+    if (rebuildSystem == 1)
         try    
             % Reduce linear system by implicit funtion theorem
-            A = HL;
-            A(:,ind) = [];
-            A(ind,:) = [];
-            b = -s * HL(:,ind) - options.solver.gamma * GL;
-            b(ind) = [];
+            lhsMatrix = hessLLH;
+            lhsMatrix(:,ind) = [];
+            lhsMatrix(ind,:) = [];
+            rhsVector = -direction * hessLLH(:,ind) - options.solver.gamma * gradLLH;
+            rhsVector(ind) = [];
 
             % Check for invertibility of the RHS
-            if (rcond(A) < options.solver.minCond) || isnan(rcond(A))
-                dth = pinv(A, options.solver.eps) * b;
+            if (rcond(lhsMatrix) < options.solver.minCond) || isnan(rcond(lhsMatrix))
+                dPar_dc = pinv(lhsMatrix, options.solver.eps) * rhsVector;
             else
-                dth = A \ b;
+                dPar_dc = lhsMatrix \ rhsVector;
             end
-            dth = [dth(1:ind-1); s; dth(ind:end)];
+            dPar_dc = [dPar_dc(1:ind-1); direction; dPar_dc(ind:end)];
         catch ME
-            dth = zeros(nPar, 1);
-            dth(ind) = s;
+            dPar_dc = zeros(nPar, 1);
+            dPar_dc(ind) = direction;
         end
     end
-%     dth(parDown) = -0.1;
-%     dth(parUp) = 0.1;
     new_Data = [];
 end
 
