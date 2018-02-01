@@ -298,8 +298,8 @@ if strcmp(options.comp_type, 'sequential')
                         parameters = performOptimizationLsqnonlin(parameters, negLogPost, iMS, par0, J_0, options);
 
                     case 'cs'
-                        % Optimization using coordinate search as local optimizer
-                        parameters = performOptimizationCs(parameters, negLogPost, iMS, par0, J_0, options);
+                        % Optimization using randomized coordinate search as local optimizer
+                        parameters = performOptimizationCoordinateSearch(parameters, negLogPost, iMS, par0, J_0, options);
 
                     case 'dhc'
                         % Optimization using dynamic hill climbing as local optimizer
