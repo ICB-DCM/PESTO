@@ -1,14 +1,14 @@
 function varargout = logLikelihoodJakstatLsqnonlin(theta, amiData)
-% Objective function for examples/jakstat_signaling
+% Objective function for examples/rafmekerk_signaling
 %
-% logLikelihoodJakstat.m provides the log-likelihood, its gradient and an 
-% the Hessian matrix for the model for the JakStat signaling pathway as
-% defined in jakstat_pesto_syms.m
+% logLikelihoodJakstatLsqnonlin.m provides the residuals, their Jacobian 
+% and the log-likelihood for the model for the JakStat signaling pathway 
+% as defined in jakstat_pesto_syms.m
 % 
 % USAGE:
-% [llh] = getParameterProfiles(theta, amiData)
-% [llh, sllh] = getParameterProfiles(theta, amiData)
-% [llh, sllh, s2llh] = getParameterProfiles(theta, amiData)
+% [res] = logLikelihoodJakstatLsqnonlin(theta, amiData)
+% [res, sres] = logLikelihoodJakstatLsqnonlin(theta, amiData)
+% [res, ~, llh] = logLikelihoodJakstatLsqnonlin(theta, amiData)
 %
 % Parameters:
 %  theta: Model parameters 
@@ -16,13 +16,11 @@ function varargout = logLikelihoodJakstatLsqnonlin(theta, amiData)
 %
 % Return values:
 %   varargout:
+%     res: residuals of simulation vs data
+%     sres: Jacobian of the residuals, i.e. partial derivatives of the
+%         residuals w.r.t. to model parameters
 %     llh: Log-Likelihood, only the LogLikelihood will be returned, no 
 %         sensitivity analysis is performed
-%     sllh: Gradient of llh, The LogLikelihood and its gradient will be 
-%         returned, first order adjoint sensitivity analysis is performed
-%     s2llh: Hessian of llh, The LogLikelihood, its gradient and the 
-%         Hessian matrix will be returned, second order adjoint sensitivity 
-%         analysis is performed
 
 
 
@@ -59,8 +57,9 @@ function varargout = logLikelihoodJakstatLsqnonlin(theta, amiData)
     res = (sol.y(:) - amiData.Y(:)) ./ sol.sigmay(:);
     res(nanIndex) = 0;
     res_sigma = sqrt(log(2*pi*sol.sigmay(:).^2) - log(2*pi*10^(-5)^2));
-    res_sigma(nanIndex) = 0;
-    varargout{1} = [res; res_sigma];
+    res_sigma_tmp = res_sigma;
+    res_sigma_tmp(nanIndex) = 0;
+    varargout{1} = [res; res_sigma_tmp];
     
     if (nargout == 2)
         sres1 = ((1 ./ sol.sigmay(:)) * ones(1,nPar)) .* reshape(sol.sy, nTime*nObs, nPar);

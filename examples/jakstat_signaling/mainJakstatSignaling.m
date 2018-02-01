@@ -108,9 +108,9 @@ optionsPesto.mode     = 'visual';
 % REMARK: The optimization in this case is rather challenging and the
 % box constraints in the parameter space are set generously. So
 % optimization will encounter many points in which the ODE can not be
-% evaluated, leading to warnings of the ODE simulator AMICI. This is normal
-% and not a bug. It just shows how paramter estimation can look like in
-% complicated situations.
+% evaluated, leading to warnings of the ODE simulator AMICI. This is
+% expected behavior and no bug. It demonstrates paramter estimation for
+% a complicated example.
 
 % Different parameter optimization methods are compared with each other.
 % The uncommented version is a simple multi-start local optimization.
