@@ -3,7 +3,6 @@
 *.mexa64
 *.mexw64
 *.mexmaci64
-*.mexw64
 *.mexw32
 *.o
 *.out
@@ -15,6 +14,3 @@ doc/config/mtocpp_filter.sh
 DRAMToolbox
 *.asv
 examples/RAmPART_examples/results
-examples/Pom1p_gradient_formation/Models/simu*
-examples/jakstat_signaling/simu*
-examples/rafmekerk_signaling/simu*
