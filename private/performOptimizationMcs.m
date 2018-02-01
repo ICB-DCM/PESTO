@@ -1,7 +1,7 @@
 function parameters = performOptimizationMcs(parameters, negLogPost, iMS, options)
 
     if ~exist('mcs.m','file')
-        error('mcs.m must be installed and added to the matlab path');
+        error('The mcs solver must be installed and added to the matlab path');
     end
 
     % Definition of index set of optimized parameters

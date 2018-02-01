@@ -138,7 +138,7 @@ function [ x, fval, exitflag, output ] = rcs( fun, x0, lb, ub, options )
     
     output.funcCount    = funcCount;
     output.iterations   = jIter;
-    output.algorithm    = 'Coordinate Search';
+    output.algorithm    = 'Randomized Coordinate Search';
     output.t_cpu        = cputime - starttime;
     
     % finalize output
@@ -159,55 +159,55 @@ end
 function [tolX,tolFun,maxIter,maxFunEvals,outputFcn,delta,expandFactor,contractFactor,barrier] = f_extractOptions(options,dim)
 % interpret options
 
-    if (isfield(options,'TolX'))
+    if isfield(options,'TolX') && ~isempty(options.TolX)
         tolX    = options.TolX;
     else
         tolX    = 1e-6;
     end
     
-    if (isfield(options,'TolFun'))
+    if isfield(options,'TolFun') && ~isempty(options.TolFun)
         tolFun  = options.TolFun;
     else
         tolFun  = 1e-6;
     end
     
-    if (isfield(options,'MaxIter'))
+    if isfield(options,'MaxIter') && ~isempty(options.MaxIter)
         maxIter = options.MaxIter;
     else
         maxIter = 200*dim;
     end
     
-    if (isfield(options,'MaxFunEvals'))
+    if isfield(options,'MaxFunEvals') && ~isempty(options.MaxFunEvals)
         maxFunEvals = options.MaxFunEvals;
     else
         maxFunEvals = 400*dim;
     end
     
-    if (isfield(options,'OutputFcn'))
+    if isfield(options,'OutputFcn') && ~isempty(options.OutputFcn)
         outputFcn = options.OutputFcn;
     else
         outputFcn = nan;
     end
     
-    if (isfield(options,'Delta'))
+    if isfield(options,'Delta') && ~isempty(options.Delta)
         delta          = options.Delta; % mesh size
     else
         delta          = 0.05;
     end
     
-    if (isfield(options,'ExpandFactor'))
+    if isfield(options,'ExpandFactor') && ~isempty(options.ExpandFactor)
         expandFactor   = options.ExpandFactor;
     else
         expandFactor   = 3.5;
     end
     
-    if (isfield(options,'ContractFactor'))
+    if isfield(options,'ContractFactor') && ~isempty(options.ContractFactor)
         contractFactor = options.ContractFactor;
     else
         contractFactor = 0.35;
     end
     
-    if (isfield(options,'Barrier'))
+    if isfield(options,'Barrier') && ~isempty(options.Barrier)
         barrier        = options.Barrier;
     else
         barrier        = '';

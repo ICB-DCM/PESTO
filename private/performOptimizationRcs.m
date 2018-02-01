@@ -3,13 +3,7 @@ function parameters = performOptimizationRcs(parameters, negLogPost, iMS, par0, 
 
     % Definition of index set of optimized parameters
     freePars = setdiff(1:parameters.number, options.fixedParameters);
-    optionsCS.TolX        = options.localOptimizerOptions.TolX;
-    optionsCS.TolFun      = options.localOptimizerOptions.TolFun;
-    optionsCS.MaxIter     = options.localOptimizerOptions.MaxIter;
-	optionsCS.MaxFunEvals = options.localOptimizerOptions.MaxFunEvals;
-	if (isfield(options.localOptimizerOptions,'Barrier') && ~isempty(options.localOptimizerOptions.Barrier))
-		optionsCS.Barrier = options.localOptimizerOptions.Barrier;
-    end
+    optionsRCS = options.localOptimizerOptions;
     
     % Set bounds
     x0 = par0(:,iMS);
@@ -22,7 +16,7 @@ function parameters = performOptimizationRcs(parameters, negLogPost, iMS, par0, 
         x0,...
         lowerBounds(freePars),...
         upperBounds(freePars),...
-        optionsCS);
+        optionsRCS);
     
     % Assignment of results
     parameters.MS.exitflag(iMS)     = exitflag;

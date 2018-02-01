@@ -268,7 +268,7 @@ if strcmp(options.comp_type, 'sequential')
             end
             parameters.MS.logPost0(iMS) = -sum(J_0);
             J_0 = sum(J_0);
-        elseif (any(strcmp(options.localOptimizer, {'dhc','cs','bobyqa'})))
+        elseif (any(strcmp(options.localOptimizer, {'cmaes','bobyqa','dhc','rcs'})))
             J_0 = negLogPost(par0(:,iMS));
         else
             J_0 = [];
@@ -324,7 +324,8 @@ if strcmp(options.comp_type, 'sequential')
                         parameters = performOptimizationDirect(parameters, negLogPost, iMS, options);
                         
                 end
-            catch 
+            catch E
+                rethrow(E);
             end
             
         end

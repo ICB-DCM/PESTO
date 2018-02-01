@@ -1,7 +1,7 @@
 % simulate_jakstat_pesto.m is the matlab interface to the cvodes mex
 %   which simulates the ordinary differential equation and respective
 %   sensitivities according to user specifications.
-%   this routine was generated using AMICI commit f2d86cf027e2f2bb7415ed72025acc6a13c80406 in branch master in repo https://github.com/ICB-DCM/AMICI.
+%   this routine was generated using AMICI commit 53032d67dfa9b9e400f9ec131a444f83f646a6a7 in branch master in repo https://github.com/icb-dcm/amici.
 %
 % USAGE:
 % ======
