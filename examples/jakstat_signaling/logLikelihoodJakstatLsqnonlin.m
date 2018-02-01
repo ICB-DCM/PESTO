@@ -33,34 +33,41 @@ function varargout = logLikelihoodJakstatLsqnonlin(theta, amiData)
 % papers on the JakStat signaling pathway by Swameye et al. and Schelker et
 % al.
 
+    nPar = 17;
+    nTime = 16;
+    nObs = 3;
+    
     %% AMICI
     % Setting the options for the AMICI solver
-
     amiOptions = amioption();
     amiOptions.rtol = 1e-9;
     amiOptions.atol = 1e-12;
     amiOptions.sensi_meth = 'forward';
-    
     if (nargout == 2)
+        % If sensitivities are requested
         amiOptions.sensi = 1;
     else
+        % If only residuals or the likelihood is requested
         amiOptions.sensi = 0;
     end
-    sol = simulate_jakstat_pesto([], theta, amiData.condition, amiData, amiOptions);
+    
+    % Run simulation
+    sol = simulate_jakstat_pesto(amiData.t, theta, amiData.condition, amiData, amiOptions);
     
     % Set residuals
+    nanIndex = isnan(amiData.Y(:));
     res = (sol.y(:) - amiData.Y(:)) ./ sol.sigmay(:);
+    res(nanIndex) = 0;
     res_sigma = sqrt(log(2*pi*sol.sigmay(:).^2) - log(2*pi*10^(-5)^2));
-    res([1 48]) = 0;
-    res_sigma([1 48]) = 0;
+    res_sigma(nanIndex) = 0;
     varargout{1} = [res; res_sigma];
     
     if (nargout == 2)
-        sres1 = ((1 ./ sol.sigmay(:)) * ones(1,17)) .* reshape(sol.sy, 16*3, 17);
-        sres2 = (((sol.y(:) - amiData.Y(:)) ./ sol.sigmay(:).^2) * ones(1,17)) .* reshape(sol.ssigmay, 16*3, 17);
-        sres3 = ((1 ./ (res_sigma .* sol.sigmay(:))) * ones(1,17)) .* reshape(sol.ssigmay, 16*3, 17);
+        sres1 = ((1 ./ sol.sigmay(:)) * ones(1,nPar)) .* reshape(sol.sy, nTime*nObs, nPar);
+        sres2 = (((sol.y(:) - amiData.Y(:)) ./ sol.sigmay(:).^2) * ones(1,nPar)) .* reshape(sol.ssigmay, nTime*nObs, nPar);
+        sres3 = ((1 ./ (res_sigma .* sol.sigmay(:))) * ones(1,nPar)) .* reshape(sol.ssigmay, nTime*nObs, nPar);
         sres = [sres1 - sres2; sres3];
-        sres([1 48 49 96], :) = 0;
+        sres([nanIndex; nanIndex], :) = 0;
         varargout{2} = sres;
     elseif (nargout == 3)
         varargout{2} = [];
