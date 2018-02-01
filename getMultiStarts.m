@@ -207,7 +207,7 @@ waitbarFields3 = {'hessian', 'par_trace'};
 if strcmp(options.comp_type, 'sequential')
     
     % Matlab parallel toolbox seems to have problems with our outfun...
-    if (strcmp(options.localOptimizer, 'fmincon') || strcmp(options.localOptimizer, 'lsqnonlin'))
+    if isfield(options.localOptimizerOptions, 'OutputFcn')
         options.localOptimizerOptions.OutputFcn = @outfun_fmincon;
     end
     
