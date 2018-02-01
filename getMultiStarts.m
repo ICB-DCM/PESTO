@@ -75,16 +75,7 @@ function [parameters,fh] = getMultiStarts(parameters, objective_function, vararg
 %         (if options.trace == true)
 %     * time_trace(:,i): computation time trace for ith MAP
 %         (if options.trace == true)
-%
-% History:
-% * 2012/05/31 Jan Hasenauer
-% * 2012/07/11 Jan Hasenauer
-% * 2014/06/11 Jan Hasenauer
-% * 2015/07/28 Fabian Froehlich
-% * 2015/11/10 Fabian Froehlich
-% * 2016/06/07 Paul Stapor
-% * 2016/10/04 Daniel Weindl
-% * 2016/12/04 Paul Stapor
+
 
 global error_count
 
