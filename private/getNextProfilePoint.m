@@ -122,6 +122,6 @@ function J = objWrap(theta, objFun, optimizer)
     elseif strcmp(optimizer, 'lsqnonlin')
         [~, ~, J] = objFun(theta);
     else
-        error('Unknown optimzer forprofile calculation!');
+        error('Unknown optimzer for profile calculation!');
     end
 end
