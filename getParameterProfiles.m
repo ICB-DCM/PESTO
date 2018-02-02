@@ -179,13 +179,13 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
             case 'mixed'
                 if strcmp(options.comp_type,'sequential')
                     for j = options.parameter_index
-                        currentOptions = options;
+                        tempOptions = options;
                         if sum(j == options.profile_integ_index) == 1
-                            currentOptions.profile_integ_index = j;
-                            [parameters, fh] = getParProfilesByIntegration(parameters, objective_function, currentOptions, fh);
+                            tempOptions.profile_integ_index = j;
+                            [parameters, fh] = getParProfilesByIntegration(parameters, objective_function, tempOptions, fh);
                         elseif sum(j == options.profile_integ_index) == 0
-                            currentOptions.profile_optim_index = j;
-                            [parameters, fh] = getParProfilesByOptimization(parameters, objective_function, currentOptions, fh);
+                            tempOptions.profile_optim_index = j;
+                            [parameters, fh] = getParProfilesByOptimization(parameters, objective_function, tempOptions, fh);
                         else
                             error('Some really strange error for the profile calculation indices occured');
                         end
@@ -193,13 +193,13 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
 
                 elseif strcmp(options.comp_type,'parallel')
                     parfor j = options.parameter_index
-                        currentOptions = options;
+                        tempOptions = options;
                         if sum(j == options.profile_integ_index) == 1
-                            currentOptions.profile_integ_index = j;
-                            getParProfilesByIntegration(parameters, objective_function, currentOptions, fh);
+                            tempOptions.profile_integ_index = j;
+                            getParProfilesByIntegration(parameters, objective_function, tempOptions, fh);
                         elseif sum(j == options.profile_integ_index) == 0
-                            currentOptions.profile_optim_index = j;
-                            getParProfilesByOptimization(parameters, objective_function, currentOptions, fh);
+                            tempOptions.profile_optim_index = j;
+                            getParProfilesByOptimization(parameters, objective_function, tempOptions, fh);
                         else
                             error('Some really strange error for the profile calculation indices occured');
                         end
