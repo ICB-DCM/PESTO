@@ -95,6 +95,11 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
         options.MAP_index = 1;
     end
 
+    % Check for emptiness of options
+    if isempty(union(union(options.profile_optim_index, options.profile_integ_index), options.parameter_index))
+        options.parameter_index = 1 : parameters.number;
+    end
+    
     % Process, which profiles should be computed in which manner
     if strcmp(options.profile_method, 'default')
         if (isempty(options.profile_optim_index) && isempty(options.profile_integ_index))
@@ -106,77 +111,31 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
         elseif (~isempty(options.profile_optim_index) && ~isempty(options.profile_integ_index))
             options.profile_method = 'mixed';
         end
-    end    
-    if isempty(options.parameter_index)
-        switch options.profile_method
-            case 'optimization'
-                if isempty(options.profile_optim_index)
-                    options.profile_optim_index = 1:parameters.number;
-                end
-                if ~isempty(options.profile_integ_index)
-                    error('Some profiles seem to be computed twice. Please redefine consistent options!');
-                end
-
-            case 'integration'
-                if isempty(options.profile_integ_index)
-                    options.profile_integ_index = 1:parameters.number;
-                end
-                if ~isempty(options.profile_optim_index)
-                    error('Some profiles seem to be computed twice. Please redefine consistent options!');
-                end
-
-            case 'mixed'
-                if (isempty(options.profile_optim_index) && isempty(options.profile_integ_index))
-                    warning('You specified profile computation method to be "mixed", but did not specify the precise method. Doing optimization for all profiles now!');
-                    options.profile_method = 'optimization';
-                    options.profile_optim_index = 1:parameters.number;
-                end
-                if length(unique([options.profile_optim_index options.profile_integ_index])) < length([options.profile_optim_index options.profile_integ_index])
-                    error('Some profiles seem to be computed twice. Please redefine consistent options!');
-                end
-
-            otherwise
-                error('Unknown profile computationg method');
-        end
-        options.parameter_index = sort(unique([options.profile_optim_index options.profile_integ_index]));
-    else
-        switch options.profile_method
-            case 'optimization'
-                options.profile_optim_index = options.parameter_index;
-                if ~isempty(options.profile_integ_index)
-                    error('Some profiles seem to be computed twice. Please redefine consistent options!');
-                end
-
-            case 'integration'
-                options.profile_integ_index = options.parameter_index;
-                if ~isempty(options.profile_optim_index)
-                    error('Some profiles seem to be computed twice. Please redefine consistent options!');
-                end
-
-            case 'mixed'
-                if (length(unique([options.profile_optim_index, options.profile_integ_index])) ~= length([options.profile_optim_index, options.profile_integ_index])) ...
-                        || (length([options.profile_optim_index, options.profile_integ_index]) ~= length(options.parameter_index))
-                    error('Inconsistent settings for indices in profile calculation.');
-                end
-                options.parameter_index = sort(unique([options.profile_optim_index options.profile_integ_index]));
-
-            otherwise
-                error('Unknown profile computationg method');
-        end
+    end
+    
+    switch options.profile_method  
+        case 'optimization'
+            options.parameter_index = union(options.profile_optim_index, options.parameter_index);
+            options.profile_optim_index = options.parameter_index;
+            
+        case 'integration'
+            options.parameter_index = union(options.profile_integ_index, options.parameter_index);
+            options.profile_integ_index = options.parameter_index;
+            
+        case 'mixed'
+            % If profiles are to be computed in a mixed manner, the correpsonding
+            % indices must be set properly
+            options.parameter_index = union(options.profile_optim_index, options.profile_integ_index);
+            
+        otherwise
+                error('Unknown profile computationg method. Please choose optimization, integration, mixed, or default');
     end
     
     % Check that parameters for which profiles are computed are not fixed
-    if ~isempty(options.profile_optim_index)
-        if ~isempty(setdiff(options.fixedParameters,options.profile_optim_index))
-            options.profile_optim_index = setdiff(options.profile_optim_index,options.fixedParameters);
-            warning('Fixed parameters are removed from options.profile_optim_index.');
-        end
-    end
-    if ~isempty(options.profile_integ_index)
-        if ~isempty(setdiff(options.fixedParameters,options.profile_integ_index))
-            options.profile_integ_index = setdiff(options.profile_integ_index,options.fixedParameters);
-            warning('Fixed parameters are removed from options.profile_integ_index.');
-        end
+    if any(ismember(options.parameter_index, options.fixedParameters))
+        options.profile_optim_index = setdiff(options.profile_optim_index, options.fixedParameters);
+        options.profile_integ_index = setdiff(options.profile_integ_index, options.fixedParameters);
+        warning('Profiles will not be computed for fixed parameters!');
     end
 
     %% Initialization and figure generation
@@ -220,7 +179,7 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
             case 'mixed'
                 if strcmp(options.comp_type,'sequential')
                     for j = options.parameter_index
-                        currentOptions = options.copy();
+                        currentOptions = options;
                         if sum(j == options.profile_integ_index) == 1
                             currentOptions.profile_integ_index = j;
                             [parameters, fh] = getParProfilesByIntegration(parameters, objective_function, currentOptions, fh);
@@ -234,7 +193,7 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
 
                 elseif strcmp(options.comp_type,'parallel')
                     parfor j = options.parameter_index
-                        currentOptions = options.copy();
+                        currentOptions = options;
                         if sum(j == options.profile_integ_index) == 1
                             currentOptions.profile_integ_index = j;
                             getParProfilesByIntegration(parameters, objective_function, currentOptions, fh);
