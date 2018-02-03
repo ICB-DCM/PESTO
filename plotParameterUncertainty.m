@@ -254,7 +254,7 @@ for l = 1:length(I)
                     ind_not_nan = find(~isnan(diag(parameters.MS.hessian(:,:,1))));
                     j = find(i==ind_not_nan);
                     if ~isempty(j)
-                        % Standard deviation of Gaussian approxiamtion of
+                        % Standard deviation of Gaussian approximation of
                         % profile
                         Sigma = pinv(parameters.MS.hessian(ind_not_nan,ind_not_nan,1));
                         sigma = sqrt(Sigma(j,j));

@@ -75,16 +75,7 @@ function [parameters,fh] = getMultiStarts(parameters, objective_function, vararg
 %         (if options.trace == true)
 %     * time_trace(:,i): computation time trace for ith MAP
 %         (if options.trace == true)
-%
-% History:
-% * 2012/05/31 Jan Hasenauer
-% * 2012/07/11 Jan Hasenauer
-% * 2014/06/11 Jan Hasenauer
-% * 2015/07/28 Fabian Froehlich
-% * 2015/11/10 Fabian Froehlich
-% * 2016/06/07 Paul Stapor
-% * 2016/10/04 Daniel Weindl
-% * 2016/12/04 Paul Stapor
+
 
 global error_count
 
@@ -117,7 +108,7 @@ switch options.mode
         fprintf(' \nOptimization:\n=============\n');
     case 'silent' % no output
         % Force fmincon to be silent.
-        if (strcmp(options.localOptimizer, 'fmincon') || strcmp(options.localOptimizer, 'lsqnonlin'))
+        if ifield(options.localOptimizerOptions, 'Display')
             options.localOptimizerOptions.Display = 'off';
         end
 end
@@ -169,9 +160,9 @@ if or(options.save,options.tempsave)
 end
 
 %% Initialization
-if (strcmp(options.localOptimizer, 'fmincon') || strcmp(options.localOptimizer, 'pswarm') || strcmp(options.localOptimizer, 'lsqnonlin'))
+if isfield(options.localOptimizerOptions, 'MaxIter')
     maxOptimSteps = options.localOptimizerOptions.MaxIter;
-elseif strcmp(options.localOptimizer, 'meigo-ess') || strcmp(options.localOptimizer, 'meigo-vns')
+elseif isfield(options.localOptimizerOptions, 'maxeval')
     maxOptimSteps = options.localOptimizerOptions.maxeval;
 end
 parameters.MS.par = nan(parameters.number,length(options.start_index));
@@ -216,7 +207,7 @@ waitbarFields3 = {'hessian', 'par_trace'};
 if strcmp(options.comp_type, 'sequential')
     
     % Matlab parallel toolbox seems to have problems with our outfun...
-    if (strcmp(options.localOptimizer, 'fmincon') || strcmp(options.localOptimizer, 'lsqnonlin'))
+    if isfield(options.localOptimizerOptions, 'OutputFcn')
         options.localOptimizerOptions.OutputFcn = @outfun_fmincon;
     end
     

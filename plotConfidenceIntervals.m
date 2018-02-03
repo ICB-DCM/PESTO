@@ -148,9 +148,7 @@ switch options.group_CI_by
 
             for j = 1 : numConf
                 CI = pStruct.CI.(methods.type{j});
-                if (j == 1) && isnan(CI(indexSet(iP),1,1))
-                    % text(pStruct.MS.par(indexSet(iP),1),j,'$\emptyset$','Interpreter','latex','HorizontalAlignment','center','VerticalAlignment','middle')
-                else
+                if not((j == 1) && isnan(CI(indexSet(iP),1,1)))
                     for k = methods.numLevels : -1 : 1
                         h = methods.bars(k);
                         if (CI(indexSet(iP),1,k) == -inf)
