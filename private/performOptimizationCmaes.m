@@ -21,13 +21,13 @@ function parameters = performOptimizationCmaes(parameters, negLogPost, iMS, par0
         insigma = [];
     end
 
-	[x,fval,counteval,stopflag] = optim.cmaes.cmaes(funName,x0,insigma,optionsCmaes,objfun);
+	[x,fval,counteval] = optim.cmaes.cmaes(funName,x0,insigma,optionsCmaes,objfun);
 	
     %TODO
     % parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
     % parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
 
-    parameters.MS.exitflag(iMS) = stopflag;
+    parameters.MS.exitflag(iMS) = nan;
     parameters.MS.logPost0(iMS) = -J_0;      % algorithm does not use J_0
     parameters.MS.logPost(iMS) = -fval;
     parameters.MS.par(:,iMS) = x;
