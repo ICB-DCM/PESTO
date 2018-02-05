@@ -29,7 +29,7 @@ function parameters = performOptimizationMcs(parameters, negLogPost, iMS, option
         maxFunEvals = 50*parameters.number^2;
     end
     
-    objfun = @(x) negLogPost(x');
+    objfun = @(x) f_naninfWrap(negLogPost,x);
 
 	[x,fval,~,~,ncall,~,flag] = mcs(fcn,objfun,parameters.min,parameters.max,printLevel,smax,maxFunEvals);
 	
@@ -66,6 +66,13 @@ function parameters = performOptimizationMcs(parameters, negLogPost, iMS, option
         parameters.MS.BIC(iMS) = log(options.nDatapoints)*length(freePars) + 2*fval;
     end
 
+end
 
+function [fval] = f_naninfWrap(objfun,x)
+
+fval = objfun(x);
+if isnan(fval) || isinf(fval)
+	fval = 1e40;
+end
 
 end
