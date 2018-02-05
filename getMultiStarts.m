@@ -315,8 +315,7 @@ if strcmp(options.comp_type, 'sequential')
                         parameters = performOptimizationDirect(parameters, negLogPost, iMS, options);
                         
                 end
-            catch E
-                rethrow(E);
+            catch
             end
             
         end
