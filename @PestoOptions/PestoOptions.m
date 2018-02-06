@@ -293,6 +293,9 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         % Set Hierarchical Optimization options by calling an HOOptions Class object
         HO = HOOptions();
         
+        ss_optimizer = 'snobfit';
+        ss_maxFunEvals;
+        
     end
     
     properties (Hidden)
