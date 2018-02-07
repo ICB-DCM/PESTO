@@ -116,20 +116,25 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
     switch options.profile_method  
         case 'optimization'
             options.parameter_index = union(options.profile_optim_index, options.parameter_index);
-            options.profile_optim_index = options.parameter_index;
+            options.profile_optim_index = transpose(options.parameter_index(:));
             
         case 'integration'
             options.parameter_index = union(options.profile_integ_index, options.parameter_index);
-            options.profile_integ_index = options.parameter_index;
+            options.profile_integ_index = transpose(options.parameter_index(:));
             
         case 'mixed'
             % If profiles are to be computed in a mixed manner, the correpsonding
             % indices must be set properly
             options.parameter_index = union(options.profile_optim_index, options.profile_integ_index);
+            options.profile_optim_index = transpose(options.profile_optim_index(:));
+            options.profile_integ_index = transpose(options.profile_integ_index(:));
             
         otherwise
                 error('Unknown profile computationg method. Please choose optimization, integration, mixed, or default');
     end
+    
+    % We don't want to depend on the transposition of the parameter index
+    options.parameter_index = transpose(options.parameter_index(:));
     
     % Check that parameters for which profiles are computed are not fixed
     if any(ismember(options.parameter_index, options.fixedParameters))
@@ -155,10 +160,10 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
     end
 
     %% Initialization of parameter struct
-    for i = options.parameter_index
-        parameters.P(i).par = parameters.MS.par(:,options.MAP_index);
-        parameters.P(i).logPost = parameters.MS.logPost(options.MAP_index);
-        parameters.P(i).R = exp(parameters.MS.logPost(options.MAP_index)-parameters.MS.logPost(1));
+    for iPar = transpose(options.parameter_index(:))
+        parameters.P(iPar).par = parameters.MS.par(:,options.MAP_index);
+        parameters.P(iPar).logPost = parameters.MS.logPost(options.MAP_index);
+        parameters.P(iPar).R = exp(parameters.MS.logPost(options.MAP_index)-parameters.MS.logPost(1));
     end
 
     %% Preperation of folder

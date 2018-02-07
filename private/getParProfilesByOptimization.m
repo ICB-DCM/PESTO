@@ -212,9 +212,9 @@ function [parameters] = optimizeProfileForParameterI(parameters, objective_funct
 
     % Initialization
     logPost_max = parameters.MS.logPost(1);
-    P_par = parameters.MS.par(:,options.MAP_index);
-    P_logPost = parameters.MS.logPost(options.MAP_index);
-    P_R = exp(parameters.MS.logPost(options.MAP_index)-parameters.MS.logPost(1));
+    Profile_par = parameters.MS.par(:,options.MAP_index);
+    Profile_logPost = parameters.MS.logPost(options.MAP_index);
+    Profile_ratio = exp(parameters.MS.logPost(options.MAP_index)-parameters.MS.logPost(1));
     negLogPost = setObjectiveWrapper(objective_function, options, 'negative log-posterior', [], [], true, true);
     
     % Construction of index set
@@ -269,7 +269,7 @@ function [parameters] = optimizeProfileForParameterI(parameters, objective_funct
             try
                 switch options.localOptimizer
                     case 'fmincon'
-                        [theta_I_opt,J_opt] = ...
+                        [theta_I_opt, negLogPostValue] = ...
                             fmincon(negLogPostReduced,... % negative log-posterior function
                             theta_next(I),...
                             A  ,b  ,... % linear inequality constraints
@@ -283,41 +283,41 @@ function [parameters] = optimizeProfileForParameterI(parameters, objective_funct
                             parameters.min(I),...   % lower bound
                             parameters.max(I),...   % upper bound
                             options.profileOptimizationOptions);
-                        [~, ~, J_opt] = negLogPostReduced(theta_I_opt);
+                        [~, ~, negLogPostValue] = negLogPostReduced(theta_I_opt);
                 end
                 stepCount = stepCount + 1;
             catch errMsg
                 theta_I_opt = theta_next;
-                J_opt = inf;
+                negLogPostValue = inf;
             end
 
             % Restore full vector and determine update direction
-            logPost = -J_opt;
+            logPost = -negLogPostValue;
             dtheta = [theta_I_opt(I1);theta_next(iPar);theta_I_opt(I2-1)] - theta;
             theta = theta + dtheta;
 
             % Sorting
             switch s
                 case -1
-                    P_par = [theta,P_par];
-                    P_logPost = [logPost,P_logPost];
-                    P_R = [exp(logPost - parameters.MS.logPost(1)),P_R];
+                    Profile_par = [theta,Profile_par];
+                    Profile_logPost = [logPost,Profile_logPost];
+                    Profile_ratio = [exp(logPost - parameters.MS.logPost(1)),Profile_ratio];
                 case +1
-                    P_par = [P_par,theta];
-                    P_logPost = [P_logPost,logPost];
-                    P_R = [P_R,exp(logPost - parameters.MS.logPost(1))];
+                    Profile_par = [Profile_par,theta];
+                    Profile_logPost = [Profile_logPost,logPost];
+                    Profile_ratio = [Profile_ratio,exp(logPost - parameters.MS.logPost(1))];
             end
 
             % Assignment
-            parameters.P(iPar).par = P_par;
-            parameters.P(iPar).logPost = P_logPost;
-            parameters.P(iPar).R = P_R;
+            parameters.P(iPar).par = Profile_par;
+            parameters.P(iPar).logPost = Profile_logPost;
+            parameters.P(iPar).R = Profile_ratio;
 
             % Save
             if options.save
-                dlmwrite([options.foldername '/P' num2str(iPar,'%d') '__par.csv'],P_par,'delimiter',',','precision',12);
-                dlmwrite([options.foldername '/P' num2str(iPar,'%d') '__logPost.csv'],P_logPost,'delimiter',',','precision',12);
-                dlmwrite([options.foldername '/P' num2str(iPar,'%d') '__R.csv'],P_R,'delimiter',',','precision',12);
+                dlmwrite([options.foldername '/P' num2str(iPar,'%d') '__par.csv'],Profile_par,'delimiter',',','precision',12);
+                dlmwrite([options.foldername '/P' num2str(iPar,'%d') '__logPost.csv'],Profile_logPost,'delimiter',',','precision',12);
+                dlmwrite([options.foldername '/P' num2str(iPar,'%d') '__R.csv'],Profile_ratio,'delimiter',',','precision',12);
             end
 
             % Output
@@ -333,7 +333,7 @@ function [parameters] = optimizeProfileForParameterI(parameters, objective_funct
                         ordstr = '-th';
                 end
                 str = [num2str(iPar,'%d') ordstr ' P: point ' num2str(length(parameters.P(iPar).R)-1,'%d') ', R = ' ...
-                    num2str(exp(- J_opt - parameters.MS.logPost(1)),'%.3e') ' (optimized) / '...
+                    num2str(exp(- negLogPostValue - parameters.MS.logPost(1)),'%.3e') ' (optimized) / '...
                     num2str(exp(- J_exp - parameters.MS.logPost(1)),'%.3e') ' (predicted)'];
                 switch options.mode
                     case 'visual', fh = plotParameterProfiles(parameters,'1D',fh,options.parameter_index,options.plot_options);
