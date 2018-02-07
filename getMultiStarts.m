@@ -300,7 +300,10 @@ if strcmp(options.comp_type, 'sequential')
                         % Optimization using bobya as local optimizer
                         parameters = performOptimizationBobyqa(parameters, negLogPost, iMS, par0, J_0, options);
                 end
-            catch
+            catch ErrMsg
+                warning(['Multi-start number ' num2str(iMS) ' failed. More details on the error: \n']);
+                display(['Last Error in function ' ErrMsg.stack(1).name ', line ' ...
+                    num2str(ErrMsg.stack(1).line) ', file ' ErrMsg.stack(1).file '.']);
             end
             
         end
