@@ -1,51 +1,40 @@
-function parameters = performOptimizationDhc(parameters, negLogPost, iMS, par0, J_0, options)
+function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+    = performOptimizationDhc(parameters, negLogPost, par0, options)
        
     % Definition of index set of optimized parameters
     freePars = setdiff(1:parameters.number, options.fixedParameters);
     optionsDHC = options.localOptimizerOptions;
     
     % Set bounds
-    x0 = par0(:,iMS);
     lowerBounds = parameters.min;
     upperBounds = parameters.max;
   
     % run DHC
-    [theta, J_opt, exitflag, output] = dynamicHillClimb(...
+    [par_opt, negLogPost_opt, exitflag, output] = dynamicHillClimb(...
         negLogPost,...
-        x0,...
+        par0,...
         lowerBounds(freePars),...
         upperBounds(freePars),...
         optionsDHC);
     
     % Assignment of results
-    parameters.MS.exitflag(iMS)     = exitflag;
-    parameters.MS.logPost0(1,iMS)   = -J_0;
-    parameters.MS.logPost(iMS)      = -J_opt;
-    parameters.MS.par(freePars,iMS) = theta;
-    parameters.MS.par(options.fixedParameters,iMS) = options.fixedParameterValues;
+    n_objfun(iMS)  = output.funcCount;
+    n_iter(iMS)    = output.iterations;
+    par_opt(freePars) = par_opt;
+    par_opt(options.fixedParameters) = options.fixedParameterValues;
     
     % Assignment of gradient and Hessian
     try
-        [~, G_opt, H_opt] = negLogPost(theta);
-        parameters.MS.hessian(freePars,freePars,iMS) = H_opt;
-        parameters.MS.hessian(options.fixedParameters,options.fixedParameters,iMS) = nan;
-        parameters.MS.gradient(freePars,iMS) = G_opt;
-        parameters.MS.gradient(options.fixedParameters,iMS) = nan;
+        [~, gradient_opt, hessian_opt] = negLogPost(par_opt);
+        hessian_opt(freePars,freePars) = hessian_opt;
+        hessian_opt(options.fixedParameters,options.fixedParameters) = nan;
+        gradient_opt(freePars) = gradient_opt;
+        gradient_opt(options.fixedParameters) = nan;
     catch
         warning('Could not compute Hessian and gradient at optimum after optimization.');
         if (options.objOutNumber == 3)
-            warning('options.objOutNumber set to 3, but your objective function can not provide 3 outputs. Please set objOutBuner accordingly!');
+            warning('options.objOutNumber is set to 3, but your objective function can not provide 3 outputs. Please set objOutNumber accordingly!');
         end
-    end
-    % Assignment of diagnosis
-    parameters.MS.n_objfun(iMS)  = output.funcCount;
-    parameters.MS.n_iter(iMS)    = output.iterations;
-    parameters.MS.t_cpu(iMS)     = output.t_cpu;
-    
-    % Assignment of AIC and BIC
-    parameters.MS.AIC(iMS) = 2*length(freePars) + 2*J_opt;
-    if ~isempty(options.nDatapoints)
-        parameters.MS.BIC(iMS) = log(options.nDatapoints)*length(freePars) + 2*J_opt;
     end
     
 end

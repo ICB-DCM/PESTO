@@ -279,27 +279,33 @@ if strcmp(options.comp_type, 'sequential')
 
                     case {'meigo-ess', 'meigo-vns'}
                         % Use the MEIGO toolbox as local / global optimizer
-                        parameters = performOptimizationMeigo(parameters, negLogPost, iMS, options);
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                            = performOptimizationMeigo(parameters, negLogPost, par0(:,iMS), options);
 
                     case 'pswarm'
                         % Optimization using a swarm based global optimizer PSwarm
-                        parameters = performOptimizationPswarm(parameters, negLogPost, iMS, options);
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                            = performOptimizationPswarm(parameters, negLogPost, par0(:,iMS), options);
 
                     case 'lsqnonlin'
                         % Optimization using dynamic hill climbin as local optimizer
-                        parameters = performOptimizationLsqnonlin(parameters, negLogPost, iMS, par0, negLogPost0, options);
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                            = performOptimizationLsqnonlin(parameters, negLogPost, par0(:,iMS), options);
 
                     case 'cs'
                         % Optimization using randomized coordinate search as local optimizer
-                        parameters = performOptimizationCoordinateSearch(parameters, negLogPost, iMS, par0, negLogPost0, options);
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                            = performOptimizationCoordinateSearch(parameters, negLogPost, par0(:,iMS), options);
 
                     case 'dhc'
                         % Optimization using dynamic hill climbing as local optimizer
-                        parameters = performOptimizationDhc(parameters, negLogPost, iMS, par0, negLogPost0, options);
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                            = performOptimizationDhc(parameters, negLogPost, par0(:,iMS), options);
 
                     case 'bobyqa'
                         % Optimization using bobya as local optimizer
-                        parameters = performOptimizationBobyqa(parameters, negLogPost, iMS, par0, negLogPost0, options);
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                            = performOptimizationBobyqa(parameters, negLogPost, par0(:,iMS), options);
                 end
             catch ErrMsg
                 warning(['Multi-start number ' num2str(iMS) ' failed. More details on the error: \n']);

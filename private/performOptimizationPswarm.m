@@ -1,4 +1,5 @@
-function parameters = performOptimizationPswarm(parameters, negLogPost, iMS, options)
+function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+    = performOptimizationPswarm(parameters, negLogPost, par0, options)
 
     % Check if PSwarm is implemented
     if ~exist('PSwarm', 'file')
@@ -18,36 +19,26 @@ function parameters = performOptimizationPswarm(parameters, negLogPost, iMS, opt
 
     % Run PSwarm
     objFunHandle = @(theta) negLogPost(theta);
-    [theta,J_opt,RunData] = PSwarm(problem, struct('x', parameters.MS.par0(:,iMS)), options.localOptimizerOptions, objFunHandle);
+    [par_opt, negLogPost_opt, RunData] = PSwarm(problem, struct('x', par0(:)), options.localOptimizerOptions, objFunHandle);
 
     % Assignment of results
-    parameters.MS.exitflag(iMS) = nan;
-    parameters.MS.logPost0(iMS) = nan;      % algorithm does not use J_0
-    parameters.MS.logPost(iMS) = -J_opt;
-    parameters.MS.par(:,iMS) = theta;
+    exitflag = nan;
+    n_objfun = RunData.ObjFunCounter;
+    n_iter = RunData.IterCounter;
+    par_opt(options.fixedParameters,iMS) = options.fixedParameterValues;
     
     % Assignment of gradient and Hessian
     try
-        [~, G_opt, H_opt] = negLogPost(theta);
-        parameters.MS.hessian(freePars,freePars,iMS) = H_opt;
-        parameters.MS.hessian(options.fixedParameters,options.fixedParameters,iMS) = nan;
-        parameters.MS.gradient(freePars,iMS) = G_opt;
-        parameters.MS.gradient(options.fixedParameters,iMS) = nan;
+        [~, gradient_opt, hessian_opt] = negLogPost(par_opt);
+        hessian_opt(freePars,freePars) = hessian_opt;
+        hessian_opt(options.fixedParameters,options.fixedParameters) = nan;
+        gradient_opt(freePars) = gradient_opt;
+        gradient_opt(options.fixedParameters) = nan;
     catch
         warning('Could not compute Hessian and gradient at optimum after optimization.');
         if (options.objOutNumber == 3)
-            warning('options.objOutNumber set to 3, but your objective function can not provide 3 outputs. Please set objOutBuner accordingly!');
+            warning('options.objOutNumber is set to 3, but your objective function can not provide 3 outputs. Please set objOutNumber accordingly!');
         end
-    end
-    
-    % Assignment of diagnosis
-    parameters.MS.n_objfun(iMS) = RunData.ObjFunCounter;
-    parameters.MS.n_iter(iMS) = RunData.IterCounter;
-    
-    % Assignment of AIC and BIC
-    parameters.MS.AIC(iMS) = 2*length(freePars) + 2*J_opt;
-    if ~isempty(options.nDatapoints)
-        parameters.MS.BIC(iMS) = log(options.nDatapoints)*length(freePars) + 2*J_opt;
     end
                         
 end
