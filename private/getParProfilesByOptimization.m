@@ -78,10 +78,10 @@ function [parameters,fh] = getParProfilesByOptimization(parameters, objective_fu
         fh = [];
     end
     
-    %% Check for fixed parameters
-    if ~isempty(options.fixedParameters)
-        error('Fixed parameters are currently not supported by getParProfilesByOptimization.');
-    end
+%     %% Check for fixed parameters
+%     if ~isempty(options.fixedParameters)
+%         error('Fixed parameters are currently not supported by getParProfilesByOptimization.');
+%     end
 
     %% Profile calculation
     if strcmp(options.comp_type,'sequential')
@@ -215,19 +215,29 @@ function [parameters] = optimizeProfileForParameterI(parameters, objective_funct
     Profile_par = parameters.MS.par(:,options.MAP_index);
     Profile_logPost = parameters.MS.logPost(options.MAP_index);
     Profile_ratio = exp(parameters.MS.logPost(options.MAP_index)-parameters.MS.logPost(1));
-    negLogPost = setObjectiveWrapper(objective_function, options, 'negative log-posterior', [], [], true, true);
     
     % Construction of index set
     I1 = (1 : iPar-1)';
     I2 = (iPar+1 : parameters.number)';
-    I  = [I1; I2];
     
     % Create options ans parameters for the reduced problem 
     optionsRed = struct(...
+        'localOptimizer', options.localOptimizer, ...
         'localOptimizerOptions', options.profileOptimizationOptions, ...
         'fixedParameters', [options.fixedParameters; iPar], ...
-        'fixedParameterValues', [options.fixedParameterValues; nan]);
- 
+        'fixedParameterValues', [options.fixedParameterValues; nan], ...
+        'objOutNumber', options.objOutNumber, ...
+        'obj_type', options.obj_type);
+    
+    optionsFull = struct(...
+        'localOptimizer', options.localOptimizer, ...
+        'localOptimizerOptions', options.profileOptimizationOptions, ...
+        'fixedParameters', [], ...
+        'fixedParameterValues', [], ...
+        'objOutNumber', options.objOutNumber, ...
+        'obj_type', options.obj_type);
+    negLogPostFull = setObjectiveWrapper(objective_function, optionsFull, 'negative log-posterior', [], [], true, true);
+    
     % Compute profile for in- and decreasing theta_i
     for s = [-1,1]
         % Starting point
@@ -252,11 +262,22 @@ function [parameters] = optimizeProfileForParameterI(parameters, objective_funct
 
             % Proposal of next profile point
             [theta_next,J_exp] = ...
-                getNextProfilePoint(theta,theta_min,theta_max,dtheta/abs(dtheta(iPar)),...
-                abs(dtheta(iPar)),options.options_getNextPoint.min,options.options_getNextPoint.max,options.options_getNextPoint.update,...
-                -(log(1-options.dR_max)+options.dJ*(logPostValue-logPost_max)+logPostValue),negLogPost,...
-                parameters.constraints,options.options_getNextPoint.mode,iPar, options.localOptimizer);
-            negLogPostReduced = setObjectiveWrapper(objective_function, options, 'negative log-posterior', iPar, theta_next(iPar), true, true);
+                getNextProfilePoint(theta, ...
+                    theta_min, ...
+                    theta_max,...
+                    dtheta/abs(dtheta(iPar)), ...
+                    abs(dtheta(iPar)), ...
+                    options.options_getNextPoint.min, ...
+                    options.options_getNextPoint.max, ...
+                    options.options_getNextPoint.update, ...
+                    -(log(1-options.dR_max) + options.dJ * (logPostValue-logPost_max) + logPostValue), ...
+                    negLogPostFull,...
+                    parameters.constraints, ...
+                    options.options_getNextPoint.mode, ...
+                    iPar, ...
+                    options.localOptimizer);
+            optionsRed.fixedParameterValues(end) = theta_next(iPar);
+            negLogPostReduced = setObjectiveWrapper(objective_function, optionsRed, 'negative log-posterior', [], [], true, true);
             
             % Check, if Hessian should be used and if a Hessian function was set,
             % otherwise use the third output of the objective function instead
@@ -268,29 +289,31 @@ function [parameters] = optimizeProfileForParameterI(parameters, objective_funct
                 options.profileOptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
             end
             
-%             % Construction of reduced linear constraints
-%             [A,b,Aeq,beq] = getConstraints(theta,parameters,I);
-            
             % Optimization
-            try
-                switch options.localOptimizer
-                    case 'fmincon'
-                        [negLogPostValue, par_opt] = ...
-                            performOptimizationFmincon(parameters, negLogPostReduced, theta_next, optionsRed);
-                    case 'lsqnonlin'
-                        [negLogPostValue, par_opt] = ...
-                            performOptimizationLsqnonlin(parameters, negLogPostReduced, theta_next, optionsRed);
+            if (length(optionsRed.fixedParameters) == parameters.number)
+                negLogPostValue = negLogPostReduced([]);
+                par_opt(:) = theta_next;
+            else
+                try
+                    switch options.localOptimizer
+                        case 'fmincon'
+                            [negLogPostValue, par_opt] = ...
+                                performOptimizationFmincon(parameters, negLogPostReduced, theta_next, optionsRed);
+                        case 'lsqnonlin'
+                            [negLogPostValue, par_opt] = ...
+                                performOptimizationLsqnonlin(parameters, negLogPostReduced, theta_next, optionsRed);
+                    end
+                    stepCount = stepCount + 1;
+                catch errMsg
+                    par_opt = theta_next;
+                    negLogPostValue = inf;
                 end
-                stepCount = stepCount + 1;
-            catch errMsg
-                par_opt = theta_next;
-                negLogPostValue = inf;
             end
 
             % Restore full vector and determine update direction
             logPostValue = -negLogPostValue;
-            dtheta = [par_opt(I1);theta_next(iPar);par_opt(I2-1)] - theta;
-            theta = theta + dtheta;
+            dtheta = par_opt(:) - theta;
+            theta  = par_opt(:);
 
             % Sorting
             switch s

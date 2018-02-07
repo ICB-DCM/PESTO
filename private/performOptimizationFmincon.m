@@ -29,7 +29,7 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
     
     [par_opt, negLogPost_opt, exitflag, results_fmincon, ~, gradient_opt, hessian_opt] = ...
         fmincon(negLogPost, ...  % negative log-likelihood function
-        par0(:), ...    % initial parameter
+        par0(freePars), ...    % initial parameter
         freeCon.A, freeCon.b, ... % linear inequality constraints
         freeCon.Aeq, freeCon.beq, ... % linear equality constraints
         parameters.min(freePars), ...     % lower bound
@@ -46,16 +46,12 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
     par_opt(options.fixedParameters) = options.fixedParameterValues;
     
     % Assignment of gradient and Hessian
-    gradient_opt(freePars) = gradient_opt;
-    gradient_opt(options.fixedParameters) = nan;
     if isempty(hessian_opt)
         hessian_opt = nan(parameters.number);
     elseif max(hessian_opt(:)) == 0
         if strcmp(options.localOptimizerOptions.Hessian,'on')
             [~,~,hessian_opt] = negLogPost(par_opt);
         end
-    end  
-    hessian_opt(freePars,freePars) = full(hessian_opt);
-    hessian_opt(options.fixedParameters,options.fixedParameters) = nan;
+    end
     
 end

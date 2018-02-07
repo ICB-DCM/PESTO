@@ -115,17 +115,20 @@ end
 
 %% Definition of index set of optimized parameters
 freePars = setdiff(1:parameters.number, options.fixedParameters);
-
+if isempty(parameters.guess)
+    parameters.guess = zeros(parameters.number,0);
+end
+    
 %% Sampling of starting points
 switch options.proposal
     case 'latin hypercube'
         % Sampling from latin hypercube
-        par0 = [parameters.guess,...
-            bsxfun(@plus,parameters.min,bsxfun(@times,parameters.max - parameters.min,...
-            lhsdesign(options.n_starts - size(parameters.guess,2),parameters.number,'smooth','off')'))];
+        par0_tmp = [parameters.guess(freePars,:),...
+            bsxfun(@plus,parameters.min(freePars),bsxfun(@times,parameters.max(freePars) - parameters.min(freePars),...
+            lhsdesign(options.n_starts - size(parameters.guess,2),length(freePars),'smooth','off')'))];
     case 'uniform'
         % Sampling from uniform distribution
-        par0 = [parameters.guess,...
+        par0_tmp = [parameters.guess(freePars,:),...
             bsxfun(@plus,parameters.min,bsxfun(@times,parameters.max - parameters.min,...
             rand(parameters.number,options.n_starts - size(parameters.guess,2))))];
     case 'user-supplied'
@@ -134,19 +137,18 @@ switch options.proposal
             if size(parameters.guess,2) < options.n_starts
                 error('You did not define an initial function and do not provide enough starting points in parameters.guess. Aborting.');
             else
-                par0 = parameters.guess(:,1:options.n_starts);
+                par0_tmp = parameters.guess(:,1:options.n_starts);
             end
         else
-            par0 = [parameters.guess,...
+            par0_tmp = [parameters.guess,...
                 parameters.init_fun(parameters.guess,parameters.min,parameters.max,options.n_starts - size(parameters.guess,2))];
         end
 end
 % Correct for fixed parameters
-par0 = par0(freePars,:);
-parameters.MS.n_starts = options.n_starts;
-parameters.MS.par0 = nan(parameters.number,max(options.start_index));
-parameters.MS.par0(freePars,:) = par0(:,options.start_index);
-parameters.MS.par0(options.fixedParameters,:) = options.fixedParameterValues;
+par0(freePars,:) = par0_tmp;
+par0(options.fixedParameters,:) = options.fixedParameterValues(:) * ones(1,options.n_starts);
+par0 = par0(:,options.start_index);
+parameters.MS.par0 = par0;
 
 %% Preparation of folder
 if or(options.save,options.tempsave)
@@ -168,8 +170,8 @@ end
 parameters.MS.par = nan(parameters.number,length(options.start_index));
 parameters.MS.logPost0 = nan(length(options.start_index),1);
 parameters.MS.logPost = nan(length(options.start_index),1);
-parameters.MS.gradient = nan(length(freePars),length(options.start_index));
-parameters.MS.hessian  = nan(length(freePars),length(freePars),length(options.start_index));
+parameters.MS.gradient = nan(parameters.number,length(options.start_index));
+parameters.MS.hessian  = nan(parameters.number,parameters.number,length(options.start_index));
 parameters.MS.n_objfun = nan(length(options.start_index),1);
 parameters.MS.n_iter = nan(length(options.start_index),1);
 parameters.MS.t_cpu = nan(length(options.start_index),1);
@@ -241,27 +243,27 @@ if strcmp(options.comp_type, 'sequential')
                 % seperately (IP) or with the objective function (TR), so
                 % different cases have to be checked.
                 if strcmp(options.localOptimizerOptions.Algorithm, 'interior-point')
-                    [negLogPost0,~] = negLogPost(par0(:,iMS));
+                    [negLogPost0,~] = negLogPost(par0(freePars,iMS));
                 else
-                    [negLogPost0,~,~] = negLogPost(par0(:,iMS));
+                    [negLogPost0,~,~] = negLogPost(par0(freePars,iMS));
                 end
             elseif (strcmp(options.localOptimizerOptions.GradObj, 'on'))
-                [negLogPost0,~] = negLogPost(par0(:,iMS));
+                [negLogPost0,~] = negLogPost(par0(freePars,iMS));
             else
-                negLogPost0 = negLogPost(par0(:,iMS));
+                negLogPost0 = negLogPost(par0(freePars,iMS));
             end
             parameters.MS.logPost0(iMS) = -negLogPost0;
         elseif (strcmp(options.localOptimizer, 'lsqnonlin'))
             if (strcmp(options.localOptimizerOptions.Jacobian, 'on'))
-                [residuals,~] = negLogPost(par0(:,iMS));
+                [residuals,~] = negLogPost(par0(freePars,iMS));
             else
-                residuals = negLogPost(par0(:,iMS));
+                residuals = negLogPost(par0(freePars,iMS));
             end
             if any(isnan(residuals))
                 negLogPost0 = inf;
             else
                 if isempty(options, 'logPostOffset')
-                    [~, ~, negLogPost0] = negLogPost(par0(:,iMS));
+                    [~, ~, negLogPost0] = negLogPost(par0(freePars,iMS));
                     chi2value = -sum(residuals.^2);
                     logPostOffset = negLogPost0 - chi2value;
                     options.logPostOffset = logPostOffset;
@@ -271,7 +273,7 @@ if strcmp(options.comp_type, 'sequential')
                 parameters.MS.logPost0(iMS) = negLogPost0;
             end
         elseif (any(strcmp(options.localOptimizer, {'dhc','cs','bobyqa'})))
-            negLogPost0 = negLogPost(par0(:,iMS));
+            negLogPost0 = negLogPost(par0(freePars,iMS));
         else
             negLogPost0 = [];
         end
@@ -319,7 +321,7 @@ if strcmp(options.comp_type, 'sequential')
                             = performOptimizationBobyqa(parameters, negLogPost, par0(:,iMS), options);
                 end
             catch ErrMsg
-                warning(['Multi-start number ' num2str(iMS) ' failed. More details on the error: \n']);
+                warning(['Multi-start number ' num2str(iMS) ' failed. More details on the error:']);
                 display(['Last Error in function ' ErrMsg.stack(1).name ', line ' ...
                     num2str(ErrMsg.stack(1).line) ', file ' ErrMsg.stack(1).file '.']);
             end
@@ -331,9 +333,9 @@ if strcmp(options.comp_type, 'sequential')
         parameters.MS.exitflag(iMS) = exitflag;
         parameters.MS.logPost0(iMS) = -negLogPost0;
         parameters.MS.logPost(iMS) = -negLogPost_opt;
-        parameters.MS.par(freePars,iMS) = par_opt;
-        parameters.MS.gradient(freePars,iMS) = gradient_opt;
-        parameters.MS.hessian = hessian_opt;
+        parameters.MS.par(:,iMS) = par_opt;
+        parameters.MS.gradient(freePars,iMS) = gradient_opt(:);
+        parameters.MS.hessian(freePars,freePars,iMS) = hessian_opt(:,:);
         parameters.MS.n_objfun(iMS) = n_objfun;
         parameters.MS.n_iter(iMS) = n_iter;
         parameters.MS.AIC(iMS) = 2*length(freePars) + 2*negLogPost_opt;
