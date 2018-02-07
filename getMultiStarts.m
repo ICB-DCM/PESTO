@@ -253,12 +253,23 @@ if strcmp(options.comp_type, 'sequential')
             parameters.MS.logPost0(iMS) = -negLogPost0;
         elseif (strcmp(options.localOptimizer, 'lsqnonlin'))
             if (strcmp(options.localOptimizerOptions.Jacobian, 'on'))
-                [negLogPost0,~] = negLogPost(par0(:,iMS));
+                [residuals,~] = negLogPost(par0(:,iMS));
             else
-                negLogPost0 = negLogPost(par0(:,iMS));
+                residuals = negLogPost(par0(:,iMS));
             end
-            parameters.MS.logPost0(iMS) = -sum(negLogPost0);
-            negLogPost0 = sum(negLogPost0);
+            if any(isnan(residuals))
+                negLogPost0 = inf;
+            else
+                if isempty(options, 'logPostOffset')
+                    [~, ~, negLogPost0] = negLogPost(par0(:,iMS));
+                    chi2value = -sum(residuals.^2);
+                    logPostOffset = negLogPost0 - chi2value;
+                    options.logPostOffset = logPostOffset;
+                else
+                    negLogPost0 = chi2value + logPostOffset;
+                end
+                parameters.MS.logPost0(iMS) = negLogPost0;
+            end
         elseif (any(strcmp(options.localOptimizer, {'dhc','cs','bobyqa'})))
             negLogPost0 = negLogPost(par0(:,iMS));
         else

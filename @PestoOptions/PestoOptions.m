@@ -90,6 +90,10 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         % optimization.
         init_threshold = -inf;
         
+        % Offset between log-likelihood and sum of squared residuals
+        % (important only for lsqnonlin so far)
+        logPostOffset = [];
+        
         % Which optimizer to use?
         % Current options: ['fmincon', 'meigo-ess', 'meigo-vns', 'pswarm']
         %

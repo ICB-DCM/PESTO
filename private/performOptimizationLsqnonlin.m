@@ -6,7 +6,7 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
     options.localOptimizerOptions.Algorithm = 'trust-region-reflective';
     
     % Run lsqnonlin
-    [par_opt, ~, ~, exitflag, results_lsqnonlin, ~, jacobian_opt] = lsqnonlin(...
+    [par_opt, chi2value, ~, exitflag, results_lsqnonlin, ~, jacobian_opt] = lsqnonlin(...
         negLogPost,...
         par0, ...
         parameters.min(freePars), ...
@@ -14,7 +14,7 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
         options.localOptimizerOptions);
     
     % Assignment of results
-    [~, ~, negLogPost_opt]         = negLogPost(par_opt);
+    negLogPost_opt = -chi2value + options.logPostOffset;
     par_opt(freePars,iMS) = par_opt;
     par_opt(options.fixedParameters) = options.fixedParameterValues;
     n_objfun = results_lsqnonlin.funcCount;
