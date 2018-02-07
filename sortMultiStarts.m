@@ -46,7 +46,7 @@ if isfield(parameters.MS,'gradient')
     parameters.MS.gradient = parameters.MS.gradient(:,ind);
 end
 
-if isfield(parameters.MS,'hessian')
+if isfield(parameters.MS,'hessian') && ~isempty(parameters.MS.hessian)
     parameters.MS.hessian = parameters.MS.hessian(:,:,ind);
 end
 

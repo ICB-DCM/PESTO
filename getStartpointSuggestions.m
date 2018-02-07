@@ -31,6 +31,16 @@ else
 end
 
 switch solver
+    case 'simple'
+        xs = bsxfun(@plus,lb,bsxfun(@times,ub-lb,lhsdesign(maxFunEvals,dim,'smooth','off')'));
+        fvals = zeros(maxFunEvals,1);
+        for j=1:maxFunEvals
+            fvals(j) = negLogPost(xs(:,j));
+        end
+        [~,index] = sort(fvals,'ascend');
+        xs = xs(:,index);
+        betterGuess = xs(:,1:n_starts);
+        
     case 'snobfit'
         lOptions = struct();
         lOptions.MaxFunEvals = maxFunEvals;
@@ -40,11 +50,31 @@ switch solver
         
         [~,~,~,output] = ysnobfit(negLogPost,lb,ub,lOptions);
         betterGuess = output.population;
-    case 'direct'
-        
+                
     case 'mcs'
+        if ~exist('mcs.m','file')
+            error('The mcs solver must be installed and added to the matlab path');
+        end
         
-    case 'cmaes'
+        fcn = 'mcsFunHandleWrap';
+
+        printLevel = 0;
+        smax = 5*dim+10;
+        
+
+        naninfwrap = @(x) f_naninfWrap(negLogPost,x);
+        global y_cache_fval_rememberBestValuesWrap;
+        global y_cache_x_rememberBestValuesWrap;
+        y_cache_fval_rememberBestValuesWrap = [];
+        y_cache_x_rememberBestValuesWrap = [];
+        objfun = @(x) f_rememberBestValuesWrap(naninfwrap,n_starts,x);
+
+        mcs(fcn,objfun,lb,ub,printLevel,smax,maxFunEvals);
+        
+        betterGuess = y_cache_x_rememberBestValuesWrap;
+        
+%     case 'cmaes'
+%     case 'direct'
         
     otherwise
         error('getStartpointSuggestions: Solver not recognized.');
@@ -101,6 +131,39 @@ end
 
 if isempty(options.ss_maxFunEvals)
     options.ss_maxFunEvals = options.n_starts*10;
+end
+
+end
+
+function [fval] = f_naninfWrap(objfun,x)
+% wrapper for algorithms that cannot handle nan or inf values well. Here,
+% in such a case fval is simply set to a high value (this is not a good
+% thing to do, though).
+
+fval = objfun(x);
+if isnan(fval) || isinf(fval)
+	fval = 1e40;
+end
+
+end
+
+function [fval] = f_rememberBestValuesWrap(objfun,cachesize,x)
+
+global y_cache_fval_rememberBestValuesWrap;
+global y_cache_x_rememberBestValuesWrap;
+
+fval = objfun(x);
+
+if length(y_cache_fval_rememberBestValuesWrap) < cachesize
+    y_cache_fval_rememberBestValuesWrap = [y_cache_fval_rememberBestValuesWrap fval];
+    y_cache_x_rememberBestValuesWrap = [y_cache_x_rememberBestValuesWrap x(:)];
+    [y_cache_fval_rememberBestValuesWrap,index] = sort(y_cache_fval_rememberBestValuesWrap,'ascend');
+    y_cache_x_rememberBestValuesWrap = y_cache_x_rememberBestValuesWrap(:,index);
+elseif fval < y_cache_fval_rememberBestValuesWrap(end)
+    y_cache_fval_rememberBestValuesWrap(end) = fval;
+    y_cache_x_rememberBestValuesWrap(:,end) = x(:);
+    [y_cache_fval_rememberBestValuesWrap,index] = sort(y_cache_fval_rememberBestValuesWrap,'ascend');
+    y_cache_x_rememberBestValuesWrap = y_cache_x_rememberBestValuesWrap(:,index);
 end
 
 end

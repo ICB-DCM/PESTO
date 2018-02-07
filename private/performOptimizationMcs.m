@@ -69,6 +69,9 @@ function parameters = performOptimizationMcs(parameters, negLogPost, iMS, option
 end
 
 function [fval] = f_naninfWrap(objfun,x)
+% wrapper for algorithms that cannot handle nan or inf values well. Here,
+% in such a case fval is simply set to a high value (this is not a good
+% thing to do, though).
 
 fval = objfun(x);
 if isnan(fval) || isinf(fval)
