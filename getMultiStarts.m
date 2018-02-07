@@ -241,40 +241,41 @@ if strcmp(options.comp_type, 'sequential')
                 % seperately (IP) or with the objective function (TR), so
                 % different cases have to be checked.
                 if strcmp(options.localOptimizerOptions.Algorithm, 'interior-point')
-                    [J_0,~] = negLogPost(par0(:,iMS));
+                    [negLogPost0,~] = negLogPost(par0(:,iMS));
                 else
-                    [J_0,~,~] = negLogPost(par0(:,iMS));
+                    [negLogPost0,~,~] = negLogPost(par0(:,iMS));
                 end
             elseif (strcmp(options.localOptimizerOptions.GradObj, 'on'))
-                [J_0,~] = negLogPost(par0(:,iMS));
+                [negLogPost0,~] = negLogPost(par0(:,iMS));
             else
-                J_0 = negLogPost(par0(:,iMS));
+                negLogPost0 = negLogPost(par0(:,iMS));
             end
-            parameters.MS.logPost0(iMS) = -J_0;
+            parameters.MS.logPost0(iMS) = -negLogPost0;
         elseif (strcmp(options.localOptimizer, 'lsqnonlin'))
             if (strcmp(options.localOptimizerOptions.Jacobian, 'on'))
-                [J_0,~] = negLogPost(par0(:,iMS));
+                [negLogPost0,~] = negLogPost(par0(:,iMS));
             else
-                J_0 = negLogPost(par0(:,iMS));
+                negLogPost0 = negLogPost(par0(:,iMS));
             end
-            parameters.MS.logPost0(iMS) = -sum(J_0);
-            J_0 = sum(J_0);
+            parameters.MS.logPost0(iMS) = -sum(negLogPost0);
+            negLogPost0 = sum(negLogPost0);
         elseif (any(strcmp(options.localOptimizer, {'dhc','cs','bobyqa'})))
-            J_0 = negLogPost(par0(:,iMS));
+            negLogPost0 = negLogPost(par0(:,iMS));
         else
-            J_0 = [];
+            negLogPost0 = [];
         end
         
         % Optimization
         startTimeLocalOptimization = cputime;
-        if (isempty(J_0) || (J_0 < -options.init_threshold))
+        if (isempty(negLogPost0) || (negLogPost0 < -options.init_threshold))
             
             %% do optimization with chosen algorithm
             try
                 switch options.localOptimizer
                     case 'fmincon'
                         % fmincon as local optimizer
-                        parameters = performOptimizationFmincon(parameters, negLogPost, iMS, par0, J_0, options);
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                            = performOptimizationFmincon(parameters, negLogPost, par0(:,iMS), options);
 
                     case {'meigo-ess', 'meigo-vns'}
                         % Use the MEIGO toolbox as local / global optimizer
@@ -286,19 +287,19 @@ if strcmp(options.comp_type, 'sequential')
 
                     case 'lsqnonlin'
                         % Optimization using dynamic hill climbin as local optimizer
-                        parameters = performOptimizationLsqnonlin(parameters, negLogPost, iMS, par0, J_0, options);
+                        parameters = performOptimizationLsqnonlin(parameters, negLogPost, iMS, par0, negLogPost0, options);
 
                     case 'cs'
                         % Optimization using randomized coordinate search as local optimizer
-                        parameters = performOptimizationCoordinateSearch(parameters, negLogPost, iMS, par0, J_0, options);
+                        parameters = performOptimizationCoordinateSearch(parameters, negLogPost, iMS, par0, negLogPost0, options);
 
                     case 'dhc'
                         % Optimization using dynamic hill climbing as local optimizer
-                        parameters = performOptimizationDhc(parameters, negLogPost, iMS, par0, J_0, options);
+                        parameters = performOptimizationDhc(parameters, negLogPost, iMS, par0, negLogPost0, options);
 
                     case 'bobyqa'
                         % Optimization using bobya as local optimizer
-                        parameters = performOptimizationBobyqa(parameters, negLogPost, iMS, par0, J_0, options);
+                        parameters = performOptimizationBobyqa(parameters, negLogPost, iMS, par0, negLogPost0, options);
                 end
             catch ErrMsg
                 warning(['Multi-start number ' num2str(iMS) ' failed. More details on the error: \n']);
@@ -307,7 +308,21 @@ if strcmp(options.comp_type, 'sequential')
             end
             
         end
+        
+        % Assignment of results
         parameters.MS.t_cpu(iMS) = cputime - startTimeLocalOptimization;
+        parameters.MS.exitflag(iMS) = exitflag;
+        parameters.MS.logPost0(iMS) = -negLogPost0;
+        parameters.MS.logPost(iMS) = -negLogPost_opt;
+        parameters.MS.par(freePars,iMS) = par_opt;
+        parameters.MS.gradient(freePars,iMS) = gradient_opt;
+        parameters.MS.hessian = hessian_opt;
+        parameters.MS.n_objfun(iMS) = n_objfun;
+        parameters.MS.n_iter(iMS) = n_iter;
+        parameters.MS.AIC(iMS) = 2*length(freePars) + 2*negLogPost_opt;
+        if ~isempty(options.nDatapoints)
+            parameters.MS.BIC(iMS) = log(options.nDatapoints)*length(freePars) + 2*negLogPost_opt;
+        end
         
         % Save
         if options.save
@@ -391,19 +406,19 @@ if strcmp(options.comp_type,'parallel')
             % seperately (IP) or with the objective function (TR), so
             % different cases have to be checked.
             if strcmp(options.localOptimizerOptions.Algorithm, 'interior-point')
-                [J_0,~] = negLogPost(parameters.MS.par0(:,iMS));
+                [negLogPost0,~] = negLogPost(parameters.MS.par0(:,iMS));
             else
-                [J_0,~,~] = negLogPost(parameters.MS.par0(:,iMS));
+                [negLogPost0,~,~] = negLogPost(parameters.MS.par0(:,iMS));
             end
         elseif (strcmp(options.localOptimizerOptions.GradObj, 'on'))
-            [J_0,~] = negLogPost(parameters.MS.par0(:,iMS));
+            [negLogPost0,~] = negLogPost(parameters.MS.par0(:,iMS));
         else
-            J_0 = negLogPost(parameters.MS.par0(:,iMS));
+            negLogPost0 = negLogPost(parameters.MS.par0(:,iMS));
         end
         
         % Optimization
         startTimeLocalOptimization = cputime;
-        if J_0 < -options.init_threshold
+        if negLogPost0 < -options.init_threshold
             % Optimization using fmincon
             [theta,J_opt,exitflag(iMS),results_fmincon,~,gradient_opt,hessian_opt] = ...
                 fmincon(negLogPost,...  % negative log-posterior function

@@ -1,4 +1,5 @@
-function parameters = performOptimizationFmincon(parameters, negLogPost, iMS, par0, J_0, options)
+function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+    = performOptimizationFmincon(parameters, negLogPost, par0, options)
 
     % Definition of index set of optimized parameters
     freePars = setdiff(1:parameters.number, options.fixedParameters);
@@ -26,9 +27,9 @@ function parameters = performOptimizationFmincon(parameters, negLogPost, iMS, pa
         freeCon.beq = [];
     end
     
-    [theta,J_opt,exitflag,results_fmincon,~,gradient_opt,hessian_opt] = ...
+    [par_opt, negLogPost_opt, exitflag, results_fmincon, ~, gradient_opt, hessian_opt] = ...
         fmincon(negLogPost, ...  % negative log-likelihood function
-        par0(:,iMS), ...    % initial parameter
+        par0(:), ...    % initial parameter
         freeCon.A, freeCon.b, ... % linear inequality constraints
         freeCon.Aeq, freeCon.beq, ... % linear equality constraints
         parameters.min(freePars), ...     % lower bound
@@ -36,32 +37,25 @@ function parameters = performOptimizationFmincon(parameters, negLogPost, iMS, pa
         nonlcon, ...            % nonlinear constraints
         options.localOptimizerOptions);   % options
 
-    % Assignment of results
-    parameters.MS.exitflag(iMS) = exitflag;
-    parameters.MS.logPost0(1, iMS) = -J_0;
-    parameters.MS.logPost(iMS) = -J_opt;
-    parameters.MS.par(freePars,iMS) = theta;
-    parameters.MS.par(options.fixedParameters,iMS) = options.fixedParameterValues;
+    % Assignment of disgnosis
+    n_objfun = results_fmincon.funcCount;
+    n_iter = results_fmincon.iterations;
+    
+    % Adapt results for fixed parameter values
+    par_opt(freePars) = par_opt;
+    par_opt(options.fixedParameters) = options.fixedParameterValues;
     
     % Assignment of gradient and Hessian
-    parameters.MS.gradient(freePars,iMS) = gradient_opt;
-    parameters.MS.gradient(options.fixedParameters,iMS) = nan;
+    gradient_opt(freePars) = gradient_opt;
+    gradient_opt(options.fixedParameters) = nan;
     if isempty(hessian_opt)
         hessian_opt = nan(parameters.number);
     elseif max(hessian_opt(:)) == 0
         if strcmp(options.localOptimizerOptions.Hessian,'on')
-            [~,~,hessian_opt] = negLogPost(theta);
+            [~,~,hessian_opt] = negLogPost(par_opt);
         end
     end  
-    parameters.MS.hessian(freePars,freePars,iMS) = full(hessian_opt);
-    parameters.MS.hessian(options.fixedParameters,options.fixedParameters,iMS) = nan;
+    hessian_opt(freePars,freePars) = full(hessian_opt);
+    hessian_opt(options.fixedParameters,options.fixedParameters) = nan;
     
-    % Assignment of disgnosis
-    parameters.MS.n_objfun(iMS) = results_fmincon.funcCount;
-    parameters.MS.n_iter(iMS) = results_fmincon.iterations;
-    
-    parameters.MS.AIC(iMS) = 2*length(freePars) + 2*J_opt;
-    if ~isempty(options.nDatapoints)
-        parameters.MS.BIC(iMS) = log(options.nDatapoints)*length(freePars) + 2*J_opt;
-    end
 end
