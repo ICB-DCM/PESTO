@@ -221,12 +221,18 @@ function [parameters] = optimizeProfileForParameterI(parameters, objective_funct
     I1 = (1 : iPar-1)';
     I2 = (iPar+1 : parameters.number)';
     I  = [I1; I2];
+    
+    % Create options ans parameters for the reduced problem 
+    optionsRed = struct(...
+        'localOptimizerOptions', options.profileOptimizationOptions, ...
+        'fixedParameters', [options.fixedParameters; iPar], ...
+        'fixedParameterValues', [options.fixedParameterValues; nan]);
  
     % Compute profile for in- and decreasing theta_i
     for s = [-1,1]
         % Starting point
         theta  = parameters.MS.par(:, options.MAP_index);
-        logPost = parameters.MS.logPost(options.MAP_index);
+        logPostValue = parameters.MS.logPost(options.MAP_index);
 
         % Lower and upper bounds for profiles
         theta_min = [parameters.min(I1); options.P.min(iPar); parameters.min(I2)];
@@ -242,70 +248,60 @@ function [parameters] = optimizeProfileForParameterI(parameters, objective_funct
 
         % Sequential update
         while (options.P.min(iPar) < theta(iPar)) && (theta(iPar) < options.P.max(iPar)) && ...
-                (logPost >= (log(options.R_min) + parameters.MS.logPost(1)))
+                (logPostValue >= (log(options.R_min) + parameters.MS.logPost(1)))
 
             % Proposal of next profile point
             [theta_next,J_exp] = ...
                 getNextProfilePoint(theta,theta_min,theta_max,dtheta/abs(dtheta(iPar)),...
                 abs(dtheta(iPar)),options.options_getNextPoint.min,options.options_getNextPoint.max,options.options_getNextPoint.update,...
-                -(log(1-options.dR_max)+options.dJ*(logPost-logPost_max)+logPost),negLogPost,...
+                -(log(1-options.dR_max)+options.dJ*(logPostValue-logPost_max)+logPostValue),negLogPost,...
                 parameters.constraints,options.options_getNextPoint.mode,iPar, options.localOptimizer);
             negLogPostReduced = setObjectiveWrapper(objective_function, options, 'negative log-posterior', iPar, theta_next(iPar), true, true);
             
             % Check, if Hessian should be used and if a Hessian function was set,
             % otherwise use the third output of the objective function instead
-            if (strcmp(options.profileOptimizationOptions.Hessian, 'on'))
-                if (~isfield(options.profileOptimizationOptions, 'HessFcn') ...
-                        || isempty(options.profileOptimizationOptions.HessFcn))
-                    % this only works for box-constraints at the moment
-                    options.profileOptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
-                end
+            % (only works for box constraints atm)
+            useHessianWrap = strcmp(options.profileOptimizationOptions.Hessian, 'on') ...
+                && (~isfield(options.profileOptimizationOptions, 'HessFcn') ...
+                || isempty(options.profileOptimizationOptions.HessFcn));
+            if useHessianWrap
+                options.profileOptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
             end
             
-            % Construction of reduced linear constraints
-            [A,b,Aeq,beq] = getConstraints(theta,parameters,I);
+%             % Construction of reduced linear constraints
+%             [A,b,Aeq,beq] = getConstraints(theta,parameters,I);
             
             % Optimization
             try
                 switch options.localOptimizer
                     case 'fmincon'
-                        [theta_I_opt, negLogPostValue] = ...
-                            fmincon(negLogPostReduced,... % negative log-posterior function
-                            theta_next(I),...
-                            A  ,b  ,... % linear inequality constraints
-                            Aeq,beq,... % linear equality constraints
-                            parameters.min(I),...   % lower bound
-                            parameters.max(I),...   % upper bound
-                            [],options.profileOptimizationOptions);    % options
+                        [negLogPostValue, par_opt] = ...
+                            performOptimizationFmincon(parameters, negLogPostReduced, theta_next, optionsRed);
                     case 'lsqnonlin'
-                        [theta_I_opt] = lsqnonlin(negLogPostReduced,...
-                            theta_next(I), ...
-                            parameters.min(I),...   % lower bound
-                            parameters.max(I),...   % upper bound
-                            options.profileOptimizationOptions);
-                        [~, ~, negLogPostValue] = negLogPostReduced(theta_I_opt);
+                        [negLogPostValue, par_opt] = ...
+                            performOptimizationLsqnonlin(parameters, negLogPostReduced, theta_next, optionsRed);
                 end
                 stepCount = stepCount + 1;
             catch errMsg
-                theta_I_opt = theta_next;
+                par_opt = theta_next;
                 negLogPostValue = inf;
             end
 
             % Restore full vector and determine update direction
-            logPost = -negLogPostValue;
-            dtheta = [theta_I_opt(I1);theta_next(iPar);theta_I_opt(I2-1)] - theta;
+            logPostValue = -negLogPostValue;
+            dtheta = [par_opt(I1);theta_next(iPar);par_opt(I2-1)] - theta;
             theta = theta + dtheta;
 
             % Sorting
             switch s
                 case -1
                     Profile_par = [theta,Profile_par];
-                    Profile_logPost = [logPost,Profile_logPost];
-                    Profile_ratio = [exp(logPost - parameters.MS.logPost(1)),Profile_ratio];
+                    Profile_logPost = [logPostValue,Profile_logPost];
+                    Profile_ratio = [exp(logPostValue - parameters.MS.logPost(1)),Profile_ratio];
                 case +1
                     Profile_par = [Profile_par,theta];
-                    Profile_logPost = [Profile_logPost,logPost];
-                    Profile_ratio = [Profile_ratio,exp(logPost - parameters.MS.logPost(1))];
+                    Profile_logPost = [Profile_logPost,logPostValue];
+                    Profile_ratio = [Profile_ratio,exp(logPostValue - parameters.MS.logPost(1))];
             end
 
             % Assignment

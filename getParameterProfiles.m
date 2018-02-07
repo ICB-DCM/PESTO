@@ -80,7 +80,15 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
     if(~isfield(parameters, 'MS'))
         error('No information from optimization available. Please run getMultiStarts() before getParameterProfiles.');
     end
-
+    
+    % Check if the offset between logPost and chi2 needs to be computed
+    if (strcmp(options.localOptimizer, 'lsqnonlin') && isempty(options, 'logPostOffset'))
+        [residuals, ~, negLogPost0] = negLogPost(parameters.MS.par(:,1));
+        chi2value = -sum(residuals.^2);
+        logPostOffset = negLogPost0 - chi2value;
+        options.logPostOffset = logPostOffset;
+    end
+                
     % Check and assign options
     options.P.min = parameters.min;
     options.P.max = parameters.max;
