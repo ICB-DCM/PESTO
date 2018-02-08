@@ -42,12 +42,12 @@ rng(0);
 
 % Wrap models for AMICI simulation, if necessary
 [exdir,~,~] = fileparts(which('rafmekerk_pesto_syms.m'));
-% try
-%     amiwrap('rafmekerk_pesto','rafmekerk_pesto_syms',exdir,1);
-% catch ME
-%     warning('This example uses the additional toolbox AMICI for ODE simulation (freely available at https://github.com/ICB-DCM/AMICI). It seems that AMICI is not or not proeperly installed, since using it resulted in an error. The original error message was:');
-%     rethrow(ME);
-% end
+try
+    amiwrap('rafmekerk_pesto','rafmekerk_pesto_syms',exdir,1);
+catch ME
+    warning('This example uses the additional toolbox AMICI for ODE simulation (freely available at https://github.com/ICB-DCM/AMICI). It seems that AMICI is not or not proeperly installed, since using it resulted in an error. The original error message was:');
+    rethrow(ME);
+end
 
 %% Data
 % Load data

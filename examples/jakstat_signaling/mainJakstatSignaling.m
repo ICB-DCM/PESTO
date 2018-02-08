@@ -50,12 +50,12 @@ rng(0);
 % al.
 
 [exdir,~,~]=fileparts(which('mainJakstatSignaling.m'));
-% try
-%     amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 1);
-% catch ME
-%     warning('This PESTO example uses the AMICI toolbox (available at https://github.com/ICB-DCM/AMICI). Unfortunately, there was a problem with AMICI when trying to run this example file. Please check if AMICI is properly installed to run this example. The original error message was:');
-%     rethrow(ME);
-% end
+try
+    amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 1);
+catch ME
+    warning('This PESTO example uses the AMICI toolbox (available at https://github.com/ICB-DCM/AMICI). Unfortunately, there was a problem with AMICI when trying to run this example file. Please check if AMICI is properly installed to run this example. The original error message was:');
+    rethrow(ME);
+end
 
 %% Data
 % Experimental data is read out from an .xls-file and written to an AMICI
