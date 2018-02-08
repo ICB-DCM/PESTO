@@ -107,7 +107,7 @@ function varargout = objectiveWrap(theta, objectiveFunction, wrapperOptions, var
         % Derive output
         switch nargout
             case {0,1}
-                varargout = {-objSign * inf};
+                varargout = {inf};
             case 2
                 if strcmp(optimizer, 'lsqnonlin')
                     varargout = {inf(size(J)), zeros(length(J), length(freeInd))};
