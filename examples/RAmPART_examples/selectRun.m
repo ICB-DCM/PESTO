@@ -1142,7 +1142,7 @@ function selectRun( b, targetDir )
    end
    meta=res.S; meta.par=[];
    targetFile = [targetDir filesep 'res_' num2str(b)];   
-   save(targetFile,'par','options.MCMC','smpl','calcTime','meta');
+   save(targetFile,'par','options','smpl','calcTime','meta');
    
 end
 
