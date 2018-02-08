@@ -6,8 +6,8 @@ function [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options)
 % Input:
 % fun     : objective function to be minimized
 % x0      : initial guess for parameters
-% lb, ub  : bounds for parameters, no value should be inf and the
-% difference ub-lb in no component be < 0
+% lb, ub  : bounds for parameters, i.e. lb <= x <= ub; no value should be 
+%           inf and the difference ub-lb in no component be < 0
 % options : struct with options for the algorithm:
 %   TolX              : tolerance of parameter
 %   TolFun            : tolerance of objective function
@@ -37,27 +37,34 @@ function [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options)
 % 2017/09/27 Yannik Schaelte
 
 % number of variables
-dim  = length(x0); % number of variables
+dim  = length(x0);
 
 % interpret options
-[tolX,tolFun,maxFunEvals,outputFcn,...
-    initialStepSize,expandFactor,contractFactor,stuckSearchFactor,barrier,...
-    display]...
-    = f_extractOptions(options,dim);
-if (isa(outputFcn,'function_handle'))
-    visual = true;
-else
-    visual = false;
-end
+options  = f_validateOptions(options,dim);
+% extract often used options
+tolX                = options.TolX;
+tolFun              = options.TolFun;
+maxFunEvals         = options.MaxFunEvals;
+initialStepSize     = options.InitialStepSize;
+expandFactor        = options.ExpandFactor;
+contractFactor      = options.ContractFactor;
+stuckSearchFactor   = options.StuckSearchFactor;
+barrier             = options.Barrier;
 
 % create column vectors
 lb      = lb(:);
 ub      = ub(:);
 x0      = x0(:);
+
+% normalize to unit square
 normalize   = @(x) f_normalize(x,lb,ub);
 denormalize = @(y) f_denormalize(y,lb,ub);
 y0      = normalize(x0);
 tolY    = tolX / norm(ub-lb);
+
+% output function for in-time analysis
+outputFcn = @(y,fval,funEvals,mode) f_output(y,denormalize,fval,funEvals,mode,options.OutputFcn);
+
 % max step size
 vmax = initialStepSize * ones(dim,1);
 
@@ -71,7 +78,7 @@ xstep  = step;             % steps before last motion
 xnorms = norms;
 gradv  = zeros(dim,1);     % gradient vector
 gradi  = -1;               % index of gradient vector, -1 indicates gradv is not set
-lastj  = -1;               % index of last step taken
+prevj  = -1;               % index of last step taken
 stuck  = false;            % is process stuck (in min/max)? set when step sizes are small
 % then step vectors are increased
 done   = false;            % is some finishing criterion fulfilled?
@@ -89,61 +96,64 @@ ybst      = y0;
 fbst      = fun(ybst,funEvals);
 funEvals  = funEvals + 1;
 
-if (visual)
-    f_output(denormalize(ybst),fbst,funEvals,'init',outputFcn); % create new figure and initialize
-    f_output(denormalize(ybst),fbst,funEvals,'iter',outputFcn); % first iteration with start point and jIter = 0
-end
+outputFcn(ybst,fbst,funEvals,'init'); % create new figure and initialize
+outputFcn(ybst,fbst,funEvals,'iter'); % first iteration with start point
 
-while (~done)
+% main loop
+while ~done
     
-    if (stuck)
+    if stuck
         % choose the smallest step, if any is smaller than the maximum size
-        [v,j] = f_min(step,norms,smax,stuckSearchFactor*tolY);
+        [v,j] = f_min(step,norms,smax);
     else
         % choose the largest step
         [v,j] = f_max(step,norms);
     end
     
-    f_display(display,funEvals,fbst,norm(v));
+    % textual output
+    f_display(options.Display,funEvals,fbst,norm(v));
     
     % j == -1 indicates minimum found
-    if ( j ~= -1 && funEvals <= maxFunEvals )
+    if j ~= -1 && funEvals <= maxFunEvals
         % compute next x, fval
         ycur = ybst + v;
         fcur = fun(ycur,funEvals);
         funEvals = funEvals + 1;
         
-        % is better estimate?
         delta_f = fcur - fbst;
-        if ( delta_f < 0 && (norm(v)>tolX/stuckSearchFactor || abs(delta_f) > tolFun) )
-            stuck = false; % we are not stuck somewhere (anymore)
-            % update x, fval
+        
+        % is better estimate?
+        if delta_f < 0
             ybst = ycur;
             fbst = fcur;
+        end
+        
+        % is significantly better estimate?
+        if delta_f < 0 && (norm(v)>tolX/stuckSearchFactor || abs(delta_f) > tolFun)
+            % we are not stuck somewhere (anymore)
+            stuck = false; 
             % contract opp step to not try the previous point next
             step(:,opp_j(j)) = -contractFactor*v;
             norms(opp_j(j)) = norm(step(:,opp_j(j)));
-            % TODO do? no.
-            % step(:,j) = expandFactor*step(:,j);
             % if last step repeated, expand the current step
-            if ( j == lastj )
+            if j == prevj
                 v = expandFactor*v;
             end
             % xstep always contains the steps of the last time we moved
             xstep = step;
             xnorms = norms;
             % record the last step
-            lastj = j;
+            prevj = j;
             % record step
             step(:,j) = v;
             norms(j) = norm(v);
             
             % update gradient vector
-            if (gradi == -1)
+            if gradi == -1
                 % if gradv empty, set gradv to current step and record index
                 gradv = v;
                 gradi = min([j, opp_j(j)]);
-            elseif (gradi == min([j, opp_j(j)]))
+            elseif gradi == min([j, opp_j(j)])
                 % if gradv is parallel to current step, add the current vector
                 gradv = (gradv + v);
             else
@@ -157,22 +167,20 @@ while (~done)
                 step(:,dim+2) = -contractFactor*step(:,dim+1);
                 norms(dim+2) = abs(contractFactor)*norms(dim+1);
                 % update gradv
-                % TODO do every round? mixed results
-                %gradv         = step(:,j);
                 gradi =-1;%        = min([j, opp_j(j)]);
             end
-            % else: if already stuck, increase the current step size
-        else
-            if (stuck)
+        else % not significantly better estimate
+            if stuck
+                % if already stuck, increase the current step size
                 step(:,j) = expandFactor*v;
                 norms(j) = norm(step(:,j));
-                % else: if current step norm >= tolX, decrease the current step size
-            elseif ( norm(step(:,j)) >= tolY )
+            elseif norm(step(:,j)) >= tolY
+                % if current step norm >= tolY, decrease the current step size
                 step(:,j) = contractFactor*v;
                 norms(j) = norm(step(:,j));
-                % else: (norm < tolX), set the stuck flag and set all steps to
-                % expandFactor times the last recorded steps
             else
+                % else (norm < tolY): set the stuck flag and set all steps to
+                % expandFactor times the last recorded steps
                 stuck = true;
                 step = expandFactor * xstep;
                 norms = abs(expandFactor)*xnorms;
@@ -180,14 +188,12 @@ while (~done)
         end
         
         % update output
-        if (visual)
-            f_output(denormalize(ybst),fbst,funEvals,'iter',outputFcn);
-        end
+        outputFcn(ybst,fbst,funEvals,'iter');
         
     else % somehow done
         done = true;
-        if (funEvals <= maxFunEvals)
-            % found a local minimum
+        if funEvals <= maxFunEvals
+            % maybe found a local minimum
             exitflag = 1;
         else
             % needed too long
@@ -197,18 +203,17 @@ while (~done)
     
 end
 
+% finalize output
+outputFcn(ybst,fbst,funEvals,'done');
+
 % assign return values
 x                   = denormalize(ybst);
 fval                = fbst;
+output = struct();
 output.funcCount    = funEvals;
 output.iterations   = funEvals;
 output.algorithm    = 'Dynamic Hill Climb';
 output.t_cpu        = cputime - starttime;
-
-% finalize output
-if (visual)
-    f_output(denormalize(ybst),fbst,funEvals,'done',outputFcn);
-end
 
 end % function
 
@@ -216,33 +221,36 @@ end % function
 %% helper functions
 
 function y = f_normalize(x,lb,ub)
+% normalize vector to [0,1]
 
 y = (x-lb)./abs(ub-lb);
 
 end
 
 function x = f_denormalize(y,lb,ub)
+% denormalize vector from [0,1]
 
 x = y.*(ub-lb) + lb;
 
 end
 
 function j_opp = f_opp_j(j,nVec)
-
 % short for opposite vector in step matrix
+
 j_opp = nVec - (j-1);
 
 end
 
 function fval = f_wrap_fun(x,fun,lb,ub,barrier,funEvals,maxFunEvals)
+% wrap around function to allow for a barrier function wrap
 
 % set fun to inf whenever conditions not fulfilled
-if (~isequal(barrier,''))
+if ~isequal(barrier,'')
     fval = fun(x);
     fval = barrierFunction(fval, [], x, [lb, ub], funEvals, maxFunEvals, barrier);
 else
     % extreme barrier
-    if (any(x>ub) || any(x<lb))
+    if any(x>ub) || any(x<lb)
         fval = inf;
     else
         fval = fun(x);
@@ -252,6 +260,8 @@ end
 end
 
 function [step,norms] = f_init_step(vmax)
+% create dim x (2*dim+2)-matrix containing the step proposals as columns
+% also return the norms of the steps to reduce computations
 
 dim  = length(vmax);
 
@@ -259,24 +269,25 @@ nVec = 2*dim + 2;
 step = zeros(dim,nVec);
 norms = zeros(1,nVec);
 % 2 positions in the center reserved for gradient
-for j=1:dim
+for j = 1:dim
     initStepSize       = abs(vmax(j));
     step(j,j)          = initStepSize;
     step(j,nVec-(j-1)) = -initStepSize;
-    norms(j) = initStepSize;
-    norms(nVec-(j-1)) = initStepSize;
+    norms(j)           = initStepSize;
+    norms(nVec-(j-1))  = initStepSize;
 end
 
 end
 
 function [v_max,j_max] = f_max(step,norms)
+% find step with maximal norm
 
 [~,j_max] = max(norms);
 v_max = step(:,j_max);
 
 end
 
-function [v_min,j_min] = f_min(step,norms,smax,tolerance)
+function [v_min,j_min] = f_min(step,norms,smax)
 % find step with smallest norm, if one exists whose norm is smaller than
 % the corresponding smax max step size
 
@@ -286,7 +297,7 @@ v_min   = -1;
 nVec    = size(step,2);
 for j=1:nVec
     vnorm = norms(j);
-    if ( vnorm <= tolerance && (vnorm < minnorm || minnorm < 0) && vnorm > 0) % tolerance % smax(min([j, nVec-(j-1)]))
+    if ( vnorm <= smax(min([j, nVec-(j-1)])) && (vnorm < minnorm || minnorm < 0) && vnorm > 0) % tolerance % smax(min([j, nVec-(j-1)]))
         minnorm = vnorm;
         j_min = j;
     end
@@ -298,85 +309,93 @@ end
 
 end
 
-function [tolX,tolFun,maxFunEvals,outputFcn,...
-    initialStepSize,expandFactor,contractFactor,stuckSearchFactor,barrier,...
-    display]...
-    = f_extractOptions(options,dim)
+function [ optionsDhc ] = f_validateOptions(options,dim)
+% fill empty or invalid fields with default values
+
+optionsDhc = struct();
 
 % interpret options
 
 if (isfield(options,'TolX') && ~isempty(options.TolX))
-    tolX    = options.TolX;
+    optionsDhc.TolX    = options.TolX;
 else
-    tolX    = 1e-8;
+    optionsDhc.TolX    = 1e-8;
 end
 
 if (isfield(options,'TolFun') && ~isempty(options.TolFun))
-    tolFun  = options.TolFun;
+    optionsDhc.TolFun  = options.TolFun;
 else
-    tolFun  = 1e-8;
+    optionsDhc.TolFun  = 1e-8;
 end
 
 if (isfield(options,'MaxFunEvals') && ~isempty(options.MaxFunEvals))
-    maxFunEvals = options.MaxFunEvals;
+    optionsDhc.MaxFunEvals = options.MaxFunEvals;
 else
-    maxFunEvals = 1000*dim;
+    optionsDhc.MaxFunEvals = 1000*dim;
 end
 
 if (isfield(options,'OutputFcn') && ~isempty(options.OutputFcn))
-    outputFcn = options.OutputFcn;
+    optionsDhc.OutputFcn = options.OutputFcn;
 else
-    outputFcn = nan;
+    optionsDhc.OutputFcn = nan;
 end
 
 % adjustment parameters
 
 if (isfield(options,'InitialStepSize') && ~isempty(options.InitialStepSize))
-    initialStepSize           = options.InitialStepSize;
+    optionsDhc.InitialStepSize           = options.InitialStepSize;
 else
-    initialStepSize           = 0.1;
+    optionsDhc.InitialStepSize           = 0.1;
 end
 
 if (isfield(options,'ExpandFactor') && ~isempty(options.ExpandFactor))
-    expandFactor              = options.ExpandFactor;
+    optionsDhc.ExpandFactor              = options.ExpandFactor;
 else
-    expandFactor              = 2.1;
+    optionsDhc.ExpandFactor              = 2.1;
 end
 
 if (isfield(options,'ContractFactor') && ~isempty(options.ContractFactor))
-    contractFactor            = options.ContractFactor;
+    optionsDhc.ContractFactor            = options.ContractFactor;
 else
-    contractFactor            = 0.47;
+    optionsDhc.ContractFactor            = 0.47;
 end
 
 if (isfield(options,'StuckSearchFactor') && ~isempty(options.StuckSearchFactor))
-    stuckSearchFactor         = options.StuckSearchFactor;
+    optionsDhc.StuckSearchFactor         = options.StuckSearchFactor;
 else
-    stuckSearchFactor         = 4;
+    optionsDhc.StuckSearchFactor         = 4;
 end
 
 if (isfield(options,'Barrier'))
-    barrier                   = options.Barrier;
+    optionsDhc.Barrier                   = options.Barrier;
 else
-    barrier                   = '';
+    optionsDhc.Barrier                   = '';
 end
 
 if (isfield(options,'Display') && ~isempty(options.Display))
-    display                   = options.Display;
+    optionsDhc.Display                   = options.Display;
 else
-    display                   = 'off';
+    optionsDhc.Display                   = 'off';
 end
 
 end
 
-function f_output(x,fval,iter,state,outputFcn)
+function f_output(y,f_denormalize,fval,funEvals,state,outputFcn)
 % short for call to output function
-optimValues.fval = fval;
-optimValues.iteration = iter;
-outputFcn(x,optimValues,state);
+% state: 'init', 'iter', or 'done'
+
+if isa(outputFcn,'function_handle')
+    x = f_denormalize(y);
+    optimValues.fval = fval;
+    optimValues.iteration = funEvals;
+    outputFcn(x,optimValues,state);
+end
+
 end
 
 function f_display(display,funEvals,fbst,vnorm)
+% short for call to display on screen
+
 if (strcmp(display,'iter') || strcmp(display,'debug'))
     if (strcmp(display,'debug'))
         show_output = true;
@@ -388,4 +407,3 @@ if (strcmp(display,'iter') || strcmp(display,'debug'))
 end
 
 end
-
