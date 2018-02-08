@@ -89,12 +89,12 @@
     catch error_thrown
 
         warning(['Evaluation of likelihood failed. ',error_thrown.message]);
-        varargout{1} = inf(2*nData,1);
+        res = inf(2*nData,1);
         if (nargout == 2)
-            varargout{2} = zeros(2*nData,nPar);
+            sres = zeros(2*nData,nPar);
         elseif (nargout == 3)
-            varargout{2} = zeros(2*nData,nPar);
-            varargout{3} = inf;
+            sres = zeros(2*nData,nPar);
+            llh = inf;
         end
     end
 

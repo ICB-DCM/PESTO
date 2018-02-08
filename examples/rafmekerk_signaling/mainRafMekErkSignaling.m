@@ -42,12 +42,12 @@ rng(0);
 
 % Wrap models for AMICI simulation, if necessary
 [exdir,~,~] = fileparts(which('rafmekerk_pesto_syms.m'));
-try
-    amiwrap('rafmekerk_pesto','rafmekerk_pesto_syms',exdir,1);
-catch ME
-    warning('This example uses the additional toolbox AMICI for ODE simulation (freely available at https://github.com/ICB-DCM/AMICI). It seems that AMICI is not or not proeperly installed, since using it resulted in an error. The original error message was:');
-    rethrow(ME);
-end
+% try
+%     amiwrap('rafmekerk_pesto','rafmekerk_pesto_syms',exdir,1);
+% catch ME
+%     warning('This example uses the additional toolbox AMICI for ODE simulation (freely available at https://github.com/ICB-DCM/AMICI). It seems that AMICI is not or not proeperly installed, since using it resulted in an error. The original error message was:');
+%     rethrow(ME);
+% end
 
 %% Data
 % Load data
@@ -120,7 +120,7 @@ objectiveFunction = @(theta) logLikelihoodRME(theta, amiD);
 % example.
 
 optionsPesto = PestoOptions();
-optionsPesto.n_starts = 10; 
+optionsPesto.n_starts = 25; 
 optionsPesto.mode = 'visual';
 optionsPesto.proposal = 'latin hypercube';
 optionsPesto.trace = false;
@@ -133,7 +133,7 @@ optionsPesto.localOptimizerOptions.Display = 'iter';
 optionsPesto.localOptimizerOptions.GradObj = 'on';
 optionsPesto.localOptimizerOptions.Hessian = 'on';
 optionsPesto.localOptimizerOptions.MaxFunEvals = 10000;
-optionsPesto.localOptimizerOptions.MaxIter = 1000;
+optionsPesto.localOptimizerOptions.MaxIter = 500;
 
 % % This example can be run using lsqnonlin as local optimizer
 % objectiveFunction = @(theta) logLikelihoodRMELsqnonlin(theta, amiD);
