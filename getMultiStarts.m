@@ -108,7 +108,7 @@ switch options.mode
         fprintf(' \nOptimization:\n=============\n');
     case 'silent' % no output
         % Force fmincon to be silent.
-        if ifield(options.localOptimizerOptions, 'Display')
+        if isfield(options.localOptimizerOptions, 'Display')
             options.localOptimizerOptions.Display = 'off';
         end
 end
@@ -259,26 +259,17 @@ if strcmp(options.comp_type, 'sequential')
             else
                 residuals = negLogPost(par0(freePars,iMS));
             end
-            if isempty(options.logPostOffset)
-                if ~all(isfinite(residuals))
-                    negLogPost0 = inf;
-                else
-                    [~,~,negLogPost0] = negLogPost(par0(freePars,iMS));
-                    logPostOffset = negLogPost0 - 0.5 * sum(residuals.^2);
-                    options.logPostOffset = logPostOffset;
-                    parameters.MS.logPost0(iMS) = -negLogPost0;
-                end
-            end
-
+            negLogPost0 = 0.5 * sum(residuals.^2);
+            parameters.MS.logPost0(iMS) = -negLogPost0;
         elseif (any(strcmp(options.localOptimizer, {'dhc','cs','bobyqa'})))
             negLogPost0 = negLogPost(par0(freePars,iMS));
         else
-            negLogPost0 = [];
+            negLogPost0 = nan;
         end
         
         % Optimization
         startTimeLocalOptimization = cputime;
-        if (isempty(negLogPost0) || (negLogPost0 < -options.init_threshold))
+        if (isnan(negLogPost0) || (negLogPost0 < -options.init_threshold))
             
             %% do optimization with chosen algorithm
             try
@@ -300,8 +291,11 @@ if strcmp(options.comp_type, 'sequential')
 
                     case 'lsqnonlin'
                         % Optimization using dynamic hill climbin as local optimizer
-                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter, logPostOffset] ...
                             = performOptimizationLsqnonlin(parameters, negLogPost, par0(:,iMS), options);
+                        if ~isempty(logPostOffset)
+                            options.logPostOffset = logPostOffset;
+                        end
 
                     case 'cs'
                         % Optimization using randomized coordinate search as local optimizer
