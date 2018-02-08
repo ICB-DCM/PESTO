@@ -31,8 +31,8 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
     n_iter = size(Results.neval, 2);
 
     exitflag= Results.end_crit;
-    negLogPost_opt = -Results.fbest;
-    par_opt = Results.xbest;
+    negLogPost_opt = Results.fbest;
+    par_opt = Results.xbest(:);
     
     % Assignment of gradient and Hessian
     try

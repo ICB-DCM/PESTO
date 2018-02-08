@@ -25,7 +25,7 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
     exitflag = nan;
     n_objfun = RunData.ObjFunCounter;
     n_iter = RunData.IterCounter;
-    par_opt(options.fixedParameters,iMS) = options.fixedParameterValues;
+    par_opt(options.fixedParameters) = options.fixedParameterValues;
     
     % Assignment of gradient and Hessian
     try
