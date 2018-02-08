@@ -3,13 +3,13 @@ function parameters = performOptimizationDirect(parameters, negLogPost, iMS, opt
     % Definition of index set of optimized parameters
     freePars = setdiff(1:parameters.number, options.fixedParameters);
     
-    objFunHandle = @(theta) negLogPost(theta);
+    objfun = @(theta) f_naninfwrap(negLogPost,theta);
     
     optionsDirect = options.localOptimizerOptions;
     
     % Define problem
     problem = struct();
-    problem.f = objFunHandle;
+    problem.f = objfun;
     
     bounds = zeros(parameters.number,2);
     bounds(:,1) = parameters.min(:);
@@ -48,4 +48,14 @@ function parameters = performOptimizationDirect(parameters, negLogPost, iMS, opt
         parameters.MS.BIC(iMS) = log(options.nDatapoints)*length(freePars) + 2*J_Opt;
     end
                         
+end
+
+function [fval] = f_naninfwrap(fun,x)
+
+fval = fun(x);
+
+if isnan(fval) || isinf(fval)
+    fval = 1e5;
+end
+
 end

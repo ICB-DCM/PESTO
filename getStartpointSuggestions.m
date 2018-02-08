@@ -41,6 +41,30 @@ switch solver
         xs = xs(:,index);
         betterGuess = xs(:,1:n_starts);
         
+    case 'simple2'
+        x = bsxfun(@plus,lb,bsxfun(@times,ub-lb,lhsdesign(maxFunEvals/10,dim,'smooth','off')'));
+        optionsMS = PestoOptions();
+        optionsMS.n_starts = maxFunEvals/10;
+        optionsMS.localOptimizer = 'fmincon';
+        optionsMS.proposal = 'user-supplied';
+        optionsMS.objOutNumber = 2;
+        optionsMS.mode = 'text';
+        optionsMS.obj_type = 'negative log-posterior';
+        lOptions = optimoptions(@fmincon);
+        lOptions.MaxFunctionEvaluations = 10;
+        lOptions.MaxIterations = 10;
+        lOptions.Display = 'off';
+        lOptions.GradObj = 'on';
+        optionsMS.localOptimizerOptions = lOptions;
+        
+        parametersMS = parameters;
+        parametersMS.guess = x;
+        
+        parametersMS = getMultiStarts(parametersMS, negLogPost, optionsMS);
+        parametersMS.MS.logPost
+        
+        betterGuess = parametersMS.MS.par(:,1:n_starts);
+        
     case 'snobfit'
         lOptions = struct();
         lOptions.MaxFunEvals = maxFunEvals;

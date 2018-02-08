@@ -108,7 +108,7 @@ switch options.mode
         fprintf(' \nOptimization:\n=============\n');
     case 'silent' % no output
         % Force fmincon to be silent.
-        if ifield(options.localOptimizerOptions, 'Display')
+        if isfield(options.localOptimizerOptions, 'Display')
             options.localOptimizerOptions.Display = 'off';
         end
 end
