@@ -50,12 +50,12 @@ rng(0);
 % al.
 
 [exdir,~,~]=fileparts(which('mainJakstatSignaling.m'));
-try
-    amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir);
-catch ME
-    warning('This PESTO example uses the AMICI toolbox (available at https://github.com/ICB-DCM/AMICI). Unfortunately, there was a problem with AMICI when trying to run this example file. Please check if AMICI is properly installed to run this example. The original error message was:');
-    rethrow(ME);
-end
+% try
+%     amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 1);
+% catch ME
+%     warning('This PESTO example uses the AMICI toolbox (available at https://github.com/ICB-DCM/AMICI). Unfortunately, there was a problem with AMICI when trying to run this example file. Please check if AMICI is properly installed to run this example. The original error message was:');
+%     rethrow(ME);
+% end
 
 %% Data
 % Experimental data is read out from an .xls-file and written to an AMICI
@@ -120,7 +120,7 @@ optionsPesto.mode     = 'visual';
 % three times, to ensure that the found optimum is indeed the global one.
 
 
-% % Multi-start local optimization part (fmincon)
+% Multi-start local optimization part (fmincon)
 % optionsPesto.n_starts = 25;
 % optionsPesto.localOptimizer = 'fmincon';
 % optionsPesto.localOptimizerOptions = optimset(...
@@ -151,6 +151,16 @@ objectiveFunction = @(theta) logLikelihoodJakstatLsqnonlin(theta, amiData);
 % % Hybrid-type optimization part (requires the MEIGO toolbox)
 % % (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
 % % uncomment):
+%
+% optionsPestoHybrid.obj_type = 'log-posterior';
+% optionsPestoHybrid.localOptimizer = 'meigo-ess';
+% optionsPestoHybrid.n_starts = 10;
+% MeigoOptions = struct(...
+%     'maxeval', 2e4, ...
+%     'local', struct('solver', 'fmincon', ...
+%     'finish', 'fmincon', ...
+%     'iterprint', 1) ...
+%     );
 % optionsPestoHybrid.localOptimizerOptions = MeigoOptions;
 
 % % Global optimization part (requires the PSwarm toolbox)
