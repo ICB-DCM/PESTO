@@ -80,14 +80,6 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
     if(~isfield(parameters, 'MS'))
         error('No information from optimization available. Please run getMultiStarts() before getParameterProfiles.');
     end
-    
-    % Check if the offset between logPost and chi2 needs to be computed
-    if (strcmp(options.localOptimizer, 'lsqnonlin') && isempty(options, 'logPostOffset'))
-        [residuals, ~, negLogPost0] = negLogPost(parameters.MS.par(:,1));
-        chi2value = -sum(residuals.^2);
-        logPostOffset = negLogPost0 - chi2value;
-        options.logPostOffset = logPostOffset;
-    end
                 
     % Check and assign options
     options.P.min = parameters.min;
@@ -101,6 +93,13 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
     end
     if (isempty(options.MAP_index))
         options.MAP_index = 1;
+    end
+    
+    % Check for emptiness of options
+    if (strcmp(options.localOptimizer, 'lsqnonlin') && isempty(options.logPostOffset))
+        residuals = objective_function(parameters.MS.par(:,1));
+        logPostOffset = - parameters.MS.logPost(1) - 0.5 * sum(residuals.^2);
+        options.logPostOffset = logPostOffset;
     end
 
     % Check for emptiness of options
@@ -123,19 +122,19 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
     
     switch options.profile_method  
         case 'optimization'
-            options.parameter_index = union(options.profile_optim_index, options.parameter_index);
+            options.parameter_index = setdiff(union(options.profile_optim_index, options.parameter_index), options.fixedParameters);
             options.profile_optim_index = transpose(options.parameter_index(:));
             
         case 'integration'
-            options.parameter_index = union(options.profile_integ_index, options.parameter_index);
+            options.parameter_index = setdiff(union(options.profile_integ_index, options.parameter_index), options.fixedParameters);
             options.profile_integ_index = transpose(options.parameter_index(:));
             
         case 'mixed'
             % If profiles are to be computed in a mixed manner, the correpsonding
             % indices must be set properly
-            options.parameter_index = union(options.profile_optim_index, options.profile_integ_index);
-            options.profile_optim_index = transpose(options.profile_optim_index(:));
-            options.profile_integ_index = transpose(options.profile_integ_index(:));
+            options.parameter_index = setdiff(union(options.profile_optim_index, options.profile_integ_index), options.fixedParameters);
+            options.profile_optim_index = transpose(setdiff(options.profile_optim_index(:), options.fixedParameters(:)));
+            options.profile_integ_index = transpose(setdiff(options.profile_integ_index(:), options.fixedParameters(:)));
             
         otherwise
                 error('Unknown profile computationg method. Please choose optimization, integration, mixed, or default');

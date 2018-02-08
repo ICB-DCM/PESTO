@@ -259,19 +259,17 @@ if strcmp(options.comp_type, 'sequential')
             else
                 residuals = negLogPost(par0(freePars,iMS));
             end
-            if any(isnan(residuals))
-                negLogPost0 = inf;
-            else
-                if isempty(options, 'logPostOffset')
-                    [~, ~, negLogPost0] = negLogPost(par0(freePars,iMS));
-                    chi2value = -sum(residuals.^2);
-                    logPostOffset = negLogPost0 - chi2value;
-                    options.logPostOffset = logPostOffset;
+            if isempty(options.logPostOffset)
+                if ~all(isfinite(residuals))
+                    negLogPost0 = inf;
                 else
-                    negLogPost0 = chi2value + logPostOffset;
+                    [~,~,negLogPost0] = negLogPost(par0(freePars,iMS));
+                    logPostOffset = negLogPost0 - 0.5 * sum(residuals.^2);
+                    options.logPostOffset = logPostOffset;
+                    parameters.MS.logPost0(iMS) = -negLogPost0;
                 end
-                parameters.MS.logPost0(iMS) = negLogPost0;
             end
+
         elseif (any(strcmp(options.localOptimizer, {'dhc','cs','bobyqa'})))
             negLogPost0 = negLogPost(par0(freePars,iMS));
         else

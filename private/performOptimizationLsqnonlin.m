@@ -8,14 +8,14 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
     % Run lsqnonlin
     [par_opt, chi2value, ~, exitflag, results_lsqnonlin, ~, jacobian_opt] = lsqnonlin(...
         negLogPost,...
-        par0, ...
+        par0(freePars), ...
         parameters.min(freePars), ...
         parameters.max(freePars), ...
         options.localOptimizerOptions);
     
     % Assignment of results
-    negLogPost_opt = -chi2value + options.logPostOffset;
-    par_opt(freePars,iMS) = par_opt;
+    negLogPost_opt = 0.5 * chi2value + options.logPostOffset;
+    par_opt(freePars) = par_opt;
     par_opt(options.fixedParameters) = options.fixedParameterValues;
     n_objfun = results_lsqnonlin.funcCount;
     n_iter = results_lsqnonlin.iterations;
@@ -25,8 +25,6 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
     if ~isempty(jacobian_opt)
         hessian_sqrt = full(jacobian_opt);
         hessian_opt = hessian_sqrt' * hessian_sqrt;
-        parameters.MS.hessian(freePars,freePars,iMS) = full(hessian_opt);
-        parameters.MS.hessian(options.fixedParameters,options.fixedParameters,iMS) = nan;
     end
     
 end
