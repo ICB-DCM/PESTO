@@ -18,18 +18,18 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
         optionsBobyqa);
     
     % Assignment of results
-    n_objfun(iMS)  = output.funcCount;
-    n_iter(iMS)    = output.funcCount;
+    n_objfun  = output.funcCount;
+    n_iter    = output.funcCount;
     par_opt(freePars) = par_opt;
     par_opt(options.fixedParameters) = options.fixedParameterValues;
     
     % Assignment of gradient and Hessian
     try
         [~, gradient_opt, hessian_opt] = negLogPost(par_opt);
-        hessian_opt(freePars,freePars,iMS) = hessian_opt;
-        hessian_opt(options.fixedParameters,options.fixedParameters,iMS) = nan;
-        gradient_opt(freePars,iMS) = gradient_opt;
-        gradient_opt(options.fixedParameters,iMS) = nan;
+        hessian_opt(freePars,freePars) = hessian_opt;
+        hessian_opt(options.fixedParameters,options.fixedParameters) = nan;
+        gradient_opt(freePars) = gradient_opt;
+        gradient_opt(options.fixedParameters) = nan;
     catch
         warning('Could not compute Hessian and gradient at optimum after optimization.');
         if (options.objOutNumber == 3)

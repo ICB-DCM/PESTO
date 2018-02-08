@@ -18,8 +18,8 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
         optionsDHC);
     
     % Assignment of results
-    n_objfun(iMS)  = output.funcCount;
-    n_iter(iMS)    = output.iterations;
+    n_objfun  = output.funcCount;
+    n_iter    = output.iterations;
     par_opt(freePars) = par_opt;
     par_opt(options.fixedParameters) = options.fixedParameterValues;
     
