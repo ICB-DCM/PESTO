@@ -31,8 +31,12 @@ function parameters = performOptimizationMcs(parameters, negLogPost, iMS, option
     
     objfun = @(x) f_naninfWrap(negLogPost,x);
 
-	[x,fval,~,~,ncall,~,flag] = mcs(fcn,objfun,parameters.min,parameters.max,printLevel,smax,maxFunEvals);
-	
+    % TODO won't work yet
+%     mcsdir=fileparts(which('optim.mcs.mcs.m'));
+%     addpath(mcsdir);
+% 	[x,fval,~,~,ncall,~,flag] = optim.mcs.mcs(fcn,objfun,parameters.min,parameters.max,printLevel,smax,maxFunEvals);
+    [x,fval,~,~,ncall,~,flag] = mcs(fcn,objfun,parameters.min,parameters.max,printLevel,smax,maxFunEvals);
+        
     %TODO
     % parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
     % parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints

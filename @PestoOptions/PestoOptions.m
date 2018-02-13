@@ -569,7 +569,7 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         end
         
         function this = set.localOptimizer(this, value)
-            list_optimizers = {'bobyqa','cmaes','direct','dhc','fmincon','lsqnonlin','mcs','meigo-ess','meigo-vns','pswarm','rcs'};
+            list_optimizers = {'bobyqa','cmaes','direct','dhc','fmincon','fminsearchbound','ga','imfil','lsqnonlin','mcs','meigo-ess','meigo-vns','patternsearch','particleswarm','pswarm','rcs','simulannealbnd'};
             if any(strcmp(value, list_optimizers))
                 this.localOptimizer = value;
                 

@@ -259,7 +259,7 @@ if strcmp(options.comp_type, 'sequential')
             end
             parameters.MS.logPost0(iMS) = -sum(J_0);
             J_0 = sum(J_0);
-        elseif (any(strcmp(options.localOptimizer, {'cmaes','bobyqa','dhc','rcs'})))
+        elseif (any(strcmp(options.localOptimizer, {'bobyqa','cmaes','dhc','fminsearchbound','imfil','patternsearch','rcs'})))
             J_0 = negLogPost(par0(:,iMS));
         else
             J_0 = [];
@@ -272,47 +272,70 @@ if strcmp(options.comp_type, 'sequential')
             %% do optimization with chosen algorithm
             try
                 switch options.localOptimizer
+
+                    case 'bobyqa'
+                        % Use bobyqa as local optimizer
+                        parameters = performOptimizationBobyqa(parameters, negLogPost, iMS, par0, J_0, options);
+                    
+                    case 'cmaes'
+                        % Perform a covariance-matrix adaptation
+                        % evolutionary search
+                        parameters = performOptimizationCmaes(parameters, negLogPost, iMS, par0, J_0, options);
+
+                    case 'dhc'
+                        % Use dynamic hill climbing as local optimizer
+                        parameters = performOptimizationDhc(parameters, negLogPost, iMS, par0, J_0, options);
+                        
+                    case 'direct'
+                        % Perform optimization using dividing rectangles
+                        parameters = performOptimizationDirect(parameters, negLogPost, iMS, options);
+                        
                     case 'fmincon'
-                        % fmincon as local optimizer
+                        % Use fmincon as local optimizer
                         parameters = performOptimizationFmincon(parameters, negLogPost, iMS, par0, J_0, options);
+                        
+                    case 'fminsearchbound'
+                        % Use fminsearchbound as local optimizer
+                        parameters = performOptimizationFminsearchbound(parameters, negLogPost, iMS, par0, J_0, options);
+                        
+                    case 'ga'
+                        % Perform optimization using the matlab genetic
+                        % algorithm.
+                        parameters = performOptimizationGa(parameters, negLogPost, iMS, options);
+                        
+                    case 'imfil'
+                        % Use imfil as local optimizer
+                        parameters = performOptimizationImfil(parameters, negLogPost, iMS, par0, J_0, options);
+                    
+                    case 'lsqnonlin'
+                        % Use lsqnonlin as local optimizer
+                        parameters = performOptimizationLsqnonlin(parameters, negLogPost, iMS, par0, J_0, options);
+                    
+                    case 'mcs'
+                        % Perform a multivariate coordinate search
+                        parameters = performOptimizationMcs(parameters, negLogPost, iMS, options);
 
                     case {'meigo-ess', 'meigo-vns'}
                         % Use the MEIGO toolbox as local / global optimizer
                         parameters = performOptimizationMeigo(parameters, negLogPost, iMS, options);
+                        
+                    case 'particleswarm'
+                        % Perform optimization using the particleswarm
+                        % algorithm
+                        parameters = performOptimizationParticleswarm(parameters, negLogPost, iMS, options);
+                        
+                    case 'patternsearch'
+                        % Use patternsearch as local optimizer
+                        parameters = performOptimizationPatternsearch(parameters, negLogPost, iMS, par0, J_0, options);
 
                     case 'pswarm'
                         % Optimization using a swarm based global optimizer PSwarm
                         parameters = performOptimizationPswarm(parameters, negLogPost, iMS, options);
 
-                    case 'lsqnonlin'
-                        % Use lsqnonlin as local optimizer
-                        parameters = performOptimizationLsqnonlin(parameters, negLogPost, iMS, par0, J_0, options);
-
                     case 'rcs'
                         % Use randomized coordinate search as local
                         % optimizer
                         parameters = performOptimizationRcs(parameters, negLogPost, iMS, par0, J_0, options);
-
-                    case 'dhc'
-                        % Use dynamic hill climbing as local optimizer
-                        parameters = performOptimizationDhc(parameters, negLogPost, iMS, par0, J_0, options);
-
-                    case 'bobyqa'
-                        % Use bobyqa as local optimizer
-                        parameters = performOptimizationBobyqa(parameters, negLogPost, iMS, par0, J_0, options);
-                        
-                    case 'mcs'
-                        % Perform a multivariate coordinate search
-                        parameters = performOptimizationMcs(parameters, negLogPost, iMS, options);
-                        
-                    case 'cmaes'
-                        % Perform a covariance-matrix adaptation
-                        % evolutionary search
-                        parameters = performOptimizationCmaes(parameters, negLogPost, iMS, par0, J_0, options);
-                        
-                    case 'direct'
-                        % Perform optimization using dividing rectangles
-                        parameters = performOptimizationDirect(parameters, negLogPost, iMS, options);
                         
                 end
             catch
