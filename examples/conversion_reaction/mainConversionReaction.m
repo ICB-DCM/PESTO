@@ -120,12 +120,12 @@ for j = 1 : properties.number
     optionsPesto.plot_options.add_points.prop(j) = properties.function{j}(optionsPesto.plot_options.add_points.par);
 end
 
-% The example can also be run in parallel mode: Uncomment this, if wanted
+% % The example can also be run in parallel mode: Uncomment this, if wanted
 % optionsMultistart.comp_type = 'parallel'; 
 % optionsMultistart.mode = 'text';
 % optionsMultistart.save = true; 
 % optionsMultistart.foldername = 'results';
-% n_workers = 10;
+% n_workers = 4;
 
 % Open parpool
 if strcmp(optionsPesto.comp_type, 'parallel') && (n_workers >= 2)
@@ -145,6 +145,9 @@ parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 % These algorithms aim at finding the global optimum, and therefore, a
 % low number or a single optimizer run should be enough.
 
+% MEIGO
+% ----------------
+
 % The following uses the MEIGO toolbox with default settings:
 % (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
 % uncomment:
@@ -156,20 +159,38 @@ parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 %     'iterprint', 1) ...
 %     );
 % 
-% optionsMultistartMeigo = optionsMultistart.copy();
+% optionsMultistartMeigo = optionsPesto;
 % optionsMultistartMeigo.localOptimizer = 'meigo-ess';
 % optionsMultistartMeigo.localOptimizerOptions = MeigoOptions;
 % optionsMultistartMeigo.n_starts = 2;
 % parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistartMeigo);
 
-% This section uses PSwarm, a particle swarm optimizer
-% (Install from http://www.norg.uminho.pt/aivaz/pswarm/ and uncomment)
+% PSWARM
+% ----------------
 
-% optionsMultistartPSwarm = optionsMultistart.copy();
+% % This section uses PSwarm, a particle swarm optimizer
+% % (Install from http://www.norg.uminho.pt/aivaz/pswarm/ and uncomment)
+% 
+% optionsMultistartPSwarm = optionsPesto;
 % optionsMultistartPSwarm.localOptimizer = 'pswarm';
 % optionsMultistartPSwarm.n_starts = 10;
 % parameters = getMultiStarts(parameters, objectiveFunction, optionsMultistartPSwarm);
 
+% DHC
+% ----------------
+
+% Now we also have a look at the derivative-free optimizer provided in
+% dynamicHillClimb.m. Since the optimizer has no information about
+% gradients, it is recommended to choose rather small tolerances and a
+% higher number of function evaluations. Every such function evaluation
+% will be less expensive because no derivatives are computed.
+% 
+% optionsPesto.localOptimizer = 'dhc';
+% optionsPesto.localOptimizerOptions.TolX   = 1e-10;
+% optionsPesto.localOptimizerOptions.TolFun = 1e-10;
+% optionsPesto.localOptimizerOptions.MaxFunEvals = 1000;
+% optionsPesto.localOptimizerOptions.Display = 'iter';
+% parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
 %% Visualization of fit
 % The measured data is visualized in plot, together with fit for the best
@@ -234,7 +255,7 @@ parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
 % The values of the properties are evaluated at the end points of the
 % multi-start optimization runs by getPropertyMultiStarts.
 
-optionsProperties = optionsPesto.copy();
+optionsProperties = optionsPesto;
 optionsProperties.fh = [];
 properties = getPropertyMultiStarts(properties,parameters,optionsProperties);
 

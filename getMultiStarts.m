@@ -1,7 +1,7 @@
 function [parameters,fh] = getMultiStarts(parameters, objective_function, varargin)
 % getMultiStarts() computes the maximum a posterior estimate of the
 % parameters of a user-supplied posterior function. Therefore, a
-% multi-start local optimization is used. The parameters from the best 
+% multi-start local optimization is used. The parameters from the best
 % value of the posterior function arethen used as the global optimum.
 % To ensure that the found maximum is a global one, a sufficiently high
 % number of multistarts must be done. Those starts can be initialized with
@@ -36,10 +36,10 @@ function [parameters,fh] = getMultiStarts(parameters, objective_function, vararg
 %
 % Parameters:
 %   parameters: parameter struct
-%   objective_function: objective function to be optimized. 
+%   objective_function: objective function to be optimized.
 %       This function should accept one input, the parameter vector.
 %   varargin:
-%     options: A PestoOptions object holding various options for the 
+%     options: A PestoOptions object holding various options for the
 %         algorithm.
 %
 % Required fields of parameters:
@@ -47,7 +47,7 @@ function [parameters,fh] = getMultiStarts(parameters, objective_function, vararg
 %   min: Lower bound for each parameter
 %   max: upper bound for each parameter
 %   name = {'name1', ...}: names of the parameters
-%   guess: initial guess for the parameters (Optional, will be initialized 
+%   guess: initial guess for the parameters (Optional, will be initialized
 %       empty if not provided)
 %   init_fun: function to draw starting points for local optimization, must
 %       have the structure init_fun(theta_0, theta_min, theta_max).
@@ -75,16 +75,7 @@ function [parameters,fh] = getMultiStarts(parameters, objective_function, vararg
 %         (if options.trace == true)
 %     * time_trace(:,i): computation time trace for ith MAP
 %         (if options.trace == true)
-%
-% History:
-% * 2012/05/31 Jan Hasenauer
-% * 2012/07/11 Jan Hasenauer
-% * 2014/06/11 Jan Hasenauer
-% * 2015/07/28 Fabian Froehlich
-% * 2015/11/10 Fabian Froehlich
-% * 2016/06/07 Paul Stapor
-% * 2016/10/04 Daniel Weindl
-% * 2016/12/04 Paul Stapor
+
 
 global error_count
 
@@ -100,15 +91,15 @@ if isempty(options.start_index)
 end
 parameters = parametersSanityCheck(parameters);
 
-if strcmp(options.localOptimizer, 'fmincon')
-    options.localOptimizerOptions.MaxFunEvals = 400*parameters.number;
+if (strcmp(options.localOptimizer, 'fmincon') && ( ~isfield(options.localOptimizerOptions, 'MaxFunEvals') || isempty(options.localOptimizerOptions.MaxFunEvals) ) )
+    options.localOptimizerOptions.MaxFunEvals = 200*parameters.number;
 end
 
 %% Initialization and figure generation
 fh = [];
 switch options.mode
     case 'visual'
-        if isempty(options.fh)
+        if (isempty(options.fh) || ~isvalid(options.fh))
             fh = figure('Name', 'getMultiStarts');
         else
             fh = figure(options.fh);
@@ -117,38 +108,47 @@ switch options.mode
         fprintf(' \nOptimization:\n=============\n');
     case 'silent' % no output
         % Force fmincon to be silent.
-        if strcmp(options.localOptimizer, 'fmincon')
+        if isfield(options.localOptimizerOptions, 'Display')
             options.localOptimizerOptions.Display = 'off';
         end
 end
 
+%% Definition of index set of optimized parameters
+freePars = setdiff(1:parameters.number, options.fixedParameters);
+if isempty(parameters.guess)
+    parameters.guess = zeros(parameters.number,0);
+end
+    
 %% Sampling of starting points
 switch options.proposal
     case 'latin hypercube'
         % Sampling from latin hypercube
-        par0 = [parameters.guess,...
-                bsxfun(@plus,parameters.min,bsxfun(@times,parameters.max - parameters.min,...
-                             lhsdesign(options.n_starts - size(parameters.guess,2),parameters.number,'smooth','off')'))];
+        par0_tmp = [parameters.guess(freePars,:),...
+            bsxfun(@plus,parameters.min(freePars),bsxfun(@times,parameters.max(freePars) - parameters.min(freePars),...
+            lhsdesign(options.n_starts - size(parameters.guess,2),length(freePars),'smooth','off')'))];
     case 'uniform'
         % Sampling from uniform distribution
-        par0 = [parameters.guess,...
-                bsxfun(@plus,parameters.min,bsxfun(@times,parameters.max - parameters.min,...
-                             rand(parameters.number,options.n_starts - size(parameters.guess,2))))];
+        par0_tmp = [parameters.guess(freePars,:),...
+            bsxfun(@plus,parameters.min,bsxfun(@times,parameters.max - parameters.min,...
+            rand(parameters.number,options.n_starts - size(parameters.guess,2))))];
     case 'user-supplied'
         % Sampling from user-supplied function
         if (~isfield(parameters, 'init_fun') || isempty(parameters.init_fun))
             if size(parameters.guess,2) < options.n_starts
                 error('You did not define an initial function and do not provide enough starting points in parameters.guess. Aborting.');
             else
-                par0 = [parameters.guess(:,1:options.n_starts)];
+                par0_tmp = parameters.guess(:,1:options.n_starts);
             end
         else
-            par0 = [parameters.guess,...
-            parameters.init_fun(parameters.guess,parameters.min,parameters.max,options.n_starts - size(parameters.guess,2))];
-        end 
+            par0_tmp = [parameters.guess,...
+                parameters.init_fun(parameters.guess,parameters.min,parameters.max,options.n_starts - size(parameters.guess,2))];
+        end
 end
-parameters.MS.n_starts = options.n_starts;
-parameters.MS.par0 = par0(:,options.start_index);
+% Correct for fixed parameters
+par0(freePars,:) = par0_tmp;
+par0(options.fixedParameters,:) = options.fixedParameterValues(:) * ones(1,options.n_starts);
+par0 = par0(:,options.start_index);
+parameters.MS.par0 = par0;
 
 %% Preparation of folder
 if or(options.save,options.tempsave)
@@ -156,15 +156,15 @@ if or(options.save,options.tempsave)
         mkdir(fullfile(pwd,options.foldername))
     end
     % only save the init mat for the first start index, not every one if they are called seperately
-    if(and(options.save,~isempty(find(options.start_index==1))))
+    if(and(options.save,~isempty(find(options.start_index == 1, 1))))
         save([options.foldername '/init'],'parameters','-v7.3');
     end
 end
 
 %% Initialization
-if strcmp(options.localOptimizer, 'fmincon') || strcmp(options.localOptimizer, 'pswarm')
+if isfield(options.localOptimizerOptions, 'MaxIter')
     maxOptimSteps = options.localOptimizerOptions.MaxIter;
-elseif strcmp(options.localOptimizer, 'meigo-ess') || strcmp(options.localOptimizer, 'meigo-vns')
+elseif isfield(options.localOptimizerOptions, 'maxeval')
     maxOptimSteps = options.localOptimizerOptions.maxeval;
 end
 parameters.MS.par = nan(parameters.number,length(options.start_index));
@@ -187,20 +187,20 @@ end
 % Define the negative log-posterior funtion
 % (fmincon needs the neagtive log posterior for optimization)
 negLogPost = setObjectiveWrapper(objective_function, options, 'negative log-posterior', [], [], true, true);
-        
-% Check, if Hessian should be used and if a Hessian function was set, 
+
+% Check, if Hessian should be used and if a Hessian function was set,
 % otherwise use the third output of the objective function instead
 if (strcmp(options.localOptimizer, 'fmincon') && ...
-    strcmp(options.localOptimizerOptions.Hessian, 'on'))
-
+        strcmp(options.localOptimizerOptions.Hessian, 'on'))
+    
     if (~isfield(options.localOptimizerOptions, 'HessFcn') ...
-        || isempty(options.localOptimizerOptions.HessFcn))
+            || isempty(options.localOptimizerOptions.HessFcn))
         
         % this only works for box-constraints at the moment
         options.localOptimizerOptions.HessFcn = @(varargin) HessianWrap(negLogPost, varargin);
-    end    
+    end
 end
-        
+
 waitbarFields1 = {'logPost', 'logPost0', 'n_objfun', 'n_iter', 't_cpu', 'exitflag'};
 waitbarFields2 = {'par', 'par0', 'gradient', 'fval_trace', 'time_trace'};
 waitbarFields3 = {'hessian', 'par_trace'};
@@ -209,7 +209,7 @@ waitbarFields3 = {'hessian', 'par_trace'};
 if strcmp(options.comp_type, 'sequential')
     
     % Matlab parallel toolbox seems to have problems with our outfun...
-    if strcmp(options.localOptimizer, 'fmincon')
+    if isfield(options.localOptimizerOptions, 'OutputFcn')
         options.localOptimizerOptions.OutputFcn = @outfun_fmincon;
     end
     
@@ -235,147 +235,105 @@ if strcmp(options.comp_type, 'sequential')
         error_count = 0;
         
         % Test evaluation of objective function at starting point
-        % Only for multi-start local, since other optimizers use a 
+        % Only for multi-start local, since other optimizers use a
         % different initialization
-        if (strcmp(options.localOptimizer, 'fmincon'))
+        if strcmp(options.localOptimizer, 'fmincon')
             if (strcmp(options.localOptimizerOptions.Hessian, 'on'))
                 % Depending on the algorithm, the Hessian gets called
                 % seperately (IP) or with the objective function (TR), so
                 % different cases have to be checked.
                 if strcmp(options.localOptimizerOptions.Algorithm, 'interior-point')
-                    [J_0,~] = negLogPost(parameters.MS.par0(:,iMS));
+                    [negLogPost0,~] = negLogPost(par0(freePars,iMS));
                 else
-                    [J_0,~,~] = negLogPost(parameters.MS.par0(:,iMS));
+                    [negLogPost0,~,~] = negLogPost(par0(freePars,iMS));
                 end
             elseif (strcmp(options.localOptimizerOptions.GradObj, 'on'))
-                [J_0,~] = negLogPost(parameters.MS.par0(:,iMS));
+                [negLogPost0,~] = negLogPost(par0(freePars,iMS));
             else
-                J_0 = negLogPost(parameters.MS.par0(:,iMS));
+                negLogPost0 = negLogPost(par0(freePars,iMS));
             end
-            parameters.MS.logPost0(iMS) = -J_0;
+            parameters.MS.logPost0(iMS) = -negLogPost0;
+        elseif (strcmp(options.localOptimizer, 'lsqnonlin'))
+            if (strcmp(options.localOptimizerOptions.Jacobian, 'on'))
+                [residuals,~] = negLogPost(par0(freePars,iMS));
+            else
+                residuals = negLogPost(par0(freePars,iMS));
+            end
+            negLogPost0 = 0.5 * sum(residuals.^2);
+            parameters.MS.logPost0(iMS) = -negLogPost0;
+        elseif (any(strcmp(options.localOptimizer, {'dhc','cs','bobyqa'})))
+            negLogPost0 = negLogPost(par0(freePars,iMS));
         else
-            J_0 = [];
+            negLogPost0 = nan;
         end
         
         % Optimization
         startTimeLocalOptimization = cputime;
-        if (isempty(J_0) || (J_0 < -options.init_threshold))
+        if (isnan(negLogPost0) || (negLogPost0 < -options.init_threshold))
             
-            if strcmp(options.localOptimizer, 'fmincon')    
-                %% fmincon as local optimizer
-                % Optimization using fmincon
-                [theta,J_opt,parameters.MS.exitflag(iMS),results_fmincon,~,gradient_opt,hessian_opt] = ...
-                    fmincon(negLogPost,...  % negative log-likelihood function
-                    parameters.MS.par0(:,iMS),...    % initial parameter
-                    parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
-                    parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
-                    parameters.min,...     % lower bound
-                    parameters.max,...     % upper bound
-                    [],options.localOptimizerOptions);   % options
-                
-                % Assignment of results
-                parameters.MS.logPost0(1, iMS) = -J_0;
-                parameters.MS.logPost(iMS) = -J_opt;
-                parameters.MS.par(:,iMS) = theta;
-                parameters.MS.gradient(:,iMS) = gradient_opt;
-                if isempty(hessian_opt)
-                    if strcmp(options.localOptimizerOptions.Hessian,'on')
-                        [~,~,hessian_opt] = negLogPost(theta); % objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
-                    end
-                elseif max(hessian_opt(:)) == 0
-                    if strcmp(options.localOptimizerOptions.Hessian,'on')
-                        [~,~,hessian_opt] = negLogPost(theta); % objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber);
-                    end
-                end
-                parameters.MS.n_objfun(iMS) = results_fmincon.funcCount;
-                parameters.MS.n_iter(iMS) = results_fmincon.iterations;
-                parameters.MS.AIC(iMS) = 2*parameters.number + 2*J_opt;
-                if ~isempty(options.nDatapoints)
-                    parameters.MS.BIC(iMS) = log(options.nDatapoints)*parameters.number + 2*J_opt;
-                end
-                    
-                try
-                    parameters.MS.hessian(:,:,iMS) = full(hessian_opt);
-                catch err_msg
-                    warning(['Error in assigning final Hessian matrix. Original errror message: ' err_msg.message]);
-                end
-                
-            elseif strcmp(options.localOptimizer, 'meigo-ess') || strcmp(options.localOptimizer, 'meigo-vns')
-                %% Use MEIGO as local optimizer
-                if ~exist('MEIGO', 'file')
-                    error('MEIGO not found. This feature requires the "MEIGO" toolbox to be installed. See http://gingproc.iim.csic.es/meigo.html for download and installation instructions.');
-                end
-                
-                problem.f = 'meigoDummy';
-                problem.x_L = parameters.min;
-                problem.x_U = parameters.max;
-                problem.x_0 = parameters.MS.par0(:,iMS);
-                
-                meigoAlgo = 'ESS';
-                if strcmp(options.localOptimizer, 'meigo-vns')
-                    meigoAlgo = 'VNS';
-                end
-                objFunHandle = @(theta) negLogPost(theta');
-                Results = MEIGO(problem, options.localOptimizerOptions, meigoAlgo, objFunHandle);
-                
-                %TODO
-                % parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
-                % parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
-                
-                parameters.MS.logPost0(1, iMS) = nan;
-                parameters.MS.logPost(iMS) = -Results.fbest;
-                parameters.MS.par(:,iMS) = Results.xbest;
-                parameters.MS.n_objfun(iMS) = Results.numeval;
-                parameters.MS.n_iter(iMS) = size(Results.neval, 2);
-                parameters.MS.AIC(iMS) = 2*parameters.number + 2*J_opt;
-                if ~isempty(options.nDatapoints)
-                    parameters.MS.BIC(iMS) = log(options.nDatapoints)*parameters.number + 2*J_opt;
-                end
-                
-                [~, G_opt, H_opt] = negLogPost(parameters.MS.par(:,iMS),objective_function,options.obj_type,options.objOutNumber);
-                parameters.MS.hessian(:,:,iMS) = H_opt;
-                parameters.MS.gradient(:,iMS) = G_opt;
-                
-                %% Output
-                switch options.mode
-                    case {'visual','text'}, disp(['-> Optimization FINISHED (MEIGO exit code: ' num2str(Results.end_crit) ').']);
-                    case 'silent' % no output
-                end
-                
-            elseif strcmp(options.localOptimizer, 'pswarm')
-                %% Use PSwarm as local optimizer
-                if ~exist('PSwarm', 'file')
-                    error('PSwarm not found. This feature requires the "PSwarm" toolbox to be installed. See http://www.norg.uminho.pt/aivaz/pswarm/ for download and installation instructions.');
-                end
+            %% do optimization with chosen algorithm
+            try
+                switch options.localOptimizer
+                    case 'fmincon'
+                        % fmincon as local optimizer
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                            = performOptimizationFmincon(parameters, negLogPost, par0(:,iMS), options);
 
-                problem = struct();
-                problem.ObjFunction= 'meigoDummy';
-                problem.LB = parameters.min;
-                problem.UB = parameters.max;
-                problem.A = parameters.constraints.A;
-                problem.b = parameters.constraints.b;
-                
-                objFunHandle = @(theta) negLogPost(theta);
-                [theta,bestLogPost,RunData] = PSwarm(problem, struct('x', parameters.MS.par0(:,iMS)), options.localOptimizerOptions, objFunHandle);
-                
-                parameters.MS.logPost0(1, iMS) = nan;
-                parameters.MS.logPost(iMS) = -bestLogPost;
-                parameters.MS.par(:,iMS) = theta;
-                parameters.MS.n_objfun(iMS) = RunData.ObjFunCounter;
-                parameters.MS.n_iter(iMS) = RunData.IterCounter;
-                parameters.MS.AIC(iMS) = 2*parameters.number + 2*J_opt;
-                if ~isempty(options.nDatapoints)
-                    parameters.MS.BIC(iMS) = log(options.nDatapoints)*parameters.number + 2*J_opt;
-                end
-                
-                [~, G_opt, H_opt] = negLogPost(parameters.MS.par(:,iMS),objective_function,options.obj_type,options.objOutNumber);
-                parameters.MS.hessian(:,:,iMS) = H_opt;
-                parameters.MS.gradient(:,iMS) = G_opt;
+                    case {'meigo-ess', 'meigo-vns'}
+                        % Use the MEIGO toolbox as local / global optimizer
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                            = performOptimizationMeigo(parameters, negLogPost, par0(:,iMS), options);
 
+                    case 'pswarm'
+                        % Optimization using a swarm based global optimizer PSwarm
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                            = performOptimizationPswarm(parameters, negLogPost, par0(:,iMS), options);
+
+                    case 'lsqnonlin'
+                        % Optimization using dynamic hill climbin as local optimizer
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter, logPostOffset] ...
+                            = performOptimizationLsqnonlin(parameters, negLogPost, par0(:,iMS), options);
+                        if ~isempty(logPostOffset)
+                            options.logPostOffset = logPostOffset;
+                        end
+
+                    case 'cs'
+                        % Optimization using randomized coordinate search as local optimizer
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                            = performOptimizationCoordinateSearch(parameters, negLogPost, par0(:,iMS), options);
+
+                    case 'dhc'
+                        % Optimization using dynamic hill climbing as local optimizer
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                            = performOptimizationDhc(parameters, negLogPost, par0(:,iMS), options);
+
+                    case 'bobyqa'
+                        % Optimization using bobya as local optimizer
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                            = performOptimizationBobyqa(parameters, negLogPost, par0(:,iMS), options);
+                end
+            catch ErrMsg
+                warning(['Multi-start number ' num2str(iMS) ' failed. More details on the error:']);
+                display(['Last Error in function ' ErrMsg.stack(1).name ', line ' ...
+                    num2str(ErrMsg.stack(1).line) ', file ' ErrMsg.stack(1).file '.']);
             end
             
         end
+        
+        % Assignment of results
         parameters.MS.t_cpu(iMS) = cputime - startTimeLocalOptimization;
+        parameters.MS.exitflag(iMS) = exitflag;
+        parameters.MS.logPost0(iMS) = -negLogPost0;
+        parameters.MS.logPost(iMS) = -negLogPost_opt;
+        parameters.MS.par(:,iMS) = par_opt;
+        parameters.MS.gradient(freePars,iMS) = gradient_opt(:);
+        parameters.MS.hessian(freePars,freePars,iMS) = hessian_opt(:,:);
+        parameters.MS.n_objfun(iMS) = n_objfun;
+        parameters.MS.n_iter(iMS) = n_iter;
+        parameters.MS.AIC(iMS) = 2*length(freePars) + 2*negLogPost_opt;
+        if ~isempty(options.nDatapoints)
+            parameters.MS.BIC(iMS) = log(options.nDatapoints)*length(freePars) + 2*negLogPost_opt;
+        end
         
         % Save
         if options.save
@@ -383,10 +341,11 @@ if strcmp(options.comp_type, 'sequential')
         end
         
         % Output
-        switch options.mode
-            case 'visual', fh = plotMultiStarts(parameters,fh,options.plot_options);
-            case 'text', disp(['  ' num2str(iMS,'%d') '/' num2str(length(options.start_index),'%d')]);
-            case 'silent' % no output
+        if strcmp(options.mode,'visual')
+            fh = plotMultiStarts(parameters, fh, options.plot_options);
+        elseif strcmp(options.mode,'text')
+            fprintf('%d / %d:\t fval = %.15f, t = %.6f\n', ...
+                iMS, length(options.start_index), parameters.MS.logPost(iMS), parameters.MS.t_cpu(iMS));
         end
         
         % Abort the calculation if the waitbar is cancelled
@@ -420,12 +379,13 @@ if strcmp(options.comp_type, 'sequential')
             waitbar(iMS / length(options.start_index), waitBar, stringTimePrediction);
         end
     end
-        
-    % Assignment
+    
+    % Order
     parameters = sortMultiStarts(parameters);
 end
 
 %% Multi-start local optimization -- PARALLEL
+% TODO: adapt parallel mode to sequential mode
 if strcmp(options.comp_type,'parallel')
     
     % Initialization
@@ -446,26 +406,33 @@ if strcmp(options.comp_type,'parallel')
         s_end = strfind(fun.function,'(')-1;
         clear(fun.function(s_start(1):s_end(2)));
     end
+    negLogPost = setObjectiveWrapper(objective_function, options, 'negative log-posterior', [], [], false, true);
     
     % Loop: Mutli-starts
     parfor iMS = options.start_index
         
         % Evaluation of objective function at starting point
-        if (~strcmp(options.localOptimizerOptions.GradObj, 'on'))
-            J_0 = objectiveWrap(parameters.MS.par0(:,iMS),objective_function,options.obj_type,options.objOutNumber);
-        elseif (strcmp(options.localOptimizerOptions.GradObj, 'on') && ~strcmp(options.localOptimizerOptions.Hessian,'on'))
-            [J_0,grad_J_0] = objectiveWrap(parameters.MS.par0(:,iMS),objective_function,options.obj_type,options.objOutNumber);
+        if (strcmp(options.localOptimizerOptions.Hessian, 'on'))
+            % Depending on the algorithm, the Hessian gets called
+            % seperately (IP) or with the objective function (TR), so
+            % different cases have to be checked.
+            if strcmp(options.localOptimizerOptions.Algorithm, 'interior-point')
+                [negLogPost0,~] = negLogPost(parameters.MS.par0(:,iMS));
+            else
+                [negLogPost0,~,~] = negLogPost(parameters.MS.par0(:,iMS));
+            end
+        elseif (strcmp(options.localOptimizerOptions.GradObj, 'on'))
+            [negLogPost0,~] = negLogPost(parameters.MS.par0(:,iMS));
         else
-            [J_0,grad_J_0,H_J_0] = objectiveWrap(parameters.MS.par0(:,iMS),objective_function,options.obj_type,options.objOutNumber);
+            negLogPost0 = negLogPost(parameters.MS.par0(:,iMS));
         end
-        logPost0(iMS) = -J_0;
         
         % Optimization
         startTimeLocalOptimization = cputime;
-        if J_0 < -options.init_threshold
+        if negLogPost0 < -options.init_threshold
             % Optimization using fmincon
             [theta,J_opt,exitflag(iMS),results_fmincon,~,gradient_opt,hessian_opt] = ...
-                fmincon(@(theta) objectiveWrap(theta,objective_function,options.obj_type,options.objOutNumber),...  % negative log-posterior function
+                fmincon(negLogPost,...  % negative log-posterior function
                 parameters.MS.par0(:,iMS),...    % initial parameter
                 parameters.constraints.A  ,parameters.constraints.b  ,... % linear inequality constraints
                 parameters.constraints.Aeq,parameters.constraints.beq,... % linear equality constraints
@@ -505,7 +472,6 @@ if strcmp(options.comp_type,'parallel')
     end
     
     % Assignment
-    parameters.MS.par0 = par0;
     parameters.MS.par = par;
     parameters.MS.logPost0 = logPost0;
     parameters.MS.logPost = logPost;
@@ -545,8 +511,12 @@ options.localOptimizerOptions.OutputFcn = [];
             case 'iter'
                 if(options.trace)
                     parameters.MS.par_trace(:,optimValues.iteration+1,iMS) = x;
-                    parameters.MS.fval_trace(optimValues.iteration+1,iMS) = optimValues.fval;
                     parameters.MS.time_trace(optimValues.iteration+1,iMS) = cputime - startTimeLocalOptimization;
+                    if isfield(optimValues, 'fval')
+                        parameters.MS.fval_trace(optimValues.iteration+1,iMS) = optimValues.fval;
+                    else
+                        parameters.MS.fval_trace(optimValues.iteration+1,iMS) = optimValues.resnorm;
+                    end
                 end
                 if(options.tempsave)
                     if optimValues.iteration>0
@@ -572,71 +542,72 @@ end
 
 %% Waitbar Update
 function stringTimePrediction = updateWaitBar(timePredicted)
-    % stringTimePrediction estimates the remaining time to display in the waitbar
-    %
-    % Parameters:
-    %  timePredicted: Predicted time in seconds
-    %
-    % Return values:
-    %  stringTimePrediction: String, Updating Message
+% stringTimePrediction estimates the remaining time to display in the waitbar
+%
+% Parameters:
+%  timePredicted: Predicted time in seconds
+%
+% Return values:
+%  stringTimePrediction: String, Updating Message
 
-    if isnan(timePredicted)
-        stringTimePrediction = 'Unknown.';
-    elseif (timePredicted < 60)
-        stringTimePrediction = 'One minute or less...';
-    elseif (timePredicted >= 60 && timePredicted < 3600)
-        stringTimePrediction = ['About ' num2str(round(timePredicted/60)) + 1 ' minutes'];
-    elseif (timePredicted >= 3600 && timePredicted < 72000)
-        hours = floor(timePredicted/3600);
-        minutes = round((timePredicted - 3600*hours) / 600) * 10;
-        if (hours == 1)
-            stringTimePrediction = ['About 1 hour'];
-        else
-            stringTimePrediction = ['About ' num2str(hours) ' hours'];
-        end
-        if (minutes == 0)
-            stringTimePrediction = strcat(stringTimePrediction, '...');
-        else
-            stringTimePrediction = strcat(stringTimePrediction, [' and ' num2str(minutes) ' minutes...']);
-        end
-    elseif (timePredicted >= 72000 && timePredicted < 36 * 3600)
-        stringTimePrediction = 'Roughly 1 day...';
-    elseif (timePredicted >= 36 * 3600 && timePredicted < 2 * 365 * 24 * 3600)
-        stringTimePrediction = ['About ' num2str(round(timePredicted / 24 * 3600)) ' days...'];
-    elseif (timePredicted >= 2 * 365 * 24 * 3600 && timePredicted < 100 * 365 * 24 * 3600)
-        stringTimePrediction = ['Oh boy! Quite some years... Maybe about ' num2str(round(timePredicted / 365 * 24 * 3600)) ' of them...'];
-    elseif (timePredicted >= 100 * 365 * 24 * 3600 && timePredicted < 1e7 * 365 * 24 * 3600)
-        stringTimePrediction = 'Well... Maybe your children, or grand-children... No, not evem them...'; 
+if isnan(timePredicted)
+    stringTimePrediction = 'Unknown.';
+elseif (timePredicted < 60)
+    stringTimePrediction = 'One minute or less...';
+elseif (timePredicted >= 60 && timePredicted < 3600)
+    stringTimePrediction = ['About ' num2str(round(timePredicted/60)) + 1 ' minutes'];
+elseif (timePredicted >= 3600 && timePredicted < 72000)
+    hours = floor(timePredicted/3600);
+    minutes = round((timePredicted - 3600*hours) / 600) * 10;
+    if (hours == 1)
+        stringTimePrediction = ['About 1 hour'];
     else
-        stringTimePrediction = 'Kingdoms will rise, civilization will decline, stars will fade - but your calculation...(!) ;)';
+        stringTimePrediction = ['About ' num2str(hours) ' hours'];
     end
-    stringTimePrediction = ['Predicted remaining waiting time: ', stringTimePrediction];
-    
+    if (minutes == 0)
+        stringTimePrediction = strcat(stringTimePrediction, '...');
+    else
+        stringTimePrediction = strcat(stringTimePrediction, [' and ' num2str(minutes) ' minutes...']);
+    end
+elseif (timePredicted >= 72000 && timePredicted < 36 * 3600)
+    stringTimePrediction = 'Roughly 1 day...';
+elseif (timePredicted >= 36 * 3600 && timePredicted < 2 * 365 * 24 * 3600)
+    stringTimePrediction = ['About ' num2str(round(timePredicted / 24 * 3600)) ' days...'];
+elseif (timePredicted >= 2 * 365 * 24 * 3600 && timePredicted < 100 * 365 * 24 * 3600)
+    stringTimePrediction = ['Oh boy! Quite some years... Maybe about ' num2str(round(timePredicted / 365 * 24 * 3600)) ' of them...'];
+elseif (timePredicted >= 100 * 365 * 24 * 3600 && timePredicted < 1e7 * 365 * 24 * 3600)
+    stringTimePrediction = 'Well... Maybe your children, or grand-children... No, not evem them...';
+else
+    stringTimePrediction = 'Kingdoms will rise, civilization will decline, stars will fade - but your calculation...(!) ;)';
+end
+stringTimePrediction = ['Predicted remaining waiting time: ', stringTimePrediction];
+
 end
 
 
 %% Saving results
-function saveResults(parameters,options,i)
+function saveResults(parameters,options,iMS)
+
     % saveResults saves Multi-start results to disk
     %
     % Parameters:
     %  parameters: Parameter struct passed to getMultiStarts
     %  options: getMultiStarts options
     %  i: multi-start index
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost.csv']),parameters.MS.logPost(i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__logPost0.csv']),parameters.MS.logPost0(i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__par.csv']),parameters.MS.par(:,i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__par0.csv']),parameters.MS.par0(:,i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__gradient.csv']),parameters.MS.gradient(:,i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__hessian.csv']),parameters.MS.hessian(:,:,i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__t_cpu.csv']),parameters.MS.t_cpu(i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__n_objfun.csv']),parameters.MS.n_objfun(i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__n_iter.csv']),parameters.MS.n_iter(i),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__exitflag.csv']),parameters.MS.exitflag(i),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__logPost.csv']),parameters.MS.logPost(iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__logPost0.csv']),parameters.MS.logPost0(iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__par.csv']),parameters.MS.par(:,iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__par0.csv']),parameters.MS.par0(:,iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__gradient.csv']),parameters.MS.gradient(:,iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__hessian.csv']),parameters.MS.hessian(:,:,iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__t_cpu.csv']),parameters.MS.t_cpu(iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__n_objfun.csv']),parameters.MS.n_objfun(iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__n_iter.csv']),parameters.MS.n_iter(iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__exitflag.csv']),parameters.MS.exitflag(iMS),'delimiter',',','precision',12);
     if(options.trace)
-        dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__par_trace.csv']),parameters.MS.par_trace(:,:,i),'delimiter',',','precision',12);
-        dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__fval_trace.csv']),parameters.MS.fval_trace(:,i),'delimiter',',','precision',12);
-        dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(i),'%d') '__time_trace.csv']),parameters.MS.time_trace(:,i),'delimiter',',','precision',12);
+        dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__par_trace.csv']),parameters.MS.par_trace(:,:,iMS),'delimiter',',','precision',12);
+        dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__fval_trace.csv']),parameters.MS.fval_trace(:,iMS),'delimiter',',','precision',12);
+        dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__time_trace.csv']),parameters.MS.time_trace(:,iMS),'delimiter',',','precision',12);
     end
     
     % Commented out due to long saving times in case of large models

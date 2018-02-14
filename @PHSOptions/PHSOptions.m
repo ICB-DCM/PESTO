@@ -1,4 +1,4 @@
-classdef PHSOptions < matlab.mixin.SetGet
+classdef PHSOptions < matlab.mixin.CustomDisplay
    % PHSOptions provides an option container to set options for Parallel
    % Hierarchical Sampling (PHS) in PestoSamplingOptions.PHS .
    %
@@ -155,7 +155,7 @@ classdef PHSOptions < matlab.mixin.SetGet
       end
       
       %% Part for checking the correct setting of options
-      function set.regFactor(this, value)
+      function this = set.regFactor(this, value)
          if(isnumeric(value) && value > 0)
             this.regFactor = lower(value);
          else
@@ -165,7 +165,7 @@ classdef PHSOptions < matlab.mixin.SetGet
          end
       end
       
-      function set.nChains(this, value)
+      function this = set.nChains(this, value)
          if(value == floor(value) && value > 0)
             this.nChains = lower(value);
          else
@@ -174,7 +174,7 @@ classdef PHSOptions < matlab.mixin.SetGet
          end
       end            
 
-      function set.alpha(this, value)
+      function this = set.alpha(this, value)
          if(isnumeric(value) && value > 0.5 && value < 1)
             this.alpha = lower(value);
          else
@@ -182,7 +182,7 @@ classdef PHSOptions < matlab.mixin.SetGet
          end
       end  
       
-      function set.memoryLength(this, value)
+      function this = set.memoryLength(this, value)
          if(value == floor(value) && value > 0)
             this.memoryLength = lower(value);
          else
@@ -191,7 +191,7 @@ classdef PHSOptions < matlab.mixin.SetGet
          end
       end   
       
-      function set.trainingTime(this, value)
+      function this = set.trainingTime(this, value)
          if(value == floor(value) && value > 0)
             this.trainingTime = lower(value);
          else
@@ -204,28 +204,3 @@ classdef PHSOptions < matlab.mixin.SetGet
             
    end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

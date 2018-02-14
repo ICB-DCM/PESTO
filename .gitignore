@@ -3,6 +3,9 @@
 *.mexa64
 *.mexw64
 *.mexmaci64
+*.mexw32
+*.o
+*.out
 simulate_*.m
 doc/out/
 doc/config/Doxyfile
@@ -11,4 +14,3 @@ doc/config/mtocpp_filter.sh
 DRAMToolbox
 *.asv
 examples/RAmPART_examples/results
-

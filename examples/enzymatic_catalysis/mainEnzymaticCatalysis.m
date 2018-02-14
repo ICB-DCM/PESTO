@@ -43,7 +43,7 @@
 
 
 %% Preliminary
-clear all;
+clear;
 close all;
 clc;
 
@@ -126,10 +126,10 @@ plotMCMCdiagnosis(parameters, 'parameters');
 % optimization and the sampling information.
 
 % Set alpha levels
-alpha = [0.8, 0.9, 0.95, 0.99];
+alphaLevels = [0.8, 0.9, 0.95, 0.99];
 
 display(' Computing confidence intervals...');
-parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
+parameters = getParameterConfidenceIntervals(parameters, alphaLevels, optionsPesto);
 
 
 %% Perform Multistart optimization
@@ -137,9 +137,11 @@ parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
 % parameters.min and .max in order to infer the unknown parameters from 
 % measurement data.
 
-% The following section uses the MEIGO toolbox with following settings:
-% (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
-% uncomment:
+optionsPesto.n_starts = 10;
+
+% % The following section uses the MEIGO toolbox with following settings:
+% % (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
+% % uncomment:
 
 % MeigoOptions = struct(...
 %     'maxeval', 1000, ...
@@ -147,26 +149,24 @@ parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
 %     'finish', 'fmincon', ...
 %     'iterprint', 0) ...
 %     );
-% 
 % optionsPesto.localOptimizer = 'meigo-ess';
 % optionsPesto.localOptimizerOptions = MeigoOptions;
-% optionsPesto.n_starts = 1;
-% parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+% optionsPesto.n_starts = 5;
 
 % Options for an alternative multi-start local optimization
+% (Comment out the Meigo code)
 display(' Optimizing parameters...');
-optionsPesto.n_starts = 5;
 parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
-% Use a diagnosis tool to see, how optimization worked
-plotMultiStartDiagnosis(parameters);
+% Use a diagnosis tool to see, how optimization worked (only works with fmincon)
+% plotMultiStartDiagnosis(parameters);
 
 
 %% Calculate Confidence Intervals
 % Confidence Intervals for the Parameters are inferred from the local 
 % optimization and the sampling information.
 display(' Computing confidence intervals...');
-parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
+parameters = getParameterConfidenceIntervals(parameters, alphaLevels, optionsPesto);
 
 
 %% Calculate Profile Likelihoods
@@ -209,4 +209,4 @@ parametersNew = getParameterSamples(parametersNew, objectiveFunction, optionsPes
 %% Calculate Confidence Intervals
 % Confidence Intervals for the Parameters are inferred from the local 
 % optimization, the sampling and the profile information.
-parameters = getParameterConfidenceIntervals(parametersNew, alpha, optionsPesto);
+parameters = getParameterConfidenceIntervals(parametersNew, alphaLevels, optionsPesto);

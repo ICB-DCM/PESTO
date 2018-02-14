@@ -58,7 +58,7 @@ fid = fopen([exdir '/getMeasuredData.m'], 'w');
 fprintf(fid, 'function yMeasure = getMeasuredData()\n\n');
 fprintf(fid, ['yMeasure = nan(' num2str(nMeasure) ', ' num2str(nTimepoints) ' , 2);\n']);
 
-% Write the Measruement data
+% Write the measurement data
 for iMeasure = 1 : nMeasure                
     [~,X] = ode15s(@(t,x) f(exp(theta),x), t, con0(:,iMeasure));
     y = h(X(:,1:4), exp(theta));

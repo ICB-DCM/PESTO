@@ -21,7 +21,7 @@ function [parameters, fh] = getParProfilesByIntegration(parameters, objective_fu
 %  * PestoOptions::options_getNextPoint .guess .min .max .update .mode
 %  * PestoOptions::parameter_index
 %  * PestoOptions::profile_method
-%  * PestoOptions::profileReoptimizationOptions
+%  * PestoOptions::profileOptimizationOptions
 %  * PestoOptions::plot_options
 %  * PestoOptions::R_min
 %  * PestoOptions::save
@@ -68,14 +68,17 @@ function [parameters, fh] = getParProfilesByIntegration(parameters, objective_fu
 % 2016/11/21 Paul Stapor
 % 2017/02/02 Paul Stapor - PESTO version of the code
 
-
-
     %% CHECK AND ASSIGN INPUTS
     if (nargin >= 4)
         fh = varargin{1};
         options.fh = fh;
     else
         fh = [];
+    end
+    
+    %% Check for fixed parameters
+    if ~isempty(options.fixedParameters)
+        error('Fixed parameters are currently not supported by getParProfilesByIntegration.');
     end
     
     %% Preperation of folder
@@ -112,7 +115,7 @@ end
 
 
 
-function parameters = integrateProfileForParameterI(parameters, objectiveFunction, j, options, fh)
+function parameters = integrateProfileForParameterI(parameters, objectiveFunction, iPar, options, fh)
  
 
     % Define global variables for communication across ODE solver
@@ -125,7 +128,7 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
     lastCounter = 0;
 
     % Initial condition (used only for Profile integration)
-    t0 = parameters.MS.par(j, options.MAP_index);
+    t0 = parameters.MS.par(iPar, options.MAP_index);
     
     % Set objective function handle
     negLogPost = setObjectiveWrapper(objectiveFunction, options, 'negative log-posterior', [], [], true, true);
@@ -171,16 +174,16 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
         borders = [parameters.min, parameters.max];
         switch s
             case 1
-                T = parameters.max(j);
+                T = parameters.max(iPar);
             case -1
-                T = parameters.min(j);
+                T = parameters.min(iPar);
         end 
 
         % Starting point
         theta  = parameters.MS.par(:, options.MAP_index);
         llhHistory = parameters.MS.logPost(options.MAP_index);
         reachedEnd = 0;
-        OutputFunction = @(t, y, flag) checkOptimality(t, y, flag, s, j, ...
+        OutputFunction = @(t, y, flag) checkOptimality(t, y, flag, s, iPar, ...
             parameters.MS.logPost(1), objectiveFunction, borders, options);
 
         if ~strcmp(options.solver.hessian, 'user-supplied')
@@ -189,7 +192,7 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
         
         % Pre-Output
         if (strcmp(options.mode, 'text'))
-            fprintf('\n  |  Integrating Parameter %4i, s = %2i  |', j, s);
+            fprintf('\n  |  Integrating Parameter %4i, s = %2i  |', iPar, s);
             fprintf('\n  |======================================|');
             fprintf('\n  | Running axis |  Optimality |  Ratio  |');
             fprintf('\n  |--------------|-------------|---------|');
@@ -215,27 +218,27 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
             switch options.solver.type
                 case {'ode45', 'ode15s', 'ode113','ode23', 'ode23s', 'ode23t'}
                     odeMatlabOptions.OutputFcn = OutputFunction;
-                    odeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, j, borders, negLogPost, options, parameters.MS.logPost(1));
+                    odeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, iPar, borders, negLogPost, options, parameters.MS.logPost(1));
                     if (strcmp(options.solver.type, 'ode15s'))
-                        [~,y] = ode15s(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions); 
+                        [~,y] = ode15s(@(t,y) getRhsRed(t, s, y, iPar, borders, negLogPost, parameterFunction, options),[s*theta(iPar), s*T], theta, odeMatlabOptions); 
                     elseif (strcmp(options.solver.type, 'ode45'))
                         error('ode45 is currently not implemented for profiling.');
                         % [~,y] = ode45(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
                     elseif (strcmp(options.solver.type, 'ode113'))
-                        [~,y] = ode113(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions); 
+                        [~,y] = ode113(@(t,y) getRhsRed(t, s, y, iPar, borders, negLogPost, parameterFunction, options),[s*theta(iPar), s*T], theta, odeMatlabOptions); 
                     elseif (strcmp(options.solver.type, 'ode23s'))
-                        [~,y] = ode23s(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);  
+                        [~,y] = ode23s(@(t,y) getRhsRed(t, s, y, iPar, borders, negLogPost, parameterFunction, options),[s*theta(iPar), s*T], theta, odeMatlabOptions);  
                     elseif (strcmp(options.solver.type, 'ode23t'))
-                        [~,y] = ode23t(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);
+                        [~,y] = ode23t(@(t,y) getRhsRed(t, s, y, iPar, borders, negLogPost, parameterFunction, options),[s*theta(iPar), s*T], theta, odeMatlabOptions);
                     elseif (strcmp(options.solver.type, 'ode23'))
-                        [~,y] = ode23(@(t,y) getRhsRed(t, s, y, j, borders, negLogPost, parameterFunction, options),[s*theta(j), s*T], theta, odeMatlabOptions);
+                        [~,y] = ode23(@(t,y) getRhsRed(t, s, y, iPar, borders, negLogPost, parameterFunction, options),[s*theta(iPar), s*T], theta, odeMatlabOptions);
                     end
 
 
                     % If yCorrection is set to inf, then the ODE is too stiff, 
                     % some steps of optimization based calculation have to be done
                     if (yCorrection == inf)
-                        addY = doOptimizationSteps(parameters, y, objectiveFunction, borders, j, s, options);
+                        addY = doOptimizationSteps(parameters, y, objectiveFunction, borders, iPar, s, options);
                         y = [y; addY];
                         optSteps = optSteps + 3;
                     else
@@ -322,9 +325,9 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
 
                 case 'ode15sDAE' 
                     error('ode15sDAE is currently not implemented for profiling.');
-                    daeMatlabOptions.Mass = @(t, y) getMassmatrixDAE(t, s, y, j, negLogPost, parameterFunction);
-                    daeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, j, borders, negLogPost, options, parameters.MS.logPost(1));
-                    [~, y] = ode15s(@(t,y) getRhsDAE(t, s, y, 1, j, negLogPost, options), [s*t0, s*T], theta, daeMatlabOptions);
+                    daeMatlabOptions.Mass = @(t, y) getMassmatrixDAE(t, s, y, iPar, negLogPost, parameterFunction);
+                    daeMatlabOptions.Events = @(t,y) getEndProfile(t, s, y, iPar, borders, negLogPost, options, parameters.MS.logPost(1));
+                    [~, y] = ode15s(@(t,y) getRhsDAE(t, s, y, 1, iPar, negLogPost, options), [s*t0, s*T], theta, daeMatlabOptions);
 
                     if (s == 1)
                         theta = y';
@@ -336,22 +339,22 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
             %% Write results to the parameters struct
             switch s
                 case 1
-                    parameters.P(j).logPost = [parameters.P(j).logPost, llhHistory];
-                    parameters.P(j).R = [parameters.P(j).R, exp(llhHistory - parameters.MS.logPost(1))];
-                    parameters.P(j).par = [parameters.P(j).par, theta];
+                    parameters.P(iPar).logPost = [parameters.P(iPar).logPost, llhHistory];
+                    parameters.P(iPar).R = [parameters.P(iPar).R, exp(llhHistory - parameters.MS.logPost(1))];
+                    parameters.P(iPar).par = [parameters.P(iPar).par, theta];
 
-                    if ((parameters.P(j).R(end) <= options.R_min) ...
-                            || parameters.P(j).par(j, end) >= borders(j, 2))
+                    if ((parameters.P(iPar).R(end) <= options.R_min) ...
+                            || parameters.P(iPar).par(iPar, end) >= borders(iPar, 2))
                         reachedEnd = 1;
                     end
 
                 case -1
-                    parameters.P(j).logPost = [fliplr(llhHistory), parameters.P(j).logPost];
-                    parameters.P(j).R = [exp(fliplr(llhHistory) - parameters.MS.logPost(1)), parameters.P(j).R];
-                    parameters.P(j).par = [theta, parameters.P(j).par];
+                    parameters.P(iPar).logPost = [fliplr(llhHistory), parameters.P(iPar).logPost];
+                    parameters.P(iPar).R = [exp(fliplr(llhHistory) - parameters.MS.logPost(1)), parameters.P(iPar).R];
+                    parameters.P(iPar).par = [theta, parameters.P(iPar).par];
 
-                    if ((parameters.P(j).R(1) <= options.R_min) ...
-                            || parameters.P(j).par(j, 1) <= borders(j, 1))
+                    if ((parameters.P(iPar).R(1) <= options.R_min) ...
+                            || parameters.P(iPar).par(iPar, 1) <= borders(iPar, 1))
                         reachedEnd = 1;
                     end
             end
@@ -359,10 +362,10 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
         end
 
         % Get computation time
-        parameters.P(j).t_cpu(round((s+3)/2)) = cputime - startTimeProfile;
-        parameters.P(j).optSteps(round((s+3)/2)) = optSteps;
-        parameters.P(j).intSteps(round((s+3)/2)) = intSteps;
-        parameters.P(j).reOptSteps(round((s+3)/2)) = reOptSteps;
+        parameters.P(iPar).t_cpu(round((s+3)/2)) = cputime - startTimeProfile;
+        parameters.P(iPar).optSteps(round((s+3)/2)) = optSteps;
+        parameters.P(iPar).intSteps(round((s+3)/2)) = intSteps;
+        parameters.P(iPar).reOptSteps(round((s+3)/2)) = reOptSteps;
         
         % Final output and storage
         if (strcmp(options.mode, 'text'))
@@ -374,9 +377,9 @@ function parameters = integrateProfileForParameterI(parameters, objectiveFunctio
 
         % Save
         if (options.save)
-            dlmwrite([options.foldername '/P' num2str(j,'%d') '__par.csv'],P_par,'delimiter',',','precision',12);
-            dlmwrite([options.foldername '/P' num2str(j,'%d') '__logPost.csv'],P_logPost,'delimiter',',','precision',12);
-            dlmwrite([options.foldername '/P' num2str(j,'%d') '__R.csv'],P_R,'delimiter',',','precision',12);
+            dlmwrite([options.foldername '/P' num2str(iPar,'%d') '__par.csv'],P_par,'delimiter',',','precision',12);
+            dlmwrite([options.foldername '/P' num2str(iPar,'%d') '__logPost.csv'],P_logPost,'delimiter',',','precision',12);
+            dlmwrite([options.foldername '/P' num2str(iPar,'%d') '__R.csv'],P_R,'delimiter',',','precision',12);
         end  
 
         % Output
@@ -415,7 +418,7 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
         
     else
         yCorrection = nan(size(y));
-       logPost = setObjectiveWrapper(objectiveFunction, options, 'log-posterior', [], [], true, true);
+        logPost = setObjectiveWrapper(objectiveFunction, options, 'log-posterior', [], [], true, true);
         
         for iT = 1 : length(t)
             % Check if Minimum step size was violated
@@ -437,6 +440,9 @@ function status = checkOptimality(t, y, flag, s, ind, logPostMax, objectiveFunct
             % Check, if first optimality is violated, reoptimize if necessary
             [L, GL] = logPost(y(:,iT));
             GL(ind) = 0;
+            violateBounds = (y(:,iT) <= (borders(:,1) + options.solver.AbsTol)) ...
+                + (y(:,iT) >= (borders(:,2) - options.solver.AbsTol));
+            GL(logical(violateBounds)) = 0;
             
             % Update Hessian, if approximation method ist used
             if (~strcmp(options.solver.hessian, 'user-supplied'))
@@ -486,13 +492,13 @@ function [newY, newL, newGL] = reoptimizePath(theta, iPar, objectiveFunction, bo
     I2 = (iPar+1 : length(theta))';
     I = [I1; I2];
     
-    % options.profileReoptimizationOptions.Display = 'off';
+    % options.profileOptimizationOptions.Display = 'off';
     negLogPostReduced = setObjectiveWrapper(objectiveFunction, options, 'negative log-posterior', iPar, theta(iPar), true, true);
     
-    if (~isfield(options.profileReoptimizationOptions, 'HessFcn') ...
-        || isempty(options.profileReoptimizationOptions.HessFcn))
+    if (~isfield(options.profileOptimizationOptions, 'HessFcn') ...
+        || isempty(options.profileOptimizationOptions.HessFcn))
         % this only works for box-constraints at the moment
-        options.profileReoptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
+        options.profileOptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
     end 
         
     % Optimization
@@ -503,7 +509,7 @@ function [newY, newL, newGL] = reoptimizePath(theta, iPar, objectiveFunction, bo
         [], [],... % linear equality constraints
         borders(I,1),...   % lower bound
         borders(I,2),...   % upper bound
-        [],options.profileReoptimizationOptions);    % options
+        [],options.profileOptimizationOptions);    % options
     newL = -newL;
     newGL = -newGL;
     newHL = -newHL;
@@ -561,16 +567,17 @@ function y = doOptimizationSteps(parameters, thetaFull, objectiveFunction, borde
             negLogPost,...
             parameters.constraints, ...
             options.options_getNextPoint.mode, ...
-            iPar);
+            iPar, ...
+            options.localOptimizer);
         negLogPostReduced = setObjectiveWrapper(objectiveFunction, options, 'negative log-posterior', iPar, theta_next(iPar), true, true);
         
         % Construction of reduced linear constraints
         [A,b,Aeq,beq] = getConstraints(theta, parameters, I);
         
-        if (~isfield(options.profileReoptimizationOptions, 'HessFcn') ...
-            || isempty(options.profileReoptimizationOptions.HessFcn))
+        if (~isfield(options.profileOptimizationOptions, 'HessFcn') ...
+            || isempty(options.profileOptimizationOptions.HessFcn))
             % this only works for box-constraints at the moment
-            options.profileReoptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
+            options.profileOptimizationOptions.HessFcn = @(varargin) HessianWrap(negLogPostReduced, varargin);
         end 
         % Optimization
         [theta_I_opt, L, ~, ~, ~, newGL, newHL] = ...
@@ -581,7 +588,7 @@ function y = doOptimizationSteps(parameters, thetaFull, objectiveFunction, borde
             parameters.min(I),...   % lower bound
             parameters.max(I),...   % upper bound
             [],...
-            options.profileReoptimizationOptions);    % options
+            options.profileOptimizationOptions);    % options
         
         % Restore full vector and determine update direction
         logPost = -L;
@@ -719,10 +726,10 @@ end
 
 
 
-function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, negLogPost, parameterFunction, options)
+function [dPar_dc, flag, new_Data] = getRhsRed(~, direction, par, ind, borders, negLogPost, ~, options)
     
     % set parameters
-    npar = length(y);
+    nPar = length(par);
     flag = 0;
     
     global ObjFuncCounter;
@@ -730,94 +737,92 @@ function [dth, flag, new_Data] = getRhsRed(~, s, y, ind, borders, negLogPost, pa
     
     switch options.solver.hessian
         case 'user-supplied'
-            [~, GL, HL] = negLogPost(y);
+            [~, gradLLH, hessLLH] = negLogPost(par);
         case {'bfgs', 'sr1', 'dfp'}
-            [~, GL] = negLogPost(y);
-            HL = approximateHessian(y, -GL, [], options.solver.hessian, 'read');
+            [~, gradLLH] = negLogPost(par);
+            hessLLH = approximateHessian(par, -gradLLH, [], options.solver.hessian, 'read');
         otherwise
             error('Unknown type of Hessian computation.');
     end
     
-    if (sum(sum(isnan(HL)))>0) || sum(isnan(GL))>0 || (sum(sum(isinf(HL)))>0) || sum(isinf(GL))>0
+    if (sum(sum(isnan(hessLLH)))>0) || sum(isnan(gradLLH))>0 || (sum(sum(isinf(hessLLH)))>0) || sum(isinf(gradLLH))>0
         disp('Warning: Undefined model output')
         flag = -1;
-        dth = nan(size(y));
+        dPar_dc = nan(size(par));
         new_Data = [];
         return;
     end
 
-    % calculate hessian of parameter function
-    [~, GG, ~] = parameterFunction(y, ind);
-
     % right handside of ODE
     try    
         % Reduce linear system by implicit funtion theorem
-        A1 = [HL(1 : ind-1, :); HL(ind+1 : npar, :); s*GG'];
-        b1 = [-GL(1 : ind-1) * options.solver.gamma; ...
-             -GL(ind+1 : npar) * options.solver.gamma; ...
-             1];
-        A2 = [A1(1:end-1, 1:ind-1), A1(1:end-1, ind+1:end)];
-        b2 = b1(1:end-1) - s * A1(1:end-1, ind);
+        lhsMatrix = hessLLH;
+        lhsMatrix(:,ind) = [];
+        lhsMatrix(ind,:) = [];
+        rhsVector = -direction * hessLLH(:,ind) - options.solver.gamma * gradLLH;
+        rhsVector(ind) = [];
         
         % Check for invertibility of the RHS
-        if (rcond(A2) < options.solver.minCond) || isnan(rcond(A2))
-            dth1 = pinv(A2, options.solver.eps) * b2;
+        if (rcond(lhsMatrix) < options.solver.minCond) || isnan(rcond(lhsMatrix))
+            dPar_dc = pinv(lhsMatrix, options.solver.eps) * rhsVector;
         else
-            dth1 = A2 \ b2;
+            dPar_dc = lhsMatrix \ rhsVector;
         end
-        dth = [dth1(1:ind-1); s; dth1(ind:end)];
+        dPar_dc = [dPar_dc(1:ind-1); direction; dPar_dc(ind:end)];
     catch
-        dth = zeros(npar + 1, 1);
-        dth(ind) = s;
+        dPar_dc = zeros(nPar, 1);
+        dPar_dc(ind) = direction;
     end
     
     % Check, if parameter bounds are violated
-    lRebuild = 0;
-    for i = 1 : npar
-        if (i ~= ind)
-            if (y(i) <= borders(i, 1))
-                if(dth(i) < 0)
-                    GL(i) = 0;
-                    HL(i,:) = 0;
-                    HL(:,i) = 0;
-                    HL(i,i) = -1;
-                    lRebuild = 1;
+    rebuildSystem = 0;
+    parDown = [];
+    parUp = [];
+    for iPar = 1 : nPar
+        if (iPar ~= ind)
+            if (par(iPar) <= borders(iPar, 1) + options.solver.RelTol)
+                if(dPar_dc(iPar) < 0)
+                    gradLLH(iPar) = 0;
+                    hessLLH(iPar,:) = 0;
+                    hessLLH(:,iPar) = 0;
+                    hessLLH(iPar,iPar) = -1;
+                    rebuildSystem = 1;
+                    parUp = [parUp, iPar];
                 end
-            elseif (y(i) >= borders(i, 2))
-                if(dth(i) > 0)
-                    GL(i) = 0;
-                    HL(i,:) = 0;
-                    HL(:,i) = 0;
-                    HL(i,i) = -1;
-                    lRebuild = 1;
+            elseif (par(iPar) >= borders(iPar, 2) - options.solver.RelTol)
+                if(dPar_dc(iPar) > 0)
+                    gradLLH(iPar) = 0;
+                    hessLLH(iPar,:) = 0;
+                    hessLLH(:,iPar) = 0;
+                    hessLLH(iPar,iPar) = -1;
+                    rebuildSystem = 1;
+                    parDown = [parDown, iPar];
                 end
             end
         end
     end
     
-    if (lRebuild == 1)
+    if (rebuildSystem == 1)
         try    
             % Reduce linear system by implicit funtion theorem
-            A1 = [HL(1 : ind-1, :); HL(ind+1 : npar, :); s*GG'];
-            b1 = [-GL(1 : ind-1) * options.solver.gamma; ...
-                 -GL(ind+1 : npar) * options.solver.gamma; ...
-                 1];
-            A2 = [A1(1:end-1, 1:ind-1), A1(1:end-1, ind+1:end)];
-            b2 = b1(1:end-1) - s * A1(1:end-1, ind);
+            lhsMatrix = hessLLH;
+            lhsMatrix(:,ind) = [];
+            lhsMatrix(ind,:) = [];
+            rhsVector = -direction * hessLLH(:,ind) - options.solver.gamma * gradLLH;
+            rhsVector(ind) = [];
 
             % Check for invertibility of the RHS
-            if (rcond(A2) < options.solver.minCond) || isnan(rcond(A2))
-                dth1 = pinv(A2, options.solver.eps) * b2;
+            if (rcond(lhsMatrix) < options.solver.minCond) || isnan(rcond(lhsMatrix))
+                dPar_dc = pinv(lhsMatrix, options.solver.eps) * rhsVector;
             else
-                dth1 = A2 \ b2;
+                dPar_dc = lhsMatrix \ rhsVector;
             end
-            dth = [dth1(1:ind-1); s; dth1(ind:end)];
-        catch
-            dth = zeros(npar + 1, 1);
-            dth(ind) = s;
+            dPar_dc = [dPar_dc(1:ind-1); direction; dPar_dc(ind:end)];
+        catch ME
+            dPar_dc = zeros(nPar, 1);
+            dPar_dc(ind) = direction;
         end
     end
-   
     new_Data = [];
 end
 

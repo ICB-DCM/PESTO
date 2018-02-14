@@ -32,79 +32,15 @@ function properties = getPropertyConfidenceIntervals(properties, alpha, varargin
 %     * local_B: Mass based approach, uses a local approximation by
 %         the Hessian matrix at the MAP estimate
 %         (requires parameters.MS, e.g. from getMultiStarts)
-%
-% History:
-% * 2013/11/29 Jan Hasenauer
-% * 2016/12/01 Paul Stapor
 
-%% Checking and assigning inputs
-if length(varargin) >= 1
-    options = handleOptionArgument(varargin{1});
-else
-    options = PestoOptions();
-end
 
-% Initialization
-properties.CI.alpha_levels = alpha;
-
-% Loop: alpha levels
-for k = 1:length(alpha)
-    % Loop: properties
-    for i = 1:properties.number
-        % Hessian
-        Sigma = properties.MS.prop_Sigma(:,:,1);
-        
-        % Confidence intervals computed using local approximation and a
-        % threshold (-> similar to PL-based confidence intervals)
-        properties.CI.local_PL(i,1,k) = properties.MS.prop(i) - sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
-        properties.CI.local_PL(i,2,k) = properties.MS.prop(i) + sqrt(icdf('chi2',alpha(k),1)*Sigma(i,i));
-
-        % Confidence intervals computed using local approximation and the
-        % probability mass (-> similar to Bayesian confidence intervals)
-        properties.CI.local_B(i,1,k)  = icdf('norm',  (1-alpha(k))/2,properties.MS.prop(i),sqrt(Sigma(i,i)));
-        properties.CI.local_B(i,2,k)  = icdf('norm',1-(1-alpha(k))/2,properties.MS.prop(i),sqrt(Sigma(i,i)));
-
-        % Confidence intervals computed using profile likelihood
-        if isfield(properties,'P')
-            if i <= length(properties.P)
-                if ~isempty(properties.P(i).prop)
-                    % left bound
-                    ind  = find(properties.P(i).prop <= properties.MS.prop(i,1));
-                    j = find(properties.P(i).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'last');
-                    if ~isempty(j)
-                        properties.CI.PL(i,1,k) = interp1(properties.P(i).R(ind([j,j+1])),...
-                            properties.P(i).prop(ind([j,j+1])),exp(-icdf('chi2',alpha(k),1)/2));
-                    else
-                        properties.CI.PL(i,1,k) = -inf;
-                    end
-                    % right bound
-                    ind  = find(properties.P(i).prop >= properties.MS.prop(i,1));
-                    j = find(properties.P(i).R(ind) <= exp(-icdf('chi2',alpha(k),1)/2),1,'first');
-                    if ~isempty(j)
-                        properties.CI.PL(i,2,k) = interp1(properties.P(i).R(ind([j-1,j])),...
-                            properties.P(i).prop(ind([j-1,j])),exp(-icdf('chi2',alpha(k),1)/2));
-                    else
-                        properties.CI.PL(i,2,k) = inf;
-                    end
-                end
-            end
-        end
-        
-        % Confidence intervals computed using sample
-        if isfield(properties,'S')
-            properties.CI.S(i,:,k) = prctile(properties.S.prop(i,:),50 + 100*[-alpha(k)/2, alpha(k)/2]);
-        end
+    %% Checking and assigning inputs
+    if length(varargin) >= 1
+        options = handleOptionArgument(varargin{1});
+    else
+        options = PestoOptions();
     end
-end
 
-%% Output
-switch options.mode
-    case 'visual'
-        plotConfidenceIntervals(properties, alpha, [], options);
-        disp('-> Calculation of confidence intervals for properties FINISHED.');
-    case 'text'
-        disp('-> Calculation of confidence intervals for properties FINISHED.');
-    case 'silent' % no output
-end
+    properties = getConfidenceIntervals(properties, alpha, 'prop', options);
 
 end
