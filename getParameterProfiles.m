@@ -76,9 +76,17 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
         options = PestoOptions();
     end
 
-    % Check if MultiStart was launched before
+    % Check if MultiStart was launched before and was successful
     if(~isfield(parameters, 'MS'))
         error('No information from optimization available. Please run getMultiStarts() before getParameterProfiles.');
+    end
+    if (isempty(options.MAP_index))
+        options.MAP_index = 1;
+    end
+    if any(isnan([parameters.MS.par(:,options.MAP_index); parameters.MS.logPost(options.MAP_index)]))
+        error(['It seems like the multi-start index from which you want to start a ' ...
+            'profile calculation was not successful. Please check your multi-start ' ...
+            'results and options.MAP_index!']);
     end
                 
     % Check and assign options
@@ -90,9 +98,6 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
     if (~isfield(options.profileOptimizationOptions, 'MaxFunEvals') ...
                 || isempty(options.profileOptimizationOptions.MaxFunEvals)) 
         options.profileOptimizationOptions.MaxFunEvals = 200 * parameters.number;
-    end
-    if (isempty(options.MAP_index))
-        options.MAP_index = 1;
     end
     
     % Check for emptiness of options
