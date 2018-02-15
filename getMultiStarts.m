@@ -316,23 +316,32 @@ if strcmp(options.comp_type, 'sequential')
                 warning(['Multi-start number ' num2str(iMS) ' failed. More details on the error:']);
                 display(['Last Error in function ' ErrMsg.stack(1).name ', line ' ...
                     num2str(ErrMsg.stack(1).line) ', file ' ErrMsg.stack(1).file '.']);
+                
+                % Assign values to exitflag, gradient etc. to avoid
+                % failure when assigning results
+                exitflag       = nan;
+                n_objfun       = nan;
+                n_iter         = nan;
+                negLogPost_opt = nan;
+                par_opt        = nan(size(freePars));
+                hessian_opt    = nan(length(freePars));
             end
             
-        end
-        
-        % Assignment of results
-        parameters.MS.t_cpu(iMS) = cputime - startTimeLocalOptimization;
-        parameters.MS.exitflag(iMS) = exitflag;
-        parameters.MS.logPost0(iMS) = -negLogPost0;
-        parameters.MS.logPost(iMS) = -negLogPost_opt;
-        parameters.MS.par(:,iMS) = par_opt;
-        parameters.MS.gradient(freePars,iMS) = gradient_opt(:);
-        parameters.MS.hessian(freePars,freePars,iMS) = hessian_opt(:,:);
-        parameters.MS.n_objfun(iMS) = n_objfun;
-        parameters.MS.n_iter(iMS) = n_iter;
-        parameters.MS.AIC(iMS) = 2*length(freePars) + 2*negLogPost_opt;
-        if ~isempty(options.nDatapoints)
-            parameters.MS.BIC(iMS) = log(options.nDatapoints)*length(freePars) + 2*negLogPost_opt;
+            % Assignment of results
+            parameters.MS.t_cpu(iMS) = cputime - startTimeLocalOptimization;
+            parameters.MS.exitflag(iMS) = exitflag;
+            parameters.MS.logPost0(iMS) = -negLogPost0;
+            parameters.MS.logPost(iMS) = -negLogPost_opt;
+            parameters.MS.par(:,iMS) = par_opt;
+            parameters.MS.gradient(freePars,iMS) = gradient_opt(:);
+            parameters.MS.hessian(freePars,freePars,iMS) = hessian_opt(:,:);
+            parameters.MS.n_objfun(iMS) = n_objfun;
+            parameters.MS.n_iter(iMS) = n_iter;
+            parameters.MS.AIC(iMS) = 2*length(freePars) + 2*negLogPost_opt;
+            if ~isempty(options.nDatapoints)
+                parameters.MS.BIC(iMS) = log(options.nDatapoints)*length(freePars) + 2*negLogPost_opt;
+            end
+            
         end
         
         % Save
