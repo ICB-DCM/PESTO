@@ -14,3 +14,4 @@ doc/config/mtocpp_filter.sh
 DRAMToolbox
 *.asv
 examples/RAmPART_examples/results
+*ess_report.mat
