@@ -135,6 +135,9 @@ end
 %% save scaling and noise parameters
 % s and noise have dimensions: 
 % (1 x # observables x max # replicates x # experiments/conditions) 
+if ~exist(options.foldername,'dir')
+    mkdir(options.foldername)
+end
 if options.save
     save([options.foldername '/analytical_results.mat'],'s','noise');
 end
