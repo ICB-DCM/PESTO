@@ -33,5 +33,13 @@ end
 parameters = getMultiStarts(parameters,@(xi) ...
     logLikelihood_JakStat(xi,D,options,approach),options.MS);
 
+if strcmp(optimizer,'fmincon')
+    tic
+    parameters = getParameterProfiles(parameters, @(xi) ...
+        logLikelihood_JakStat(xi,D,options,approach),options.MS);
+    parameters.profiles_t_cpu = toc;
+end
+
 save(options.MS.foldername,'parameters','D','options','optimizer','approach')
+
 end
