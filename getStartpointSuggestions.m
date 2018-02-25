@@ -40,30 +40,32 @@ switch solver
         [~,index] = sort(fvals,'ascend');
         xs = xs(:,index);
         betterGuess = xs(:,1:n_starts);
-        
-    case 'simple2'
-        x = bsxfun(@plus,lb,bsxfun(@times,ub-lb,lhsdesign(maxFunEvals/10,dim,'smooth','off')'));
-        optionsMS = PestoOptions();
-        optionsMS.n_starts = maxFunEvals/10;
-        optionsMS.localOptimizer = 'fmincon';
-        optionsMS.proposal = 'user-supplied';
-        optionsMS.objOutNumber = 2;
-        optionsMS.mode = 'text';
-        optionsMS.obj_type = 'negative log-posterior';
-        lOptions = optimoptions(@fmincon);
-        lOptions.MaxFunctionEvaluations = 10;
-        lOptions.MaxIterations = 10;
-        lOptions.Display = 'off';
-        lOptions.GradObj = 'on';
-        optionsMS.localOptimizerOptions = lOptions;
-        
-        parametersMS = parameters;
-        parametersMS.guess = x;
-        
-        parametersMS = getMultiStarts(parametersMS, negLogPost, optionsMS);
-        parametersMS.MS.logPost
-        
-        betterGuess = parametersMS.MS.par(:,1:n_starts);
+	case 'simple2'
+		% sample from a latin hypercube, evaluate all, order, then successively add new points such that each newly added point
+		% is not too close to all previous points (is always possible)
+		xs = bsxfun(@plus,lb,bsxfun(@times,ub-lb,lhsdesign(maxFunEvals,dim,'smooth','off')'));
+		fvals = zeros(maxFunEvals,1);
+		for j=1:maxFunEvals
+			fvals(j) = negLogPost(xs(:,j));
+		end
+		[fvals,index] = sort(fvals,'ascend');
+		xs = xs(:,index);
+		betterGuess = zeros(dim,n_starts);
+		counter = 1;
+		for j=1:n_starts
+			x_j = xs(:,j);
+			too_close_to_previous = false;
+			for k = 1:counter-1
+				x_k = betterGuess(:,k);
+				distance = abs(x_k-x_j); % each dimension separately
+				% TODO
+			end
+			if ~too_close_to_previous
+				betterGuess(:,counter) = x_j;
+				counter = counter + 1;
+			end
+		end
+		
         
     case 'snobfit'
         lOptions = struct();
