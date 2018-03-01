@@ -278,21 +278,6 @@ function res = performPT( logPostHandle, par, opt )
          end
       end
       
-      if nTemps > 1
-         dBeta = beta(1:end-1) - beta(2:end);
-         for l = nTemps:-1:2
-            pAccSwap(l-1) = dBeta(l-1) .* (logPost(l)-logPost(l-1))';
-            A(l-1) = log(rand) < pAccSwap(l-1);
-            propSwap(l-1) = propSwap(l-1) + 1;
-            accSwap(l-1) = accSwap(l-1) + A(l-1);
-            % As usually implemented when using PT
-            if A(l-1)
-               theta(:,[l,l-1]) = theta(:,[l-1,l]);
-               logPost([l,l-1]) = logPost([l-1,l]);
-            end
-         end
-      end
-      
       % Adaptation of the temperature values (Vousden 2016)
       if nTemps > 1
          
