@@ -3,15 +3,15 @@ function [model] = Pom1p_NLIC_syms_ft()
 %% CVODES OPTIONS
 
 % set the default absolute tolerance
-model.atol = 1e-10; 
+% model.atol = 1e-10; 
 % set the default relative tolerance
-model.rtol = 1e-10; 
+% model.rtol = 1e-10; 
 % set the default maximum number of integration steps
-model.maxsteps = 1e4; 
+% model.maxsteps = 1e4; 
 % set the parametrisation of the problem options are 'log', 'log10' and
 % 'lin' (default).
 model.param = 'log10'; 
-model.noadjoint = true;
+% model.noadjoint = true;
 
 %% PDE discretization
 n_grid = 200;
