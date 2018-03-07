@@ -1,28 +1,21 @@
 function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
-    = performOptimizationCoordinateSearch(parameters, negLogPost, par0, options)
+    = performOptimizationRcs(parameters, negLogPost, par0, options)
 
     % Definition of index set of optimized parameters
     freePars = setdiff(1:parameters.number, options.fixedParameters);
-    optionsCS.TolX        = options.localOptimizerOptions.TolX;
-    optionsCS.TolFun      = options.localOptimizerOptions.TolFun;
-    optionsCS.MaxIter     = options.localOptimizerOptions.MaxIter;
-	optionsCS.MaxFunEvals = options.localOptimizerOptions.MaxFunEvals;
-    
-	if (isfield(options.localOptimizerOptions,'Barrier') && ~isempty(options.localOptimizerOptions.Barrier))
-		optionsCS.Barrier = options.localOptimizerOptions.Barrier;
-    end
+    options_rcs = options.localOptimizerOptions;
     
     % Set bounds
     lowerBounds = parameters.min;
     upperBounds = parameters.max;
   
-    % Run CS
-    [par_opt, negLogPost_opt, exitflag, output] = coordinateSearch(...
+    % Run RCS
+    [par_opt, negLogPost_opt, exitflag, output] = rcs(...
         negLogPost,...
         par0,...
         lowerBounds(freePars),...
         upperBounds(freePars),...
-        optionsCS);
+        options_rcs);
     
     % Assignment of results
     n_objfun = output.funcCount;
@@ -35,7 +28,7 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
         [~, gradient_opt, hessian_opt] = negLogPost(par_opt);
         hessian_opt(freePars,freePars) = hessian_opt;
         hessian_opt(options.fixedParameters,options.fixedParameters) = nan;
-        gradient_opt(freePars) = G_opt;
+        gradient_opt(freePars) = gradient_opt;
         gradient_opt(options.fixedParameters) = nan;
     catch
         warning('Could not compute Hessian and gradient at optimum after optimization.');

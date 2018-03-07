@@ -3,19 +3,19 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
        
     % Definition of index set of optimized parameters
     freePars = setdiff(1:parameters.number, options.fixedParameters);
-    optionsDHC = options.localOptimizerOptions;
+    options_dhc = options.localOptimizerOptions;
     
     % Set bounds
     lowerBounds = parameters.min;
     upperBounds = parameters.max;
   
     % run DHC
-    [par_opt, negLogPost_opt, exitflag, output] = dynamicHillClimb(...
+    [par_opt, negLogPost_opt, exitflag, output] = dhc(...
         negLogPost,...
         par0,...
         lowerBounds(freePars),...
         upperBounds(freePars),...
-        optionsDHC);
+        options_dhc);
     
     % Assignment of results
     n_objfun  = output.funcCount;
