@@ -1,7 +1,8 @@
-function [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options)
-% An implementation with slight modifications of the "Dynamic Hill
-% Climbing" algorithm as described in [De La Maza and Yuret. Dynamic Hill
-% Climbing].
+function [x, fval, exitflag, output] = dhc(fun,x0,lb,ub,options)
+% Optimization via Dynamic Hill Climbing.
+%
+% An implementation with slight modifications of the algorithm as described
+% in [De La Maza and Yuret. Dynamic Hill Climbing].
 %
 % Input:
 % fun     : objective function to be minimized
@@ -40,7 +41,7 @@ function [x, fval, exitflag, output] = dynamicHillClimb(fun,x0,lb,ub,options)
 dim  = length(x0);
 
 % interpret options
-options  = f_validateOptions(options,dim);
+options  = f_get_options(options);
 % extract often used options
 tolX                = options.TolX;
 tolFun              = options.TolFun;
@@ -205,6 +206,8 @@ end
 
 % finalize output
 outputFcn(ybst,fbst,funEvals,'done');
+% textual output
+f_display(options.Display,funEvals,fbst,delta,true)
 
 % assign return values
 x                   = denormalize(ybst);
@@ -220,12 +223,14 @@ end % function
 
 %% helper functions
 
+
 function y = f_normalize(x,lb,ub)
 % normalize vector to [0,1]
 
 y = (x-lb)./abs(ub-lb);
 
 end
+
 
 function x = f_denormalize(y,lb,ub)
 % denormalize vector from [0,1]
@@ -234,12 +239,14 @@ x = y.*(ub-lb) + lb;
 
 end
 
+
 function j_opp = f_opp_j(j,nVec)
 % short for opposite vector in step matrix
 
 j_opp = nVec - (j-1);
 
 end
+
 
 function fval = f_wrap_fun(x,fun,lb,ub,barrier,funEvals,maxFunEvals)
 % wrap around function to allow for a barrier function wrap
@@ -258,6 +265,7 @@ else
 end
 
 end
+
 
 function [step,norms] = f_init_step(vmax)
 % create dim x (2*dim+2)-matrix containing the step proposals as columns
@@ -279,6 +287,7 @@ end
 
 end
 
+
 function [v_max,j_max] = f_max(step,norms)
 % find step with maximal norm
 
@@ -286,6 +295,7 @@ function [v_max,j_max] = f_max(step,norms)
 v_max = step(:,j_max);
 
 end
+
 
 function [v_min,j_min] = f_min(step,norms,smax)
 % find step with smallest norm, if one exists whose norm is smaller than
@@ -309,76 +319,36 @@ end
 
 end
 
-function [ optionsDhc ] = f_validateOptions(options,dim)
-% fill empty or invalid fields with default values
 
-optionsDhc = struct();
+function [ options ] = f_get_options(options_in)
+% fill non-existent fields with default values, and check validity
 
-% interpret options
+options = struct();
+options.TolX                = 1e-8;
+options.TolFun              = 1e-8;
+options.MaxFunEvals         = Inf;
+options.OutputFcn           = nan;
+options.InitialStepSize     = 0.1;
+options.ExpandFactor        = 2.1;
+options.ContractFactor      = 0.47;
+options.StuckSearchFactor   = 4;
+options.Barrier             = '';
+options.Display             = 'off';
 
-if (isfield(options,'TolX') && ~isempty(options.TolX))
-    optionsDhc.TolX    = options.TolX;
-else
-    optionsDhc.TolX    = 1e-8;
-end
+% fill from input
+cell_fieldnames = fieldnames(options);
+cell_fieldnames_in = fieldnames(options_in);
 
-if (isfield(options,'TolFun') && ~isempty(options.TolFun))
-    optionsDhc.TolFun  = options.TolFun;
-else
-    optionsDhc.TolFun  = 1e-8;
-end
-
-if (isfield(options,'MaxFunEvals') && ~isempty(options.MaxFunEvals))
-    optionsDhc.MaxFunEvals = options.MaxFunEvals;
-else
-    optionsDhc.MaxFunEvals = 1000*dim;
-end
-
-if (isfield(options,'OutputFcn') && ~isempty(options.OutputFcn))
-    optionsDhc.OutputFcn = options.OutputFcn;
-else
-    optionsDhc.OutputFcn = nan;
-end
-
-% adjustment parameters
-
-if (isfield(options,'InitialStepSize') && ~isempty(options.InitialStepSize))
-    optionsDhc.InitialStepSize           = options.InitialStepSize;
-else
-    optionsDhc.InitialStepSize           = 0.1;
-end
-
-if (isfield(options,'ExpandFactor') && ~isempty(options.ExpandFactor))
-    optionsDhc.ExpandFactor              = options.ExpandFactor;
-else
-    optionsDhc.ExpandFactor              = 2.1;
-end
-
-if (isfield(options,'ContractFactor') && ~isempty(options.ContractFactor))
-    optionsDhc.ContractFactor            = options.ContractFactor;
-else
-    optionsDhc.ContractFactor            = 0.47;
-end
-
-if (isfield(options,'StuckSearchFactor') && ~isempty(options.StuckSearchFactor))
-    optionsDhc.StuckSearchFactor         = options.StuckSearchFactor;
-else
-    optionsDhc.StuckSearchFactor         = 4;
-end
-
-if (isfield(options,'Barrier'))
-    optionsDhc.Barrier                   = options.Barrier;
-else
-    optionsDhc.Barrier                   = '';
-end
-
-if (isfield(options,'Display') && ~isempty(options.Display))
-    optionsDhc.Display                   = options.Display;
-else
-    optionsDhc.Display                   = 'off';
+for jf = 1:length(cell_fieldnames_in)
+    fieldname = cell_fieldnames_in{jf};
+    if ~any(strcmp(cell_fieldnames,fieldname))
+        error(['Options field ' fieldname ' does not exist.']);
+    end
+    options.(fieldname) = options_in.(fieldname);
 end
 
 end
+
 
 function f_output(y,f_denormalize,fval,funEvals,state,outputFcn)
 % short for call to output function
@@ -393,17 +363,30 @@ end
 
 end
 
-function f_display(display,funEvals,fbst,vnorm)
+
+function f_display(display,funEvals,fbst,vnorm,final)
 % short for call to display on screen
 
-if (strcmp(display,'iter') || strcmp(display,'debug'))
+if nargin < 5, final = false; end
+
+if strcmp(display,'iter') || strcmp(display,'debug')
     if (strcmp(display,'debug'))
         show_output = true;
     else
-        show_output = mod(funEvals,100) == 0;
+        show_output = mod(funEvals,100) == 1;
     end
     
-    if (show_output), fprintf(strcat('%d\t|\t%.15f\t|\t%.15f\n'),funEvals,fbst,vnorm); end
+    if show_output && ~final
+        if mod(funEvals,1000) == 1
+            fprintf('fevals\t|\tfbst\t|\tstepnorm\n');
+        end
+        fprintf(strcat('%d\t|\t%.8e\t|\t%.8e\n'),funEvals,fbst,vnorm);
+    end
+    
+    if final
+        fprintf('final: \t funEvals: %d, \t fbst: %.8e\n',funEvals,fbst); 
+    end
+
 end
 
 end

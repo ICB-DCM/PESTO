@@ -570,14 +570,15 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         end
         
         function this = set.localOptimizer(this, value)
-            if any(strcmp(value, {'fmincon', 'meigo-ess', 'meigo-vns', 'pswarm', 'lsqnonlin', 'cs', 'dhc', 'bobyqa'}))
+            list_optimizers = {'fmincon', 'meigo-ess', 'meigo-vns', 'pswarm', 'lsqnonlin', 'rcs', 'dhc', 'bobyqa'};
+            if any(strcmp(value, list_optimizers))
                 this.localOptimizer = value;
                 
                 if strcmp(value, 'pswarm')
                     this.localOptimizerOptions = PSwarm('defaults');
                 end
             else
-                error('PestoOptions.localOptimizer only supports the following choices: fmincon, meigo-ess, meigo-vns, pswarm, lsqnonlin, cs, dhc, bobyqa.');
+                error([sprintf('PestoOptions.localOptimizer only supports the following choices:\n') sprintf('%s ', list_optimizers{:})]);
             end
         end
         

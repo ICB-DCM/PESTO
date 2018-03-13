@@ -150,15 +150,14 @@ parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
 % The following uses the MEIGO toolbox with default settings:
 % (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
-% uncomment:
 
+% UNCOMMENT THE FOLLOWING BLOCK
 % MeigoOptions = struct(...
 %     'maxeval', 1e4, ...
 %     'local', struct('solver', 'fmincon', ...
 %     'finish', 'fmincon', ...
 %     'iterprint', 1) ...
 %     );
-% 
 % optionsMultistartMeigo = optionsPesto;
 % optionsMultistartMeigo.localOptimizer = 'meigo-ess';
 % optionsMultistartMeigo.localOptimizerOptions = MeigoOptions;
@@ -170,7 +169,8 @@ parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 
 % % This section uses PSwarm, a particle swarm optimizer
 % % (Install from http://www.norg.uminho.pt/aivaz/pswarm/ and uncomment)
-% 
+
+% UNCOMMENT THE FOLLOWING BLOCK
 % optionsMultistartPSwarm = optionsPesto;
 % optionsMultistartPSwarm.localOptimizer = 'pswarm';
 % optionsMultistartPSwarm.n_starts = 10;
@@ -179,15 +179,33 @@ parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 % DHC
 % ----------------
 
-% Now we also have a look at the derivative-free optimizer provided in
-% dynamicHillClimb.m. Since the optimizer has no information about
-% gradients, it is recommended to choose rather small tolerances and a
-% higher number of function evaluations. Every such function evaluation
-% will be less expensive because no derivatives are computed.
-% 
+% Now we also have a look at derivative-free optimization. Since the 
+% optimizer requires no information about gradients, it is recommended to 
+% choose rather small tolerances and a higher number of function 
+% evaluations. Every such function evaluation
+% will be less expensive because compared to derivative-based optimization,
+% because no derivatives need to be computed.
+
+% UNCOMMENT THE FOLLOWING BLOCK
+% optionsPesto.objOutNumber = 1;
 % optionsPesto.localOptimizer = 'dhc';
+% optionsPesto.localOptimizerOptions = struct();
 % optionsPesto.localOptimizerOptions.TolX   = 1e-10;
 % optionsPesto.localOptimizerOptions.TolFun = 1e-10;
+% optionsPesto.localOptimizerOptions.MaxFunEvals = 1000;
+% optionsPesto.localOptimizerOptions.Display = 'iter';
+% parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+
+% RCS
+% ----------------
+
+% The derivative-free RCS optimizer (randomized coordinate search) can be
+% applicable in small dimensions, comparable to fminsearch.
+
+% UNCOMMENT THE FOLLOWING BLOCK
+% optionsPesto.objOutNumber = 1;
+% optionsPesto.localOptimizer = 'rcs';
+% optionsPesto.localOptimizerOptions = struct();
 % optionsPesto.localOptimizerOptions.MaxFunEvals = 1000;
 % optionsPesto.localOptimizerOptions.Display = 'iter';
 % parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
