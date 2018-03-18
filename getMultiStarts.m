@@ -261,7 +261,7 @@ if strcmp(options.comp_type, 'sequential')
             end
             negLogPost0 = 0.5 * sum(residuals.^2);
             parameters.MS.logPost0(iMS) = -negLogPost0;
-        elseif (any(strcmp(options.localOptimizer, {'dhc','rcs','bobyqa'})))
+        elseif (any(strcmp(options.localOptimizer, {'dhc','rcs','bobyqa','noodles'})))
             negLogPost0 = negLogPost(par0(freePars,iMS));
         else
             negLogPost0 = nan;
@@ -308,9 +308,13 @@ if strcmp(options.comp_type, 'sequential')
                             = performOptimizationDhc(parameters, negLogPost, par0(:,iMS), options);
 
                     case 'bobyqa'
-                        % Optimization using bobya as local optimizer
+                        % Optimization using bobyqa as local optimizer
                         [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
                             = performOptimizationBobyqa(parameters, negLogPost, par0(:,iMS), options);
+                    case 'noodles'
+                        % Optimization using noodles as local optimizer
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                            = performOptimizationNoodles(parameters, negLogPost, par0(:,iMS), options);
                 end
             catch ErrMsg
                 warning(['Multi-start number ' num2str(iMS) ' failed. More details on the error:']);
