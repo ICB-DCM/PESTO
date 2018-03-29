@@ -220,7 +220,7 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         % *             currently calculated is updated.
         % *     .guess = 1e-2 ... guess for initial update stepsize
         % *     .min = 1e-6 ... lower bound for update stepsize
-        % *     .min = 1e2 ... upper bound for update stepsize
+        % *     .max = 1e2 ... upper bound for update stepsize
         % *     .update = 1.25 ... incremental change if stepsize is too large or
         % *         too small, must be > 1.
         options_getNextPoint = struct('mode', 'multi-dimensional', ...
