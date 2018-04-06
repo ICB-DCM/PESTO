@@ -6,9 +6,9 @@ function varargout = logLikelihoodJakstat(theta, amiData)
 % defined in jakstat_pesto_syms.m
 % 
 % USAGE:
-% [llh] = getParameterProfiles(theta, amiData)
-% [llh, sllh] = getParameterProfiles(theta, amiData)
-% [llh, sllh, s2llh] = getParameterProfiles(theta, amiData)
+% [llh] = logLikelihoodJakstat(theta, amiData)
+% [llh, sllh] = logLikelihoodJakstat(theta, amiData)
+% [llh, sllh, s2llh] = logLikelihoodJakstat(theta, amiData)
 %
 % Parameters:
 %  theta: Model parameters 

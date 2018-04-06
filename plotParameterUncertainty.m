@@ -251,30 +251,21 @@ for l = 1:length(I)
         case 1
             if (isfield(parameters, 'MS'))
                 if isfield(parameters.MS,'hessian')
-                    % likelihood ratio
-                    Sigma = pinv(parameters.MS.hessian(:,:,1));
-                    sigma = sqrt(Sigma(i,i));
-                    % Get grid
-                    par_grid = parameters.MS.par(i,1) + sigma*linspace(-4,4,100);
-                    par_grid = par_grid(find((parameters.min(i) <= par_grid).*(par_grid <= parameters.max(i))));
-                    % Calculation of objectiev function approximation
-                    % - with non-zero gradient
-    %                 ind_I = [1:i-1,i+1:parameters.number];
-    %                 dtheta_i = -parameters.MS.par(i,1)+par_grid;
-    %                 dtheta_ind_I = -pinv(parameters.MS.hessian(ind_I,ind_I,1))*bsxfun(@plus,parameters.MS.hessian(ind_I,i,1)*dtheta_i,parameters.MS.gradient(ind_I,1));
-    %                 dtheta = [dtheta_ind_I(1:i-1,:);dtheta_i;dtheta_ind_I(i:end,:)];
-    %                 for l = 1:size(dtheta,2)
-    %                     dtheta(:,l) = max(min(parameters.MS.par(:,1)+dtheta(:,l),parameters.max),parameters.min)-parameters.MS.par(:,1);
-    %                 end
-    %                 J = nan(1,size(dtheta,2));
-    %                 for l = 1:size(dtheta,2)
-    %                     J(l) = parameters.MS.gradient(:,1)'*dtheta(:,l) + 0.5*dtheta(:,l)'*parameters.MS.hessian(:,:,1)*dtheta(:,l);
-    %                 end
-                    J = parameters.MS.gradient(i,1)*(par_grid-parameters.MS.par(i,1)) + 0.5*((par_grid-parameters.MS.par(i,1))/sigma).^2;
-                    % - with zero gradient
-    %                 J = 0.5*((par_grid-parameters.MS.par(i,1))/sigma).^2;
-                    % Plot
-                    h = plot(par_grid,exp(-J),'-','linewidth',options.A.lw,'color',options.A.col); hold on;
+                    ind_not_nan = find(~isnan(diag(parameters.MS.hessian(:,:,1))));
+                    j = find(i==ind_not_nan);
+                    if ~isempty(j)
+                        % Standard deviation of Gaussian approximation of
+                        % profile
+                        Sigma = pinv(parameters.MS.hessian(ind_not_nan,ind_not_nan,1));
+                        sigma = sqrt(Sigma(j,j));
+                        % Get grid
+                        par_grid = parameters.MS.par(i,1) + sigma*linspace(-4,4,100);
+                        par_grid = par_grid(find((parameters.min(i) <= par_grid).*(par_grid <= parameters.max(i))));
+                        % Calculation of objectiev function approximation
+                        J = parameters.MS.gradient(i,1)*(par_grid-parameters.MS.par(i,1)) + 0.5*((par_grid-parameters.MS.par(i,1))/sigma).^2;
+                        % Plot
+                        h = plot(par_grid,exp(-J),'-','linewidth',options.A.lw,'color',options.A.col); hold on;
+                    end
                 else
                     warning('No hessian provided in .MS. Approximation in not plotted.');
                 end

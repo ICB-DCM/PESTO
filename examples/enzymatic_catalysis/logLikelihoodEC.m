@@ -122,7 +122,7 @@ dydtheta = zeros(length(t), nParams * nObserv);
 % Loop over the experiments and simulation for each experiment
 for iMeasure = 1 : nMeasure
     % Simulation
-    odeOptions = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
+    odeOptions = odeset('RelTol', 1e-6, 'AbsTol', 1e-10);
     [~,X] = ode15s(@(t,x) f(exp(theta),x), t, [con0(:,iMeasure); fillX], odeOptions);
     y = h(X(:,1:nStates), exp(theta));
     Y(:, :) = yMeasured(iMeasure, :, :);
@@ -139,7 +139,7 @@ for iMeasure = 1 : nMeasure
         J = J - 0.5 * sum(log(2*pi*sigma2) + (Y(:,iObserv) - y(:,iObserv)).^2 / sigma2);
         if (nargout > 1)
             gradJ = gradJ + dydtheta(:,iObserv + (0 : nObserv : nParams*nObserv - iObserv))' * ((Y(:,iObserv) - y(:,iObserv)) / sigma2);
-            FIM = FIM + dydtheta(:,iObserv + (0 : nObserv : nParams*nObserv - iObserv))' * dydtheta(:,iObserv + (0 : nObserv : nParams*nObserv - iObserv))/sigma2;
+            FIM = FIM - dydtheta(:,iObserv + (0 : nObserv : nParams*nObserv - iObserv))' * dydtheta(:,iObserv + (0 : nObserv : nParams*nObserv - iObserv))/sigma2;
         end
     end
 end

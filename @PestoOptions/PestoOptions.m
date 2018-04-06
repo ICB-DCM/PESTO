@@ -90,6 +90,10 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         % optimization.
         init_threshold = -inf;
         
+        % Offset between log-likelihood and sum of squared residuals
+        % (important only for lsqnonlin so far)
+        logPostOffset = [];
+        
         % Which optimizer to use?
         % Current options: ['fmincon', 'meigo-ess', 'meigo-vns', 'pswarm']
         %
@@ -199,14 +203,7 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         % *     .GradObj ... are gradients provided?
         % *     .GradConstr ... do we have constraints?
         % *     .TolCon ... Tolerance for constraints
-        profileReoptimizationOptions = optimset( ...
-            'algorithm', 'interior-point', ...
-            'display', 'off', ...
-            'MaxIter', 400, ...
-            'GradObj', 'on', ...
-            'GradConstr', 'on', ...
-            'TolCon', 1e-6 ...
-            );
+        profileOptimizationOptions = [];
         
         % Maximal relative decrease of ratio allowed for two adjacent
         % points in the profile (default = 0.10) if options.dJ = 0;
@@ -223,7 +220,7 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         % *             currently calculated is updated.
         % *     .guess = 1e-2 ... guess for initial update stepsize
         % *     .min = 1e-6 ... lower bound for update stepsize
-        % *     .min = 1e2 ... upper bound for update stepsize
+        % *     .max = 1e2 ... upper bound for update stepsize
         % *     .update = 1.25 ... incremental change if stepsize is too large or
         % *         too small, must be > 1.
         options_getNextPoint = struct('mode', 'multi-dimensional', ...
@@ -573,14 +570,15 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         end
         
         function this = set.localOptimizer(this, value)
-            if any(strcmp(value, {'fmincon', 'meigo-ess', 'meigo-vns', 'pswarm', 'lsqnonlin', 'cs', 'dhc', 'bobyqa'}))
+            list_optimizers = {'fmincon', 'meigo-ess', 'meigo-vns', 'pswarm', 'lsqnonlin', 'rcs', 'dhc', 'bobyqa'};
+            if any(strcmp(value, list_optimizers))
                 this.localOptimizer = value;
                 
                 if strcmp(value, 'pswarm')
                     this.localOptimizerOptions = PSwarm('defaults');
                 end
             else
-                error('PestoOptions.localOptimizer only supports the following choices: fmincon, meigo-ess, meigo-vns, pswarm, lsqnonlin, cs, dhc, bobyqa.');
+                error([sprintf('PestoOptions.localOptimizer only supports the following choices:\n') sprintf('%s ', list_optimizers{:})]);
             end
         end
         

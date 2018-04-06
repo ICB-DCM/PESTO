@@ -30,10 +30,9 @@
 
 
 %% Preliminary
-% Clean up
 
-% clear all;
-% close all;
+clear;
+close all;
 clc;
 
 TextSizes.DefaultAxesFontSize = 14;
@@ -54,7 +53,7 @@ rng(0);
 try
     amiwrap('jakstat_pesto','jakstat_pesto_syms', exdir, 1);
 catch ME
-    warning('There was a problem with the AMICI toolbox (available at https:// github.com/ICB-DCM/AMICI), which is needed to run this example file. The original error message was:');
+    warning('This PESTO example uses the AMICI toolbox (available at https://github.com/ICB-DCM/AMICI). Unfortunately, there was a problem with AMICI when trying to run this example file. Please check if AMICI is properly installed to run this example. The original error message was:');
     rethrow(ME);
 end
 
@@ -109,9 +108,9 @@ optionsPesto.mode     = 'visual';
 % REMARK: The optimization in this case is rather challenging and the
 % box constraints in the parameter space are set generously. So
 % optimization will encounter many points in which the ODE can not be
-% evaluated, leading to warnings of the ODE simulator AMICI. This is normal
-% and not a bug. It just shows how paramter estimation can look like in
-% complicated situations.
+% evaluated, leading to warnings of the ODE simulator AMICI. This is
+% expected behavior and no bug. It demonstrates paramter estimation for
+% a complicated example.
 
 % Different parameter optimization methods are compared with each other.
 % The uncommented version is a simple multi-start local optimization.
@@ -121,29 +120,56 @@ optionsPesto.mode     = 'visual';
 % three times, to ensure that the found optimum is indeed the global one.
 
 
-% Multi-start local optimization part
+% Multi-start local optimization part (fmincon)
+% optionsPesto.n_starts = 25;
+% optionsPesto.localOptimizer = 'fmincon';
+% optionsPesto.localOptimizerOptions = optimset(...
+%     'Algorithm', 'interior-point',...
+%     'GradObj', 'on',...
+%     'Display', 'iter', ... 'Hessian', 'on', ... uncomment this to use the Hessian for optimization 
+%     'MaxIter', 1000,...
+%     'TolFun', 1e-10,...
+%     'MaxFunEvals', 1000*parameters.number);
+
+% Multi-start local optimization part (lsqnonlin)
 optionsPesto.n_starts = 25;
-optionsPesto.localOptimizer = 'fmincon';
-optionsPesto.localOptimizerOptions = optimset(...
-    'Algorithm', 'interior-point',...
-    'GradObj', 'on',...
-    'Display', 'iter', ... 'Hessian', 'on', ... uncomment this to use the Hessian for optimization 
+optionsPesto.localOptimizer = 'lsqnonlin';
+optionsPesto.obj_type = 'log-posterior';
+optionsPesto.localOptimizerOptions  = optimset(...
+    'Algorithm', 'trust-region-reflective',...
     'MaxIter', 1000,...
     'TolFun', 1e-10,...
-    'MaxFunEvals', 1000*parameters.number);
-
+    'GradObj', 'on', ...
+    'Display', 'off', ...
+    'Jacobian', 'on', ...
+    'TolX', 1e-12,...
+    'TolGrad', 1e-6, ...
+    'PrecondBandWidth', Inf,...
+    'MaxFunEvals', 2000*parameters.number);
+objectiveFunction = @(theta) logLikelihoodJakstatLsqnonlin(theta, amiData);
+    
 % % Hybrid-type optimization part (requires the MEIGO toolbox)
 % % (Install MEIGO from http://gingproc.iim.csic.es/meigom.html and
 % % uncomment):
+%
+% optionsPestoHybrid.obj_type = 'log-posterior';
+% optionsPestoHybrid.localOptimizer = 'meigo-ess';
+% optionsPestoHybrid.n_starts = 10;
+% MeigoOptions = struct(...
+%     'maxeval', 2e4, ...
+%     'local', struct('solver', 'fmincon', ...
+%     'finish', 'fmincon', ...
+%     'iterprint', 1) ...
+%     );
 % optionsPestoHybrid.localOptimizerOptions = MeigoOptions;
-% 
+
 % % Global optimization part (requires the PSwarm toolbox)
 % % (Install from http://www.norg.uminho.pt/aivaz/pswarm/ and uncomment)
 % optionsPestoGlobal = optionsPesto.copy;
 % optionsPestoGlobal.localOptimizer = 'pswarm';
 % optionsPestoGlobal.localOptimizerOptions.MaxObj  = 10000;
 
-% The example can also be run in parallel mode: Uncomment this, if wanted
+% The example can also be run in parallel mode: Uncomment the following, if wanted
 % optionsPesto.comp_type = 'parallel'; 
 % optionsPesto.mode = 'text';
 % % optionsPesto.save = true; 
@@ -158,7 +184,7 @@ end
     
 % Run getMultiStarts
 fprintf('\n Perform optimization...');
-parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
+parametersMultistart = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 % parametersHybrid = getMultiStarts(parameters, objectiveFunction, optionsPestoHybrid);
 % parametersGlobal = getMultiStarts(parameters, objectiveFunction, optionsPestoGlobal);
 
@@ -171,7 +197,8 @@ parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 % optionsPesto.profile_method = 'integration';
 
 % Profile likelihood calculation
-parameters = getParameterProfiles(parameters, objectiveFunction, optionsPesto);
+optionsPesto.parameter_index = [2, 3, 5, 9, 10, 11, 12, 15];
+parametersMultistart = getParameterProfiles(parametersMultistart, objectiveFunction, optionsPesto);
 
 
 %% Cleaning up

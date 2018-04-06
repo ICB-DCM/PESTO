@@ -1,4 +1,4 @@
-classdef PestoSamplingOptions < matlab.mixin.SetGet
+classdef PestoSamplingOptions < matlab.mixin.CustomDisplay
    % PestoSamplingOptions provides an option container to pass options to
    % various PESTO functions. Not all options are used by all functions,
    % consult the respective function documentation for details.
@@ -210,7 +210,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       end
       
       %% Part for checking the correct setting of options
-      function set.obj_type(this, value)
+      function this = set.obj_type(this, value)
          if(strcmpi(value, 'log-posterior') || strcmpi(value, 'negative log-posterior'))
             this.obj_type = lower(value);
          else
@@ -218,7 +218,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
          end
       end
       
-      function set.mode(this, value)
+      function this = set.mode(this, value)
          if (strcmp(value, 'visual') || strcmp(value, 'text') || strcmp(value, 'silent') || strcmp(value, 'debug'))
             this.mode = value;
          else
@@ -226,7 +226,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
          end
       end
             
-      function set.nIterations(this, value)
+      function this = set.nIterations(this, value)
          if (value == floor(value) && value > 0)
             this.nIterations = value;
          else
@@ -234,7 +234,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
          end
       end
       
-      function set.samplingAlgorithm(this, value)
+      function this = set.samplingAlgorithm(this, value)
          if ~isstr(value) || isempty(value)
             error('Please specify the algorithm which should be used, e.g. opt.samplingAlgorithm = ''PT''');
          end
@@ -278,7 +278,7 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
          end
       end
       
-      function set.objOutNumber(this, value)
+      function this = set.objOutNumber(this, value)
          if value == floor(value) && ( value == 1 || value == 2 || value == 3 )
             this.objOutNumber = lower(value);
          else
@@ -384,28 +384,3 @@ classdef PestoSamplingOptions < matlab.mixin.SetGet
       end
    end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

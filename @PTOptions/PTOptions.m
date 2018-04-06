@@ -1,5 +1,5 @@
-classdef PTOptions < matlab.mixin.SetGet
-   % RBPTOptions provides an option container to specify region based parallel tempering (RBPT) options 
+classdef PTOptions < matlab.mixin.CustomDisplay
+   % PTOptions provides an option container to specify parallel tempering (PT) options 
    % in PestoSamplingOptions.PT.
    %
    % This file is based on AMICI amioptions.m (http://icb-dcm.github.io/AMICI/)
@@ -160,7 +160,7 @@ classdef PTOptions < matlab.mixin.SetGet
       end
       
       %% Part for checking the correct setting of options
-      function set.regFactor(this, value)
+      function this = set.regFactor(this, value)
          if(isnumeric(value) && value > 0)
             this.regFactor = lower(value);
          else
@@ -170,7 +170,7 @@ classdef PTOptions < matlab.mixin.SetGet
          end
       end
       
-      function set.nTemps(this, value)
+      function this = set.nTemps(this, value)
          if(value == floor(value) && value > 0)
             this.nTemps = lower(value);
          else
@@ -178,7 +178,7 @@ classdef PTOptions < matlab.mixin.SetGet
          end
       end    
       
-      function set.exponentT(this, value)
+      function this = set.exponentT(this, value)
          if(isnumeric(value) && value > 0)
             this.exponentT = lower(value);
          else
@@ -187,23 +187,23 @@ classdef PTOptions < matlab.mixin.SetGet
          end
       end          
 
-      function set.alpha(this, value)
+      function this = set.alpha(this, value)
          if(isnumeric(value) && value > 0.5 && value < 1)
             this.alpha = lower(value);
          else
-            error(['Please an adaption decay constant between 0.5 and 1.0, e.g. PestoSamplingOptions.PT.alpha = 0.51']);
+            error('Please an adaption decay constant between 0.5 and 1.0, e.g. PestoSamplingOptions.PT.alpha = 0.51');
          end
       end  
       
-      function set.temperatureNu(this, value)
+      function this = set.temperatureNu(this, value)
          if(isnumeric(value) && value > 0.0)
             this.temperatureNu = lower(value);
          else
-            error(['Please an temperature adaption decay constant greater 0']);
+            error('Please an temperature adaption decay constant greater 0');
          end
       end   
       
-      function set.memoryLength(this, value)
+      function this = set.memoryLength(this, value)
          if(value == floor(value) && value > 0)
             this.memoryLength = lower(value);
          else
@@ -212,7 +212,8 @@ classdef PTOptions < matlab.mixin.SetGet
          end
       end   
       
-      function set.swapsPerIter(this, value)
+
+      function this = set.swapsPerIter(this, value)
          if(value == floor(value) && value > 0)
             this.swapsPerIter = lower(value);
          else
@@ -220,7 +221,7 @@ classdef PTOptions < matlab.mixin.SetGet
          end
       end 
       
-      function set.temperatureEta(this, value)
+      function this = set.temperatureEta(this, value)
          if(value == floor(value) && value > 0)
             this.temperatureEta = lower(value);
          else

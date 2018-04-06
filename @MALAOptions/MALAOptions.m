@@ -1,4 +1,4 @@
-classdef MALAOptions < matlab.mixin.SetGet
+classdef MALAOptions < matlab.mixin.CustomDisplay
    % MALAOptions provides an option container to pass options as subclass
    % into the PestoSamplingOptions class for the Metropolis Adaptive Langevin Algorithm (MALA).
    %
@@ -143,7 +143,7 @@ classdef MALAOptions < matlab.mixin.SetGet
       end
       
       %% Part for checking the correct setting of options
-      function set.regFactor(this, value)
+      function this = set.regFactor(this, value)
          if(isnumeric(value) && value > 0)
             this.regFactor = lower(value);
          else
@@ -156,28 +156,3 @@ classdef MALAOptions < matlab.mixin.SetGet
       
    end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

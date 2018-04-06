@@ -18,6 +18,7 @@ function varargout = objectiveWrap(theta, objectiveFunction, wrapperOptions, var
     objSign = wrapperOptions{1};
     fixedTheta = wrapperOptions{2};
     outNumber = wrapperOptions{4};
+    optimizer = wrapperOptions{5};
     countErrors = wrapperOptions{6};
     showWarnings = wrapperOptions{7};
     if isempty(fixedTheta)
@@ -52,7 +53,12 @@ function varargout = objectiveWrap(theta, objectiveFunction, wrapperOptions, var
                     case {2, 3}
                         [J, G] = objectiveFunction(longTheta);
                 end
-                varargout = {objSign * J, objSign * G(freeInd)};
+                
+                if strcmp(optimizer, 'lsqnonlin')
+                    varargout = {objSign * J, objSign * G(:,freeInd)};
+                else
+                    varargout = {objSign * J, objSign * G(freeInd)};
+                end
                 if any(any(~isfinite(G)))
                     error('Gradient contains NaNs or Infs')
                 end
@@ -68,7 +74,11 @@ function varargout = objectiveWrap(theta, objectiveFunction, wrapperOptions, var
                         [J, G, H] = objectiveFunction(longTheta);
                 end
                 
-                varargout = {objSign * J, objSign * G(freeInd), objSign * H(freeInd, freeInd)};
+                if strcmp(optimizer, 'lsqnonlin')
+                    varargout = {objSign * J, [], objSign * H};
+                else
+                    varargout = {objSign * J, objSign * G(freeInd), objSign * H(freeInd, freeInd)};
+                end
                 if any(any(~isfinite(G)))
                     error('Gradient contains NaNs or Infs')
                 end
@@ -99,9 +109,17 @@ function varargout = objectiveWrap(theta, objectiveFunction, wrapperOptions, var
             case {0,1}
                 varargout = {inf};
             case 2
-                varargout = {inf,zeros(length(freeInd),1)};
+                if strcmp(optimizer, 'lsqnonlin')
+                    varargout = {inf(size(J)), zeros(length(J), length(freeInd))};
+                else
+                    varargout = {inf, zeros(length(freeInd),1)};
+                end
             case 3
-                varargout = {inf,zeros(length(freeInd),1),zeros(length(freeInd))};
+                if strcmp(optimizer, 'lsqnonlin')
+                    varargout = {inf(size(J)), zeros(length(J), length(freeInd)), inf};
+                else
+                    varargout = {inf,zeros(length(freeInd),1),zeros(length(freeInd))};
+                end
         end
     end
 

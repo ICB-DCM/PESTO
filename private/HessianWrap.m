@@ -1,5 +1,5 @@
 %% Hessian function for optimization
-function Hessian = HessianWrap(negLogPostWErrorCount, varargin)
+function Hessian = HessianWrap(negLogPost, varargin)
 % This function is a dummy for the Hessian function from fmincon
     
     if (nargin == 0)
@@ -8,5 +8,9 @@ function Hessian = HessianWrap(negLogPostWErrorCount, varargin)
         theta = varargin{1}{1};
     end
     
-    [~, ~, Hessian] = negLogPostWErrorCount(theta);
+    [llh, ~, Hessian] = negLogPost(theta);
+    
+    if ~isfinite(llh)
+        Hessian = inf(size(Hessian));
+    end
 end
