@@ -1,16 +1,19 @@
-function [] = runEstimation_JakStat(varargin)
+function parameters = runEstimation_JakStat(varargin)
 % runEstimation_JakStat() runs the parameter estimation for the JAK-STAT
 % signalig model.
 %
 % USAGE:
-% * [] = runEstimation_JakStat('hierarchical','normal')
-% * [] = runEstimation_JakStat('hierarchical','normal','pswarm')
+% * parameters = runEstimation_JakStat('hierarchical','normal')
+% * parameters = runEstimation_JakStat('hierarchical','normal','pswarm')
 %
 % Parameters
 %  approach: 'hierarchical' or 'standard' approach for the optimization
 %  distribution: 'normal' (Gaussian noise) or 'laplace' (Laplace noise) for
 %  the noise distribution
 %  optimizer: 'fmincon','pswarm',... see PTOptions local optimizer
+%
+% Return values:
+% parameters: returned by getParameterProfiles
 
 approach = varargin{1};
 distribution = varargin{2};
@@ -25,21 +28,28 @@ load('data_JakStat.mat')
 
 options.MS.HO.distribution = distribution;
 if nargin > 2
-    options.MS.foldername = ['results_SmallJakStat_' approach '_' distribution '_' optimizer];
+    options.MS.foldername = ['./results/results_SmallJakStat_' approach '_' distribution '_' optimizer];
 else
-    options.MS.foldername = ['results_SmallJakStat_' approach '_' distribution];
+    options.MS.foldername = ['./results/results_SmallJakStat_' approach '_' distribution];
+end
+
+% Save optimization paths
+if strcmp(optimizer,'fmincon')
+    options.MS.trace = false;
 end
 
 parameters = getMultiStarts(parameters,@(xi) ...
     logLikelihood_JakStat(xi,D,options,approach),options.MS);
 
-if strcmp(optimizer,'fmincon')
-    tic
-    parameters = getParameterProfiles(parameters, @(xi) ...
-        logLikelihood_JakStat(xi,D,options,approach),options.MS);
-    parameters.profiles_t_cpu = toc;
-end
-
 save(options.MS.foldername,'parameters','D','options','optimizer','approach')
 
+% Profile calculation
+if strcmp(distribution,'normal') && strcmp(optimizer,'fmincon')
+    options.MS.parameter_index = 1:11;
+    tmp = tic;
+    parameters = getParameterProfiles(parameters, @(xi) ...
+        logLikelihood_JakStat(xi,D,options,approach),options.MS);
+    parameters.t_cpu_profiles = toc(tmp);
+    save(options.MS.foldername,'parameters','D','options','optimizer','approach')
+end
 end

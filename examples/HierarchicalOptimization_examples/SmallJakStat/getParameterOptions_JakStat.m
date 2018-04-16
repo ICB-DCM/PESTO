@@ -33,7 +33,7 @@ switch optimizer
         options.MS.localOptimizerOptions.MaxObj = 40000;
 end
 
-load parameter_guesses_JakStat par0
+load parameter_guesses_SmallJakStat par0
 
 switch approach
     case 'hierarchical'
@@ -47,7 +47,6 @@ switch approach
         options.MS.HO.obsgroups_scaling = {1,2,3};
         
     case 'standard'
-        
         parameters.name = {'log_{10}(p1)','log_{10}(p2)','log_{10}(p3)','log_{10}(p4)',...
             'log_{10}(sp1)','log_{10}(sp2)','log_{10}(sp3)','log_{10}(sp4)','log_{10}(sp5)',...
             'log_{10}(offset_{tSTAT})','log_{10}(offset_{pSTAT})',...

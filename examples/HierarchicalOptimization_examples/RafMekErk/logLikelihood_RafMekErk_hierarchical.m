@@ -43,8 +43,9 @@ try
     end
     
     %% LOG-LIKELIHOOD, GRADIENT
-    % observable 1
-    if nargout > 1
+    if nargout == 3
+        [lLH, gradlLH,HlLH] = logLikelihoodHierarchical(simulation,D,options.MS.HO);        
+     elseif nargout == 2
         [lLH, gradlLH] = logLikelihoodHierarchical(simulation,D,options.MS.HO);        
     else
         lLH = logLikelihoodHierarchical(simulation,D,options.MS.HO);        
@@ -62,6 +63,10 @@ switch nargout
     case 2
         varargout{1} = lLH;
         varargout{2} = gradlLH;
+    case 3
+        varargout{1} = lLH;
+        varargout{2} = gradlLH;
+        varargout{3} = HlLH;
 end
 
 end
