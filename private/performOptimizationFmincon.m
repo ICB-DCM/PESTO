@@ -47,7 +47,7 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
     
     % Assignment of gradient and Hessian
     if isempty(hessian_opt)
-        hessian_opt = nan(parameters.number);
+        hessian_opt = nan(numel(freePars));
     elseif max(hessian_opt(:)) == 0
         if strcmp(options.localOptimizerOptions.Hessian,'on')
             [~,~,hessian_opt] = negLogPost(par_opt);
