@@ -323,7 +323,7 @@ if strcmp(options.comp_type, 'sequential')
                 n_objfun       = nan;
                 n_iter         = nan;
                 negLogPost_opt = nan;
-                par_opt        = nan(size(freePars));
+                par_opt        = nan(parameters.number,1);
                 gradient_opt   = nan(length(freePars),1);
                 hessian_opt    = nan(length(freePars));
             end
