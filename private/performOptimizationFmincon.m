@@ -14,7 +14,11 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
     % Adapt constraints according to fixed parameters
     if ~isempty(parameters.constraints.A)
         freeCon.A = parameters.constraints.A(:,freePars);
-        freeCon.b = parameters.constraints.b - parameters.constraints.A(:,options.fixedParameters) * options.fixedParameterValues;
+        if isempty(options.fixedParameters)
+            freeCon.b = parameters.constraints.b;
+        else
+            freeCon.b = parameters.constraints.b - parameters.constraints.A(:,options.fixedParameters) * options.fixedParameterValues;
+        end
     else
         freeCon.A = [];
         freeCon.b = [];
