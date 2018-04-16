@@ -261,7 +261,7 @@ if strcmp(options.comp_type, 'sequential')
             end
             negLogPost0 = 0.5 * sum(residuals.^2);
             parameters.MS.logPost0(iMS) = -negLogPost0;
-        elseif (any(strcmp(options.localOptimizer, {'dhc','cs','bobyqa'})))
+        elseif (any(strcmp(options.localOptimizer, {'dhc','rcs','bobyqa'})))
             negLogPost0 = negLogPost(par0(freePars,iMS));
         else
             negLogPost0 = nan;
@@ -297,10 +297,10 @@ if strcmp(options.comp_type, 'sequential')
                             options.logPostOffset = logPostOffset;
                         end
 
-                    case 'cs'
+                    case 'rcs'
                         % Optimization using randomized coordinate search as local optimizer
                         [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
-                            = performOptimizationCoordinateSearch(parameters, negLogPost, par0(:,iMS), options);
+                            = performOptimizationRcs(parameters, negLogPost, par0(:,iMS), options);
 
                     case 'dhc'
                         % Optimization using dynamic hill climbing as local optimizer
@@ -314,7 +314,7 @@ if strcmp(options.comp_type, 'sequential')
                 end
             catch ErrMsg
                 warning(['Multi-start number ' num2str(iMS) ' failed. More details on the error:']);
-                display(['Last Error in function ' ErrMsg.stack(1).name ', line ' ...
+                disp(['Last Error in function ' ErrMsg.stack(1).name ', line ' ...
                     num2str(ErrMsg.stack(1).line) ', file ' ErrMsg.stack(1).file '.']);
                 
                 % Assign values to exitflag, gradient etc. to avoid
@@ -324,7 +324,7 @@ if strcmp(options.comp_type, 'sequential')
                 n_iter         = nan;
                 negLogPost_opt = nan;
                 par_opt        = nan(parameters.number,1);
-                gradient_opt   = nan(size(freePars));
+                gradient_opt   = nan(length(freePars),1);
                 hessian_opt    = nan(length(freePars));
             end
             

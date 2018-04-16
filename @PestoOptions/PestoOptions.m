@@ -21,8 +21,7 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         
         % Name of the folder in which results are stored. If no folder is
         % provided, a random foldername is generated.
-        foldername = strrep(datestr(now,31),' ','__');
-        
+        foldername = datestr(now, 'yyyy-mm-dd__hh-MM-ss');
         
         
         % <!-- Options for the objective function -->
@@ -74,7 +73,6 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         
         % Plotting options of class PestoPlottingOptions.m
         plot_options = PestoPlottingOptions();
-        
         
         
         % <!-- Options for getMultiStarts -->
@@ -144,7 +142,6 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         resetobjective = false;
         
         
-        
         % <!-- Options for getParameterProfiles -->
         
         % flag for profile calculation
@@ -188,7 +185,6 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         profile_method = 'default';
         
         
-        
         % <!-- Detailed options for profile optimization -->
         
         % Optimizer options for profile likelihood
@@ -228,7 +224,6 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
             'min', 1e-6, ...
             'max', 1, ...
             'update', 1.25);
-        
         
         
         % <!-- Detailed options for profile integration -->
@@ -278,7 +273,6 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
             'RelTol', 1e-4, ...
             'AbsTol', 1e-6 ...
             );
-        
         
         
         % <!-- Options for getPropertyProfiles -->
@@ -449,7 +443,7 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
                 error('PestoOptions.comp_type must be ''sequential'' or ''parallel''.');
             end
         end
-
+        
         function this = set.n_starts(this, value)
             if(isnumeric(value) && floor(value) == value && value > 0)
                 this.n_starts = value;
@@ -499,7 +493,7 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
                 error('PestoOptions.trace must ba a logical value.');
             end
         end
-
+        
         function this = set.calc_profiles(this, value)
             if islogical(value)
                 this.calc_profiles = value;
@@ -555,7 +549,7 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
                 error('PestoOptions.dR_max positive numeric value between 0 and 1.');
             end
         end
-
+        
         function this = set.R_min(this, value)
             if(isnumeric(value) && value >= 0 && value <= 1)
                 this.R_min = value;
@@ -570,14 +564,15 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         end
         
         function this = set.localOptimizer(this, value)
-            if any(strcmp(value, {'fmincon', 'meigo-ess', 'meigo-vns', 'pswarm', 'lsqnonlin', 'cs', 'dhc', 'bobyqa'}))
+            list_optimizers = {'fmincon', 'meigo-ess', 'meigo-vns', 'pswarm', 'lsqnonlin', 'rcs', 'dhc', 'bobyqa'};
+            if any(strcmp(value, list_optimizers))
                 this.localOptimizer = value;
                 
                 if strcmp(value, 'pswarm')
                     this.localOptimizerOptions = PSwarm('defaults');
                 end
             else
-                error('PestoOptions.localOptimizer only supports the following choices: fmincon, meigo-ess, meigo-vns, pswarm, lsqnonlin, cs, dhc, bobyqa.');
+                error([sprintf('PestoOptions.localOptimizer only supports the following choices:\n') sprintf('%s ', list_optimizers{:})]);
             end
         end
         
