@@ -34,7 +34,7 @@ parameters = checkSanityOfStructs(parameters, 'parameters');
 
 % Open figure
 if length(varargin) >= 1 && ~isempty(varargin{1}) && isvalid(varargin{1})
-    fh = figure(varargin{1});
+    fh = varargin{1};
 else
     fh = figure('Name','plotMultiStarts');
 end
