@@ -40,11 +40,20 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
     
     % Assignment of gradient and Hessian
     try
-        [~, gradient_opt, hessian_opt] = negLogPost(Results.xbest);
+        if options.localOptimizerSaveHessian
+            [~, gradient_opt, hessian_opt] = negLogPost(Results.xbest);
+        else
+            [~, gradient_opt] = negLogPost(Results.xbest);
+            hessian_opt = [];
+        end
     catch
-        warning('Could not compute Hessian and gradient at optimum after optimization.');
-        if (options.objOutNumber == 3)
-            warning('options.objOutNumber is set to 3, but your objective function can not provide 3 outputs. Please set objOutNumber accordingly!');
+        if options.localOptimizerSaveHessian
+            warning('Could not compute Hessian and gradient at optimum after optimization.');
+            if (options.objOutNumber == 3)
+                warning('options.objOutNumber is set to 3, but your objective function can not provide 3 outputs. Please set objOutNumber accordingly!');
+            end
+        else
+            warning('Could not compute gradient at optimum after optimization.');
         end
     end
     

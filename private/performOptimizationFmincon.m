@@ -50,12 +50,14 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
     par_opt(options.fixedParameters) = options.fixedParameterValues;
     
     % Assignment of gradient and Hessian
-    if isempty(hessian_opt)
-        hessian_opt = nan(numel(freePars));
-    elseif max(hessian_opt(:)) == 0
-        if strcmp(options.localOptimizerOptions.Hessian,'on')
+    if options.localOptimizerSaveHessian
+        if isempty(hessian_opt)
+            hessian_opt = nan(numel(freePars));
+        elseif isempty(find(a,1)) && strcmp(options.localOptimizerOptions.Hessian,'on')
             [~,~,hessian_opt] = negLogPost(par_opt);
         end
+    else
+        hessian_opt = [];
     end
     
 end

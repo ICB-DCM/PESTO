@@ -116,6 +116,12 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
             'MaxIter', 2000, ...
             'PrecondBandWidth', inf);
         
+        % Option for saving the Hessian at optimal parameter values
+        % (As Hessians can be large matrices, they may take a lot of memory
+        % and in some cases computation time, if they are not automatically
+        % computed during optimization)
+        localOptimizerSaveHessian = true;
+        
         % Method used to propose starting points for fmincon. Can be
         % * 'latin hypercube': latin hypercube sampling
         % * 'uniform': uniform random sampling

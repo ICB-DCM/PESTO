@@ -171,7 +171,11 @@ parameters.MS.par = nan(parameters.number,length(options.start_index));
 parameters.MS.logPost0 = nan(length(options.start_index),1);
 parameters.MS.logPost = nan(length(options.start_index),1);
 parameters.MS.gradient = nan(parameters.number,length(options.start_index));
-parameters.MS.hessian  = nan(parameters.number,parameters.number,length(options.start_index));
+if options.localOptimizerSaveHessian
+    parameters.MS.hessian  = nan(parameters.number,parameters.number,length(options.start_index));
+else
+    parameters.MS.hessian  = nan(0,0,length(options.start_index));
+end
 parameters.MS.n_objfun = nan(length(options.start_index),1);
 parameters.MS.n_iter = nan(length(options.start_index),1);
 parameters.MS.t_cpu = nan(length(options.start_index),1);
@@ -325,7 +329,9 @@ if strcmp(options.comp_type, 'sequential')
                 negLogPost_opt = nan;
                 par_opt        = nan(parameters.number,1);
                 gradient_opt   = nan(length(freePars),1);
-                hessian_opt    = nan(length(freePars));
+                if options.localOptimizerSaveHessian
+                    hessian_opt    = nan(length(freePars));
+                end
             end
             
             % Assignment of results
@@ -335,7 +341,9 @@ if strcmp(options.comp_type, 'sequential')
             parameters.MS.logPost(iMS) = -negLogPost_opt;
             parameters.MS.par(:,iMS) = par_opt;
             parameters.MS.gradient(freePars,iMS) = gradient_opt(:);
-            parameters.MS.hessian(freePars,freePars,iMS) = hessian_opt(:,:);
+            if options.localOptimizerSaveHessian
+                parameters.MS.hessian(freePars,freePars,iMS) = hessian_opt(:,:);
+            end
             parameters.MS.n_objfun(iMS) = n_objfun;
             parameters.MS.n_iter(iMS) = n_iter;
             parameters.MS.AIC(iMS) = 2*length(freePars) + 2*negLogPost_opt;
