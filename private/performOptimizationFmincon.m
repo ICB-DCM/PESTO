@@ -53,7 +53,7 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
     if options.localOptimizerSaveHessian
         if isempty(hessian_opt)
             hessian_opt = nan(numel(freePars));
-        elseif isempty(find(a,1)) && strcmp(options.localOptimizerOptions.Hessian,'on')
+        elseif isempty(find(hessian_opt,1)) && strcmp(options.localOptimizerOptions.Hessian,'on')
             [~,~,hessian_opt] = negLogPost(par_opt);
         end
     else
