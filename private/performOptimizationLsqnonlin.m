@@ -31,9 +31,15 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
     
     % Assigment of Hessian (gradient is not computed)
     gradient_opt = nan(size(par_opt));
-    if ~isempty(jacobian_opt)
-        hessian_sqrt = full(jacobian_opt);
-        hessian_opt = hessian_sqrt' * hessian_sqrt;
+    if options.localOptimizerSaveHessian
+        if ~isempty(jacobian_opt)
+            hessian_sqrt = full(jacobian_opt);
+            hessian_opt = hessian_sqrt' * hessian_sqrt;
+        else
+            hessian_opt = nan(numel(freePars));
+        end
+    else
+        hessian_opt = [];
     end
     
 end
