@@ -265,6 +265,17 @@ if strcmp(options.comp_type, 'sequential')
             end
             negLogPost0 = 0.5 * sum(residuals.^2);
             parameters.MS.logPost0(iMS) = -negLogPost0;
+        elseif (strcmp(options.localOptimizer, 'delos'))
+            if options.localOptimizerOptions.minibatching
+                minibatchIndices = DELOS.generateMiniBatches(...
+                    options.localOptimizerOptions.miniBatchSize, ...
+                    options.localOptimizerOptions.dataSetSize, ...
+                    options.localOptimizerOptions.maxIter, ...
+                    options.localOptimizerOptions.maxFunEvals);
+                negLogPost0 = negLogPost(par0(freePars,iMS), minibatchIndices{1});
+            else
+                negLogPost0 = negLogPost(par0(freePars,iMS));
+            end
         elseif (any(strcmp(options.localOptimizer, {'dhc','rcs','bobyqa'})))
             negLogPost0 = negLogPost(par0(freePars,iMS));
         else
@@ -315,6 +326,11 @@ if strcmp(options.comp_type, 'sequential')
                         % Optimization using bobya as local optimizer
                         [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
                             = performOptimizationBobyqa(parameters, negLogPost, par0(:,iMS), options);
+                        
+                    case 'delos'
+                        % fmincon as local optimizer
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                            = performOptimizationDelos(parameters, negLogPost, par0(:,iMS), options);
                 end
             catch ErrMsg
                 warning(['Multi-start number ' num2str(iMS) ' failed. More details on the error:']);
