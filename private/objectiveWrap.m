@@ -21,6 +21,11 @@ function varargout = objectiveWrap(theta, objectiveFunction, wrapperOptions, var
     optimizer = wrapperOptions{5};
     countErrors = wrapperOptions{6};
     showWarnings = wrapperOptions{7};
+    if isempty(varargin)
+        additionalObjInput = [];
+    else
+        additionalObjInput = varargin{1};
+    end
     if isempty(fixedTheta)
         longTheta = theta;
         freeInd = 1 : length(theta);
@@ -32,26 +37,35 @@ function varargout = objectiveWrap(theta, objectiveFunction, wrapperOptions, var
         longTheta(freeInd) = theta;
         longTheta(fixedTheta) = wrapperOptions{3};
     end
-    
-%     if (~isempty(varargin))
-%         minibatch = varargin{1};
-%     end
 
     global error_count;
     
     try
         switch nargout
             case {0,1}
-                J = objectiveFunction(longTheta);
+                if isempty(additionalObjInput)
+                    J = objectiveFunction(longTheta);
+                else
+                    J = objectiveFunction(longTheta, additionalObjInput);
+                end
                 varargout = {objSign * J};
                 
             case 2
                 switch outNumber
                     case 1
-                        J = objectiveFunction(longTheta);
-                        G = getFiniteDifferences(longTheta, objectiveFunction, 1);
+                        if isempty(additionalObjInput)
+                            J = objectiveFunction(longTheta, additionalObjInput);
+                            G = getFiniteDifferences(longTheta, objectiveFunction, 1);
+                        else
+                            J = objectiveFunction(longTheta);
+                            G = getFiniteDifferences(longTheta, @(x) objectiveFunction(x, additionalObjInput), 1);
+                        end
                     case {2, 3}
-                        [J, G] = objectiveFunction(longTheta);
+                        if isempty(additionalObjInput)
+                            [J, G] = objectiveFunction(longTheta);
+                        else
+                            [J, G] = objectiveFunction(longTheta, additionalObjInput);
+                        end
                 end
                 
                 if strcmp(optimizer, 'lsqnonlin')
@@ -66,12 +80,25 @@ function varargout = objectiveWrap(theta, objectiveFunction, wrapperOptions, var
             case 3
                 switch outNumber
                     case 1
-                        [J, G, H] = getFiniteDifferences(longTheta, objectiveFunction, 2);
+                        if isempty(additionalObjInput)
+                            [J, G, H] = getFiniteDifferences(longTheta, objectiveFunction, 2);
+                        else
+                            [J, G, H] = getFiniteDifferences(longTheta, @(x) objectiveFunction(x, additionalObjInput), 2);
+                        end
                     case 2
-                        [J, G] = objectiveFunction(longTheta);
-                        H = getFiniteDifferences(longTheta, objectiveFunction, 3);
+                        if isempty(additionalObjInput)
+                            [J, G] = objectiveFunction(longTheta);
+                            H = getFiniteDifferences(longTheta, objectiveFunction, 3);
+                        else
+                            [J, G] = objectiveFunction(longTheta, additionalObjInput);
+                            H = getFiniteDifferences(longTheta, @(x) objectiveFunction(x, additionalObjInput), 3);
+                        end
                     case 3
-                        [J, G, H] = objectiveFunction(longTheta);
+                        if isempty(additionalObjInput)
+                            [J, G, H] = objectiveFunction(longTheta);
+                        else
+                            [J, G, H] = objectiveFunction(longTheta, additionalObjInput);
+                        end
                 end
                 
                 if strcmp(optimizer, 'lsqnonlin')
