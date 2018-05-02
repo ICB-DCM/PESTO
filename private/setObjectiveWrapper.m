@@ -44,7 +44,11 @@ function wrapperFunction = setObjectiveWrapper(objective_function, options, type
     wrapperOptions{7} = showWarnings;
 
     if strcmp(wrapperOptions{5}, 'delos')
-        wrapperFunction = @(theta, miniBatch) objectiveWrap(theta,objective_function,wrapperOptions,miniBatch);
+        if options.localOptimizerOptions.minibatching
+            wrapperFunction = @(theta, miniBatch) objectiveWrap(theta,objective_function,wrapperOptions,miniBatch);
+        else
+            wrapperFunction = @(theta) objectiveWrap(theta,objective_function,wrapperOptions);
+        end
     else
         wrapperFunction = @(theta) objectiveWrap(theta,objective_function,wrapperOptions);
     end
