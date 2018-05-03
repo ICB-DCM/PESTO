@@ -272,9 +272,9 @@ if strcmp(options.comp_type, 'sequential')
                     options.localOptimizerOptions.dataSetSize, ...
                     options.localOptimizerOptions.maxIter, ...
                     options.localOptimizerOptions.maxFunEvals);
-                negLogPost0 = negLogPost(par0(freePars,iMS), minibatchIndices{1});
+                [negLogPost0,~] = negLogPost(par0(freePars,iMS), minibatchIndices{1});
             else
-                negLogPost0 = negLogPost(par0(freePars,iMS));
+                [negLogPost0,~] = negLogPost(par0(freePars,iMS));
             end
         elseif (any(strcmp(options.localOptimizer, {'dhc','rcs','bobyqa'})))
             negLogPost0 = negLogPost(par0(freePars,iMS));
