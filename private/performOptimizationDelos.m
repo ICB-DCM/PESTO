@@ -30,7 +30,7 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
     
     % Save optimizer trace
     if options.trace
-        trace.fval = [ResultsDelos.initObj, ResultsDelos.objectiveTrace];
+        trace.fval = [ResultsDelos.initObj; ResultsDelos.objectiveTrace];
         trace.par = [ResultsDelos.initPar, ResultsDelos.parameterTrace];
     else
         trace = [];

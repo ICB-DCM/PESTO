@@ -334,8 +334,8 @@ if strcmp(options.comp_type, 'sequential')
                         [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter, trace] ...
                             = performOptimizationDelos(parameters, negLogPost, par0(:,iMS), options);
                         if options.trace
-                            parameters.MS.fval_trace = trace.fval;
-                            parameters.MS.par_trace = trace.par;
+                            parameters.MS.fval_trace(:,iMS) = trace.fval;
+                            parameters.MS.par_trace(:,:,iMS) = trace.par;
                         end
                 end
             catch ErrMsg
