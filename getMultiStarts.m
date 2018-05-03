@@ -164,6 +164,8 @@ end
 %% Initialization
 if isfield(options.localOptimizerOptions, 'MaxIter')
     maxOptimSteps = options.localOptimizerOptions.MaxIter;
+elseif isfield(options.localOptimizerOptions, 'maxIter')
+    maxOptimSteps = options.localOptimizerOptions.maxIter;
 elseif isfield(options.localOptimizerOptions, 'maxeval')
     maxOptimSteps = options.localOptimizerOptions.maxeval;
 end
@@ -329,8 +331,12 @@ if strcmp(options.comp_type, 'sequential')
                         
                     case 'delos'
                         % fmincon as local optimizer
-                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+                        [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter, trace] ...
                             = performOptimizationDelos(parameters, negLogPost, par0(:,iMS), options);
+                        if options.trace
+                            parameters.MS.fval_trace = trace.fval;
+                            parameters.MS.par_trace = trace.par;
+                        end
                 end
             catch ErrMsg
                 warning(['Multi-start number ' num2str(iMS) ' failed. More details on the error:']);

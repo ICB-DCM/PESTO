@@ -1,4 +1,4 @@
-function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
+function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter, trace] ...
     = performOptimizationDelos(parameters, negLogPost, par0, options)
 
     % Definition of index set of optimized parameters
@@ -27,6 +27,14 @@ function [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun
     % Adapt results for fixed parameter values
     par_opt(freePars) = ResultsDelos.finalPar;
     par_opt(options.fixedParameters) = options.fixedParameterValues;
+    
+    % Save optimizer trace
+    if options.trace
+        trace.fval = [ResultsDelos.initObj, ResultsDelos.objectiveTrace];
+        trace.par = [ResultsDelos.initPar, ResultsDelos.parameterTrace];
+    else
+        trace = [];
+    end
     
     % Assignment of gradient (and maybe Hessian)
     try
