@@ -32,15 +32,15 @@ try
     J = 0;
     if nargout>1
         dJdtheta = zeros(length(xi),1);
-        options_simu.sensi = 1;
+        options.ami.sensi = 1;
     else
-        options_simu.sensi = 0;
+        options.ami.sensi = 0;
     end
 
     for i = 1:n_u
         t_m = D.t{i};
         n_t = length(t_m);
-        sol = simulate_RafMekErk(t_m,theta,u(i,:),[],options_simu);
+        sol = simulate_RafMekErk(t_m,theta,u(i,:),[],options.ami);
 
         if sol.status < 0
             error(['failed to integrate ODE for experiment ' num2str(i)])

@@ -21,17 +21,17 @@ function [varargout] = logLikelihood_RafMekErk_hierarchical(xi,D,options)
 %         returned
 
 try
-     kappa = [zeros(1,2);[0,30];[5,0]];
+   kappa = [zeros(1,2);[0,30];[5,0]];
    n_e = size(D,2);
    if nargout>1
-        options_simu.sensi = 1;
+        options.ami.sensi = 1;
     else
-        options_simu.sensi = 0;
+        options.ami.sensi = 0;
    end
     %% SIMULATION
     simulation = struct([]);
     for j = 1:n_e %simulations for the different input values for Sora and UO126
-            sol = simulate_RafMekErk_hierarchical(D(j).t,xi,kappa(j,:),[],options_simu);        
+            sol = simulate_RafMekErk_hierarchical(D(j).t,xi,kappa(j,:),[],options.ami);        
         if sol.status < 0 
             error(['failed to integrate ODE for experiment ' num2str(j)])
         end
