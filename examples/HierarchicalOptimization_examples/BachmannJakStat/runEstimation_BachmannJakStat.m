@@ -33,6 +33,10 @@ for cond = 1:numel(D)
 end
 D(3).my = D(3).my - 1;
 
+options.ami = amioption();
+options.ami.atol = 1e-6;
+options.ami.rtol = 1e-6;
+
 options.MS = PestoOptions();
 options.MS.localOptimizerOptions = optimset('algorithm','interior-point',...
     'display','iter',...
