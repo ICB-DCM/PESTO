@@ -165,7 +165,7 @@ function [parameters,fh] = getParameterProfiles(parameters, objective_function, 
                 fh = figure(options.fh);
             end
         case 'text'
-            fprintf(' \nProfile likelihood caculation:\n===============================\n');
+            fprintf(' \nProfile likelihood calculation:\n===============================\n');
         case 'silent' % no output
             % Force fmincon to be silent.
             options.profileOptimizationOptions.display = 'off';

@@ -1,4 +1,4 @@
-% Main file of the JakStat signaling model I  example.
+% Main file of the JakStat signaling I example.
 %
 % Demonstrates the use of:
 % * logLikelhoodHierarchical()
@@ -10,14 +10,24 @@ clear all
 close all
 clc
 
+%% Compilation of simulation files using AMICI
 compilation_JakStat
-%%
+
+%% Optimization using fmincon
 runEstimation_JakStat('hierarchical','normal')
 runEstimation_JakStat('hierarchical','laplace')
 
 runEstimation_JakStat('standard','normal')
 runEstimation_JakStat('standard','laplace')
-%%
+
+%% Profile calculation
+runProfiles_JakStat('standard','normal')
+runProfiles_JakStat('standard','laplace')
+
+runProfiles_JakStat('hierarchical','normal')
+runProfiles_JakStat('hierarchical','laplace')
+
+%% Optimization using PSwarm
 runEstimation_JakStat('hierarchical','normal','pswarm')
 runEstimation_JakStat('hierarchical','laplace','pswarm')
 

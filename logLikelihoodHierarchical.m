@@ -115,6 +115,8 @@ for ie = 1:numel(options.expgroups_scaling)
         end
     end
 end
+% remove zeros added due to dimension differences between experiments
+s(s==0) = nan;
 
 %% optimal values for the noise parameters
 for ie = 1:numel(options.expgroups_noise)
@@ -135,6 +137,9 @@ end
 %% save scaling and noise parameters
 % s and noise have dimensions: 
 % (1 x # observables x max # replicates x # experiments/conditions) 
+if ~exist(options.foldername,'dir')
+    mkdir(options.foldername)
+end
 if options.save
     save([options.foldername '/analytical_results.mat'],'s','noise');
 end
@@ -178,10 +183,13 @@ for j = 1:n_e
                     dy_sh(:,ind_log,:,:) = -bsxfun(@ldivide,simulation(j).y(:,ind_log),...
                         permute(repmat(simulation(j).sy(:,ind_log,:),[1,1,1,n_r]),[1,2,4,3]));
                 case 'laplace'
-                    dy_sh(:,ind_log,:,:) = permute(bsxfun(@ldivide,bsxfun(@times,s_j(:,ind_log,:),simulation(j).y(:,ind_log)),...
-                        permute(bsxfun(@plus,bsxfun(@times,permute(ds_j(:,ind_log,:,1:n_r),[1,2,4,3]),simulation(j).y(:,ind_log)),...
-                        bsxfun(@times,permute(s_j(:,ind_lin,1:n_r),[1,2,4,3]),...
-                        simulation(j).sy(:,ind_lin,:))),[1,2,4,3])),[1,2,4,3]);
+                    dy_sh(:,ind_log,:,:) = bsxfun(@ldivide,...
+                        bsxfun(@times,s_j(:,ind_log,1:n_r),simulation(j).y(:,ind_log)),...
+                        bsxfun(@plus,bsxfun(@times,permute(ds_j(:,ind_log,:,1:n_r),[1,2,4,3]),...
+                        simulation(j).y(:,ind_log)),...
+                        bsxfun(@times,s_j(:,ind_log,1:n_r),...
+                        permute(repmat(simulation(j).sy(:,ind_log,:),[1,1,1,n_r]),...
+                        [1,2,4,3]))));
             end
         end
     end

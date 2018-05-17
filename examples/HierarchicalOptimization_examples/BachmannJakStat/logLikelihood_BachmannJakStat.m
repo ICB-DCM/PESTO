@@ -28,7 +28,6 @@ if(nderiv>=1)
 else
     options.ami.sensi = 0;
 end
-
 % Simulation of conditions
 try
     for cond = 1:numel(D)
@@ -48,6 +47,9 @@ catch
     if nderiv>=1
         varargout{2} = nan(numel(xi),1);
     end
+    if nderiv>=2
+        varargout{3} = nan(numel(xi),numel(xi));
+    end
     warning('simulation failed')
     return;
 end
@@ -57,8 +59,10 @@ switch approach
         sol = getSimulation_BachmannJakStat_offsetscaling(xi,sol,D,approach);
         if nderiv == 0
             logL = logLikelihoodHierarchical(sol,D,options.MS.HO);
-        else
+        elseif nderiv == 1
             [logL,dlogL] = logLikelihoodHierarchical(sol,D,options.MS.HO);
+        else
+            [logL,dlogL,HlogL] = logLikelihoodHierarchical(sol,D,options.MS.HO);
         end
     case 'standard'
         logL = 0;
@@ -162,4 +166,7 @@ end
 varargout{1} = logL;
 if nderiv>=1
     varargout{2} = dlogL;
+end
+if nderiv >=2
+    varargout{3} = HlogL;
 end

@@ -294,7 +294,7 @@ if strcmp(options.comp_type, 'sequential')
                             = performOptimizationPswarm(parameters, negLogPost, par0(:,iMS), options);
 
                     case 'lsqnonlin'
-                        % Optimization using dynamic hill climbin as local optimizer
+                        % Optimization using lsqnonlin as local optimizer
                         [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter, logPostOffset] ...
                             = performOptimizationLsqnonlin(parameters, negLogPost, par0(:,iMS), options);
                         if ~isempty(logPostOffset)

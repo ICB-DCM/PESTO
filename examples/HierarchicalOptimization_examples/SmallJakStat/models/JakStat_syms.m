@@ -43,8 +43,8 @@ x0(1) = init_STAT;
 % OBSERVABLES
 y = sym(zeros(3,1));
 
-y(1) = offset_pSTAT + scale_pSTAT/init_STAT*(pSTAT + 2*pSTAT_pSTAT);
-y(2) = offset_tSTAT + scale_tSTAT/init_STAT*(STAT + pSTAT + 2*(pSTAT_pSTAT));
+y(1) = scale_pSTAT*(offset_pSTAT + 1/init_STAT*(pSTAT + 2*pSTAT_pSTAT));
+y(2) = scale_tSTAT*(offset_tSTAT + 1/init_STAT*(STAT + pSTAT + 2*(pSTAT_pSTAT)));
 y(3) = u(1);
 
 % SYSTEM STRUCT

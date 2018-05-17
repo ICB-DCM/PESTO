@@ -21,17 +21,17 @@ function [varargout] = logLikelihood_RafMekErk_hierarchical(xi,D,options)
 %         returned
 
 try
-     kappa = [zeros(1,2);[0,30];[5,0]];
+   kappa = [zeros(1,2);[0,30];[5,0]];
    n_e = size(D,2);
    if nargout>1
-        options_simu.sensi = 1;
+        options.ami.sensi = 1;
     else
-        options_simu.sensi = 0;
+        options.ami.sensi = 0;
    end
     %% SIMULATION
     simulation = struct([]);
     for j = 1:n_e %simulations for the different input values for Sora and UO126
-            sol = simulate_RafMekErk_hierarchical(D(j).t,xi,kappa(j,:),[],options_simu);        
+            sol = simulate_RafMekErk_hierarchical(D(j).t,xi,kappa(j,:),[],options.ami);        
         if sol.status < 0 
             error(['failed to integrate ODE for experiment ' num2str(j)])
         end
@@ -43,8 +43,9 @@ try
     end
     
     %% LOG-LIKELIHOOD, GRADIENT
-    % observable 1
-    if nargout > 1
+    if nargout == 3
+        [lLH, gradlLH,HlLH] = logLikelihoodHierarchical(simulation,D,options.MS.HO);        
+     elseif nargout == 2
         [lLH, gradlLH] = logLikelihoodHierarchical(simulation,D,options.MS.HO);        
     else
         lLH = logLikelihoodHierarchical(simulation,D,options.MS.HO);        
@@ -62,6 +63,10 @@ switch nargout
     case 2
         varargout{1} = lLH;
         varargout{2} = gradlLH;
+    case 3
+        varargout{1} = lLH;
+        varargout{2} = gradlLH;
+        varargout{3} = HlLH;
 end
 
 end
