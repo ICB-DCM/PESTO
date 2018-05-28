@@ -96,7 +96,7 @@ n_max = 10;
 x0 = zeros(n_grid*n_comp,1);
 while (n < n_max) && (flag_ss == 0)
     sol = modelEq(T,p,x0,[],options_simu);
-    if sum(sol.xdot.^2) < 1e-6
+    if sum(sol.diagnosis.xdot.^2) < 1e-6
         flag_ss = 1;
     elseif sol.status < 0
         break
