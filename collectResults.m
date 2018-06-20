@@ -29,7 +29,7 @@ warning on;
 files = dir(fullfile(foldername,'*.csv'));
 
 ntheta = size(init.parameters.MS.par0,1);
-nstarts = init.parameters.MS.n_starts;
+nstarts = size(init.parameters.MS.par0,2);
 
 obj.MS.logPost = NaN(nstarts,1);
 obj.MS.logPost0 = NaN(nstarts,1);
@@ -109,7 +109,7 @@ end
 switch type
     case 'parameters'
         if isfield(obj,'MS')
-            disp(['progress of MS = ' num2str(100*sum(~isnan(obj.MS.par(1,:)))/obj.MS.n_starts) '%']);
+            disp(['progress of MS = ' num2str(100*sum(~isnan(obj.MS.par(1,:)))/nstarts) '%']);
             plotMultiStarts(obj);
         end
         if isfield(obj,'P')
