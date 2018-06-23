@@ -1,8 +1,8 @@
-function pStruct = getConfidenceIntervals(pStruct, alpha, type, varargin)
+function pStruct = getConfidenceIntervals(pStruct, confLevels, type, varargin)
     % getConfidenceIntervals() calculates the confidence intervals for the 
     % model parameters or properties. This is done by four approaches:
     % The values of CI.local_PL and CI.PL are determined by the point on which 
-    % a threshold according to the confidence level alpha (calculated by a 
+    % a threshold according to the confidence level (calculated by a 
     % chi2-distribution) is reached. local_PL computes this point by a local
     % approximation around the MAP estimate using the Hessian matrix, PL uses 
     % the profile likelihoods instead.
@@ -10,14 +10,14 @@ function pStruct = getConfidenceIntervals(pStruct, alpha, type, varargin)
     % function of a local approximation of the profile based on the Hessian
     % matrix at the MAP estimate.
     % The value of CI.S is calculated using samples for the model parameters
-    % and the according percentiles based on the confidence levels alpha.
+    % and the according percentiles based on the confidence levels.
     %
     % USAGE:
-    % * pStruct = getConfidenceIntervals(pStruct, alpha)
+    % * pStruct = getConfidenceIntervals(pStruct, confLevels)
     %
     % Parameters:
     %   pStruct: parameter or properties struct
-    %   alpha: vector with desired confidence levels for the intervals
+    %   confLevels: vector with desired confidence levels for the intervals
     %   varargin: 
     %    options: A PestoOptions instance
     %
@@ -64,24 +64,24 @@ function pStruct = getConfidenceIntervals(pStruct, alpha, type, varargin)
     end
     
     % Initialization
-    pStruct.CI.alpha_levels = alpha;
+    pStruct.CI.confLevels = confLevels;
 
-    % Loop: alpha levels
-    for iConfLevel = 1:length(alpha)
+    % Loop: confidence levels
+    for iConfLevel = 1:length(confLevels)
         % Loop: Parameters
         for iP = options.(p_index)
             if isfield(pStruct,'MS')
-                pStruct = getCIfromOptimization(pStruct, alpha(iConfLevel), type, iMAP, iP, iConfLevel, options);
+                pStruct = getCIfromOptimization(pStruct, confLevels(iConfLevel), type, iMAP, iP, iConfLevel, options);
             end
 
             % Confidence intervals computed using profile likelihood
             if isfield(pStruct,'P')
-                pStruct = getCIfromProfiles(pStruct, alpha(iConfLevel), type, iMAP, iP, iConfLevel);
+                pStruct = getCIfromProfiles(pStruct, confLevels(iConfLevel), type, iMAP, iP, iConfLevel);
             end
 
             % Confidence intervals computed using sample
             if isfield(pStruct,'S')
-                pStruct.CI.S(iP,:,iConfLevel) = prctile(pStruct.S.(type)(iP,:,1),50 + 100*[-alpha(iConfLevel)/2, alpha(iConfLevel)/2]);
+                pStruct.CI.S(iP,:,iConfLevel) = prctile(pStruct.S.(type)(iP,:,1),50 + 100*[-confLevels(iConfLevel)/2, confLevels(iConfLevel)/2]);
             end
         end
     end
@@ -89,7 +89,7 @@ function pStruct = getConfidenceIntervals(pStruct, alpha, type, varargin)
     %% Output
     switch options.mode
         case 'visual'
-            plotConfidenceIntervals(pStruct, alpha, [], options);
+            plotConfidenceIntervals(pStruct, [], options);
             disp('-> Calculation of confidence intervals for parameters FINISHED.');
         case 'text'
             disp('-> Calculation of confidence intervals for parameters FINISHED.');
@@ -99,7 +99,7 @@ function pStruct = getConfidenceIntervals(pStruct, alpha, type, varargin)
 end
 
 
-function pStruct = getCIfromOptimization(pStruct, alpha, type, iMAP, iP, iConfLevel, options)
+function pStruct = getCIfromOptimization(pStruct, confLevel, type, iMAP, iP, iConfLevel, options)
 
     if strcmp(type, 'par')
         % Inversion of Hessian
@@ -116,36 +116,36 @@ function pStruct = getCIfromOptimization(pStruct, alpha, type, iMAP, iP, iConfLe
 
     % Confidence intervals computed using local approximation and a
     % threshold (-> similar to PL-based confidence intervals)
-    pStruct.CI.local_PL(iP,1,iConfLevel) = pStruct.MS.(type)(iP,iMAP) - sqrt(icdf('chi2',alpha,1)*Sigma(iP,iP));
-    pStruct.CI.local_PL(iP,2,iConfLevel) = pStruct.MS.(type)(iP,iMAP) + sqrt(icdf('chi2',alpha,1)*Sigma(iP,iP));
+    pStruct.CI.local_PL(iP,1,iConfLevel) = pStruct.MS.(type)(iP,iMAP) - sqrt(icdf('chi2',confLevel,1)*Sigma(iP,iP));
+    pStruct.CI.local_PL(iP,2,iConfLevel) = pStruct.MS.(type)(iP,iMAP) + sqrt(icdf('chi2',confLevel,1)*Sigma(iP,iP));
 
     % Confidence intervals computed using local approximation and the
     % probability mass (-> similar to Bayesian confidence intervals)
-    pStruct.CI.local_B(iP,1,iConfLevel)  = icdf('norm',  (1-alpha)/2,pStruct.MS.(type)(iP,iMAP),sqrt(Sigma(iP,iP)));
-    pStruct.CI.local_B(iP,2,iConfLevel)  = icdf('norm',1-(1-alpha)/2,pStruct.MS.(type)(iP,iMAP),sqrt(Sigma(iP,iP)));
+    pStruct.CI.local_B(iP,1,iConfLevel)  = icdf('norm',  (1-confLevel)/2,pStruct.MS.(type)(iP,iMAP),sqrt(Sigma(iP,iP)));
+    pStruct.CI.local_B(iP,2,iConfLevel)  = icdf('norm',1-(1-confLevel)/2,pStruct.MS.(type)(iP,iMAP),sqrt(Sigma(iP,iP)));
     
 end
 
 
-function pStruct = getCIfromProfiles(pStruct, alpha, type, iMAP, iP, iConfLevel)
+function pStruct = getCIfromProfiles(pStruct, confLevel, type, iMAP, iP, iConfLevel)
 
     if ~isempty(pStruct.P(iP).(type))
         % left bound
         if strcmp(type, 'par')
             ind  = find(pStruct.P(iP).(type)(iP,:) <= pStruct.MS.(type)(iP,iMAP));
-            j = find(pStruct.P(iP).R(ind) <= exp(-icdf('chi2',alpha,1)/2),1,'last');
+            j = find(pStruct.P(iP).R(ind) <= exp(-icdf('chi2',confLevel,1)/2),1,'last');
             if ~isempty(j)
                 pStruct.CI.PL(iP,1,iConfLevel) = interp1(pStruct.P(iP).R(ind([j,j+1])),...
-                    pStruct.P(iP).(type)(iP,ind([j,j+1])),exp(-icdf('chi2',alpha,1)/2));
+                    pStruct.P(iP).(type)(iP,ind([j,j+1])),exp(-icdf('chi2',confLevel,1)/2));
             else
                 pStruct.CI.PL(iP,1,iConfLevel) = -inf;
             end
         else
             ind  = find(pStruct.P(iP).(type) <= pStruct.MS.(type)(iP,1));
-            j = find(pStruct.P(iP).R(ind) <= exp(-icdf('chi2',alpha,1)/2),1,'last');
+            j = find(pStruct.P(iP).R(ind) <= exp(-icdf('chi2',confLevel,1)/2),1,'last');
             if ~isempty(j)
                 pStruct.CI.PL(iP,1,iConfLevel) = interp1(pStruct.P(iP).R(ind([j,j+1])),...
-                    pStruct.P(iP).(type)(ind([j,j+1])),exp(-icdf('chi2',alpha,1)/2));
+                    pStruct.P(iP).(type)(ind([j,j+1])),exp(-icdf('chi2',confLevel,1)/2));
             else
                 pStruct.CI.PL(iP,1,iConfLevel) = -inf;
             end
@@ -154,19 +154,19 @@ function pStruct = getCIfromProfiles(pStruct, alpha, type, iMAP, iP, iConfLevel)
         % right bound
         if strcmp(type, 'par')
             ind  = find(pStruct.P(iP).(type)(iP,:) >= pStruct.MS.(type)(iP,iMAP));
-            j = find(pStruct.P(iP).R(ind) <= exp(-icdf('chi2',alpha,1)/2),1,'first');
+            j = find(pStruct.P(iP).R(ind) <= exp(-icdf('chi2',confLevel,1)/2),1,'first');
             if ~isempty(j)
                 pStruct.CI.PL(iP,2,iConfLevel) = interp1(pStruct.P(iP).R(ind([j-1,j])),...
-                    pStruct.P(iP).(type)(iP,ind([j-1,j])),exp(-icdf('chi2',alpha,1)/2));
+                    pStruct.P(iP).(type)(iP,ind([j-1,j])),exp(-icdf('chi2',confLevel,1)/2));
             else
                 pStruct.CI.PL(iP,2,iConfLevel) = inf;
             end
         else
             ind  = find(pStruct.P(iP).(type) >= pStruct.MS.(type)(iP,1));
-            j = find(pStruct.P(iP).R(ind) <= exp(-icdf('chi2',alpha,1)/2),1,'first');
+            j = find(pStruct.P(iP).R(ind) <= exp(-icdf('chi2',confLevel,1)/2),1,'first');
             if ~isempty(j)
                 pStruct.CI.PL(iP,2,iConfLevel) = interp1(pStruct.P(iP).R(ind([j-1,j])),...
-                    pStruct.P(iP).(type)(ind([j-1,j])),exp(-icdf('chi2',alpha,1)/2));
+                    pStruct.P(iP).(type)(ind([j-1,j])),exp(-icdf('chi2',confLevel,1)/2));
             else
                 pStruct.CI.PL(iP,2,iConfLevel) = inf;
             end

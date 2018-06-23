@@ -261,12 +261,12 @@ parameters = getParameterSamples(parameters, objectiveFunction, optionsPesto);
 
 %% Confidence interval evaluation -- Parameters
 % Confidence intervals to the confidence levels fixed in the array
-% alpha
+% confLevels
 % are computed based on local approximations from the Hessian matrix at the
 % optimum, based on the profile likelihoods and on the parameter sampling.
 
-alpha = [0.9,0.95,0.99];
-parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
+confLevels = [0.9,0.95,0.99];
+parameters = getParameterConfidenceIntervals(parameters, confLevels, optionsPesto);
 
 
 %% Evaluation of properties for multi-start local optimization results -- Properties
@@ -298,7 +298,7 @@ properties = getPropertySamples(properties, parameters, optionsProperties);
 % properties in different fashion, based on local approximations, profile
 % likelihoods and samples.
 
-properties = getPropertyConfidenceIntervals(properties, alpha, optionsProperties);
+properties = getPropertyConfidenceIntervals(properties, confLevels, optionsProperties);
 
 
 %% Comparison of calculated parameter profiles
