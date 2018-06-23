@@ -1,4 +1,4 @@
-function fh = plotConfidenceIntervals(pStruct, alpha, varargin)
+function fh = plotConfidenceIntervals(pStruct, varargin)
 % plotConfidenceIntervals.m visualizes confidence itervals stored in either
 % the parameters or properties struct .CI
 %
@@ -30,7 +30,6 @@ function fh = plotConfidenceIntervals(pStruct, alpha, varargin)
 %       information about parameters and results of optimization (.MS) 
 %       and uncertainty analysis (.P and .S). This structures is the output
 %       of plotMultiStarts.m, getProfiles.m or plotSamples.m.
-%  alpha: significance levels
 %   varargin:
 %     method: integer array, from which method confidence intervals 
 %         should be plotted: 
@@ -298,8 +297,8 @@ function methodsOut = checkMeth(methodsIn, pStruct, boolWarning)
             methodsOut.name{iMeth} = tempMethName{j};
         end
     end
-    methodsOut.numLevels = length(pStruct.CI.alpha_levels);
-    methodsOut.levels = pStruct.CI.alpha_levels;
+    methodsOut.numLevels = length(pStruct.CI.confLevels);
+    methodsOut.levels = pStruct.CI.confLevels;
     methodsOut.num = length(methodsOut.name);
     methodsOut.bars = linspace(0.3, 0.15, methodsOut.numLevels);
     colors = nan(methodsOut.num, 3, methodsOut.numLevels);
