@@ -311,21 +311,21 @@ plotParameterSamples(parameters,'2D',fh,[],optionsPesto.plot_options);
 
 
 %% Confidence interval evaluation -- Parameters
-% Confidence intervals to the confidence levels fixed in the array alpha
+% Confidence intervals to the confidence levels fixed in the array confLevels
 % are computed based on local approximations from the Hessian matrix at the
 % optimum, based on the profile likelihoods and on the parameter sampling.
 
-alpha = [0.9,0.95,0.99];
+confLevels = [0.9,0.95,0.99];
 
 % Computation for the first mode
 optionsPesto.MAP_index = 1;
 optionsPesto.parameter_index = 1 : parameters.number;
-parameters = getParameterConfidenceIntervals(parameters, alpha, optionsPesto);
+parameters = getParameterConfidenceIntervals(parameters, confLevels, optionsPesto);
 
 % Computation for the second mode
 optionsPesto.MAP_index = MAP_index2;
 optionsPesto.parameter_index = [3, 4];
-parametersAlt = getParameterConfidenceIntervals(parametersAlt, alpha, optionsPesto);
+parametersAlt = getParameterConfidenceIntervals(parametersAlt, confLevels, optionsPesto);
 
 %% Evaluation of properties for multi-start local optimization results -- Properties
 % The values of the properties are evaluated at the end points of the
@@ -353,7 +353,7 @@ properties = getPropertySamples(properties, parameters, optionsPesto);
 % properties in different fashion, based on local approximations, profile
 % likelihoods and samples.
 
-properties = getPropertyConfidenceIntervals(properties, alpha);
+properties = getPropertyConfidenceIntervals(properties, confLevels);
 
 %% Comparison of calculated parameter profiles
 
