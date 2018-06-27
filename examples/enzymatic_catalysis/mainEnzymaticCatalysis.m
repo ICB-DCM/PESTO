@@ -125,11 +125,11 @@ plotMCMCdiagnosis(parameters, 'parameters');
 % Confidence Intervals for the Parameters are inferred from the local 
 % optimization and the sampling information.
 
-% Set alpha levels
-alphaLevels = [0.8, 0.9, 0.95, 0.99];
+% Set confidence levels
+confLevels = [0.8, 0.9, 0.95, 0.99];
 
 display(' Computing confidence intervals...');
-parameters = getParameterConfidenceIntervals(parameters, alphaLevels, optionsPesto);
+parameters = getParameterConfidenceIntervals(parameters, confLevels, optionsPesto);
 
 
 %% Perform Multistart optimization
@@ -166,7 +166,7 @@ parameters = getMultiStarts(parameters, objectiveFunction, optionsPesto);
 % Confidence Intervals for the Parameters are inferred from the local 
 % optimization and the sampling information.
 display(' Computing confidence intervals...');
-parameters = getParameterConfidenceIntervals(parameters, alphaLevels, optionsPesto);
+parameters = getParameterConfidenceIntervals(parameters, confLevels, optionsPesto);
 
 
 %% Calculate Profile Likelihoods
@@ -209,4 +209,4 @@ parametersNew = getParameterSamples(parametersNew, objectiveFunction, optionsPes
 %% Calculate Confidence Intervals
 % Confidence Intervals for the Parameters are inferred from the local 
 % optimization, the sampling and the profile information.
-parameters = getParameterConfidenceIntervals(parametersNew, alphaLevels, optionsPesto);
+parameters = getParameterConfidenceIntervals(parametersNew, confLevels, optionsPesto);
