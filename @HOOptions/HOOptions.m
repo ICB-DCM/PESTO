@@ -29,16 +29,16 @@ classdef HOOptions < matlab.mixin.CustomDisplay
         
         % Array containing the indices of the experiments
         % that share a noise parameter.
-        expgroups_noise = [1];
+        expgroups_noise = {1};
         % Array containing the indices of the experiments
         % that share a scaling parameter.
-        expgroups_scaling = [1];
+        expgroups_scaling = {1};
         % Array containing the indices of the observables
         % that share a noise parameter.
-        obsgroups_noise = [1];
+        obsgroups_noise = {1};
         %Array containing the indices of the observables
         % that share a scaling parameter.
-        obsgroups_scaling = [1];
+        obsgroups_scaling = {1};
         
         % 1 x n_y array of strings indicating scale for the observable
         % Valid options are "log","log10" and "lin" for log, log10 or
