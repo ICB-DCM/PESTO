@@ -113,41 +113,18 @@ switch options.mode
         end
 end
 
+% Define the negative log-posterior funtion
+% (fmincon needs the neagtive log posterior for optimization)
+negLogPost = setObjectiveWrapper(objective_function, options, 'negative log-posterior', [], [], true, true);
+
 %% Definition of index set of optimized parameters
 freePars = setdiff(1:parameters.number, options.fixedParameters);
 if isempty(parameters.guess)
     parameters.guess = zeros(parameters.number,0);
 end
-    
+
 %% Sampling of starting points
-switch options.proposal
-    case 'latin hypercube'
-        % Sampling from latin hypercube
-        par0_tmp = [parameters.guess(freePars,:),...
-            bsxfun(@plus,parameters.min(freePars),bsxfun(@times,parameters.max(freePars) - parameters.min(freePars),...
-            lhsdesign(options.n_starts - size(parameters.guess,2),length(freePars),'smooth','off')'))];
-    case 'uniform'
-        % Sampling from uniform distribution
-        par0_tmp = [parameters.guess(freePars,:),...
-            bsxfun(@plus,parameters.min,bsxfun(@times,parameters.max - parameters.min,...
-            rand(parameters.number,options.n_starts - size(parameters.guess,2))))];
-    case 'user-supplied'
-        % Sampling from user-supplied function
-        if (~isfield(parameters, 'init_fun') || isempty(parameters.init_fun))
-            if size(parameters.guess,2) < options.n_starts
-                error('You did not define an initial function and do not provide enough starting points in parameters.guess. Aborting.');
-            else
-                par0_tmp = parameters.guess(:,1:options.n_starts);
-            end
-        else
-            par0_tmp = [parameters.guess,...
-                parameters.init_fun(parameters.guess,parameters.min,parameters.max,options.n_starts - size(parameters.guess,2))];
-        end
-end
-% Correct for fixed parameters
-par0(freePars,:) = par0_tmp;
-par0(options.fixedParameters,:) = options.fixedParameterValues(:) * ones(1,options.n_starts);
-par0 = par0(:,options.start_index);
+par0 = getStartpointSuggestions(parameters, negLogPost, options);
 parameters.MS.par0 = par0;
 
 %% Preparation of folder
@@ -187,10 +164,6 @@ if(options.trace)
     parameters.MS.fval_trace = nan(maxOptimSteps+1,length(options.start_index));
     parameters.MS.time_trace = nan(maxOptimSteps+1,length(options.start_index));
 end
-
-% Define the negative log-posterior funtion
-% (fmincon needs the neagtive log posterior for optimization)
-negLogPost = setObjectiveWrapper(objective_function, options, 'negative log-posterior', [], [], true, true);
 
 % Check, if Hessian should be used and if a Hessian function was set,
 % otherwise use the third output of the objective function instead
@@ -282,17 +255,17 @@ if strcmp(options.comp_type, 'sequential')
                         % fmincon as local optimizer
                         [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
                             = performOptimizationFmincon(parameters, negLogPost, par0(:,iMS), options);
-
+                        
                     case {'meigo-ess', 'meigo-vns'}
                         % Use the MEIGO toolbox as local / global optimizer
                         [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
                             = performOptimizationMeigo(parameters, negLogPost, par0(:,iMS), options);
-
+                        
                     case 'pswarm'
                         % Optimization using a swarm based global optimizer PSwarm
                         [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
                             = performOptimizationPswarm(parameters, negLogPost, par0(:,iMS), options);
-
+                        
                     case 'lsqnonlin'
                         % Optimization using lsqnonlin as local optimizer
                         [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter, logPostOffset] ...
@@ -300,17 +273,17 @@ if strcmp(options.comp_type, 'sequential')
                         if ~isempty(logPostOffset)
                             options.logPostOffset = logPostOffset;
                         end
-
+                        
                     case 'rcs'
                         % Optimization using randomized coordinate search as local optimizer
                         [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
                             = performOptimizationRcs(parameters, negLogPost, par0(:,iMS), options);
-
+                        
                     case 'dhc'
                         % Optimization using dynamic hill climbing as local optimizer
                         [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
                             = performOptimizationDhc(parameters, negLogPost, par0(:,iMS), options);
-
+                        
                     case 'bobyqa'
                         % Optimization using bobya as local optimizer
                         [negLogPost_opt, par_opt, gradient_opt, hessian_opt, exitflag, n_objfun, n_iter] ...
@@ -606,29 +579,29 @@ end
 %% Saving results
 function saveResults(parameters,options,iMS)
 
-    % saveResults saves Multi-start results to disk
-    %
-    % Parameters:
-    %  parameters: Parameter struct passed to getMultiStarts
-    %  options: getMultiStarts options
-    %  i: multi-start index
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__logPost.csv']),parameters.MS.logPost(iMS),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__logPost0.csv']),parameters.MS.logPost0(iMS),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__par.csv']),parameters.MS.par(:,iMS),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__par0.csv']),parameters.MS.par0(:,iMS),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__gradient.csv']),parameters.MS.gradient(:,iMS),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__hessian.csv']),parameters.MS.hessian(:,:,iMS),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__t_cpu.csv']),parameters.MS.t_cpu(iMS),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__n_objfun.csv']),parameters.MS.n_objfun(iMS),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__n_iter.csv']),parameters.MS.n_iter(iMS),'delimiter',',','precision',12);
-    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__exitflag.csv']),parameters.MS.exitflag(iMS),'delimiter',',','precision',12);
-    if(options.trace)
-        dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__par_trace.csv']),parameters.MS.par_trace(:,:,iMS),'delimiter',',','precision',12);
-        dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__fval_trace.csv']),parameters.MS.fval_trace(:,iMS),'delimiter',',','precision',12);
-        dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__time_trace.csv']),parameters.MS.time_trace(:,iMS),'delimiter',',','precision',12);
-    end
-    
-    % Commented out due to long saving times in case of large models
+% saveResults saves Multi-start results to disk
+%
+% Parameters:
+%  parameters: Parameter struct passed to getMultiStarts
+%  options: getMultiStarts options
+%  i: multi-start index
+dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__logPost.csv']),parameters.MS.logPost(iMS),'delimiter',',','precision',12);
+dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__logPost0.csv']),parameters.MS.logPost0(iMS),'delimiter',',','precision',12);
+dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__par.csv']),parameters.MS.par(:,iMS),'delimiter',',','precision',12);
+dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__par0.csv']),parameters.MS.par0(:,iMS),'delimiter',',','precision',12);
+dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__gradient.csv']),parameters.MS.gradient(:,iMS),'delimiter',',','precision',12);
+dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__hessian.csv']),parameters.MS.hessian(:,:,iMS),'delimiter',',','precision',12);
+dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__t_cpu.csv']),parameters.MS.t_cpu(iMS),'delimiter',',','precision',12);
+dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__n_objfun.csv']),parameters.MS.n_objfun(iMS),'delimiter',',','precision',12);
+dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__n_iter.csv']),parameters.MS.n_iter(iMS),'delimiter',',','precision',12);
+dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__exitflag.csv']),parameters.MS.exitflag(iMS),'delimiter',',','precision',12);
+if(options.trace)
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__par_trace.csv']),parameters.MS.par_trace(:,:,iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__fval_trace.csv']),parameters.MS.fval_trace(:,iMS),'delimiter',',','precision',12);
+    dlmwrite(fullfile(pwd,options.foldername ,['MS' num2str(options.start_index(iMS),'%d') '__time_trace.csv']),parameters.MS.time_trace(:,iMS),'delimiter',',','precision',12);
+end
+
+% Commented out due to long saving times in case of large models
 %     save([options.foldername '/init'],'parameters','-v7.3');
 
 end
