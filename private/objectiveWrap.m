@@ -16,21 +16,22 @@ function varargout = objectiveWrap(theta, objectiveFunction, wrapperOptions, var
     
     % Process input
     objSign = wrapperOptions{1};
-    fixedTheta = wrapperOptions{2};
+    fixedInd = wrapperOptions{2};
+    fixedTheta = wrapperOptions{3};
     outNumber = wrapperOptions{4};
     optimizer = wrapperOptions{5};
     countErrors = wrapperOptions{6};
     showWarnings = wrapperOptions{7};
-    if isempty(fixedTheta)
+    if isempty(fixedInd)
         longTheta = theta;
         freeInd = 1 : length(theta);
     else
-        nTheta = length(theta) + length(fixedTheta);
+        nTheta = length(theta) + length(fixedInd);
         freeInd = 1:nTheta;
-        freeInd(fixedTheta) = [];
+        freeInd(fixedInd) = [];
         longTheta = nan(nTheta,1);
         longTheta(freeInd) = theta;
-        longTheta(fixedTheta) = wrapperOptions{3};
+        longTheta(fixedInd) = fixedTheta;
     end
     
 %     if (~isempty(varargin))
