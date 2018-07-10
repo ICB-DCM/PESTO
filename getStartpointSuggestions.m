@@ -26,31 +26,48 @@ function [ par0 ] = getStartpointSuggestions(parameters, nllh, options)
 
 % index set of optimized parameters
 freePars = setdiff(1:parameters.number, options.fixedParameters);
+parGuess = parameters.guess(freePars,:);
+minPars = parameters.min(freePars);
+maxPars = parameters.max(freePars);
+nPars = length(freePars);
+nStarts = options.n_starts;
+ss_maxFunEvals = options.ss_maxFunEvals;
 
 switch options.proposal
     case 'latin hypercube'
         % Sampling from latin hypercube
-        par0_tmp = [parameters.guess(freePars,:),...
-            bsxfun(@plus,parameters.min(freePars),bsxfun(@times,parameters.max(freePars) - parameters.min(freePars),...
-            lhsdesign(options.n_starts - size(parameters.guess,2),length(freePars),'smooth','off')'))];
+        par0_tmp = [parGuess, ...
+            bsxfun(@plus, minPars, bsxfun(@times, maxPars - minPars, ...
+            lhsdesign(options.n_starts - size(parGuess, 2), nPars, 'smooth', 'off')'))];
+        
     case 'uniform'
         % Sampling from uniform distribution
-        par0_tmp = [parameters.guess(freePars,:),...
-            bsxfun(@plus,parameters.min,bsxfun(@times,parameters.max - parameters.min,...
-            rand(parameters.number,options.n_starts - size(parameters.guess,2))))];
+        par0_tmp = [parGuess, ...
+            bsxfun(@plus, minPars, bsxfun(@times, maxPars - minPars,...
+            rand(nPars, nStarts - size(parGuess, 2))))];
+        
     case 'user-supplied'
         % Sampling from user-supplied function
         if (~isfield(parameters, 'init_fun') || isempty(parameters.init_fun))
-            if size(parameters.guess,2) < options.n_starts
-                error('You did not define an initial function and do not provide enough starting points in parameters.guess. Aborting.');
+            if size(parGuess, 2) < nStarts
+                error('You did not define a parameter proposal function and do not provide enough starting points in parameters.guess. Aborting.');
             else
-                par0_tmp = parameters.guess(:,1:options.n_starts);
+                par0_tmp = parGuess(:, 1:nStarts);
             end
         else
-            par0_tmp = [parameters.guess,...
-                parameters.init_fun(parameters.guess,parameters.min,parameters.max,options.n_starts - size(parameters.guess,2))];
+            par0_tmp = [parGuess, ...
+                parameters.init_fun(parGuess, minPars, maxPars, nStarts - size(parGuess, 2))];
         end
-    
+        
+    case 'ss latin hypercube'
+        xs = bsxfun(@plus, minPars, bsxfun(@times, maxPars - minPars, lhsdesign(ss_maxFunEvals, nPars, 'smooth', 'off')'));
+        fvals = zeros(ss_maxFunEvals, 1);
+        for j = 1:ss_maxFunEvals
+            fvals(j) = nllh(xs(:,j));
+        end
+        [~, index] = sort(fvals, 'ascent');
+        xs = xs(:, index);
+        par0_tmp = xs(:, 1:n_starts);
 end
 % Correct for fixed parameters
 par0(freePars,:) = par0_tmp;
