@@ -298,7 +298,7 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         HO = HOOptions();
         
         % Set startpoint suggestion options
-        ss_maxFunEvals = 20 * 10;
+        ss_maxFunEvals = [];
         
     end
     
@@ -472,7 +472,7 @@ classdef PestoOptions < matlab.mixin.CustomDisplay
         end
         
         function this = set.proposal(this, value)
-            if (strcmp(value, 'latin hypercube') || strcmp(value, 'uniform') || strcmp(value, 'user-supplied'))
+            if any(strcmp(value, {'latin hypercube', 'uniform', 'orthogonal', 'user-supplied', 'ss latin hypercube'}))
                 this.proposal = value;
             else
                 error('PestoOptions.proposal must be set to either "latin hypercube", "uniform" or "user-supplied".');

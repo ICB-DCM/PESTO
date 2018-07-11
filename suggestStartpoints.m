@@ -1,4 +1,4 @@
-function [ par0 ] = getStartpointSuggestions(parameters, nllh, options)
+function [ par0 ] = suggestStartpoints(parameters, nllh, options)
 % getStartpointSuggestions() generates better start points for a subsequent
 % multistart local optimization.
 % This is usually of interest when one has a limited budget but no idea
@@ -11,7 +11,7 @@ function [ par0 ] = getStartpointSuggestions(parameters, nllh, options)
 % parameters: parameter struct
 % nllh: objective function to be minimized
 % options: A PestoOptions object holding various options for the algorithm
-% 
+%
 % Output:
 % par0: found parameter start values
 %
@@ -19,10 +19,10 @@ function [ par0 ] = getStartpointSuggestions(parameters, nllh, options)
 %   * number: number of parameters
 %   * min: lower bound for each parameter
 %   * max: upper bound for each parameter
-% 
+%
 % Required fields of options:
-%   * 
-% 
+%   *
+%
 
 % index set of optimized parameters
 freePars = setdiff(1:parameters.number, options.fixedParameters);
@@ -31,7 +31,6 @@ minPars = parameters.min(freePars);
 maxPars = parameters.max(freePars);
 nPars = length(freePars);
 nStarts = options.n_starts;
-ss_maxFunEvals = options.ss_maxFunEvals;
 
 switch options.proposal
     case 'latin hypercube'
@@ -46,6 +45,9 @@ switch options.proposal
             bsxfun(@plus, minPars, bsxfun(@times, maxPars - minPars,...
             rand(nPars, nStarts - size(parGuess, 2))))];
         
+    case 'orthogonal'
+        % Sampling using orthogonal approach, i.e. 
+        
     case 'user-supplied'
         % Sampling from user-supplied function
         if (~isfield(parameters, 'init_fun') || isempty(parameters.init_fun))
@@ -59,19 +61,63 @@ switch options.proposal
                 parameters.init_fun(parGuess, minPars, maxPars, nStarts - size(parGuess, 2))];
         end
         
-    case 'ss latin hypercube'
-        xs = bsxfun(@plus, minPars, bsxfun(@times, maxPars - minPars, lhsdesign(ss_maxFunEvals, nPars, 'smooth', 'off')'));
-        fvals = zeros(ss_maxFunEvals, 1);
-        for j = 1:ss_maxFunEvals
-            fvals(j) = nllh(xs(:,j));
-        end
-        [~, index] = sort(fvals, 'ascent');
-        xs = xs(:, index);
-        par0_tmp = xs(:, 1:n_starts);
+    otherwise
+        par0_tmp = getStartpointSuggestions_doSomething();
+        
 end
+
 % Correct for fixed parameters
 par0(freePars,:) = par0_tmp;
 par0(options.fixedParameters,:) = options.fixedParameterValues(:) * ones(1,options.n_starts);
 par0 = par0(:,options.start_index);
+
+    function par0_tmp = getStartpointSuggestions_doSomething()
+        
+        time_ss = tic;
+        
+        ss_maxFunEvals = options.ss_maxFunEvals;
+        
+        switch options.proposal
+            case 'ss latin hypercube'
+                xs = bsxfun(@plus, minPars, bsxfun(@times, maxPars - minPars, lhsdesign(ss_maxFunEvals, nPars, 'smooth', 'off')'));
+                fvals = zeros(ss_maxFunEvals, 1);
+                for j = 1:ss_maxFunEvals
+                    fvals(j) = nllh(xs(:,j));
+                end
+                par0_tmp = bestParameters(xs, fvals, nStarts, minPars, maxPars);
+%                 par0_tmp = separateLatinHypercube(xs, fvals, nStarts, minPars, maxPars);
+        end
+        
+        time_ss = toc(time_ss);
+        disp(['Done enhanced startpoint selection (' num2str(time_ss) 's)']);
+    end
+
+end
+
+function par0_tmp = bestParameters(xs, fvals, n_starts, minPars, maxPars)
+
+[~, index] = sort(fvals, 'ascend');
+xs = xs(:, index);
+par0_tmp = xs(:, 1:n_starts);
+
+end
+
+function par0_tmp = separateLatinHypercube(xs, fvals, n_starts, minPars, maxPars)
+
+[~, index] = sort(fvals, 'ascend');
+xs = xs(:, index);
+dim = length(minPars);
+par0_tmp = zeros(dim, n_starts);
+lhs_indices = [];
+% par0_tmp = xs(:, 1:n_starts);
+for jStart = 1:n_starts
+    x = xs(:, 1);
+    % compute lhs index
+    for jDim = 1:dim
+        index = 0;
+        width = maxPars(jDim) - minPars(jDim);
+        
+    end
+end
 
 end

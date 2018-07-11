@@ -124,7 +124,7 @@ if isempty(parameters.guess)
 end
 
 %% Sampling of starting points
-par0 = getStartpointSuggestions(parameters, negLogPost, options);
+par0 = suggestStartpoints(parameters, negLogPost, options);
 parameters.MS.par0 = par0;
 
 %% Preparation of folder
