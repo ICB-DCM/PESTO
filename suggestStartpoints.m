@@ -84,8 +84,8 @@ par0 = par0(:,options.start_index);
                 for j = 1:ss_maxFunEvals
                     fvals(j) = nllh(xs(:,j));
                 end
-                par0_tmp = bestParameters(xs, fvals, nStarts, minPars, maxPars);
-%                 par0_tmp = separateLatinHypercube(xs, fvals, nStarts, minPars, maxPars);
+%                 par0_tmp = bestParameters(xs, fvals, nStarts, minPars, maxPars);
+                par0_tmp = separateLatinHypercube(xs, fvals, nStarts, minPars, maxPars);
         end
         
         time_ss = toc(time_ss);
@@ -107,16 +107,30 @@ function par0_tmp = separateLatinHypercube(xs, fvals, n_starts, minPars, maxPars
 [~, index] = sort(fvals, 'ascend');
 xs = xs(:, index);
 dim = length(minPars);
-par0_tmp = zeros(dim, n_starts);
+par0_tmp = [];
 lhs_indices = [];
-% par0_tmp = xs(:, 1:n_starts);
-for jStart = 1:n_starts
+
+% find sufficiently distant startpoints
+while size(lhs_indices, 2) < n_starts
     x = xs(:, 1);
-    % compute lhs index
+    
+    % remove from array
+    xs = xs(:, 2:end);
+    
+    % compute the lhs index of x
+    lhs_index = zeros(dim, 1);
     for jDim = 1:dim
-        index = 0;
-        width = maxPars(jDim) - minPars(jDim);
-        
+        for index = 1:n_starts
+            if x(jDim) <= minPars(jDim) + index / n_starts * (maxPars(jDim) - minPars(jDim))
+                lhs_index(jDim) = index;
+                break;
+            end
+        end
+    end
+    
+    if isempty(lhs_indices) || ~any(all(lhs_indices==lhs_index, 1))
+        par0_tmp = [par0_tmp, x];
+        lhs_indices = [lhs_indices, lhs_index];
     end
 end
 
