@@ -635,6 +635,6 @@ function saveResults(parameters,options,iMS)
 
 end
 
-function is_non_empty_field = isNonEmptyFieldOrProperty(struct, fieldname)
-    is_non_empty_field = (isprop(struct, fieldname) || isfield(struct, fieldname)) && ~isempty(struct.(fieldname));
+function is_that = isNonEmptyFieldOrProperty(struct, fieldname)
+    is_that = (isprop(struct, fieldname) || isfield(struct, fieldname)) && ~isempty(struct.(fieldname));
 end
