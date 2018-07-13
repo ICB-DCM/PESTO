@@ -30,23 +30,21 @@ parGuess = parameters.guess(freePars,:);
 minPars = parameters.min(freePars);
 maxPars = parameters.max(freePars);
 nPars = length(freePars);
-nStarts = options.n_starts;
+nStarts = options.n_starts - size(parGuess, 2);
 
 switch options.proposal
     case 'latin hypercube'
         % Sampling from latin hypercube
-        par0_tmp = [parGuess, ...
-            bsxfun(@plus, minPars, bsxfun(@times, maxPars - minPars, ...
-            lhsdesign(options.n_starts - size(parGuess, 2), nPars, 'smooth', 'off')'))];
+        par0_tmp = bsxfun(@plus, minPars, bsxfun(@times, maxPars - minPars, ...
+            lhsdesign(options.n_starts - size(parGuess, 2), nPars, 'smooth', 'off')'));
         
     case 'uniform'
         % Sampling from uniform distribution
-        par0_tmp = [parGuess, ...
-            bsxfun(@plus, minPars, bsxfun(@times, maxPars - minPars,...
-            rand(nPars, nStarts - size(parGuess, 2))))];
+        par0_tmp = bsxfun(@plus, minPars, bsxfun(@times, maxPars - minPars,...
+            rand(nPars, nStarts - size(parGuess, 2))));
         
     case 'orthogonal'
-        % Sampling using orthogonal approach, i.e. 
+        % Sampling using orthogonal approach
         
     case 'user-supplied'
         % Sampling from user-supplied function
@@ -57,44 +55,72 @@ switch options.proposal
                 par0_tmp = parGuess(:, 1:nStarts);
             end
         else
-            par0_tmp = [parGuess, ...
-                parameters.init_fun(parGuess, minPars, maxPars, nStarts - size(parGuess, 2))];
+            par0_tmp = parameters.init_fun(parGuess, minPars, maxPars, nStarts - size(parGuess, 2));
         end
         
     otherwise
-        par0_tmp = getStartpointSuggestions_doSomething();
+        par0_tmp = suggestBetterStartpoints();
         
 end
 
-% Correct for fixed parameters
+% add user-chosed parameters
+par0_tmp = [parGuess, par0_tmp];
+
+% correct for fixed parameters
 par0(freePars,:) = par0_tmp;
 par0(options.fixedParameters,:) = options.fixedParameterValues(:) * ones(1,options.n_starts);
 par0 = par0(:,options.start_index);
 
-    function par0_tmp = getStartpointSuggestions_doSomething()
-        
-        time_ss = tic;
+    function par0_tmp = suggestBetterStartpoints()
         
         ss_maxFunEvals = options.ss_maxFunEvals;
         
+        if ss_maxFunEvals < nStarts
+            error("It is required that ss_maxFunEvals >= nStarts to select start points.");
+        end
+        
+        time_ss = tic;
+        
         switch options.proposal
-            case 'ss latin hypercube'
+            case {'ss latinHypercube bestParameters', ...
+                  'ss latinHypercube separatedLHParametersSimple', ...
+                  'ss latinHypercube separatedLHParameters', ...
+                  'ss latinHypercube clusteredParameters'}
+              
+                % sample LH parameters and compute function values
                 xs = bsxfun(@plus, minPars, bsxfun(@times, maxPars - minPars, lhsdesign(ss_maxFunEvals, nPars, 'smooth', 'off')'));
                 fvals = zeros(ss_maxFunEvals, 1);
                 for j = 1:ss_maxFunEvals
                     fvals(j) = nllh(xs(:,j));
                 end
-%                 par0_tmp = bestParameters(xs, fvals, nStarts, minPars, maxPars);
-                par0_tmp = separateLatinHypercube(xs, fvals, nStarts, minPars, maxPars);
+                
+                % apply selection method
+                switch options.proposal
+                    case 'ss latinHypercube bestParameters'
+                        method = @bestParameters;
+                    case 'ss latinHypercube separatedLHParametersSimple'
+                        method = @separatedLHParametersSimple;
+                    case 'ss latinHypercube separatedLHParameters'
+                        method = @separatedLHParameters;
+                    case 'ss latinHyperube clusteredParameters'
+                        method = @clusteredParameters;
+                end
+                par0_tmp = method(xs, fvals, nStarts, minPars, maxPars);
         end
         
         time_ss = toc(time_ss);
-        disp(['Done enhanced startpoint selection (' num2str(time_ss) 's)']);
+        if any(strcmp(options.mode, {'visual', 'text'}))
+            disp(['Done enhanced startpoint selection (' num2str(time_ss) 's)']);
+        end
     end
 
 end
 
-function par0_tmp = bestParameters(xs, fvals, n_starts, minPars, maxPars)
+
+function par0_tmp = bestParameters(xs, fvals, n_starts, ~, ~)
+% Extract the best parameters from xs, according to the smallest values in
+% fvals. This should not be used for obtaining parameter guesses, since the
+% selected parameters may be very close to each other.
 
 [~, index] = sort(fvals, 'ascend');
 xs = xs(:, index);
@@ -102,7 +128,11 @@ par0_tmp = xs(:, 1:n_starts);
 
 end
 
-function par0_tmp = separateLatinHypercube(xs, fvals, n_starts, minPars, maxPars)
+
+function par0_tmp = separatedLHParametersSimple(xs, fvals, n_starts, minPars, maxPars)
+% Extracts the best parameters from xs making sure that they have a scaled
+% distance of at least 1/n (i.e. different LH boxes in at least 1
+% dimension).
 
 [~, index] = sort(fvals, 'ascend');
 xs = xs(:, index);
@@ -133,5 +163,22 @@ while size(lhs_indices, 2) < n_starts
         lhs_indices = [lhs_indices, lhs_index];
     end
 end
+
+end
+
+
+function par0_tmp = separatedLHParameters(xs, fvals, n_starts, minPars, maxPars)
+% Bootstrap parameters of large LH distances, using a scheme of iteratively
+% decreasing acceptance thresholds.
+
+error("Ingenting.");
+
+end
+
+
+function par0_tmp = clusteredParameters(xs, fvals, n_starts, minPars, maxPars)
+% Use clustering in order to select the best startpoints.
+
+error("Ingenting.");
 
 end
