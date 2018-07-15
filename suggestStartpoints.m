@@ -171,7 +171,49 @@ function par0_tmp = separatedLHParameters(xs, fvals, n_starts, minPars, maxPars)
 % Bootstrap parameters of large LH distances, using a scheme of iteratively
 % decreasing acceptance thresholds.
 
-error("Ingenting.");
+[~, index] = sort(fvals, 'ascend');
+xs = xs(:, index);
+dim = length(minPars);
+par0_tmp = [];
+lhs_indices = [];
+
+% find sufficiently distant startpoints
+
+% number of allowed coinciding entries
+jComponents = 0;
+while jComponents <= n_starts && size(par0_tmp, 2) < n_starts    
+    
+    % look through xs from smallest value upwards
+    jXs = 1;
+    
+    while jXs <= size(xs, 2) && size(par0_tmp, 2) < n_starts
+        
+        x = xs(:, jXs);
+        
+        % compute the lhs index of x
+        lhs_index = zeros(dim, 1);
+        for jDim = 1:dim
+            for index = 1:n_starts
+                if x(jDim) <= minPars(jDim) + index / n_starts * (maxPars(jDim) - minPars(jDim))
+                    lhs_index(jDim) = index;
+                    break;
+                end
+            end
+        end
+
+        % check for acceptance
+        if isempty(lhs_indices) || all(sum(lhs_indices==lhs_index, 1) <= jComponents)
+            par0_tmp = [par0_tmp, x];
+            lhs_indices = [lhs_indices, lhs_index];
+            xs = xs(:, [1:(jXs-1), (jXs+1):end]);
+            disp(['jComponents/jXs: ' num2str(jComponents) '/' num2str(jXs)]);
+        else
+            jXs = jXs + 1;
+        end
+    end
+    
+    jComponents = jComponents + 1;
+end
 
 end
 
