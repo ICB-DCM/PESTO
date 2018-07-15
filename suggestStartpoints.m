@@ -88,10 +88,10 @@ par0 = par0(:,options.start_index);
                   'ss latinHypercube clusteredParameters'}
               
                 % sample LH parameters and compute function values
-                xs = bsxfun(@plus, minPars, bsxfun(@times, maxPars - minPars, lhsdesign(ss_maxFunEvals, nPars, 'smooth', 'off')'));
-                fvals = zeros(ss_maxFunEvals, 1);
+                xs = bsxfun(@plus, minPars, bsxfun(@times, maxPars - minPars, lhsdesign(ss_maxFunEvals, nPars, 'smooth', 'off', 'criterion', 'none')'));
+                fvals = zeros(1, ss_maxFunEvals);
                 for j = 1:ss_maxFunEvals
-                    fvals(j) = nllh(xs(:,j));
+                    fvals(1, j) = nllh(xs(:,j));
                 end
                 
                 % apply selection method
@@ -122,7 +122,7 @@ function par0_tmp = bestParameters(xs, fvals, n_starts, ~, ~)
 % fvals. This should not be used for obtaining parameter guesses, since the
 % selected parameters may be very close to each other.
 
-[~, index] = sort(fvals, 'ascend');
+[~, index] = sort(fvals, 2, 'ascend');
 xs = xs(:, index);
 par0_tmp = xs(:, 1:n_starts);
 
@@ -134,7 +134,7 @@ function par0_tmp = separatedLHParametersSimple(xs, fvals, n_starts, minPars, ma
 % distance of at least 1/n (i.e. different LH boxes in at least 1
 % dimension).
 
-[~, index] = sort(fvals, 'ascend');
+[~, index] = sort(fvals, 2, 'ascend');
 xs = xs(:, index);
 dim = length(minPars);
 par0_tmp = [];
@@ -171,8 +171,9 @@ function par0_tmp = separatedLHParameters(xs, fvals, n_starts, minPars, maxPars)
 % Bootstrap parameters of large LH distances, using a scheme of iteratively
 % decreasing acceptance thresholds.
 
-[~, index] = sort(fvals, 'ascend');
+[~, index] = sort(fvals, 2, 'ascend');
 xs = xs(:, index);
+fvals = fvals(:, index);
 dim = length(minPars);
 par0_tmp = [];
 lhs_indices = [];
@@ -189,6 +190,7 @@ while jComponents <= n_starts && size(par0_tmp, 2) < n_starts
     while jXs <= size(xs, 2) && size(par0_tmp, 2) < n_starts
         
         x = xs(:, jXs);
+        fval = fvals(:, jXs);
         
         % compute the lhs index of x
         lhs_index = zeros(dim, 1);
@@ -202,17 +204,19 @@ while jComponents <= n_starts && size(par0_tmp, 2) < n_starts
         end
 
         % check for acceptance
-        if isempty(lhs_indices) || all(sum(lhs_indices==lhs_index, 1) <= jComponents)
+        if (isempty(lhs_indices) || all(sum(lhs_indices==lhs_index, 1) <= jComponents)) ...
+                && (jComponents == n_starts || isfinite(fval))
             par0_tmp = [par0_tmp, x];
             lhs_indices = [lhs_indices, lhs_index];
             xs = xs(:, [1:(jXs-1), (jXs+1):end]);
+            fvals = fvals(:, [1:(jXs-1), (jXs+1):end]);
             disp(['jComponents/jXs: ' num2str(jComponents) '/' num2str(jXs)]);
         else
             jXs = jXs + 1;
         end
     end
     
-    jComponents = jComponents + 1;
+    jComponents = min([n_starts, jComponents + 2]);
 end
 
 end
