@@ -102,7 +102,7 @@ par0 = par0(:,options.start_index);
                         method = @separatedLHParametersSimple;
                     case 'ss latinHypercube separatedLHParameters'
                         method = @separatedLHParameters;
-                    case 'ss latinHyperube clusteredParameters'
+                    case 'ss latinHypercube clusteredParameters'
                         method = @clusteredParameters;
                 end
                 par0_tmp = method(xs, fvals, nStarts, minPars, maxPars);
@@ -224,7 +224,16 @@ end
 
 function par0_tmp = clusteredParameters(xs, fvals, n_starts, minPars, maxPars)
 % Use clustering in order to select the best startpoints.
+dim = length(minPars);
+par0_tmp = zeros(dim, n_starts);
 
-error("Ingenting.");
+idxs = kmeans(xs', n_starts); % kmeans requires a n*p data matrix
+for jStart = 1:n_starts
+    xs_j = xs(:, idxs == jStart);
+    fvals_j = fvals(:, idxs == jStart);
+    [~, index_j] = sort(fvals_j, 2, 'ascend');
+    xs_j = xs_j(:, index_j);
+    par0_tmp(:, jStart) = xs_j(:, 1);
+end
 
 end
