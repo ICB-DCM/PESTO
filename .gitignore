@@ -17,3 +17,5 @@ examples/RAmPART_examples/results
 *ess_report.mat
 old/
 examples/HierarchicalOptimization_examples/figures
+examples/transfection
+examples/HierarchicalOptimization_examples/*.csv
