@@ -182,7 +182,7 @@ lhs_indices = [];
 
 % number of allowed coinciding entries
 jComponents = 0;
-while jComponents <= n_starts && size(par0_tmp, 2) < n_starts    
+while size(par0_tmp, 2) < n_starts    
     
     % look through xs from smallest value upwards
     jXs = 1;
