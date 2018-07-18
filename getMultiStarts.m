@@ -91,7 +91,9 @@ if isempty(options.start_index)
 end
 parameters = parametersSanityCheck(parameters);
 
-if (strcmp(options.localOptimizer, 'fmincon') && ( ~isfield(options.localOptimizerOptions, 'MaxFunEvals') || isempty(options.localOptimizerOptions.MaxFunEvals) ) )
+if strcmp(options.localOptimizer, 'fmincon') && ...
+        ~isNonEmptyFieldOrProperty(options.localOptimizerOptions, 'MaxFunEvals') && ...
+        ~isNonEmptyFieldOrProperty(options.localOptimizerOptions, 'MaxFunctionEvaluations')
     options.localOptimizerOptions.MaxFunEvals = 200*parameters.number;
 end
 
@@ -631,4 +633,8 @@ function saveResults(parameters,options,iMS)
     % Commented out due to long saving times in case of large models
 %     save([options.foldername '/init'],'parameters','-v7.3');
 
+end
+
+function is_that = isNonEmptyFieldOrProperty(struct, fieldname)
+    is_that = (isprop(struct, fieldname) || isfield(struct, fieldname)) && ~isempty(struct.(fieldname));
 end
