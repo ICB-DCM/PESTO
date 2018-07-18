@@ -1,8 +1,7 @@
-function [varargout] = optimalScaling(varargin)
+function varargout = optimalScaling(varargin)
 % optimalScaling() computes the optimal scaling parameters.
 %
 % USAGE:
-% * [...]  = optimalScaling(iy,simulation,D,options)
 % * [...]  = optimalScaling(iy,simulation,D,options,scale)
 % * [s,ds] = optimalScaling(...)
 %
@@ -20,12 +19,7 @@ iy = varargin{1};
 simulation = varargin{2};
 D = varargin{3};
 options = varargin{4};
-
-if nargin == 5
-    scale = varargin{5};
-else
-    scale = 'lin';
-end
+scale = varargin{5};
 
 %% CHECK SCENARIO
 for iiy = 1:numel(iy)
@@ -100,8 +94,10 @@ try
                                         candidates = [candidates;bsxfun(@rdivide,...
                                             D(j).my(it,iy(iiy),ir),simulation(j).y(it,iy(iiy)))];
                                         if nargout > 1
-                                            grad_candidates = [grad_candidates;-bsxfun(@rdivide,...
-                                                simulation(j).sy(it,iy(iiy),:),simulation(j).y(it,iy(iiy)))];
+                                            grad_candidates = [grad_candidates;...
+                                                -bsxfun(@times,D(j).my(it,iy(iiy),ir),...
+                                                bsxfun(@rdivide,...
+                                                simulation(j).sy(it,iy(iiy),:),simulation(j).y(it,iy(iiy)).^2))];
                                         end
                                     end
                                 end
@@ -110,10 +106,10 @@ try
                         if isempty(candidates)
                             s(1,1,ir) = nan;
                         else
-                            [candidates,I] = sort(candidates); 
+                            [candidates,I] = sort(candidates);
                             middle = (candidates(1:end-1,:,:)+candidates(2:end,:,:))/2;
                             dJds = zeros(size(middle));
-                            for cand = 1:size(dJds,1) 
+                            for cand = 1:size(dJds,1)
                                 for j = 1:n_e
                                     for iiy = 1:numel(iy)
                                         for it = 1:size(D(j).my,1)
@@ -157,7 +153,7 @@ try
                             
                             if nargout > 1
                                 grad_candidates = grad_candidates(I,:);
-                                ds_i = s(1,1,ir)*squeeze(grad_candidates(s_opt_r,:,:));
+                                ds_i = squeeze(grad_candidates(s_opt_r,:,:));
                                 ds(1,1,:,ir) = ds_i';
                             end
                         end
@@ -171,7 +167,7 @@ try
                             si_z = zeros(1,1);
                             si_n = zeros(1,1);
                             for j = 1:n_e
-                                %calculating the optimal scaling parameters c_ir
+                                %calculating the optimal scaling parameters s_ir
                                 si_z = si_z + sum(sum(nansum(bsxfun(@times,D(j).my(:,iy,:),simulation(j).y(:,iy)),1),3));
                                 si_n = si_n + sum(sum(sum(bsxfun(@power,bsxfun(@times,~isnan(D(j).my(:,iy,:)),...
                                     simulation(j).y(:,iy)),2),1),3));
@@ -200,8 +196,10 @@ try
                                         candidates = [candidates;reshape(bsxfun(@rdivide,...
                                             D(j).my(it,iy(iiy),ir),simulation(j).y(it,iy(iiy))),[],1)];
                                         if nargout > 1
-                                            grad_candidates = [grad_candidates;repmat(-bsxfun(@rdivide,...
-                                                simulation(j).sy(it,iy(iiy),:),simulation(j).y(it,iy(iiy))),[n_r,1])];
+                                            grad_candidates = [grad_candidates;...
+                                                -bsxfun(@times,D(j).my(it,iy(iiy),ir),...
+                                                bsxfun(@rdivide,...
+                                                simulation(j).sy(it,iy(iiy),:),simulation(j).y(it,iy(iiy)).^2))];
                                         end
                                     end
                                 end
@@ -215,7 +213,7 @@ try
                             ds = nan(1,1,n_theta,n_r);
                         end
                     else
-                        [candidates,I] = sort(candidates); %candidates for c_ir, should be n_e*n_y*n_t
+                        [candidates,I] = sort(candidates); %candidates for s_ir
                         middle = (candidates(1:end-1,:,:)+candidates(2:end,:,:))/2;
                         dJds = zeros(size(middle));
                         for cand = 1:size(dJds,1)
@@ -258,7 +256,7 @@ try
                             s = bsxfun(@times,ones(1,1,n_r),candidates(s_opt));
                             if nargout > 1
                                 grad_candidates = grad_candidates(I,:);
-                                ds_i = s(1,1,1)*squeeze(grad_candidates(s_opt,:,:));
+                                ds_i = squeeze(grad_candidates(s_opt,:,:));
                                 for ir = 1:n_r
                                     ds(1,1,:,ir) = ds_i';
                                 end
@@ -282,6 +280,7 @@ switch nargout
         varargout{1} = s;
         varargout{2} = ds;
 end
+
 
 % Note: If for all j there are Nans in D(j).my(:,i,r)
 % sir and sigma2ir are NaN as well.
