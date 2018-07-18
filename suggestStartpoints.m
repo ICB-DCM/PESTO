@@ -216,7 +216,7 @@ while jComponents <= n_starts && size(par0_tmp, 2) < n_starts
         end
     end
     
-    jComponents = min([n_starts, jComponents + 2]);
+    jComponents = min([dim, jComponents + 2]);
 end
 
 end
