@@ -24,7 +24,7 @@ parameters.max(11) = 4; %JAK2EpoRDeaSHP1
 parameters.max(20) = 4;
 parameters.min(28:end) = -5; %offsets
 
-load data_Bachmann
+load('data/data_Bachmann')
 D = getOffsetScalingStd_Bachmann(D);
 D = loadInitialConditions(D);
 
@@ -50,7 +50,10 @@ options.MS.localOptimizerOptions = optimset('algorithm','interior-point',...
 options.MS.comp_type = 'sequential';
 options.MS.n_starts = 100;
 options.MS.save = false;
-options.MS.foldername = ['results_BachmannJakStat_' approach '_' distribution];
+if ~exist('results','dir')
+    mkdir('results')
+end
+options.MS.foldername = ['./results/results_BachmannJakStat_' approach '_' distribution];
 options.MS.HO.distribution = distribution;
 options.MS.HO.n_obs = 20;
 options.MS.HO.n_exp = 36;

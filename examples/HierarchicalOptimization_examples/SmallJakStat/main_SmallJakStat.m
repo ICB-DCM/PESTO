@@ -11,6 +11,7 @@ close all
 clc
 
 %% Compilation of simulation files using AMICI
+addpath('models/')
 compilation_JakStat
 
 %% Optimization using fmincon
@@ -20,7 +21,8 @@ runEstimation_JakStat('hierarchical','laplace')
 runEstimation_JakStat('standard','normal')
 runEstimation_JakStat('standard','laplace')
 
-%% Profile calculation
+%% Profile calculation 
+% requires runEstimation_JakStat to be called before
 runProfiles_JakStat('standard','normal')
 runProfiles_JakStat('standard','laplace')
 

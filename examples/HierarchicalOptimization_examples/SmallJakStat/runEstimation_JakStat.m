@@ -23,11 +23,15 @@ else
     optimizer = 'fmincon';
 end
 
-load('data_JakStat.mat')
+load('data/data_JakStat.mat')
 [parameters,options] = getParameterOptions_JakStat(approach,optimizer);
 
 options.MS.HO.distribution = distribution;
 options.MS.save = false;
+
+if ~exist('results','dir')
+    mkdir('results')
+end
 
 if nargin > 2
     options.MS.foldername = ['./results/results_SmallJakStat_' approach '_' distribution '_' optimizer];
@@ -40,15 +44,4 @@ parameters = getMultiStarts(parameters,@(xi) ...
 
 save(options.MS.foldername,'parameters','D','options','optimizer','approach')
 
-%% Profile calculation
-if strcmp(optimizer,'fmincon')
-    options.MS.parameter_index = 1:11;
-    options.MS.localOptimizerOptions.Algorithm = 'trust-region-reflective';
-    options.MS.options_getNextPoint.mode = 'one-dimensional';
-    tmp = tic;
-    parameters = getParameterProfiles(parameters, @(xi) ...
-        logLikelihood_JakStat(xi,D,options,approach),options.MS);
-    parameters.t_cpu_profiles = toc(tmp);
-    save(options.MS.foldername,'parameters','D','options','optimizer','approach')
-end
 end

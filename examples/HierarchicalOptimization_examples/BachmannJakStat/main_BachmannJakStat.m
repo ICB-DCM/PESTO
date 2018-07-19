@@ -11,6 +11,7 @@ clear all
 close all
 clc
 
+addpath('models/')
 compilation_BachmannJakStat
 
 runEstimation_BachmannJakStat('hierarchical','normal')
