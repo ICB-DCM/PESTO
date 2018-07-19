@@ -11,6 +11,7 @@ close all
 clc
 
 %% Compilation of simulation files using AMICI
+addpath('models/')
 compilation_JakStat
 
 %% Optimization using fmincon

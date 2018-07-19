@@ -10,6 +10,7 @@ clear all
 close all
 clc
 
+addpath('models/')
 compilation_RafMekErk
 
 runEstimation_RafMekErk('hierarchical','normal')
