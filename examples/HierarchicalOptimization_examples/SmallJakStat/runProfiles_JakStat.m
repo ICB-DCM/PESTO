@@ -40,10 +40,8 @@ options.MS.save = true;
 options.MS.parameter_index = 1:11;
 options.MS.MAP_index = MAP_index;
 
-tmp = tic;
 parameters = getParameterProfiles(parameters, @(xi) ...
     logLikelihood_JakStat(xi,D,options,approach),options.MS);
-parameters.t_cpu_profiles = toc(tmp);
 
 save(options.MS.foldername,'parameters','D','options','optimizer','approach')
 
