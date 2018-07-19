@@ -20,6 +20,11 @@ end
 [parameters,options] = getParameterOptions_RafMekErk(approach);
 
 options.MS.HO.distribution = distribution;
+
+if ~exist('results','dir')
+    mkdir('results')
+end
+
 options.MS.foldername = ['./results/results_RafMekErk_' approach '_' distribution];
 
 switch approach

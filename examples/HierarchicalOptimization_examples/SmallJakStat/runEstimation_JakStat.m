@@ -29,6 +29,10 @@ load('data/data_JakStat.mat')
 options.MS.HO.distribution = distribution;
 options.MS.save = false;
 
+if ~exist('results','dir')
+    mkdir('results')
+end
+
 if nargin > 2
     options.MS.foldername = ['./results/results_SmallJakStat_' approach '_' distribution '_' optimizer];
 else
