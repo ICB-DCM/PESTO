@@ -26,6 +26,10 @@ PESTO usage is demonstrated in various [examples](examples/). Further documentat
 
 PESTO is implemented fully in MATLAB and compatible with MATLAB releases from R2014b up to at least 2017a running on Windows, Mac and Linux.
 
+## Citation
+If you use PESTO in a projects, please cite
+* Stapor, P., Weindl, D., Ballnus, B., Hug, S., Loos, C., Fiedler, A., Krause, S., Hross, S., Fröhlich, F., Hasenauer, J. (2018). PESTO: Parameter EStimation TOolbox. Bioinformatics, 34(4), 705-707. doi: 10.1093/bioinformatics/btx676
+
 ## Licensing
 
 See [ ```LICENSE```](LICENSE) file in the PESTO source directory.
