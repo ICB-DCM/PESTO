@@ -3,7 +3,7 @@ function [] = runEstimation_RafMekErk(approach,distribution)
 % RAF/MEK/ERK signaling model.
 %
 % USAGE:
-% * [] = runEstimation_JakStat('hierarchical','normal')
+% * [] = runEstimation_RafMekErk('hierarchical','normal')
 %
 % Parameters
 %  approach: 'hierarchical' or 'standard' approach for the optimization
@@ -28,21 +28,6 @@ switch approach
             logLikelihood_RafMekErk_hierarchical(xi,D,options),options.MS);
     case 'standard'
         parameters = getMultiStarts(parameters,@(xi) ...
-            logLikelihood_RafMekErk_standard(xi,D,options),options.MS);
-end
-save(options.MS.foldername,'parameters','D','options','approach')
-
-%% Calculate profiles
-options.MS.localOptimizerOptions.Algorithm = 'interior-point';
-options.MS.options_getNextPoint.mode = 'multi-dimensional';
-options.MS.parameter_index = 1:12;
-switch approach
-    case 'hierarchical'
-        parameters = getParameterProfiles(parameters, @(xi) ...
-            logLikelihood_RafMekErk_hierarchical(xi,D,options),options.MS);
-    case 'standard'
-        parameters.max(13:end) = 10;
-        parameters = getParameterProfiles(parameters, @(xi) ...
             logLikelihood_RafMekErk_standard(xi,D,options),options.MS);
 end
 save(options.MS.foldername,'parameters','D','options','approach')

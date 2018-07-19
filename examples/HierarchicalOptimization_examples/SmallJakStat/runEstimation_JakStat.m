@@ -39,4 +39,5 @@ parameters = getMultiStarts(parameters,@(xi) ...
     logLikelihood_JakStat(xi,D,options,approach),options.MS);
 
 save(options.MS.foldername,'parameters','D','options','optimizer','approach')
+
 end

@@ -13,8 +13,18 @@ clc
 addpath('models/')
 compilation_RafMekErk
 
+%% Optimization
 runEstimation_RafMekErk('hierarchical','normal')
 runEstimation_RafMekErk('hierarchical','laplace')
 
 runEstimation_RafMekErk('standard','normal')
 runEstimation_RafMekErk('standard','laplace')
+
+%% Profile calculation 
+% requires runEstimation_JakStat to be called before
+runProfiles_RafMekErk('hierarchical','normal')
+runProfiles_RafMekErk('hierarchical','laplace')
+
+runProfiles_RafMekErk('standard','normal')
+runProfiles_RafMekErk('standard','laplace')
+
