@@ -24,7 +24,7 @@ parameters.max(11) = 4; %JAK2EpoRDeaSHP1
 parameters.max(20) = 4;
 parameters.min(28:end) = -5; %offsets
 
-load data_Bachmann
+load('data/data_Bachmann')
 D = getOffsetScalingStd_Bachmann(D);
 D = loadInitialConditions(D);
 

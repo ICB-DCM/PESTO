@@ -12,9 +12,9 @@ function [] = runEstimation_RafMekErk(approach,distribution)
 
 switch approach
     case 'standard'
-        load('data_RafMekErk_standard')
+        load('data/data_RafMekErk_standard')
     case 'hierarchical'
-        load('data_RafMekErk')
+        load('data/data_RafMekErk')
 end
 
 [parameters,options] = getParameterOptions_RafMekErk(approach);

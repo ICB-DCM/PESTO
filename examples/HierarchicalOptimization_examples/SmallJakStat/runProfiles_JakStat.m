@@ -19,9 +19,9 @@ if nargin > 2
     MAP_index = varargin{3};
 end
 
-load('data_JakStat.mat')
+load('data/data_JakStat.mat')
 
-load(['results_SmallJakStat_' approach '_' distribution]);
+load(['results/results_SmallJakStat_' approach '_' distribution]);
 
 [~,options] = getParameterOptions_JakStat(approach,optimizer);
 

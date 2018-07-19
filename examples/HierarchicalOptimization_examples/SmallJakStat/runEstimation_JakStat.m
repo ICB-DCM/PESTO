@@ -23,7 +23,7 @@ else
     optimizer = 'fmincon';
 end
 
-load('data_JakStat.mat')
+load('data/data_JakStat.mat')
 [parameters,options] = getParameterOptions_JakStat(approach,optimizer);
 
 options.MS.HO.distribution = distribution;
