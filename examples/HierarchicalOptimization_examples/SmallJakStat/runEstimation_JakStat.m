@@ -39,16 +39,4 @@ parameters = getMultiStarts(parameters,@(xi) ...
     logLikelihood_JakStat(xi,D,options,approach),options.MS);
 
 save(options.MS.foldername,'parameters','D','options','optimizer','approach')
-
-%% Profile calculation
-if strcmp(optimizer,'fmincon')
-    options.MS.parameter_index = 1:11;
-    options.MS.localOptimizerOptions.Algorithm = 'trust-region-reflective';
-    options.MS.options_getNextPoint.mode = 'one-dimensional';
-    tmp = tic;
-    parameters = getParameterProfiles(parameters, @(xi) ...
-        logLikelihood_JakStat(xi,D,options,approach),options.MS);
-    parameters.t_cpu_profiles = toc(tmp);
-    save(options.MS.foldername,'parameters','D','options','optimizer','approach')
-end
 end
