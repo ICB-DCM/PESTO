@@ -17,6 +17,8 @@ approach = varargin{1};
 distribution = varargin{2};
 if nargin > 2
     MAP_index = varargin{3};
+else
+    MAP_index = 1;
 end
 
 load('data/data_JakStat.mat')
