@@ -249,7 +249,7 @@ classdef RAMPARTOptions < matlab.mixin.SetGet
          if(value > 0)
             this.maxT = lower(value);
          else
-            error(['Please enter the maximum temperature. May be inf.']);
+            error(['Please enter the maximum temperature.']);
          end
       end
       
