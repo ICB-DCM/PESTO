@@ -15,7 +15,6 @@ classdef PTOptions < matlab.mixin.CustomDisplay
       % velocity of the single-chain proposals.
       % Value between 0 and 1.
       % No adaption (classical Metropolis-Hastings) for 0.
-
       alpha = 0.51;
 
       % Parameter which controlls the adaption degeneration velocity of
@@ -38,8 +37,8 @@ classdef PTOptions < matlab.mixin.CustomDisplay
       % Scaling factor for temperature adaptation
       temperatureEta = 100;
       
-      % Maximum T - may be infinity
-      maxT = inf;
+      % Maximum T 
+      maxT = 5e4;
 
    end
    
@@ -229,11 +228,11 @@ classdef PTOptions < matlab.mixin.CustomDisplay
          end
       end  
       
-      function set.maxT(this, value)
+      function this = set.maxT(this, value)
          if(value > 0)
             this.maxT = lower(value);
          else
-            error(['Please enter the maximum temperature. May be inf.']);
+            error(['Please enter the maximum temperature.']);
          end
       end        
             

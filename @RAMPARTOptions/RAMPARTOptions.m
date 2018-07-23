@@ -38,8 +38,8 @@ classdef RAMPARTOptions < matlab.mixin.SetGet
       % Scaling factor for temperature adaptation
       temperatureEta = 10;
       
-      % Maximum T - may be infinity
-      maxT = inf;
+      % Maximum T
+      maxT = 5e4;
       
       % Fraction of iterations which are used to train a region predictor
       trainPhaseFrac = 0.2;
@@ -249,7 +249,7 @@ classdef RAMPARTOptions < matlab.mixin.SetGet
          if(value > 0)
             this.maxT = lower(value);
          else
-            error(['Please enter the maximum temperature. May be inf.']);
+            error(['Please enter the maximum temperature.']);
          end
       end
       
