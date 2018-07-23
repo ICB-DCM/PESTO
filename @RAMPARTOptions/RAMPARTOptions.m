@@ -38,8 +38,8 @@ classdef RAMPARTOptions < matlab.mixin.SetGet
       % Scaling factor for temperature adaptation
       temperatureEta = 10;
       
-      % Maximum T - may be infinity
-      maxT = inf;
+      % Maximum T
+      maxT = 5e4;
       
       % Fraction of iterations which are used to train a region predictor
       trainPhaseFrac = 0.2;

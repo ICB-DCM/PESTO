@@ -38,8 +38,8 @@ classdef PTOptions < matlab.mixin.CustomDisplay
       % Scaling factor for temperature adaptation
       temperatureEta = 100;
       
-      % Maximum T - may be infinity
-      maxT = inf;
+      % Maximum T 
+      maxT = 5e4;
 
    end
    
