@@ -15,7 +15,6 @@ classdef PTOptions < matlab.mixin.CustomDisplay
       % velocity of the single-chain proposals.
       % Value between 0 and 1.
       % No adaption (classical Metropolis-Hastings) for 0.
-
       alpha = 0.51;
 
       % Parameter which controlls the adaption degeneration velocity of
@@ -229,7 +228,7 @@ classdef PTOptions < matlab.mixin.CustomDisplay
          end
       end  
       
-      function set.maxT(this, value)
+      function this = set.maxT(this, value)
          if(value > 0)
             this.maxT = lower(value);
          else
