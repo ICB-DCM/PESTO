@@ -224,13 +224,16 @@ for j = 1:n_e
                     dy_sh),1),2),3));
                 if nargout > 2
                     % approximated Hessian
-                    for i1 = 1:n_theta
-                        for i2 = 1:n_theta
-                            HlLH(i1,i2) = HlLH(i1,i2) - ...
-                                nansum(nansum(nansum(bsxfun(@rdivide,...
-                                bsxfun(@times,dy_sh(:,:,:,i1),dy_sh(:,:,:,i2)),noise_j))));
-                        end
-                    end
+                    tmp1 = nansum(bsxfun(@rdivide, dy_sh, sqrt(noise_j)), 3) / size(dy_sh, 3);
+                    tmp2 = permute(tmp1, [1, 2, 4, 3]);
+                    HlLH = HlLH -squeeze(nansum(nansum(bsxfun(@times, tmp1, tmp2), 1), 2));%  ;
+%                     for i1 = 1:n_theta
+%                         for i2 = 1:n_theta
+%                             HlLH(i1,i2) = HlLH(i1,i2) - ...
+%                                 nansum(nansum(nansum(bsxfun(@rdivide,...
+%                                 bsxfun(@times,dy_sh(:,:,:,i1),dy_sh(:,:,:,i2)),noise_j))));
+%                         end
+%                     end
                 end
             case 'laplace'
                 gradlLH = gradlLH + squeeze(sum(sum(nansum(...
