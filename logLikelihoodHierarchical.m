@@ -137,10 +137,10 @@ end
 %% save scaling and noise parameters
 % s and noise have dimensions: 
 % (1 x # observables x max # replicates x # experiments/conditions) 
-if ~exist(options.foldername,'dir')
-    mkdir(options.foldername)
-end
 if options.save
+    if ~exist(options.foldername,'dir') 
+        mkdir(options.foldername)
+    end
     save([options.foldername '/analytical_results.mat'],'s','noise');
 end
 
@@ -220,7 +220,6 @@ for j = 1:n_e
         case 'laplace'
             temparg = bsxfun(@times,~isnan(D(j).my),log(2*noise_j))+...
                 bsxfun(@rdivide,abs(y_sh),noise_j);
-            
     end
     lLH = lLH - sum(sum(nansum(temparg,1),3),2);
     
