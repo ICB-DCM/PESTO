@@ -63,8 +63,8 @@ classdef HOOptions < matlab.mixin.CustomDisplay
     end
     
     properties (Hidden)
-        % Name of the folder in which results are stored. If no folder is
-        % provided, a random foldername is generated.
+        % Name of the folder in which results are stored. The same as in
+        % PestoOptions.
         foldername;
     end
     
