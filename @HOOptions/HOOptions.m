@@ -6,7 +6,12 @@ classdef HOOptions < matlab.mixin.CustomDisplay
     
     properties
         % Determine whether optimal parameters are saved or not.
-        % * false: results are not saved
+        % Note: The parameters saved after multi-start are not necessarily 
+        % the optimal parameters corresponding to the best optimum found 
+        % in multi-start optimization. To obtain these, call the likelihood
+        % function again with the optimal dynamic parameters.
+        % * false: (default) results are not saved, recommended for
+        %           optimization
         % * true: results are stored in the same folder in the file
         %         analytical_results.mat
         save = false;
