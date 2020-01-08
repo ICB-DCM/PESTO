@@ -26,7 +26,7 @@
 % This example is a model for mRNA transfection, taken from the paper
 % "Single-cell mRNA transfection studies: Delivery, kinetics and statistics
 % by numbers", by Leonhardt C et al., Nanomedicine: NBM, 2014, vol.10
-% (see http://dx.doi.org/10.1016/j.nano.2013.11.008)
+% (see https://doi.org/10.1016/j.nano.2013.11.008)
 %
 % The data used is measurement data provided in the publication.
 %
