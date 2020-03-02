@@ -207,7 +207,7 @@ end
 % finalize output
 outputFcn(ybst,fbst,funEvals,'done');
 % textual output
-f_display(options.Display,funEvals,fbst,delta,true)
+f_display(options.Display,funEvals,fbst,delta_f,true)
 
 % assign return values
 x                   = denormalize(ybst);
@@ -342,7 +342,7 @@ cell_fieldnames_in = fieldnames(options_in);
 for jf = 1:length(cell_fieldnames_in)
     fieldname = cell_fieldnames_in{jf};
     if ~any(strcmp(cell_fieldnames,fieldname))
-        error(['Options field ' fieldname ' does not exist.']);
+        continue;
     end
     options.(fieldname) = options_in.(fieldname);
 end
